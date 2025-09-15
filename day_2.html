@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2: Constructors, Static Members & Object Lifecycle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .problem-tag { font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-block; }
+        .code-block { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.875rem; overflow-x: auto; }
+        .code-block .keyword { color: #93c5fd; }
+        .code-block .type { color: #86efac; }
+        .code-block .comment { color: #9ca3af; }
+        .code-block .string { color: #fcd34d; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8">
+            <a href="roadmap.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200">&larr; Back to Roadmap</a>
+            <h1 class="text-4xl font-extrabold text-slate-800 mt-2 tracking-tight">Day 2: Constructors, Static Members & Object Lifecycle</h1>
+            <p class="mt-2 text-lg text-slate-500">Week 1: OOP Foundations</p>
+        </header>
+        <main class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                <h2 class="font-bold text-xl text-slate-700 mb-3 border-b pb-2 flex items-center gap-2">&#128218; Theory Topics</h2>
+                <div class="space-y-4 pt-2 text-slate-700">
+                     <div>
+                        <h3 class="font-semibold text-lg">Constructors</h3>
+                        <p>A constructor is a special method for creating and initializing an object instance of a class. It's called automatically when you use the `new` keyword. A class can have multiple constructors (overloading), including a parameterless default constructor.</p>
+                    </div>
+                     <div>
+                        <h3 class="font-semibold text-lg">Static Members</h3>
+                        <p>Static members (fields, methods, properties) belong to the class itself, not to any specific object instance. There is only one copy of a static member, shared across all objects of the class. You access them using the class name, e.g., `Math.PI`. They are useful for utility functions or shared data (like a counter).</p>
+                    </div>
+                     <div>
+                        <h3 class="font-semibold text-lg">Object Lifecycle</h3>
+                        <p>An object's life in .NET is managed by the Common Language Runtime (CLR). It begins with **creation** (`new`), followed by **usage** (calling methods, accessing properties), and ends with **destruction**. Destruction is handled by the Garbage Collector (GC), which automatically reclaims memory from objects that are no longer reachable.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                <h2 class="font-bold text-xl text-slate-700 mb-3 border-b pb-2 flex items-center gap-2">&#128187; Coding Practice</h2>
+                <p class="text-slate-600 pt-1 mb-4">Create a `Logger` class using a static instance (a simple Singleton approach).</p>
+                <div class="code-block">
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Logger</span>
+{
+    <span class="comment">// A private static instance of the Logger itself</span>
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">Logger</span> _instance;
+
+    <span class="comment">// Private constructor prevents direct instantiation</span>
+    <span class="keyword">private</span> <span class="type">Logger</span>() { }
+
+    <span class="comment">// Public static method to get the single instance</span>
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">Logger</span> GetInstance()
+    {
+        <span class="keyword">if</span> (_instance == <span class="keyword">null</span>)
+        {
+            _instance = <span class="keyword">new</span> <span class="type">Logger</span>();
+        }
+        <span class="keyword">return</span> _instance;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> Log(<span class="type">string</span> message)
+    {
+        Console.WriteLine($<span class="string">"[{DateTime.Now}]: {message}"</span>);
+    }
+}
+</code></pre>
+                </div>
+            </div>
+            <!-- Problems, UML, and Case Study sections for Day 2 would follow -->
+        </main>
+    </div>
+</body>
+</html>
+

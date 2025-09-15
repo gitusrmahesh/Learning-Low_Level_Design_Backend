@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low-Level Design Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Reference UI Palette (Teal, Slate, Neutrals) -->
+    <!-- Application Structure Plan: This version completes the application by building out a fully functional "Full Curriculum" view. The structure remains a two-view SPA. The "Interactive Roadmap" is the detailed daily dashboard. The new "Full Curriculum" view provides a high-level weekly summary with a dedicated week-selector, content cards for "Core Concepts" and "Practical Application," and a weekly focus chart. This final structure perfectly mirrors the user's reference images, providing both micro and macro views of the curriculum. -->
+    <!-- Visualization & Content Choices: Weekly Curriculum View -> Goal: Summarize/Plan -> Presentation: A dedicated view with weekly navigation and content cards -> Interaction: Click a week to update the entire view's content -> Justification: Fulfills the final requirement to make the "Full Curriculum" button functional and meaningful, providing a strategic overview of the entire bootcamp as seen in the reference images. Method: JS/HTML/CSS. Weekly Focus Chart -> Goal: Inform -> Viz: Doughnut Chart -> Justification: Provides a specific visual breakdown for each week within the "Full Curriculum" view, adding valuable context. Library: Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .nav-button.active { background-color: #0d9488; color: #ffffff; }
+        .week-tab-interactive.active { background-color: #0d9488; color: #ffffff; }
+        .week-tab-full.active { background-color: #1e293b; color: #ffffff; }
+        .chart-container-large { position: relative; margin: auto; height: 220px; width: 220px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+        .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+        .modal-content { background-color: #ffffff; border-radius: 0.75rem; width: 90%; max-width: 640px; max-height: 90vh; overflow-y: auto; padding: 1.5rem 2rem; transform: scale(0.95); transition: all 0.3s ease; }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
+        .problem-tag { font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-block; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-10">
+            <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+            <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            <div id="view-switcher" class="mt-8 inline-flex items-center bg-white shadow-sm p-1 rounded-full border border-slate-200">
+                <button data-view="interactive" class="nav-button py-2 px-6 rounded-full text-sm font-medium transition-colors duration-300">Interactive Roadmap</button>
+                <button data-view="curriculum" class="nav-button py-2 px-6 rounded-full text-sm font-medium transition-colors duration-300">Full Curriculum</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Interactive Roadmap View -->
+            <div id="interactive-view">
+                <div id="focus-header" class="bg-white border-l-4 border-teal-500 p-5 rounded-r-xl rounded-l-md mb-8 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-md">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200/80 mb-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2">
+                            <h3 class="font-bold text-xl text-slate-800 mb-4">Your Progress</h3>
+                            <div class="flex items-center gap-8">
+                                <div class="flex-1">
+                                    <p class="text-sm text-slate-600 mb-1" id="progress-text">0% complete (0 of 60 days)</p>
+                                    <div class="w-full bg-slate-200 rounded-full h-2"><div id="progress-bar" class="bg-teal-500 h-2 rounded-full" style="width: 0%"></div></div>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-sm font-semibold text-slate-600 mb-1">Weekly Streak</h4>
+                                    <div class="flex justify-center text-3xl space-x-1 text-slate-300"><span>&#128293;</span><span>&#128293;</span><span>&#128293;</span><span>&#128293;</span><span>&#128293;</span></div>
+                                </div>
+                            </div>
+                            <hr class="my-6 border-slate-200/80">
+                            <h3 class="font-bold text-xl text-slate-800 mb-4">Performance Snapshot</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="bg-slate-50 border border-slate-200/80 p-4 rounded-lg text-center"><p class="text-lg font-bold text-green-600">On Track</p><p class="text-sm text-slate-500">Current Pace</p></div>
+                                <div class="bg-blue-50 border border-blue-200/80 p-4 rounded-lg text-center"><p id="topics-mastered-count" class="text-2xl font-bold text-blue-800">0</p><p class="text-sm text-slate-500">Topics Mastered</p></div>
+                                <div class="bg-yellow-50 border border-yellow-200/80 p-4 rounded-lg text-center"><p class="font-bold text-yellow-800">Mini-Project</p><p class="text-sm text-slate-500">Next Challenge (Day 14)</p></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <h3 class="font-bold text-xl text-slate-800 mb-4 text-center">Topic Distribution</h3>
+                            <div class="chart-container-large"><canvas id="topicDistributionChart"></canvas></div>
+                            <div id="topic-distribution-legend" class="grid grid-cols-2 gap-x-4 gap-y-1 mt-4 text-xs"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div id="week-tabs" class="flex flex-wrap justify-center gap-2 mb-6"></div>
+                    <div id="curriculum-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <div class="mt-8 bg-teal-700 text-white p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-3xl font-bold text-center mb-2">Key Takeaways & Outcomes</h3>
+                    <p class="text-center text-teal-100 max-w-3xl mx-auto mb-8">By completing this plan, you'll gain the practical skills and theoretical knowledge to excel in backend engineering roles.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 max-w-4xl mx-auto">
+                        <div class="flex items-start"><span class="flex-shrink-0 text-white bg-white/25 rounded-full p-1 mr-4 mt-1">&#10004;</span> <div><h4 class="font-semibold">Architect Scalable Solutions</h4><p class="text-sm text-teal-100">Use design principles and design patterns to build robust, maintainable systems.</p></div></div>
+                        <div class="flex items-start"><span class="flex-shrink-0 text-white bg-white/25 rounded-full p-1 mr-4 mt-1">&#10004;</span> <div><h4 class="font-semibold">Design & Build APIs</h4><p class="text-sm text-teal-100">Confidently design, implement, and document RESTful APIs using the MVC pattern.</p></div></div>
+                        <div class="flex items-start"><span class="flex-shrink-0 text-white bg-white/25 rounded-full p-1 mr-4 mt-1">&#10004;</span> <div><h4 class="font-semibold">Master LLD Interviews</h4><p class="text-sm text-teal-100">Confidently tackle complex design problems and articulate your design choices effectively.</p></div></div>
+                        <div class="flex items-start"><span class="flex-shrink-0 text-white bg-white/25 rounded-full p-1 mr-4 mt-1">&#10004;</span> <div><h4 class="font-semibold">Write Professional Code</h4><p class="text-sm text-teal-100">Leverage advanced .NET features to write clean, efficient, and production-ready code.</p></div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="curriculum-view" class="hidden"></div>
+        </main>
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+    <div id="details-modal" class="modal-overlay"><div class="modal-content" id="modal-content-area"></div></div>
+
+    <script>
+        const fullRoadmapData = [
+            { 
+                week: 1, 
+                title: "OOP Foundations", 
+                description: "Master the bedrock of modern software. This week is crucial for building a strong mental model for all future design concepts, focusing on the principles that govern clean and maintainable code.",
+                practicePlan: { theory: "Days 1-4: Dive deep into theory with guided examples and real-world analogies.", application: "Days 5-6: Apply knowledge with focused problem-solving and hands-on practice.", consolidation: "Day 7: Consolidate learning and prepare for what's next with a comprehensive review." },
+                focus: { "OOP": 100 }, 
+                days: [
+                    { day: 1, title: 'Introduction to OOP & Encapsulation', type: 'Concept', tags: [], details: { theory: ["What are Objects and Classes in C#.", "Access Modifiers (public, private, protected, internal).", "Why Encapsulation is important in backend systems.", "Real-world analogy: Banking system."], coding: ["Write a simple Book class with Title, Author, and private Price.", "Add methods GetPrice() and ApplyDiscount()."], problems: [{ difficulty: "Easy", text: "Implement a Stack using arrays." }, { difficulty: "Medium", text: "Implement a Queue class with O(1) enqueue/dequeue." }], uml: "Create a class diagram for a Library Management system.", caseStudy: { title: "URL Shortener: First Draft", points: ["Input: Long URL → Output: Short Code.", "Think: Hashing or Base62 encoding."] } } },
+                    { day: 2, title: 'Constructors, Static Members & Object Lifecycle', type: 'Concept', tags: [], details: { theory: ["Constructors (default, parameterized).", "Static members and their lifecycle.", "Object lifecycle: creation → usage → destruction.", "When to use static vs instance methods."], coding: ["Create a Logger class with a static instance (Singleton approach).", "Write a program to count number of active objects using a static counter."], problems: [{ difficulty: "Easy", text: "Implement a basic Calculator with constructor initialization." }, { difficulty: "Medium", text: "Implement a thread-safe Singleton pattern." }], uml: "UML object lifecycle diagram for Logger.", caseStudy: { title: "Design Parking Lot System", points: ["Entities: ParkingSlot, Car, Ticket.", "Constraints: Different slot sizes (Bike, Car, Truck)."] } } },
+                    { day: 3, title: 'Inheritance & Polymorphism', type: 'Concept', tags: [], details: { theory: ["Base and derived classes in C#.", "Abstract classes vs Interfaces.", "Method overriding (virtual, override, sealed).", "Polymorphism in backend: Different PaymentMethod classes."], coding: ["Create Shape base class → derive Circle and Rectangle with area calculation."], problems: [{ difficulty: "Easy", text: "Implement a base Animal class with Dog and Cat subclasses." }, { difficulty: "Medium-Hard", text: "Implement a Notification System (SMS, Email, Push) with polymorphism." }], uml: "UML inheritance diagram for Employee hierarchy.", caseStudy: { title: "Design Ride-Hailing System", points: ["Entities: Rider, Driver, Ride.", "Polymorphism: Different ride types (Economy, Premium, Pool)."] } } },
+                    { day: 4, title: 'Immutability & Value Types', type: 'Concept', tags: [], details: { theory: ["Difference between Value Types and Reference Types.", "Creating Immutable classes and records in C#.", "Benefits: Thread safety, predictability."], coding: ["Create immutable User record with Name and Email."], problems: [{ difficulty: "Easy", text: "Implement Point as immutable struct." }, { difficulty: "Hard", text: "Implement a thread-safe in-memory cache." }], uml: "UML class diagram for immutable Order with state transitions.", caseStudy: { title: "Design E-commerce Order Processing", points: ["Immutable states for orders.", "API endpoints: CreateOrder, PayOrder, ShipOrder."] } } },
+                    { day: 5, title: 'Method Overloading, Overriding & Extension Methods', type: 'Practice', tags: [], details: { theory: ["Difference between method overloading and overriding.", "Extension methods in .NET Core.", "Best practices: when to overload, when to override."], coding: ["Implement Calculator with overloaded Add methods."], problems: [{ difficulty: "Easy", text: "Implement a simple extension method IsEven() for integers." }, { difficulty: "Medium", text: "Implement Strategy pattern for discounts." }], uml: "UML for overloaded methods.", caseStudy: { title: "Build Online Library System APIs", points: ["Search books, reserve books.", "Overloaded SearchBooks by title, author, category."] } } },
+                    { day: 6, title: 'Interfaces & Partial Classes', type: 'Practice', tags: [], details: { theory: ["Interfaces in C#: multiple inheritance alternative.", "Partial classes for large projects.", "Interface Segregation Principle."], coding: ["Implement IPaymentProcessor with PayPal and Stripe classes."], problems: [{ difficulty: "Easy", text: "Define multiple small interfaces (IPrint, IScan, IFax)." }, { difficulty: "Medium", text: "Implement Factory Pattern for payments." }], uml: "UML interface diagram for IPaymentProcessor.", caseStudy: { title: "Design Chat Service with IMessageSender interface", points: ["Implement Email, SMS, and Push Notification."] } } },
+                    { day: 7, title: 'Static Classes & Records', type: 'Review', tags:[], details: { theory: ["Static classes in .NET (Utility design).", "Records in C# 9+ (immutability + equality).", "Use cases in backend (constants, helpers)."], coding: ["Implement MathUtils as static class."], problems: [{ difficulty: "Easy", text: "Add extension method for string reversal." }, { difficulty: "Medium", text: "Implement Adapter Pattern demo." }], uml: "UML diagram for static helpers.", caseStudy: { title: "Design Payment Processing Service", points: ["Static utility helpers for currency conversions.", "Records to represent transactions immutably."] } } },
+                ] 
+            },
+            { 
+                week: 2, 
+                title: "Multithreading Basics", 
+                description: "Unlock the power of concurrent programming. This week introduces the complexities and benefits of multithreading, a critical skill for building high-performance, responsive backend applications.",
+                practicePlan: { theory: "Days 8-10: Grasp the fundamentals of threads, tasks, race conditions, and deadlocks.", application: "Days 11-13: Implement synchronization primitives and thread-safe collections in practical scenarios.", consolidation: "Day 14: Synthesize your knowledge by building a complete asynchronous mini-project." },
+                focus: { "Multithreading": 100 }, 
+                days: [
+                    { day: 8, title: 'Threads vs Tasks, Async & Await', type: 'Concept', tags: [], details: { theory: ["Difference between Threads, Tasks, and ThreadPool.", "Introduction to async/await in .NET Core.", "Use cases: I/O-bound vs CPU-bound tasks."], coding: ["Write a demo that fetches data from two APIs in parallel using Task.WhenAll()."], problems: [{ difficulty: "Easy", text: "Run two methods in parallel using threads." }, { difficulty: "Medium", text: "Implement async file read/write." }], uml: "Sequence diagram of an async API call.", caseStudy: { title: "Design a Job Scheduler", points: ["Submit jobs → Execute asynchronously → Track completion."] } } },
+                    { day: 9, title: 'Race Conditions & Locks', type: 'Concept', tags: [], details: { theory: ["What is a race condition?", "Critical sections & shared resources.", "Locking mechanisms in C#: lock, Monitor."], coding: ["Implement a BankAccount class with thread-safe Deposit and Withdraw."], problems: [{ difficulty: "Easy", text: "Print numbers 1–100 from two threads without race conditions." }, { difficulty: "Hard", text: "Thread-safe in-memory dictionary." }], uml: "Activity diagram showing threads updating shared balance.", caseStudy: { title: "Design E-commerce Cart", points: ["Multiple users updating cart concurrently.", "Apply locks to ensure consistent totals."] } } },
+                    { day: 10, title: 'Deadlocks & Prevention', type: 'Concept', tags: [], details: { theory: ["What is a deadlock?", "4 conditions for deadlock (Hold & Wait, etc.).", "Deadlock prevention strategies."], coding: ["Write a program to simulate a deadlock with two threads & two locks."], problems: [{ difficulty: "Easy", text: "Demonstrate a deadlock in C#." }, { difficulty: "Hard", text: "Implement lock timeout handling." }], uml: "Deadlock diagram.", caseStudy: { title: "Design Ticket Booking System", points: ["Prevent multiple users from booking the same seat."] } } },
+                    { day: 11, title: 'Thread Synchronization (Mutex & Semaphore)', type: 'Practice', tags: [], details: { theory: ["What is a Mutex? Difference from lock.", "Semaphore vs SemaphoreSlim.", "Real-world use: DB connection pooling."], coding: ["Implement a SemaphoreSlim to allow only 3 threads into critical section."], problems: [{ difficulty: "Easy", text: "Mutex demo for single-thread access." }, { difficulty: "Medium", text: "Implement semaphore-controlled print queue." }], uml: "Sequence diagram: Multiple threads waiting on semaphore.", caseStudy: { title: "Design Parking Lot with multiple entry gates", points: ["Use semaphore to control available slots."] } } },
+                    { day: 12, title: 'ReaderWriterLockSlim & Concurrency', type: 'Practice', tags: [], details: { theory: ["Reader-Writer problems.", "ReaderWriterLockSlim in C#.", "When to prefer reader-writer locks."], coding: ["Implement a shared dictionary with ReaderWriterLockSlim."], problems: [{ difficulty: "Easy", text: "Allow multiple threads to read but only one to write." }, { difficulty: "Medium", text: "Thread-safe cache with expiration." }], uml: "UML: Reader/Writer lock on shared DB table.", caseStudy: { title: "Design Ride-Matching Service", points: ["Multiple reads (searching available drivers)."] } } },
+                    { day: 13, title: 'Thread-Safe Collections', type: 'Practice', tags: [], details: { theory: ["Concurrent collections in .NET.", "BlockingCollection & producer-consumer pattern."], coding: ["Implement producer-consumer using BlockingCollection."], problems: [{ difficulty: "Easy", text: "Thread-safe counter with Interlocked." }, { difficulty: "Medium", text: "Use ConcurrentDictionary for caching." }], uml: "Sequence diagram: Producer-Consumer.", caseStudy: { title: "Design Notification Service", points: ["Queue-based system for sending notifications."] } } },
+                    { day: 14, title: 'Multithreading Review & Mini Project', type: 'Project', tags: [], details: { theory: ["Review: Threads, Tasks, Locks, Semaphores.", "Trade-offs: Performance vs Safety.", "Common interview questions."], coding: ["Implement a mini Thread Pool in C#."], problems: [{ difficulty: "Medium", text: "Multi-threaded download manager." }, { difficulty: "Hard", text: "Implement batch job executor with worker threads." }], uml: "Activity diagram of thread pool execution.", caseStudy: { title: "Build Async Notification System", points: ["Multiple workers consuming queue messages."] } } },
+                ] 
+            },
+            { 
+                week: 3, 
+                title: "Advanced .NET Concepts", 
+                description: "Go beyond the basics and explore the powerful, modern features of the .NET ecosystem. This week is about writing more efficient, flexible, and professional C# code.",
+                practicePlan: { theory: "Explore advanced concepts like delegates, generics, and memory management.", application: "Apply LINQ, Reflection, and Source Generators to solve complex problems.", consolidation: "Build a data-driven application using the power of Entity Framework Core." },
+                focus: { ".NET": 100 }, 
+                days: [
+                    { day: 15, title: 'Delegates & Events', type: 'Concept', tags: [], details: { theory: ["Delegates in C#.", "Events and Pub-Sub model."], coding: ["Publisher-Subscriber model."], problems: [{ difficulty: "Medium", text: "Chat event bus." }, { difficulty: "Hard", text: "Event-driven logging system." }], uml: "Event sequence diagram.", caseStudy: { title: "Event bus for Notification system", points: [] } } },
+                    { day: 16, title: 'Generics', type: 'Concept', tags: [], details: { theory: ["Generic methods, classes, interfaces.", "Constraints."], coding: ["Generic Repository<T>."], problems: [{ difficulty: "Medium", text: "Generic cache." }, { difficulty: "Hard", text: "Generic ORM mapper." }], uml: "UML generic repository.", caseStudy: { title: "Build generic data access layer", points: [] } } },
+                    { day: 17, title: 'LINQ', type: 'Practice', tags: [], details: { theory: ["LINQ queries.", "Deferred execution."], coding: ["LINQ on collections."], problems: [{ difficulty: "Medium", text: "LINQ joins." }, { difficulty: "Hard", text: "LINQ custom provider." }], uml: "Data flow with LINQ.", caseStudy: { title: "Reporting service using LINQ queries", points: [] } } },
+                    { day: 18, title: 'Memory Management & GC', type: 'Concept', tags: [], details: { theory: ["Heap vs Stack.", "Garbage Collector generations."], coding: ["IDisposable demo."], problems: [{ difficulty: "Medium", text: "Dispose pattern." }, { difficulty: "Hard", text: "Custom memory pool." }], uml: "GC lifecycle diagram.", caseStudy: { title: "High-load API with memory optimizations", points: [] } } },
+                    { day: 19, title: 'Reflection & Attributes', type: 'Practice', tags: [], details: { theory: ["Reflection basics.", "Custom attributes."], coding: ["Load assembly dynamically."], problems: [{ difficulty: "Medium", text: "Custom attribute." }, { difficulty: "Hard", text: "Reflection-based serializer." }], uml: "Metadata diagram.", caseStudy: { title: "Build mini ORM using reflection", points: [] } } },
+                    { day: 20, title: 'Source Generators', type: 'Practice', tags: [], details: { theory: ["What are source generators.", "Use in compile-time optimizations."], coding: ["Hello World source generator."], problems: [{ difficulty: "Medium", text: "Logging generator." }, { difficulty: "Hard", text: "DTO → Entity generator." }], uml: "Compile-time flow diagram.", caseStudy: { title: "Auto DTO class generator", points: [] } } },
+                    { day: 21, title: 'ORM & EF Core Basics', type: 'Project', tags: [], details: { theory: ["What is ORM.", "EF Core basics."], coding: ["Basic EF project."], problems: [{ difficulty: "Medium", text: "Relationships." }, { difficulty: "Hard", text: "Migrations." }], uml: "DB Schema diagram.", caseStudy: { title: "Blog system with EF Core", points: [] } } },
+                ] 
+            },
+            { 
+                week: 4, 
+                title: "SOLID Principles", 
+                description: "Learn the five principles that are the foundation of modern software architecture. Mastering SOLID is non-negotiable for writing software that is understandable, flexible, and maintainable.",
+                practicePlan: { theory: "Days 22-26: Dedicate a full day to understanding and implementing each of the five SOLID principles.", application: "Day 27: Apply all principles together in a challenging refactoring project.", consolidation: "Day 28: Test your knowledge in a mock interview setting to solidify your understanding." },
+                focus: { "SOLID": 100 }, 
+                days: [
+                    { day: 22, title: 'Single Responsibility Principle (SRP)', type: 'Concept', tags: [], details: { theory: ["Definition of SRP.", "Refactoring large classes into smaller ones."], coding: ["Refactor a UserService into two classes."], problems: [{ difficulty: "Medium", text: "Separate logging logic into dedicated Logger class." }], uml: "UML Class diagram: Before vs After.", caseStudy: { title: "Logging Service", points: ["Refactor so logging is a dedicated responsibility."] } } },
+                    { day: 23, title: 'Open/Closed Principle (OCP)', type: 'Concept', tags: [], details: { theory: ["Definition: “Open for extension, closed for modification.”", "Avoiding if-else ladders with polymorphism."], coding: ["Refactor PaymentProcessor with switch-case to OCP."], problems: [{ difficulty: "Medium", text: "Add new payment method without touching old logic." }], uml: "UML Class diagram: Base interface + new implementations.", caseStudy: { title: "Payment Gateway System", points: ["Add new payment methods without modifying base processor."] } } },
+                    { day: 24, title: 'Liskov Substitution Principle (LSP)', type: 'Concept', tags: [], details: { theory: ["Definition: “Subtypes must be substitutable for their base types.”", "Violations of LSP."], coding: ["Fix Rectangle vs Square violation."], problems: [{ difficulty: "Medium", text: "PaymentProcessor hierarchy." }], uml: "UML Inheritance diagram (before vs after refactor).", caseStudy: { title: "Shape Hierarchy", points: ["Implement proper inheritance where substitution is valid."] } } },
+                    { day: 25, title: 'Interface Segregation Principle (ISP)', type: 'Concept', tags: [], details: { theory: ["Definition: “Clients should not be forced to depend on interfaces they don’t use.”", "Splitting large interfaces into smaller ones."], coding: ["Refactor IMachine into smaller interfaces."], problems: [{ difficulty: "Medium", text: "Notification system with IEmailSender, ISmsSender." }], uml: "UML Interface diagram (fat → segregated).", caseStudy: { title: "Printer System", points: ["Different printers implementing only required features."] } } },
+                    { day: 26, title: 'Dependency Inversion Principle (DIP)', type: 'Concept', tags: [], details: { theory: ["Definition: “Depend on abstractions, not concretions.”", "Inversion of control (IoC)."], coding: ["Implement constructor-based DI."], problems: [{ difficulty: "Medium", text: "Repository pattern with DI." }], uml: "UML dependency diagram.", caseStudy: { title: "E-commerce Service Layer with DI", points: [] } } },
+                    { day: 27, title: 'SOLID Consolidation', type: 'Project', tags: [], details: { theory: ["Applying multiple principles together.", "Refactoring legacy code."], coding: ["Refactor legacy OrderService applying all SOLID principles."], problems: [{ difficulty: "Medium", text: "Add extensible payment (OCP)." }], uml: "Before vs After UML for legacy service.", caseStudy: { title: "Refactor Monolithic Order Service", points: [] } } },
+                    { day: 28, title: 'Review & Mock Interview', type: 'Review', tags: [], details: { theory: ["Quick review of SOLID.", "Common interview questions."], coding: ["Solve small interview-style refactoring challenges."], problems: [], uml: "", caseStudy: { title: "Mock interview: Design Library Management System", points: [] } } },
+                ] 
+            },
+            { 
+                week: 5, 
+                title: "Design Patterns", 
+                description: "Build your toolbox of reusable solutions to common software design problems. This week focuses on creational and structural patterns that improve code flexibility and maintainability.",
+                practicePlan: { theory: "Study the intent, structure, and consequences of each pattern.", application: "Implement each pattern from scratch to understand its mechanics.", consolidation: "Recognize when and where to apply specific patterns in real-world case studies." },
+                focus: { "Design Patterns": 100 }, 
+                days: [
+                    { day: 29, title: 'Factory Pattern', type: 'Pattern', tags: [], details: { theory: ["What is Factory Pattern.", "When to use it."], coding: ["Factory for PaymentProcessors."], problems: [{ difficulty: "Medium", text: "LoggerFactory." }], uml: "UML Factory Pattern.", caseStudy: { title: "Factory for creating Payment Gateways", points: [] } } },
+                    { day: 30, title: 'Singleton Pattern', type: 'Pattern', tags: [], details: { theory: ["Definition of Singleton.", "Thread-safety issues."], coding: ["Singleton Logger."], problems: [{ difficulty: "Medium", text: "Thread-safe Logger." }], uml: "UML Singleton diagram.", caseStudy: { title: "Database Connection Pool using Singleton", points: [] } } },
+                    { day: 31, title: 'Builder Pattern', type: 'Pattern', tags: [], details: { theory: ["When to use Builder.", "Fluent APIs."], coding: ["Pizza Builder."], problems: [{ difficulty: "Medium", text: "HTTP Request builder." }], uml: "UML Builder Pattern.", caseStudy: { title: "PDF Report Generator using Builder", points: [] } } },
+                    { day: 32, title: 'Prototype Pattern', type: 'Pattern', tags: [], details: { theory: ["When to use Prototype.", "Shallow vs Deep copy."], coding: ["Clone Shape objects."], problems: [{ difficulty: "Medium", text: "Deep copy with serialization." }], uml: "UML Prototype Pattern.", caseStudy: { title: "Clone user profiles for recommendation engine", points: [] } } },
+                    { day: 33, title: 'Adapter Pattern', type: 'Pattern', tags: [], details: { theory: ["Adapter definition.", "Legacy system integration."], coding: ["Adapter for Payment API."], problems: [{ difficulty: "Medium", text: "Media player adapter." }], uml: "UML Adapter Pattern.", caseStudy: { title: "Legacy Payment Gateway Adapter", points: [] } } },
+                    { day: 34, title: 'Decorator Pattern', type: 'Pattern', tags: [], details: { theory: ["Definition of Decorator.", "Adding behavior dynamically."], coding: ["Decorator for Notifications."], problems: [{ difficulty: "Medium", text: "Coffee cost calculator." }], uml: "UML Decorator Pattern.", caseStudy: { title: "Notification Service with decorators", points: [] } } },
+                    { day: 35, title: 'Observer Pattern', type: 'Pattern', tags: [], details: { theory: ["Publish/Subscribe pattern.", "Observer in .NET Events."], coding: ["EventBus."], problems: [{ difficulty: "Medium", text: "Chatroom observer." }], uml: "UML Observer Pattern.", caseStudy: { title: "Event-driven Notification Service", points: [] } } },
+                ] 
+            },
+            { 
+                week: 6, 
+                title: "Design Patterns & Schema", 
+                description: "Continue expanding your design pattern knowledge with behavioral patterns, then transition into the art of database schema design, a cornerstone of backend development.",
+                practicePlan: { theory: "Learn patterns that manage algorithms and object responsibilities.", application: "Model data relationships for both SQL and NoSQL databases.", consolidation: "Translate system requirements into efficient and scalable database schemas." },
+                focus: { "Design Patterns": 50, "Schema Design": 50 }, 
+                days: [
+                    { day: 36, title: 'Strategy Pattern', type: 'Pattern', tags: [], details: { theory: ["Define Strategy.", "Replace if-else logic."], coding: ["Discount strategies."], problems: [{ difficulty: "Medium", text: "Payment strategy." }], uml: "UML Strategy Pattern.", caseStudy: { title: "Discount Engine", points: [] } } },
+                    { day: 37, title: 'Command Pattern', type: 'Pattern', tags: [], details: { theory: ["Encapsulating requests.", "Undo/Redo."], coding: ["Light switch commands."], problems: [{ difficulty: "Medium", text: "Text editor Undo." }], uml: "UML Command Pattern.", caseStudy: { title: "Undo/Redo Text Editor", points: [] } } },
+                    { day: 38, title: 'State Pattern', type: 'Pattern', tags: [], details: { theory: ["Encapsulating object states.", "Replacing switch-case state logic."], coding: ["Order states."], problems: [{ difficulty: "Medium", text: "Order status." }], uml: "UML State Pattern.", caseStudy: { title: "Order Lifecycle System", points: [] } } },
+                    { day: 39, title: 'Chain of Responsibility', type: 'Pattern', tags: [], details: { theory: ["Request pipeline.", "Example: Middleware."], coding: ["Logger chain."], problems: [{ difficulty: "Medium", text: "Logging pipeline." }], uml: "UML COR.", caseStudy: { title: "Request Processing Middleware", points: [] } } },
+                    { day: 40, title: 'UML Class & Sequence Diagrams', type: 'Practice', tags: [], details: { theory: ["UML basics.", "Class & Sequence diagrams."], coding: ["Build diagrams for small system."], problems: [], uml: "Draw UML for Library System.", caseStudy: { title: "Design Ride-Hailing Sequence diagram", points: [] } } },
+                    { day: 41, title: 'Schema Design (SQL)', type: 'Practice', tags: [], details: { theory: ["Normalization.", "Relationships & Indexes."], coding: ["Write SQL queries."], problems: [], uml: "ER Diagram: E-commerce.", caseStudy: { title: "E-commerce DB schema", points: [] } } },
+                    { day: 42, title: 'Schema Design (NoSQL)', type: 'Practice', tags: [], details: { theory: ["Document design.", "Denormalization."], coding: ["MongoDB queries."], problems: [], uml: "NoSQL schema: Chat app.", caseStudy: { title: "Chat Service schema", points: [] } } },
+                ] 
+            },
+            { 
+                week: 7, 
+                title: "Networking & API Design", 
+                description: "Dive into the protocols that power the internet and learn the principles of designing clean, robust, and easy-to-use REST APIs—the public face of your backend services.",
+                practicePlan: { theory: "Understand the fundamentals of TCP/IP, HTTP, and SSL/TLS.", application: "Design and build REST APIs following industry best practices for versioning, pagination, and documentation.", consolidation: "Secure and document a public-facing API." },
+                focus: { "Networking & API": 100 }, 
+                days: [
+                    { day: 43, title: 'TCP vs UDP', type: 'Concept', tags: [], details: { theory: ["TCP vs UDP differences.", "Socket programming basics."], coding: ["TCP client-server."], problems: [{ difficulty: "Medium", text: "UDP Chat." }], uml: "Sequence diagram: Client-Server.", caseStudy: { title: "Chat Service with TCP/UDP", points: [] } } },
+                    { day: 44, title: 'HTTP Deep Dive', type: 'Concept', tags: [], details: { theory: ["HTTP methods.", "Headers, cookies, statelessness."], coding: ["HTTP GET/POST client."], problems: [{ difficulty: "Medium", text: "REST client." }], uml: "HTTP Request lifecycle diagram.", caseStudy: { title: "REST Client-Service app", points: [] } } },
+                    { day: 45, title: 'TLS/SSL', type: 'Concept', tags: [], details: { theory: ["TLS handshake.", "HTTPS & Certificates."], coding: ["Enable HTTPS in .NET Core."], problems: [{ difficulty: "Medium", text: "Secure API." }], uml: "TLS handshake diagram.", caseStudy: { title: "Secure Payment API", points: [] } } },
+                    { day: 46, title: 'Load Balancers & Proxies', type: 'Concept', tags: [], details: { theory: ["Reverse proxy.", "Load balancing strategies."], coding: ["Setup Nginx."], problems: [{ difficulty: "Medium", text: "Weighted LB." }], uml: "System diagram with LB.", caseStudy: { title: "API Gateway for Microservices", points: [] } } },
+                    { day: 47, title: 'REST Best Practices', type: 'Practice', tags:['API'], details: { theory: ["Resource modeling.", "RESTful URIs.", "Status codes."], coding: ["Build REST API."], problems: [{ difficulty: "Medium", text: "Pagination API." }], uml: "API resource diagram.", caseStudy: { title: "Product Catalog API", points: [] } } },
+                    { day: 48, title: 'API Versioning & Pagination', type: 'Practice', tags:['API'], details: { theory: ["Versioning strategies.", "Offset vs Cursor pagination."], coding: ["Implement pagination."], problems: [{ difficulty: "Medium", text: "Cursor paging." }], uml: "API lifecycle diagram.", caseStudy: { title: "Search API with versioning", points: [] } } },
+                    { day: 49, title: 'API Documentation with Swagger', type: 'Practice', tags:['API'], details: { theory: ["Introduction to Swagger (OpenAPI).", "Setting up Swagger in .NET Core."], coding: ["Add Swagger to a sample API project."], problems: [{ difficulty: "Medium", text: "Add API versioning and show multiple versions in Swagger." }], uml: "Sequence diagram: Client → Swagger → Controller → Database.", caseStudy: { title: "Build a Public REST API with Swagger Documentation", points: [] } } },
+                ] 
+            },
+            { 
+                week: 8, 
+                title: "MVC & Middleware", 
+                description: "Master the ASP.NET Core framework by building applications using the Model-View-Controller (MVC) pattern and leveraging the powerful middleware pipeline for handling requests.",
+                practicePlan: { theory: "Grasp MVC architecture and the request/response pipeline.", application: "Implement routing, filters, authentication (JWT), and authorization in a real application.", consolidation: "Begin a full capstone project by designing and building its core API." },
+                focus: { "MVC & Middleware": 100 }, 
+                days: [
+                    { day: 50, title: 'MVC Basics', type: 'Concept', tags:['MVC'], details: { theory: ["Understanding MVC architecture in .NET Core.", "Role of Model, View, and Controller."], coding: ["Build a simple Blog Application using MVC."], problems: [{ difficulty: "Medium", text: "Add model validation (DataAnnotations)." }], uml: "MVC Component Diagram.", caseStudy: { title: "Build a Movie Review MVC App", points: [] } } },
+                    { day: 51, title: 'Middleware Pipeline & Filters', type: 'Concept', tags:['MVC'], details: { theory: ["What is middleware in ASP.NET Core.", "Request → Response pipeline."], coding: ["Implement Logging Middleware."], problems: [{ difficulty: "Medium", text: "Exception handling middleware." }], uml: "Sequence diagram of HTTP request passing through middleware.", caseStudy: { title: "Build an API Gateway Middleware", points: [] } } },
+                    { day: 52, title: 'Routing, Filters & Model Binding', type: 'Practice', tags:['MVC'], details: { theory: ["Attribute routing vs Conventional routing.", "Action Filters, Result Filters, Exception Filters."], coding: ["Define routes for API versioning."], problems: [{ difficulty: "Medium", text: "Add custom action filter for logging." }], uml: "Routing flow diagram.", caseStudy: { title: "Build User Profile Service with versioned APIs", points: [] } } },
+                    { day: 53, title: 'Authentication (JWT)', type: 'Practice', tags:['API'], details: { theory: ["Authentication vs Authorization.", "JWT structure.", "Implementing JWT authentication in .NET Core."], coding: ["Add JWT auth to API."], problems: [{ difficulty: "Medium", text: "Secure API endpoints with [Authorize]." }], uml: "Authentication sequence diagram.", caseStudy: { title: "Build Login & Secure API", points: [] } } },
+                    { day: 54, title: 'Authorization (Role-Based & Policy-Based)', type: 'Practice', tags:['API'], details: { theory: ["Role-based vs Policy-based authorization.", "Claims-based authorization."], coding: ["Add roles to JWT tokens."], problems: [{ difficulty: "Medium", text: "Create custom policy (e.g., MinimumAgePolicy)." }], uml: "Role-based access control diagram.", caseStudy: { title: "Build E-commerce API with Role-based Access", points: [] } } },
+                    { day: 55, title: 'Caching & Rate Limiting', type: 'Practice', tags: [], details: { theory: ["What is caching, why it matters for performance.", "Rate limiting strategies."], coding: ["Add in-memory cache to API."], problems: [{ difficulty: "Medium", text: "Use Redis distributed cache." }], uml: "Cache access sequence diagram.", caseStudy: { title: "Build News API with response caching", points: [] } } },
+                    { day: 56, title: 'Capstone Start – URL Shortener', type: 'Project', tags: [], details: { theory: ["Requirements of a URL shortener.", "Designing schema and APIs."], coding: ["Implement base62 encoding for short URLs."], problems: [{ difficulty: "Medium", text: "CRUD APIs for URLs." }], uml: "ER diagram: Url, User, Analytics.", caseStudy: { title: "Build End-to-End URL Shortener Backend", points: [] } } },
+                ] 
+            },
+            { 
+                week: 9, 
+                title: "Final Case Studies", 
+                description: "Apply everything you've learned to design large-scale, real-world systems. This week is the ultimate test of your design and problem-solving skills, preparing you for senior-level interviews.",
+                practicePlan: { theory: "Analyze the complex requirements of large systems like Uber and E-commerce platforms.", application: "Design the architecture, database schema, and APIs for each case study.", consolidation: "Combine all concepts into a final, scalable backend capstone project." },
+                focus: { "Case Studies": 100 }, 
+                days: [
+                    { day: 57, title: 'Parking Lot System', type: 'Case Study', tags: [], details: { theory: ["Requirements (multiple entry/exit, vehicle types, pricing).", "Handling concurrency at multiple gates."], coding: ["Implement Vehicle & Slot classes."], problems: [{ difficulty: "Medium", text: "Ticket generation & pricing." }], uml: "Class diagram: ParkingLot, Slot, Vehicle, Ticket.", caseStudy: { title: "Full Parking Lot Management System", points: [] } } },
+                    { day: 58, title: 'Ride-Hailing Backend', type: 'Case Study', tags: [], details: { theory: ["Requirements: Riders, Drivers, Trips.", "Matching algorithm."], coding: ["Implement Rider, Driver, Trip classes."], problems: [{ difficulty: "Medium", text: "Assign nearest driver." }], uml: "Sequence diagram: Rider requests ride → Driver assigned.", caseStudy: { title: "Build Ride-Hailing Backend Service", points: [] } } },
+                    { day: 59, title: 'E-commerce System', type: 'Case Study', tags: [], details: { theory: ["Requirements: Orders, Products, Inventory, Payments.", "Applying SOLID + Design Patterns."], coding: ["Implement Product & Order classes."], problems: [{ difficulty: "Medium", text: "Place an order (deduct inventory)." }], uml: "ER diagram: Order, Product, Inventory, Payment.", caseStudy: { title: "Full E-commerce Backend System", points: [] } } },
+                    { day: 60, title: 'Final Capstone Project', type: 'Project', tags: [], details: { theory: ["Combine all concepts learned.", "Importance of scalability, fault-tolerance."], coding: ["Integrate all modules: Auth, API, DB, Caching, Async processing."], problems: [], uml: "Final system design diagrams.", caseStudy: { title: "Build End-to-End Scalable Backend Application", points: [] } } },
+                ] 
+            },
+        ];
+        
+        // SCRIPT
+        let currentView = 'interactive';
+        let activeWeekTab = 0;
+        let activeCurriculumWeek = 0;
+        let topicsMastered = 0;
+        let currentDay = 1;
+        let topicDistributionChart = null; 
+        let curriculumChart = null;
+        
+        const views = { interactive: document.getElementById('interactive-view'), curriculum: document.getElementById('curriculum-view') };
+        const modal = document.getElementById('details-modal');
+        const topicsMasteredCountEl = document.getElementById('topics-mastered-count');
+        const progressTextEl = document.getElementById('progress-text');
+        const progressBarEl = document.getElementById('progress-bar');
+        const focusHeaderEl = document.getElementById('focus-header');
+
+        const typeStyles = {
+            'Concept': { bg: 'bg-sky-100', text: 'text-sky-700' },
+            'Practice': { bg: 'bg-amber-100', text: 'text-amber-700' },
+            'Review': { bg: 'bg-slate-100', text: 'text-slate-600' },
+            'Project': { bg: 'bg-indigo-100', text: 'text-indigo-700' },
+            'Pattern': { bg: 'bg-purple-100', text: 'text-purple-700' },
+            'Case Study': { bg: 'bg-rose-100', text: 'text-rose-700' },
+            'API': { bg: 'bg-blue-100', text: 'text-blue-700' },
+            'MVC': { bg: 'bg-purple-100', text: 'text-purple-700' },
+        };
+
+        function setGreeting() {
+             const hour = new Date().getHours();
+            const greetingEl = document.getElementById('greeting');
+            if (hour < 12) greetingEl.textContent = "Good Morning!";
+            else if (hour < 18) greetingEl.textContent = "Good Afternoon!";
+            else greetingEl.textContent = "Good Evening!";
+        }
+
+        function switchView(viewName) {
+            currentView = viewName;
+            Object.values(views).forEach(view => view.classList.add('hidden'));
+            views[viewName].classList.remove('hidden');
+            document.querySelectorAll('#view-switcher button').forEach(button => button.classList.toggle('active', button.dataset.view === viewName));
+            if (viewName === 'interactive') {
+                renderInteractiveView();
+                renderTopicDistributionChart();
+            } else {
+                renderFullCurriculumView();
+            }
+        }
+
+        function calculateCurrentDay() {
+            const progress = JSON.parse(localStorage.getItem('bootcampProgress')) || {};
+            let firstUncompleted = 1;
+            for (let i = 1; i <= 60; i++) {
+                if (!progress[i]) {
+                    firstUncompleted = i;
+                    break;
+                }
+                if (i === 60) firstUncompleted = 60; // All done
+            }
+            return firstUncompleted;
+        }
+
+        function findDayByNumber(dayNumber) {
+            for (const week of fullRoadmapData) {
+                for (const day of week.days) {
+                    if (day.day === dayNumber) {
+                        return day;
+                    }
+                }
+            }
+            return null;
+        }
+        
+        function updateFocusHeader() {
+            const currentDayData = findDayByNumber(currentDay);
+            const nextDayData = findDayByNumber(currentDay + 1);
+
+            if (!currentDayData) return;
+
+            focusHeaderEl.innerHTML = `
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg">Today's Focus: ${currentDayData.title}</h3>
+                    <p class="text-sm text-slate-500">Day ${currentDayData.day} - ${currentDayData.type}</p>
+                </div>
+                <div class="w-full sm:w-px sm:h-12 bg-slate-200"></div>
+                <div class="text-left sm:text-right w-full sm:w-auto">
+                    <h3 class="font-semibold text-slate-500">Up Next (Tomorrow)</h3>
+                    <p class="text-sm text-slate-800 font-medium">${nextDayData ? nextDayData.title : 'Final Review'}</p>
+                </div>`;
+        }
+
+
+        function renderInteractiveView() {
+            const weekTabsContainer = document.getElementById('week-tabs');
+            weekTabsContainer.innerHTML = '';
+            
+            const currentDayWeekIndex = fullRoadmapData.findIndex(week => week.days.some(day => day.day === currentDay));
+            activeWeekTab = currentDayWeekIndex !== -1 ? currentDayWeekIndex : 0;
+            
+            fullRoadmapData.forEach((week, index) => {
+                const tab = document.createElement('button');
+                tab.textContent = `Week ${week.week}: ${week.title}`;
+                tab.className = `week-tab-interactive whitespace-nowrap py-2 px-4 text-sm font-medium rounded-full transition-colors duration-200 border ${activeWeekTab === index ? 'active border-transparent' : 'text-slate-600 bg-white border-slate-300 hover:bg-slate-100'}`;
+                tab.onclick = () => { activeWeekTab = index; renderInteractiveView(); };
+                weekTabsContainer.appendChild(tab);
+            });
+
+            const curriculumGrid = document.getElementById('curriculum-grid');
+            curriculumGrid.innerHTML = '';
+            const progress = JSON.parse(localStorage.getItem('bootcampProgress')) || {};
+            fullRoadmapData[activeWeekTab].days.forEach(day => {
+                const isChecked = progress[day.day] || false;
+                const style = typeStyles[day.type] || {};
+                let tagsHTML = `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${style.bg} ${style.text}">${day.type}</span>`;
+                if(day.tags) {
+                    day.tags.forEach(tag => {
+                        const tagStyle = typeStyles[tag] || { bg: 'bg-gray-100', text: 'text-gray-700' };
+                        tagsHTML += `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${tagStyle.bg} ${tagStyle.text}">${tag}</span>`;
+                    });
+                }
+
+                const card = document.createElement('div');
+                const isCurrent = day.day === currentDay;
+                card.className = `bg-white border rounded-xl p-4 flex flex-col justify-between hover:shadow-md transition-shadow duration-200 cursor-pointer min-h-[120px] ${isCurrent ? 'border-teal-500 border-2' : 'border-slate-200/80'}`;
+                card.innerHTML = `
+                    <div>
+                        <p class="text-xs font-bold ${isCurrent ? 'text-teal-600' : 'text-slate-400'}">DAY ${day.day}</p>
+                        <p class="font-bold text-slate-800 mt-1">${day.title}</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-3">
+                        <div class="flex items-center gap-2 text-slate-400">
+                            <span>&#128214;</span>
+                            <div class="flex items-center gap-1.5">${tagsHTML}</div>
+                        </div>
+                        <input type="checkbox" data-day="${day.day}" class="h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" onchange="updateProgress(this, ${day.day})" ${isChecked ? 'checked' : ''}>
+                    </div>`;
+                card.onclick = (e) => { if(e.target.type !== 'checkbox') showDetailsModal(day); };
+                curriculumGrid.appendChild(card);
+            });
+        }
+        
+        function updateProgress(checkbox, day) {
+            const progress = JSON.parse(localStorage.getItem('bootcampProgress')) || {};
+            progress[day] = checkbox.checked;
+            localStorage.setItem('bootcampProgress', JSON.stringify(progress));
+            
+            topicsMastered = Object.values(progress).filter(Boolean).length;
+            topicsMasteredCountEl.textContent = topicsMastered;
+            
+            const progressPercent = Math.round((topicsMastered / 60) * 100);
+            progressTextEl.textContent = `${progressPercent}% complete (${topicsMastered} of 60 days)`;
+            progressBarEl.style.width = `${progressPercent}%`;
+
+            currentDay = calculateCurrentDay();
+            updateFocusHeader();
+            renderInteractiveView(); // Re-render to update highlight
+        }
+
+        function showDetailsModal(dayData) {
+            const contentArea = document.getElementById('modal-content-area');
+            if (!dayData || !dayData.details) {
+                contentArea.innerHTML = `<p>Details for this day are not available.</p><button id="close-modal" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>`;
+                modal.classList.add('visible');
+                document.getElementById('close-modal').onclick = hideDetailsModal;
+                return;
+            }
+            const problemsHTML = dayData.details.problems.map(p => `<div class="flex items-start mb-2"><span class="problem-tag mr-2 ${p.difficulty === 'Easy' ? 'bg-green-100 text-green-700' : p.difficulty.includes('Medium') ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">${p.difficulty}</span><p class="text-slate-600 flex-1">${p.text}</p></div>`).join('');
+            const caseStudyHTML = dayData.details.caseStudy.points.length > 0 ? `<p class="font-semibold text-slate-600">${dayData.details.caseStudy.title}</p><ul class="list-disc list-inside space-y-1 text-slate-600">${dayData.details.caseStudy.points.map(p => `<li>${p}</li>`).join('')}</ul>` : `<p class="font-semibold text-slate-600">${dayData.details.caseStudy.title}</p>`;
+
+            contentArea.innerHTML = `
+                <div class="flex justify-between items-start mb-4"><div><h2 class="text-2xl font-bold text-slate-800">${dayData.title}</h2><p class="text-sm text-slate-500">Week ${dayData.week} - Day ${dayData.day}</p></div><button id="close-modal" class="text-slate-400 hover:text-slate-600 text-3xl font-light leading-none">&times;</button></div>
+                <div class="space-y-6">
+                    ${dayData.details.theory.length > 0 ? `<div><h3 class="font-bold text-lg text-slate-700 mb-2 border-b pb-1 flex items-center gap-2">&#128218; Theory Topics</h3><ul class="list-disc list-inside space-y-1 text-slate-600 pt-1">${dayData.details.theory.map(t => `<li>${t}</li>`).join('')}</ul></div>` : ''}
+                    ${dayData.details.coding.length > 0 ? `<div><h3 class="font-bold text-lg text-slate-700 mb-2 border-b pb-1 flex items-center gap-2">&#128187; Coding Practice</h3><ul class="list-disc list-inside space-y-1 text-slate-600 pt-1">${dayData.details.coding.map(c => `<li>${c}</li>`).join('')}</ul></div>` : ''}
+                    ${dayData.details.problems.length > 0 ? `<div><h3 class="font-bold text-lg text-slate-700 mb-2 border-b pb-1 flex items-center gap-2">&#128221; Problems</h3><div class="pt-2">${problemsHTML}</div></div>` : ''}
+                    ${dayData.details.uml ? `<div><h3 class="font-bold text-lg text-slate-700 mb-2 border-b pb-1 flex items-center gap-2">&#128443; UML/Schema Task</h3><p class="text-slate-600 pt-1">${dayData.details.uml}</p></div>` : ''}
+                    ${dayData.details.caseStudy ? `<div><h3 class="font-bold text-lg text-slate-700 mb-2 border-b pb-1 flex items-center gap-2">&#128193; Case Study</h3><div class="pt-1">${caseStudyHTML}</div></div>` : ''}
+                </div>`;
+            modal.classList.add('visible');
+            document.getElementById('close-modal').onclick = hideDetailsModal;
+        }
+        function hideDetailsModal() { modal.classList.remove('visible'); }
+
+        function renderTopicDistributionChart() {
+            const chartCanvas = document.getElementById('topicDistributionChart');
+            if (!chartCanvas) return;
+            const ctx = chartCanvas.getContext('2d');
+            const totals = {};
+            fullRoadmapData.forEach(week => { Object.keys(week.focus).forEach(key => { totals[key] = (totals[key] || 0) + week.focus[key]; }); });
+            
+            const labels = Object.keys(totals).filter(key => totals[key] > 0);
+            const data = labels.map(key => totals[key]);
+            const colorPalette = { "OOP": "#38bdf8", "Multithreading": "#818cf8", ".NET": "#fb7185", "SOLID": "#facc15", "Design Patterns": "#4ade80", "Schema Design": "#f87171", "Networking & API": "#c084fc", "MVC & Middleware": "#a78bfa", "Case Studies": "#e879f9"};
+            const backgroundColors = labels.map(l => colorPalette[l] || '#d1d5db');
+            
+            const legendContainer = document.getElementById('topic-distribution-legend');
+            legendContainer.innerHTML = '';
+            labels.forEach((label, index) => {
+                const color = backgroundColors[index];
+                const legendItem = `<div class="flex items-center"><span class="h-2.5 w-2.5 rounded-full mr-2" style="background-color: ${color};"></span><span>${label}</span></div>`;
+                legendContainer.innerHTML += legendItem;
+            });
+            
+            if (topicDistributionChart) { topicDistributionChart.destroy(); }
+            topicDistributionChart = new Chart(ctx, {
+                type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: backgroundColors, borderColor: '#ffffff', borderWidth: 8, hoverOffset: 12 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: true } } }
+            });
+        }
+
+        function renderFullCurriculumView() {
+            const curriculumView = document.getElementById('curriculum-view');
+            curriculumView.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200/80">
+                    <div id="curriculum-week-nav" class="flex justify-center flex-wrap gap-2 mb-8"></div>
+                    <div id="curriculum-content"></div>
+                </div>`;
+
+            const navContainer = document.getElementById('curriculum-week-nav');
+            fullRoadmapData.forEach((week, index) => {
+                const button = document.createElement('button');
+                button.textContent = `Week ${week.week}`;
+                button.className = `week-tab-full py-2 px-4 text-sm font-medium rounded-full transition-colors duration-200 ${activeCurriculumWeek === index ? 'active' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`;
+                button.onclick = () => { activeCurriculumWeek = index; renderFullCurriculumView(); };
+                navContainer.appendChild(button);
+            });
+            
+            const weekData = fullRoadmapData[activeCurriculumWeek];
+            const contentContainer = document.getElementById('curriculum-content');
+            contentContainer.innerHTML = `
+                <div class="text-center mb-10"><h2 class="text-3xl font-bold text-slate-800">${weekData.title}</h2><p class="mt-2 text-slate-600 max-w-2xl mx-auto">${weekData.description}</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-6"><h4 class="font-bold text-lg mb-4 text-slate-800 flex items-center"><span class="text-xl mr-3">&#128214;</span>Core Concepts</h4><ul class="space-y-2 text-slate-600">${weekData.days.filter(d => ['Concept'].includes(d.type)).map(d => `<li class="flex items-start"><span class="text-teal-500 mr-2 mt-1">&#10145;</span>${d.title}</li>`).join('')}</ul></div>
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-6"><h4 class="font-bold text-lg mb-4 text-slate-800 flex items-center"><span class="text-xl mr-3">&#128187;</span>Practical Application</h4><ul class="space-y-2 text-slate-600">${weekData.days.filter(d => ['Practice', 'Project', 'Pattern', 'Case Study'].includes(d.type)).map(d => `<li class="flex items-start"><span class="text-teal-500 mr-2 mt-1">&#10145;</span>${d.title}</li>`).join('')}</ul></div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-6 md:col-span-2">
+                     <h4 class="font-bold text-lg mb-4 text-slate-800 flex items-center"><span class="text-xl mr-3">&#128197;</span>Weekly Practice Plan</h4>
+                     <div class="space-y-3 text-slate-600">
+                        <p><strong>${weekData.practicePlan.theory.split(':')[0]}:</strong> ${weekData.practicePlan.theory.split(':')[1]}</p>
+                        <p><strong>${weekData.practicePlan.application.split(':')[0]}:</strong> ${weekData.practicePlan.application.split(':')[1]}</p>
+                         <p><strong>${weekData.practicePlan.consolidation.split(':')[0]}:</strong> ${weekData.practicePlan.consolidation.split(':')[1]}</p>
+                     </div>
+                </div>`;
+        }
+        
+        function initializeApp() {
+            setGreeting();
+            const progress = JSON.parse(localStorage.getItem('bootcampProgress')) || {};
+            topicsMastered = Object.values(progress).filter(Boolean).length;
+            const progressPercent = Math.round((topicsMastered / 60) * 100);
+            topicsMasteredCountEl.textContent = topicsMastered;
+            progressTextEl.textContent = `${progressPercent}% complete (${topicsMastered} of 60 days)`;
+            progressBarEl.style.width = `${progressPercent}%`;
+
+            currentDay = calculateCurrentDay();
+            updateFocusHeader();
+            switchView('interactive');
+            modal.addEventListener('click', (e) => { if(e.target === modal) hideDetailsModal(); });
+            document.querySelectorAll('#view-switcher button').forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
+
