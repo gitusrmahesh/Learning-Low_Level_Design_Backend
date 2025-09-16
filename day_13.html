@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 13: Thread-Safe Collections & Concurrent Programming</title>
+    <!-- Chosen Palette: Calm Neutrals (Beige, Slate, Soft Teal accents) -->
+    <!-- Application Structure Plan: The application is designed as a guided learning path using a two-column layout. The main content area on the left provides a logical flow from foundational theory to practical application, minimizing cognitive load. A sticky table of contents on the right allows for both linear progression and random-access exploration, catering to different learning styles. This structure was chosen because it transforms a static syllabus into an interactive educational experience, where concepts are introduced, visually demonstrated, practiced, and then tested in a cohesive, self-contained environment. -->
+    <!-- Visualization & Content Choices: Report Info: Producer-Consumer Pattern -> Goal: Visualize the dynamic interaction between threads and a shared collection -> Viz Method: Interactive Chart.js Line Chart -> Interaction: Buttons to simulate adding producers/consumers and starting/stopping the process, updating the chart in real-time. -> Justification: Makes an abstract, time-based concurrency concept concrete and observable. Report Info: UML Sequence Diagram -> Goal: Illustrate message flow between producer and consumer -> Viz Method: Structured HTML divs styled with Tailwind CSS to create a clean, vector-like diagram. -> Interaction: Static visual aid. -> Justification: Fulfills the requirement for a UML diagram without using prohibited SVG or Mermaid JS, maintaining a professional look. Interactive elements like solution toggles and quizzes are chosen to promote active learning and self-assessment. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #FDFBF8;
+            color: #334155;
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap');
+        h1, h2, h3 { font-family: 'Inter', sans-serif; font-weight: 600; }
+        pre {
+            background-color: #282c34;
+            color: #abb2bf;
+            font-family: 'Source Code Pro', monospace;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4b5563;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+        .toc-link.active {
+            color: #0d9488;
+            font-weight: 600;
+            transform: translateX(2px);
+        }
+        .solution-toggle {
+            background-color: #e2e8f0;
+            color: #334155;
+            transition: background-color 0.3s;
+        }
+        .solution-toggle:hover {
+            background-color: #cbd5e1;
+        }
+        .callout {
+            background-color: #f0f9ff;
+            border-left: 4px solid #38bdf8;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .quiz-option.selected {
+            border-color: #38bdf8;
+            background-color: #f0f9ff;
+        }
+        .quiz-option.correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .diagram-box {
+            border: 2px solid #9ca3af;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            background-color: #f9fafb;
+            text-align: center;
+        }
+        .diagram-arrow {
+            position: relative;
+            flex-grow: 1;
+            height: 2px;
+            background-color: #6b7280;
+            margin: 0 1rem;
+        }
+        .diagram-arrow::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #6b7280;
+        }
+        .header-gradient {
+            background: linear-gradient(135deg, #f0fdfa, #f0f9ff);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- The custom header gap has been moved inside the container for easier replacement -->
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- START: CUSTOMIZABLE HEADER SECTION -->
+        <!-- You can replace the entire content of the div below with your custom header. -->
+        <div id="page-header-container">
+            <!-- This spacer is included to accommodate fixed headers. Adjust or remove as needed. -->
+            <div class="h-16"></div>
+            <header class="mb-12 text-center p-8 rounded-xl shadow-lg header-gradient border border-slate-200">
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full">Day 13 of 14</span>
+                    <span class="bg-sky-100 text-sky-800 text-sm font-bold px-3 py-1 rounded-full">Focus: Concurrency</span>
+                </div>
+                <h1 class="text-5xl font-bold text-slate-800 leading-tight">Thread-Safe Collections & Concurrent Programming</h1>
+                <p class="mt-4 text-xl text-slate-500 max-w-3xl mx-auto">Mastering the essential .NET tools for writing clean, robust, and scalable multithreaded applications by safely sharing data between threads.</p>
+            </header>
+        </div>
+        <!-- END: CUSTOMIZABLE HEADER SECTION -->
+
+        <div class="flex flex-col lg:flex-row gap-12">
+            <!-- Main Content -->
+            <main class="w-full lg:w-3/4">
+
+                <section id="introduction" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-4">What is Concurrent Programming?</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed mb-4">
+                        At its core, concurrent programming is about having multiple streams of operations running at the same time. Think of an application as a factory assembly line. In a traditional, single-threaded application, you have one worker who does every single task in sequence. Concurrent programming gives you multiple workers (threads) that can perform tasks simultaneously.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-8 my-8">
+                        <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                            <h3 class="font-semibold text-xl mb-2 text-red-600">The Challenge: Shared Resources</h3>
+                             <p class="text-slate-600">The problem arises when these multiple workers need to use the same tool or access the same bin of parts—this is your application's **shared state** (like a list, dictionary, or any variable). If two workers try to modify the same part at the same time, you get chaos. One might be painting it blue while the other is trying to attach a wheel. The result is a broken, unpredictable product. This is a **race condition**.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
+                            <h3 class="font-semibold text-xl mb-2 text-green-600">The Solution: Thread Safety</h3>
+                            <p class="text-slate-600">Thread safety is the practice of managing these shared resources to prevent such chaos. The "old" way was to use manual locks—giving only one worker at a time the key to the parts bin. This works, but it's complex, easy to get wrong (e.g., deadlocks, where workers are waiting on each other indefinitely), and can create performance bottlenecks. **Thread-safe collections** are the modern solution: "smart" parts bins that manage the keys and access rules internally, providing a highly optimized and safe way for many workers to collaborate effectively.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="theory" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Deep Dive: Core Theory</h2>
+
+                    <article id="concurrent-collections" class="mb-10">
+                        <h3 class="text-2xl font-semibold text-teal-700 mb-4">1. Concurrent Collections in .NET</h3>
+                        <p class="text-slate-600 mb-6">
+                            These collections, found in the <code class="bg-slate-200 p-1 rounded">System.Collections.Concurrent</code> namespace, are optimized for scenarios where multiple threads might access the collection. They handle all the low-level locking and synchronization internally, so you don't have to.
+                        </p>
+
+                        <h4 class="text-xl font-semibold text-slate-600 mt-6 mb-2">ConcurrentQueue&lt;T&gt;</h4>
+                        <p class="text-slate-600 mb-4">A thread-safe first-in, first-out (FIFO) collection. It's perfect for producer-consumer scenarios where one or more threads are adding items ("producing") and others are removing them ("consuming") in the order they were added.</p>
+                        <div class="callout">
+                            <p><strong>Analogy:</strong> Think of a cafeteria line. People (items) get in line, and the cashier (consumer thread) serves the person at the front. New people (producer threads) can join the back of the line at any time without disrupting the cashier.</p>
+                        </div>
+                        <h5 class="font-semibold mt-4 mb-2">Syntax Snippet</h5>
+                        <pre><code>using System.Collections.Concurrent;
+
+var queue = new ConcurrentQueue&lt;int&gt;();
+
+// Add an item
+queue.Enqueue(1);
+
+// Try to remove an item
+if (queue.TryDequeue(out int item))
+{
+    // Process item
+}</code></pre>
+
+                        <h4 class="text-xl font-semibold text-slate-600 mt-8 mb-2">ConcurrentDictionary&lt;TKey, TValue&gt;</h4>
+                        <p class="text-slate-600 mb-4">A thread-safe dictionary. It allows multiple threads to add, update, and retrieve key-value pairs without risk of corruption. This is incredibly useful for shared caches, lookup tables, or state management in concurrent applications.</p>
+                        <div class="callout">
+                             <p><strong>Analogy:</strong> A modern library's digital catalog. Multiple librarians (threads) can look up, add, or update book records simultaneously. The system ensures that two librarians don't try to edit the exact same record at the exact same microsecond, preventing data conflicts.</p>
+                        </div>
+                        <h5 class="font-semibold mt-4 mb-2">Syntax Snippet</h5>
+                        <pre><code>using System.Collections.Concurrent;
+
+var cache = new ConcurrentDictionary&lt;string, string&gt;();
+
+// Add or update an item
+cache["user:1"] = "John Doe"; 
+
+// Atomically add if key doesn't exist, or get if it does
+string userName = cache.GetOrAdd("user:1", (key) => "Default User"); 
+
+// Try to remove
+if(cache.TryRemove("user:1", out string removedValue))
+{
+    // Removed successfully
+}</code></pre>
+                    </article>
+
+                    <article id="producer-consumer" class="mb-10">
+                        <h3 class="text-2xl font-semibold text-teal-700 mb-4">2. The Producer-Consumer Pattern & BlockingCollection&lt;T&gt;</h3>
+                        <p class="text-slate-600 mb-4">This is one of the most common concurrency patterns. Producers generate work and add it to a shared queue. Consumers take work from the queue and process it. This decouples the task of work creation from work execution, allowing them to proceed at different rates.</p>
+                        <p class="text-slate-600 mb-4">
+                            <code class="bg-slate-200 p-1 rounded">BlockingCollection&lt;T&gt;</code> is the cornerstone of this pattern in .NET. It's a wrapper around a concurrent collection (like <code class="bg-slate-200 p-1 rounded">ConcurrentQueue&lt;T&gt;</code> by default) that adds blocking and bounding capabilities.
+                        </p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-2 mb-4">
+                            <li><strong>Blocking:</strong> If a consumer tries to take an item from an empty collection, it will block (wait) until an item becomes available. This prevents the consumer from spinning in a loop, wasting CPU cycles.</li>
+                            <li><strong>Bounding:</strong> You can set a maximum capacity. If a producer tries to add an item to a full collection, it will block until space becomes available. This prevents the collection from growing indefinitely and consuming all available memory.</li>
+                        </ul>
+                         <h5 class="font-semibold mt-4 mb-2">Syntax Snippet</h5>
+                        <pre><code>using System.Collections.Concurrent;
+
+// Bounded collection that can hold 100 items
+var dataBus = new BlockingCollection&lt;WorkItem&gt;(100);
+
+// Producer thread
+dataBus.Add(new WorkItem());
+
+// Consumer thread - this will block if the collection is empty
+WorkItem item = dataBus.Take(); 
+
+// Signal that no more items will be added
+dataBus.CompleteAdding();
+
+// Consumers can use a foreach loop that ends when the collection is empty and CompleteAdding has been called.
+foreach (var workItem in dataBus.GetConsumingEnumerable())
+{
+    // Process workItem
+}</code></pre>
+                    </article>
+                </section>
+
+                <section id="visualization" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-4">Interactive Visualization: Producer-Consumer</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                        See the Producer-Consumer pattern in action. Use the buttons below to add producer and consumer "threads". Producers add one item per second, and consumers process one every 1.5 seconds. Watch how the queue size changes over time.
+                    </p>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                        <div class="chart-container relative mx-auto" style="height:350px; max-width:800px;">
+                            <canvas id="producerConsumerChart"></canvas>
+                        </div>
+                        <div class="mt-6 flex flex-wrap justify-center gap-4">
+                            <button id="startSim" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition">▶️ Start</button>
+                            <button id="stopSim" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-red-700 transition" disabled>⏹️ Stop</button>
+                            <button id="addProducer" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition">➕ Add Producer</button>
+                            <button id="addConsumer" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">➖ Add Consumer</button>
+                            <button id="resetSim" class="bg-gray-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition">🔄 Reset</button>
+                        </div>
+                        <div id="simStats" class="mt-4 text-center text-slate-600 font-mono flex justify-center gap-6">
+                            <span>Producers: <span id="producerCount" class="font-bold">1</span></span>
+                            <span>Consumers: <span id="consumerCount" class="font-bold">1</span></span>
+                            <span>Queue Size: <span id="queueSize" class="font-bold">0</span></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="coding-practice" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Coding Practice & Solutions</h2>
+
+                    <div class="space-y-8">
+                        <!-- Problem 1 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800"><span class="text-green-600">[Easy]</span> Thread-Safe Counter with Interlocked</h3>
+                            <p class="text-slate-600 my-2">Create a class with a counter that can be incremented by multiple threads safely. Avoid using locks; use the <code class="bg-slate-200 p-1 rounded">System.Threading.Interlocked</code> class.</p>
+                            <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-2" data-target="solution1">Show Solution</button>
+                            <div id="solution1" class="hidden mt-4">
+                                <pre><code>using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class ThreadSafeCounter
+{
+    private int _counter = 0;
+
+    public void Increment()
+    {
+        // Interlocked.Increment performs an atomic increment operation.
+        // It's much faster than a lock for simple operations like this.
+        Interlocked.Increment(ref _counter);
+    }
+
+    public int GetValue()
+    {
+        // A simple read is atomic on most platforms for 32-bit integers.
+        // For full memory barrier guarantees, you might use Interlocked.CompareExchange.
+        // Or simply: return Volatile.Read(ref _counter);
+        return _counter;
+    }
+}
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var counter = new ThreadSafeCounter();
+        var tasks = new Task[100];
+
+        for (int i = 0; i < 100; i++)
+        {
+            tasks[i] = Task.Run(() =>
+            {
+                for (int j = 0; j < 1000; j++)
+                {
+                    counter.Increment();
+                }
+            });
+        }
+
+        await Task.WhenAll(tasks);
+
+        Console.WriteLine($"Expected: 100,000, Actual: {counter.GetValue()}");
+    }
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <!-- Problem 2 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800"><span class="text-orange-500">[Medium]</span> Use ConcurrentDictionary for Caching</h3>
+                            <p class="text-slate-600 my-2">Implement a simple in-memory cache for expensive data fetching operations. The cache should be thread-safe. If data is not in the cache, it should be fetched (simulated with a delay) and stored.</p>
+                             <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-2" data-target="solution2">Show Solution</button>
+                            <div id="solution2" class="hidden mt-4">
+                                <pre><code>using System;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class DataCache
+{
+    private readonly ConcurrentDictionary&lt;string, string&gt; _cache = new ConcurrentDictionary&lt;string, string&gt;();
+
+    // Simulates a slow database or API call
+    private string FetchDataFromSource(string key)
+    {
+        Console.WriteLine($"[Thread {Thread.CurrentThread.ManagedThreadId}] Fetching data for key: {key}...");
+        Thread.Sleep(1000); // Simulate network latency
+        return $"Data for {key}";
+    }
+
+    public string GetData(string key)
+    {
+        // GetOrAdd is the perfect atomic operation for a cache.
+        // The valueFactory function (the second argument) is only executed
+        // if the key is not already present in the dictionary.
+        // This prevents multiple threads from fetching the same data simultaneously.
+        return _cache.GetOrAdd(key, FetchDataFromSource);
+    }
+}
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var cache = new DataCache();
+        
+        Func&lt;Task&gt; accessCache = async () =>
+        {
+            await Task.Run(() =>
+            {
+                Console.WriteLine($"[Thread {Thread.CurrentThread.ManagedThreadId}] Requesting data for 'user:123'. Result: {cache.GetData("user:123")}");
+            });
+        };
+        
+        // Start 5 tasks that all try to access the same key at once
+        var tasks = new Task[5];
+        for(int i = 0; i < 5; i++)
+        {
+            tasks[i] = accessCache();
+        }
+
+        await Task.WhenAll(tasks);
+        
+        // Access it again, should be instant
+        Console.WriteLine($"\n[Thread {Thread.CurrentThread.ManagedThreadId}] Second request. Result: {cache.GetData("user:123")}");
+        // Notice "Fetching data..." is only printed once.
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                        
+                        <!-- Problem 3 -->
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                             <h3 class="text-xl font-semibold text-slate-800"><span class="text-red-600">[Hard]</span> Implement Producer-Consumer using BlockingCollection</h3>
+                            <p class="text-slate-600 my-2">Create a system with multiple "producer" threads that generate "jobs" (e.g., simple strings) and one "consumer" thread that processes them. The consumer should stop gracefully when all producers are finished.</p>
+                             <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-2" data-target="solution3">Show Solution</button>
+                            <div id="solution3" class="hidden mt-4">
+                                <pre><code>using System;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class JobProcessor
+{
+    // A BlockingCollection with a capacity of 10.
+    // Producers will wait if the queue is full.
+    private readonly BlockingCollection&lt;string&gt; _jobQueue = new BlockingCollection&lt;string&gt;(10);
+
+    public void Run()
+    {
+        // Start consumer task
+        var consumerTask = Task.Run(() => Consume());
+
+        // Start producer tasks
+        var producerTasks = new Task[3];
+        for (int i = 0; i < 3; i++)
+        {
+            int producerId = i + 1;
+            producerTasks[i] = Task.Run(() => Produce(producerId));
+        }
+
+        // Wait for all producers to finish
+        Task.WhenAll(producerTasks).ContinueWith(t =>
+        {
+            // This is crucial: signal that no more items will be added.
+            // The consumer's GetConsumingEnumerable() loop will then terminate
+            // once the queue is empty.
+            _jobQueue.CompleteAdding();
+        });
+
+        // Wait for the consumer to finish processing all items
+        consumerTask.Wait();
+
+        Console.WriteLine("All jobs processed. Shutting down.");
+    }
+
+    private void Produce(int producerId)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            var job = $"Job {i} from Producer {producerId}";
+            Console.WriteLine($"[Producer {producerId}] Adding: {job}");
+            _jobQueue.Add(job); // This will block if the queue is full
+            Thread.Sleep(200); // Simulate work
+        }
+        Console.WriteLine($"[Producer {producerId}] Finished producing.");
+    }
+
+    private void Consume()
+    {
+        // This loop will automatically block when the queue is empty
+        // and terminate when the queue is empty AND CompleteAdding() has been called.
+        foreach (var job in _jobQueue.GetConsumingEnumerable())
+        {
+            Console.WriteLine($"\t[Consumer] Processing: {job}");
+            Thread.Sleep(500); // Simulate processing time
+        }
+        Console.WriteLine("\t[Consumer] Finished consuming.");
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var processor = new JobProcessor();
+        processor.Run();
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="uml-task" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-6">UML Task: Producer-Consumer Sequence Diagram</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                        This diagram illustrates the interactions between a Producer, a Consumer, and the shared BlockingCollection. It shows how the <code class="bg-slate-200 p-1 rounded">Add</code> and <code class="bg-slate-200 p-1 rounded">Take</code> methods coordinate the workflow.
+                    </p>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 flex flex-col items-center space-y-4">
+                        <div class="flex justify-around w-full">
+                            <div class="diagram-box w-32"><strong>:Producer</strong></div>
+                            <div class="diagram-box w-48"><strong>:BlockingCollection</strong></div>
+                            <div class="diagram-box w-32"><strong>:Consumer</strong></div>
+                        </div>
+                        
+                        <div class="w-full flex items-center">
+                            <div class="w-32"></div>
+                            <div class="text-center" style="width: 200px;">
+                                <p>1. Add(item)</p>
+                                <div class="diagram-arrow"></div>
+                            </div>
+                            <div class="flex-grow"></div>
+                        </div>
+
+                         <div class="w-full flex items-center">
+                            <div class="flex-grow"></div>
+                            <div class="text-center" style="width: 200px;">
+                                <p>2. Take() <span class="text-sm text-slate-500">(blocks if empty)</span></p>
+                                <div class="diagram-arrow transform rotate-180"></div>
+                            </div>
+                             <div class="w-32"></div>
+                        </div>
+                        
+                        <div class="w-full flex items-center">
+                            <div class="flex-grow"></div>
+                            <div class="text-center" style="width: 200px;">
+                                <p class="text-sm text-slate-500">3. returns item</p>
+                                <div class="diagram-arrow border-dashed"></div>
+                            </div>
+                             <div class="w-32"></div>
+                        </div>
+                        
+                        <div class="w-full flex items-center mt-6">
+                            <div class="w-32"></div>
+                             <div class="text-center" style="width: 200px;">
+                                <p>4. CompleteAdding()</p>
+                                <div class="diagram-arrow"></div>
+                            </div>
+                             <div class="flex-grow"></div>
+                        </div>
+                        
+                        <div class="w-full flex items-center">
+                            <div class="flex-grow"></div>
+                            <div class="text-center" style="width: 200px;">
+                                <p class="text-sm text-slate-500">5. GetConsumingEnumerable() ends</p>
+                                <div class="diagram-arrow border-dashed"></div>
+                            </div>
+                             <div class="w-32"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="case-study" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Case Study: Designing a Notification Service</h2>
+                    <p class="text-lg text-slate-600 mb-6">
+                       Let's design a robust, scalable service that sends notifications (Email, SMS, Push). The key is to handle sudden bursts of requests without slowing down the main application. A queue-based system using the producer-consumer pattern is a perfect fit.
+                    </p>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-2xl font-semibold text-slate-800 mb-4">System Design</h3>
+                        <ul class="list-disc list-inside space-y-3 text-slate-600">
+                            <li><strong>Producers:</strong> Different parts of your application (e.g., user registration, order confirmation) act as producers. They create a <code class="bg-slate-200 p-1 rounded">Notification</code> object and add it to a central queue. This is a very fast operation, so the main application thread is not blocked.</li>
+                            <li><strong>The Queue:</strong> A single, shared <code class="bg-slate-200 p-1 rounded">BlockingCollection&lt;Notification&gt;</code> acts as the central buffer. We can give it a large capacity to absorb spikes in demand.</li>
+                            <li><strong>Consumers:</strong> A pool of long-running background worker threads act as consumers. Each consumer takes a notification from the queue and handles the actual sending process (e.g., calling an email API, an SMS gateway). Because sending can be slow due to network latency, having multiple consumers allows us to process notifications in parallel.</li>
+                        </ul>
+                        <div class="callout mt-6">
+                             <p><strong>Why this is a great design:</strong> It decouples the application logic from the slow, unreliable process of sending notifications. If an SMS gateway is down, only the consumer threads are affected; the main application continues to run smoothly, and notifications are queued up to be sent later.</p>
+                        </div>
+                         <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Implementation</h3>
+                         <pre><code>using System;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+
+public enum NotificationType { Email, SMS, Push }
+
+public class Notification
+{
+    public NotificationType Type { get; set; }
+    public string Recipient { get; set; }
+    public string Message { get; set; }
+}
+
+public class NotificationService : IDisposable
+{
+    private readonly BlockingCollection&lt;Notification&gt; _queue = new BlockingCollection&lt;Notification&gt;(new ConcurrentQueue&lt;Notification&gt;(), 1000);
+    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+    private readonly Task[] _workers;
+
+    public NotificationService(int workerCount = 2)
+    {
+        _workers = new Task[workerCount];
+        for (int i = 0; i < workerCount; i++)
+        {
+            int workerId = i + 1;
+            _workers[i] = Task.Run(() => ProcessNotifications(workerId, _cts.Token));
+        }
+    }
+
+    public void SendNotification(Notification notification)
+    {
+        if (!_queue.IsAddingCompleted)
+        {
+            try
+            {
+                _queue.Add(notification, _cts.Token);
+                Console.WriteLine($"Queued '{notification.Type}' to {notification.Recipient}");
+            }
+            catch (OperationCanceledException)
+            {
+                 Console.WriteLine("Shutdown in progress. Could not queue notification.");
+            }
+        }
+    }
+
+    private void ProcessNotifications(int workerId, CancellationToken token)
+    {
+        Console.WriteLine($"Worker {workerId} started.");
+        try
+        {
+            // GetConsumingEnumerable will block until a notification is available
+            // or the collection is marked as complete and empty.
+            foreach (var notification in _queue.GetConsumingEnumerable(token))
+            {
+                Console.WriteLine($"\t[Worker {workerId}] Sending {notification.Type} to {notification.Recipient}: '{notification.Message}'");
+                // Simulate sending work (e.g., calling an external API)
+                Thread.Sleep(500 + (workerId * 100));
+                Console.WriteLine($"\t[Worker {workerId}] Sent.");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"Worker {workerId} shutting down.");
+        }
+    }
+
+    public void Dispose()
+    {
+        // Signal that no more notifications will be added.
+        _queue.CompleteAdding();
+        
+        // Wait for all workers to finish processing the remaining items in the queue.
+        Task.WaitAll(_workers);
+        
+        _cts.Cancel(); // Cancel any threads that might still be blocked.
+        _cts.Dispose();
+        _queue.Dispose();
+        Console.WriteLine("Notification service stopped.");
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        using (var service = new NotificationService(3)) // Use 3 worker threads
+        {
+            // Simulate a burst of notifications
+            for (int i = 0; i < 20; i++)
+            {
+                service.SendNotification(new Notification
+                {
+                    Type = (NotificationType)(i % 3),
+                    Recipient = $"user{i}@example.com",
+                    Message = $"Hello User {i}!"
+                });
+                if(i % 5 == 0) Thread.Sleep(100); // Small delay between bursts
+            }
+
+            Console.WriteLine("\n--- Main app logic finished, waiting for notifications to be sent... ---\n");
+        } // Dispose() is called here, ensuring graceful shutdown
+    }
+}</code></pre>
+                    </div>
+                </section>
+
+                 <section id="knowledge-check" class="mb-16 scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Knowledge Check Quiz</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 space-y-8" id="quiz-container">
+                        <!-- Questions will be injected here by JS -->
+                    </div>
+                </section>
+
+                <section id="self-assessment" class="scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Self-Assessment Challenge</h2>
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                        <h3 class="text-xl font-semibold text-slate-800">Challenge: A Multi-threaded Web Crawler</h3>
+                        <p class="text-slate-600 my-4">
+                            Design and implement a simple web crawler. The crawler should start with a single URL, download its content, find all the links on that page, and then visit those links. This process should repeat up to a certain depth and should not visit the same URL twice.
+                        </p>
+                        <p class="text-slate-600 font-semibold">Requirements:</p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-2 mb-4">
+                            <li>Use <code class="bg-slate-200 p-1 rounded">BlockingCollection&lt;string&gt;</code> to store the URLs that need to be visited.</li>
+                            <li>Use <code class="bg-slate-200 p-1 rounded">ConcurrentDictionary&lt;string, bool&gt;</code> to keep track of visited URLs to prevent duplicates and loops.</li>
+                            <li>Create multiple worker tasks that act as consumers, taking URLs from the queue, "downloading" them (simulated), and adding new, unvisited links back to the queue.</li>
+                            <li>The crawler should stop gracefully when there are no more URLs to visit.</li>
+                        </ul>
+                         <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-4" data-target="challenge-solution">Show Detailed Solution</button>
+                        <div id="challenge-solution" class="hidden mt-4">
+                            <pre><code>using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class WebCrawler
+{
+    private readonly BlockingCollection&lt;string&gt; _urlQueue = new BlockingCollection&lt;string&gt;();
+    private readonly ConcurrentDictionary&lt;string, bool&gt; _visitedUrls = new ConcurrentDictionary&lt;string, bool&gt;();
+    private int _activeWorkers = 0;
+    
+    public async Task Start(string startUrl, int maxWorkers)
+    {
+        if (_visitedUrls.TryAdd(startUrl, true))
+        {
+            _urlQueue.Add(startUrl);
+        }
+
+        var workers = new List&lt;Task&gt;();
+        for (int i = 0; i < maxWorkers; i++)
+        {
+            workers.Add(Task.Run(() => CrawlWorker()));
+        }
+
+        // A simple way to wait for completion. A more robust system
+        // might use CountdownEvent or other synchronization primitives.
+        while (_urlQueue.Count > 0 || Interlocked.CompareExchange(ref _activeWorkers, 0, 0) > 0)
+        {
+            await Task.Delay(100);
+        }
+        
+        _urlQueue.CompleteAdding(); // Signal workers to stop
+        await Task.WhenAll(workers);
+        Console.WriteLine($"\nCrawling finished. Visited {_visitedUrls.Count} unique URLs.");
+    }
+
+    private async Task CrawlWorker()
+    {
+        while (!_urlQueue.IsCompleted)
+        {
+            if (_urlQueue.TryTake(out string url, 50)) // Try to get a URL, wait 50ms
+            {
+                Interlocked.Increment(ref _activeWorkers);
+                try
+                {
+                    Console.WriteLine($"[Thread {Thread.CurrentThread.ManagedThreadId}] Crawling: {url}");
+                    string content = await DownloadContent(url);
+                    var newUrls = FindLinks(content, url);
+
+                    foreach (var newUrl in newUrls)
+                    {
+                        if (_visitedUrls.TryAdd(newUrl, true))
+                        {
+                            _urlQueue.Add(newUrl);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error crawling {url}: {ex.Message}");
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _activeWorkers);
+                }
+            }
+        }
+    }
+
+    // This is a simulation. A real crawler would use HttpClient.
+    private Task&lt;string&gt; DownloadContent(string url)
+    {
+        // Simulate network delay
+        return Task.FromResult(SimulatedContent.GetContentForUrl(url));
+    }
+
+    // Simplified link finder
+    private IEnumerable&lt;string&gt; FindLinks(string content, string baseUrl)
+    {
+        var regex = new Regex(@"href\s*=\s*(?:[""'](?&lt;1&gt;[^""']*)[""']|(?&lt;1&gt;\S+))", RegexOptions.IgnoreCase);
+        return regex.Matches(content)
+                    .Select(m => m.Groups[1].Value)
+                    .Where(l => l.StartsWith("http")) // Only absolute URLs for simplicity
+                    .Take(5); // Limit links per page to prevent explosion
+    }
+}
+
+// Helper class to provide fake web page content for the simulation
+public static class SimulatedContent
+{
+    private static readonly Dictionary&lt;string, string&gt; Pages = new Dictionary&lt;string, string&gt;
+    {
+        ["http://example.com"] = @"&lt;html&gt;&lt;body&gt;
+            &lt;a href='http://example.com/page1'&gt;Page 1&lt;/a&gt;
+            &lt;a href='http://example.com/page2'&gt;Page 2&lt;/a&gt;
+        &lt;/body&gt;&lt;/html&gt;",
+        ["http://example.com/page1"] = @"&lt;html&gt;&lt;body&gt;
+            &lt;a href='http://example.com/page3'&gt;Page 3&lt;/a&gt;
+        &lt;/body&gt;&lt;/html&gt;",
+        ["http://example.com/page2"] = @"&lt;html&gt;&lt;body&gt;
+            &lt;a href='http://example.com'&gt;Back to Home&lt;/a&gt;
+        &lt;/body&gt;&lt;/html&gt;",
+        ["http://example.com/page3"] = "&lt;html&gt;&lt;body&gt;No more links.&lt;/body&gt;&lt;/html&gt;"
+    };
+
+    public static string GetContentForUrl(string url)
+    {
+        return Pages.GetValueOrDefault(url, string.Empty);
+    }
+}
+
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var crawler = new WebCrawler();
+        await crawler.Start("http://example.com", 4);
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 h-fit">
+                 <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-700 mb-4">On This Page</h3>
+                    <nav>
+                        <ul class="space-y-3">
+                            <li><a href="#introduction" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Introduction</a></li>
+                            <li>
+                                <a href="#theory" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Core Theory</a>
+                                <ul class="ml-4 mt-2 space-y-2 border-l-2 border-slate-200">
+                                     <li><a href="#concurrent-collections" class="toc-link block text-sm text-slate-500 hover:text-teal-600 transition-colors duration-300 pl-4">Concurrent Collections</a></li>
+                                     <li><a href="#producer-consumer" class="toc-link block text-sm text-slate-500 hover:text-teal-600 transition-colors duration-300 pl-4">Producer-Consumer</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#visualization" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Interactive Visualization</a></li>
+                            <li><a href="#coding-practice" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Coding Practice</a></li>
+                            <li><a href="#uml-task" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">UML Sequence Diagram</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Case Study: Notification Service</a></li>
+                            <li><a href="#knowledge-check" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Self-Assessment Challenge</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="mt-20 py-8 bg-slate-800 text-slate-400 text-center">
+        <div class="container mx-auto">
+            <p>&copy; 2025 Multithreading Mastery Course. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Code Block Copy Functionality ---
+    const allCodeBlocks = document.querySelectorAll('pre');
+    allCodeBlocks.forEach(block => {
+        const button = document.createElement('button');
+        button.innerText = 'Copy';
+        button.className = 'copy-btn';
+        block.appendChild(button);
+
+        button.addEventListener('click', () => {
+            const code = block.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.innerText = 'Copied!';
+                setTimeout(() => {
+                    button.innerText = 'Copy';
+                }, 2000);
+            });
+        });
+    });
+
+    // --- Solution Toggle Functionality ---
+    const solutionToggles = document.querySelectorAll('.solution-toggle');
+    solutionToggles.forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const targetId = toggle.getAttribute('data-target');
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                const isHidden = targetElement.classList.contains('hidden');
+                targetElement.classList.toggle('hidden');
+                toggle.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+            }
+        });
+    });
+
+    // --- Sticky TOC Active State ---
+    const sections = document.querySelectorAll('section[id]');
+    const tocLinks = document.querySelectorAll('.toc-link');
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === entry.target.id) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+    
+    // --- Producer-Consumer Chart ---
+    const ctx = document.getElementById('producerConsumerChart').getContext('2d');
+    let chart;
+    let producerCount = 1;
+    let consumerCount = 1;
+    let queueSize = 0;
+    let time = 0;
+    let producerIntervals = [];
+    let consumerIntervals = [];
+    let chartUpdateInterval;
+    
+    const producerCountEl = document.getElementById('producerCount');
+    const consumerCountEl = document.getElementById('consumerCount');
+    const queueSizeEl = document.getElementById('queueSize');
+    const startBtn = document.getElementById('startSim');
+    const stopBtn = document.getElementById('stopSim');
+    const addProducerBtn = document.getElementById('addProducer');
+    const addConsumerBtn = document.getElementById('addConsumer');
+    const resetBtn = document.getElementById('resetSim');
+
+    function initChart() {
+        if(chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [0],
+                datasets: [{
+                    label: 'Queue Size',
+                    data: [0],
+                    borderColor: '#0d9488',
+                    backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                    fill: true,
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Time (s)' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Items in Queue' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChart() {
+        time++;
+        chart.data.labels.push(time);
+        chart.data.datasets[0].data.push(queueSize);
+        if (chart.data.labels.length > 30) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
+        chart.update();
+        queueSizeEl.textContent = queueSize;
+    }
+    
+    function startSimulation() {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        
+        producerIntervals.forEach(clearInterval);
+        consumerIntervals.forEach(clearInterval);
+        producerIntervals = [];
+        consumerIntervals = [];
+
+        for(let i=0; i<producerCount; i++){
+            producerIntervals.push(setInterval(() => { queueSize++; }, 1000));
+        }
+        for(let i=0; i<consumerCount; i++){
+             consumerIntervals.push(setInterval(() => {
+                if (queueSize > 0) queueSize--;
+            }, 1500));
+        }
+        
+        chartUpdateInterval = setInterval(updateChart, 1000);
+    }
+    
+    function stopSimulation() {
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        clearInterval(chartUpdateInterval);
+        producerIntervals.forEach(clearInterval);
+        consumerIntervals.forEach(clearInterval);
+    }
+    
+    function resetSimulation() {
+        stopSimulation();
+        producerCount = 1;
+        consumerCount = 1;
+        queueSize = 0;
+        time = 0;
+        producerCountEl.textContent = producerCount;
+        consumerCountEl.textContent = consumerCount;
+        queueSizeEl.textContent = queueSize;
+        initChart();
+    }
+    
+    addProducerBtn.addEventListener('click', () => {
+        producerCount++;
+        producerCountEl.textContent = producerCount;
+        if (!stopBtn.disabled) startSimulation();
+    });
+    
+    addConsumerBtn.addEventListener('click', () => {
+        consumerCount++;
+        consumerCountEl.textContent = consumerCount;
+        if (!stopBtn.disabled) startSimulation();
+    });
+    
+    startBtn.addEventListener('click', startSimulation);
+    stopBtn.addEventListener('click', stopSimulation);
+    resetBtn.addEventListener('click', resetSimulation);
+    
+    initChart();
+    
+    // --- Quiz Functionality ---
+    const quizData = [
+        {
+            question: "Which collection is best suited for a simple producer-consumer scenario where order matters and you need blocking capabilities?",
+            options: ["ConcurrentDictionary<TKey, TValue>", "ConcurrentQueue<T>", "List<T> with manual locks", "BlockingCollection<T>"],
+            answer: "BlockingCollection<T>",
+            explanation: "BlockingCollection<T> is specifically designed for this. It wraps a concurrent collection (like ConcurrentQueue) and adds essential blocking and bounding features, simplifying the pattern immensely."
+        },
+        {
+            question: "When should you use Interlocked.Increment over a lock statement?",
+            options: ["When updating a complex object", "For simple atomic operations like incrementing an integer", "Always, as it's universally better than locks", "When you need to perform multiple operations as a single transaction"],
+            answer: "For simple atomic operations like incrementing an integer",
+            explanation: "The Interlocked class provides highly optimized, atomic operations for simple numeric types. It's much more performant than a full lock for these specific, simple use cases."
+        },
+        {
+            question: "What is the primary benefit of using ConcurrentDictionary's GetOrAdd method for a cache?",
+            options: ["It's shorter to type than a manual check", "It guarantees the value factory function is executed only once if multiple threads request a new key simultaneously", "It automatically removes old items from the cache", "It allows null keys"],
+            answer: "It guarantees the value factory function is executed only once if multiple threads request a new key simultaneously",
+            explanation: "GetOrAdd performs an atomic check-and-add operation. This prevents the 'race condition' where multiple threads might check for a key, find it missing, and all start the expensive data-fetching operation at the same time."
+        },
+        {
+            question: "In the BlockingCollection producer-consumer pattern, how do you signal to the consumers that no more items will be added?",
+            options: ["You add a special 'null' item to the queue", "You call the Stop() method", "You call the CompleteAdding() method", "You dispose the CancellationTokenSource"],
+            answer: "You call the CompleteAdding() method",
+            explanation: "CompleteAdding() signals that the collection should not accept any more items. Once the collection is empty and adding is complete, the consumer's GetConsumingEnumerable() loop will terminate gracefully."
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+
+    quizData.forEach((q, index) => {
+        const questionEl = document.createElement('div');
+        questionEl.innerHTML = `
+            <h4 class="text-lg font-semibold text-slate-700">${index + 1}. ${q.question}</h4>
+            <div class="mt-4 space-y-2" id="options-${index}">
+                ${q.options.map((option, i) => `
+                    <div class="quiz-option border-2 border-slate-300 p-3 rounded-lg cursor-pointer transition" data-question="${index}" data-option="${option}">
+                        <span class="font-mono text-sm bg-teal-100 text-teal-800 font-bold px-2 py-1 rounded mr-3">${String.fromCharCode(65 + i)}</span>
+                        ${option}
+                    </div>
+                `).join('')}
+            </div>
+            <div id="feedback-${index}" class="hidden mt-3 p-3 rounded-lg"></div>
+        `;
+        quizContainer.appendChild(questionEl);
+    });
+
+    quizContainer.addEventListener('click', (e) => {
+        const optionEl = e.target.closest('.quiz-option');
+        if (optionEl) {
+            const qIndex = optionEl.dataset.question;
+            const selectedOption = optionEl.dataset.option;
+            const questionData = quizData[qIndex];
+            const feedbackEl = document.getElementById(`feedback-${qIndex}`);
+            const allOptions = document.querySelectorAll(`#options-${qIndex} .quiz-option`);
+
+            allOptions.forEach(opt => {
+                opt.classList.remove('selected');
+                opt.style.pointerEvents = 'none'; // Disable further clicks
+                const optValue = opt.dataset.option;
+                if (optValue === questionData.answer) {
+                    opt.classList.add('correct');
+                } else if(optValue === selectedOption) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            optionEl.classList.add('selected');
+            
+            if (selectedOption === questionData.answer) {
+                feedbackEl.innerHTML = `<strong class="text-green-700">Correct!</strong> ${questionData.explanation}`;
+                feedbackEl.className = 'mt-3 p-3 rounded-lg bg-green-100 text-green-800';
+            } else {
+                feedbackEl.innerHTML = `<strong class="text-red-700">Incorrect.</strong> ${questionData.explanation}`;
+                feedbackEl.className = 'mt-3 p-3 rounded-lg bg-red-100 text-red-800';
+            }
+            feedbackEl.classList.remove('hidden');
+        }
+    });
+});
+</script>
+
+</body>
+</html>
+
+

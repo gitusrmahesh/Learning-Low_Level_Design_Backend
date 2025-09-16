@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 12: ReaderWriterLockSlim & Concurrency</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Soothing Neutrals" - A calm palette using beige, slate, stone, with subtle teal and amber accents for a focused learning environment. -->
+    <!-- Application Structure Plan: A two-column responsive layout was chosen. The left, main column presents the lesson content in a logical, top-to-bottom flow (Theory -> Practice -> Application -> Assessment) to guide the learner progressively. The right column features a sticky Table of Contents that tracks scroll position, allowing users to jump to any section easily. This structure supports both linear learning and quick reference, maximizing usability for a dense technical topic. Interactions like code copying, an interactive visualization, and a quiz are embedded directly within the content flow to reinforce concepts at the point of learning. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: The core concept of Reader/Writer locks. Goal: Visually demonstrate concurrent reads vs. exclusive writes. Viz/Method: An interactive Canvas simulation. Interaction: User clicks buttons to request read/write locks, and animated 'threads' (circles) enter/exit a 'shared resource' area, visually showing the lock's rules in real-time. Justification: This makes an abstract concurrency concept tangible and easier to grasp than text alone. Library/Method: Vanilla JS + HTML Canvas.
+        - Report Info: UML for a shared DB table lock. Goal: Represent a database schema with a lock. Viz/Method: A diagram built with styled HTML divs and Tailwind CSS. Justification: Avoids forbidden SVG/image files while still presenting a clean, clear visual representation of the design pattern.
+        - Report Info: Coding problems and solutions. Goal: Provide practical, applicable code. Viz/Method: Syntax-highlighted code blocks. Interaction: A "Copy to Clipboard" button on each block. Justification: Enhances user experience by making it easy to grab and experiment with the provided C# solutions. Library/Method: Vanilla JS.
+        - Report Info: Knowledge check. Goal: Allow self-assessment. Viz/Method: An interactive quiz. Interaction: Users select answers and get immediate feedback. Justification: Actively engages the learner and helps solidify their understanding. Library/Method: Vanilla JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #383838;
+        }
+        .code-block {
+            background-color: #2D3748;
+            color: #E2E8F0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+            margin-bottom: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .code-block .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4A5568;
+            color: #E2E8F0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background-color 0.2s;
+        }
+        .code-block .copy-btn:hover {
+            background-color: #718096;
+        }
+        .toc-link.active {
+            color: #007BFF;
+            font-weight: 600;
+            border-left-color: #007BFF;
+        }
+        .syntax-keyword { color: #569CD6; }
+        .syntax-type { color: #4EC9B0; }
+        .syntax-string { color: #D69D85; }
+        .syntax-comment { color: #6A9955; }
+        .syntax-number { color: #B5CEA8; }
+        .quiz-option:hover { background-color: #E9E9E9; }
+        .quiz-correct { background-color: #D1FAE5; border-color: #10B981; }
+        .quiz-incorrect { background-color: #FEE2E2; border-color: #EF4444; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA]">
+
+    <!-- Custom Header Gap -->
+    <div class="h-16"></div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Main Content -->
+            <main class="w-full lg:w-3/4">
+                <article>
+                    <header class="mb-8">
+                        <h1 class="text-4xl font-bold text-gray-800 mb-2">Day 12: ReaderWriterLockSlim & Concurrency</h1>
+                        <p class="text-lg text-gray-600">Mastering high-performance synchronization for read-heavy scenarios.</p>
+                    </header>
+                    
+                    <section id="theory" class="mb-12">
+                        <h2 class="text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 mb-6">✅ Theory Topics</h2>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-3">The Reader-Writer Problem</h3>
+                                <p class="text-gray-700 mb-4">Imagine a popular digital library. Hundreds of people (readers) can look at a book simultaneously without any issue. However, if an author (a writer) needs to update the book's text, they must have exclusive access. No one should be reading it while it's being rewritten, or they'd see a jumbled mess. Similarly, no two authors should try to edit the same book at once.</p>
+                                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg my-4">
+                                    <p class="text-blue-800"><strong class="font-semibold">Analogy:</strong> A shared resource is like a book. Many readers can access it, but a writer needs exclusive control, locking out everyone else to ensure data integrity.</p>
+                                </div>
+                                <p class="text-gray-700">This scenario is the classic "Reader-Writer Problem" in computer science. The goal is to design a synchronization mechanism that:</p>
+                                <ul class="list-disc list-inside text-gray-700 mt-2 ml-4 space-y-1">
+                                    <li>Allows any number of "reader" threads to access a shared resource concurrently.</li>
+                                    <li>Allows only one "writer" thread to access the resource at any given time.</li>
+                                    <li>Prevents any readers from accessing the resource while a writer is modifying it.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-3">ReaderWriterLockSlim in C#</h3>
+                                <p class="text-gray-700 mb-4">C# provides an elegant and highly efficient solution to this problem: the `ReaderWriterLockSlim` class. It's a "slim" version of the older `ReaderWriterLock`, meaning it's faster and uses less memory, making it the preferred choice in modern .NET applications.</p>
+                                <p class="text-gray-700">This lock distinguishes between three modes of access:</p>
+                                <ul class="list-disc list-inside text-gray-700 mt-2 ml-4 space-y-1">
+                                    <li><strong>Read Mode:</strong> Entered using `EnterReadLock()`. Multiple threads can be in read mode simultaneously.</li>
+                                    <li><strong>Write Mode:</strong> Entered using `EnterWriteLock()`. Only one thread can be in write mode, and it excludes all other readers and writers.</li>
+                                    <li><strong>Upgradeable Read Mode:</strong> A special mode entered with `EnterUpgradeableReadLock()`. It acts like a read lock but gives the thread the option to "upgrade" to a write lock without releasing its read lock first. This helps prevent deadlocks in certain scenarios.</li>
+                                </ul>
+                            </div>
+                             <!-- Interactive Visualization -->
+                            <div id="visualization" class="my-6">
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-4">Interactive Lock Visualization</h3>
+                                <div class="bg-white p-4 rounded-lg shadow-md border">
+                                    <p class="text-sm text-gray-600 mb-4">Click the buttons to simulate threads requesting locks. Observe how multiple readers are allowed, but a writer blocks everyone.</p>
+                                    <div class="chart-container mx-auto" style="position: relative; height:250px; width:100%; max-width: 600px;">
+                                        <canvas id="lockVizCanvas"></canvas>
+                                    </div>
+                                    <div class="flex justify-center gap-4 mt-4">
+                                        <button id="addReader" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Request Read Lock</button>
+                                        <button id="addWriter" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Request Write Lock</button>
+                                        <button id="resetViz" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-3">When to Prefer Reader-Writer Locks</h3>
+                                <p class="text-gray-700 mb-4">Using `ReaderWriterLockSlim` is not always the best choice. A simple `lock` (Monitor) is often faster if contention is low. The real power of `ReaderWriterLockSlim` shines in specific scenarios:</p>
+                                <ul class="list-disc list-inside text-gray-700 mt-2 ml-4 space-y-1">
+                                    <li><strong>High Read-to-Write Ratio:</strong> The resource is read far more often than it is written to.</li>
+                                    <li><strong>Long-Running Read Operations:</strong> Readers hold the lock for a significant amount of time, making it inefficient to block other potential readers with a simple exclusive lock.</li>
+                                    <li><strong>Examples:</strong>
+                                        <ul class="list-circle list-inside ml-6 mt-1">
+                                            <li>An in-memory application cache. Configuration values are read frequently, but updated rarely.</li>
+                                            <li>A server that broadcasts data to many clients. The data structure is read by many threads simultaneously.</li>
+                                            <li>A dictionary of users that is frequently searched but infrequently modified.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg my-4">
+                                     <p class="text-yellow-800"><strong class="font-semibold">Performance Note:</strong> `ReaderWriterLockSlim` has more overhead than a simple `lock`. Only use it when you can justify the complexity and the read/write profile of your application truly benefits from it.</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-3">Syntax Snippets</h3>
+                                <p class="text-gray-600 mb-4">Here's the basic syntax for using `ReaderWriterLockSlim`.</p>
+
+                                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Initialization</h4>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code><span class="syntax-keyword">private static readonly</span> <span class="syntax-type">ReaderWriterLockSlim</span> cacheLock = <span class="syntax-keyword">new</span> <span class="syntax-type">ReaderWriterLockSlim</span>();</code></pre>
+                                </div>
+                                
+                                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Acquiring a Read Lock</h4>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code>cacheLock.EnterReadLock();
+<span class="syntax-keyword">try</span>
+{
+    <span class="syntax-comment">// Critical section: Read from the shared resource</span>
+}
+<span class="syntax-keyword">finally</span>
+{
+    cacheLock.ExitReadLock();
+}</code></pre>
+                                </div>
+
+                                <h4 class="text-lg font-semibold text-gray-700 mt-4 mb-2">Acquiring a Write Lock</h4>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code>cacheLock.EnterWriteLock();
+<span class="syntax-keyword">try</span>
+{
+    <span class="syntax-comment">// Critical section: Write to the shared resource</span>
+}
+<span class="syntax-keyword">finally</span>
+{
+    cacheLock.ExitWriteLock();
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="coding" class="mb-12">
+                        <h2 class="text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 mb-6">✅ Coding Practice</h2>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-3">[Easy] Shared Dictionary</h3>
+                                <p class="text-gray-700 mb-4"><strong>Problem:</strong> Implement a thread-safe `SharedDictionary<TKey, TValue>` class. It should allow multiple threads to read values concurrently, but only one thread at a time should be able to write (add, update, or remove) values.</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code><span class="syntax-keyword">using</span> System;
+<span class="syntax-keyword">using</span> System.Collections.Generic;
+<span class="syntax-keyword">using</span> System.Threading;
+
+<span class="syntax-keyword">public class</span> <span class="syntax-type">SharedDictionary</span>&lt;TKey, TValue&gt;
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">Dictionary</span>&lt;TKey, TValue&gt; _dictionary = <span class="syntax-keyword">new</span> <span class="syntax-type">Dictionary</span>&lt;TKey, TValue&gt;();
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">ReaderWriterLockSlim</span> _lock = <span class="syntax-keyword">new</span> <span class="syntax-type">ReaderWriterLockSlim</span>();
+
+    <span class="syntax-keyword">public</span> TValue Get(TKey key)
+    {
+        _lock.EnterReadLock();
+        <span class="syntax-keyword">try</span>
+        {
+            <span class="syntax-keyword">return</span> _dictionary[key];
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
+    <span class="syntax-keyword">public void</span> Add(TKey key, TValue value)
+    {
+        _lock.EnterWriteLock();
+        <span class="syntax-keyword">try</span>
+        {
+            _dictionary[key] = value;
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    <span class="syntax-comment">// Example Usage</span>
+    <span class="syntax-keyword">public static void</span> Main()
+    {
+        <span class="syntax-keyword">var</span> sharedDict = <span class="syntax-keyword">new</span> <span class="syntax-type">SharedDictionary</span>&lt;<span class="syntax-type">string</span>, <span class="syntax-type">string</span>&gt;();
+        
+        <span class="syntax-comment">// Writer thread</span>
+        <span class="syntax-keyword">new</span> <span class="syntax-type">Thread</span>(() =&gt; {
+            sharedDict.Add(<span class="syntax-string">"key1"</span>, <span class="syntax-string">"value1"</span>);
+            Console.WriteLine(<span class="syntax-string">"Writer: Added key1"</span>);
+        }).Start();
+
+        <span class="syntax-comment">// Reader threads</span>
+        <span class="syntax-keyword">for</span> (<span class="syntax-keyword">int</span> i = <span class="syntax-number">0</span>; i &lt; <span class="syntax-number">5</span>; i++)
+        {
+            <span class="syntax-keyword">int</span> readerId = i;
+            <span class="syntax-keyword">new</span> <span class="syntax-type">Thread</span>(() =&gt; {
+                Thread.Sleep(<span class="syntax-number">100</span>); <span class="syntax-comment">// Wait for writer to finish</span>
+                <span class="syntax-keyword">var</span> value = sharedDict.Get(<span class="syntax-string">"key1"</span>);
+                Console.WriteLine($<span class="syntax-string">"Reader {readerId}: Got value '{value}'"</span>);
+            }).Start();
+        }
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                             <div>
+                                <h3 class="text-2xl font-semibold text-gray-700 mb-3">[Medium] Thread-Safe Cache with Expiration</h3>
+                                <p class="text-gray-700 mb-4"><strong>Problem:</strong> Build a generic cache class `ExpiringCache<TKey, TValue>` that stores items for a specified duration. Reads should be highly concurrent. Writes (adding or updating an item) and cleanup of expired items should be exclusive.</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code><span class="syntax-keyword">using</span> System;
+<span class="syntax-keyword">using</span> System.Collections.Generic;
+<span class="syntax-keyword">using</span> System.Linq;
+<span class="syntax-keyword">using</span> System.Threading;
+
+<span class="syntax-keyword">public class</span> <span class="syntax-type">ExpiringCache</span>&lt;TKey, TValue&gt;
+{
+    <span class="syntax-keyword">private class</span> <span class="syntax-type">CacheItem</span>
+    {
+        <span class="syntax-keyword">public</span> TValue Value { <span class="syntax-keyword">get</span>; <span class="syntax-keyword">set</span>; }
+        <span class="syntax-keyword">public</span> DateTime Expiration { <span class="syntax-keyword">get</span>; <span class="syntax-keyword">set</span>; }
+    }
+
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">Dictionary</span>&lt;TKey, CacheItem&gt; _cache = <span class="syntax-keyword">new</span>();
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">ReaderWriterLockSlim</span> _lock = <span class="syntax-keyword">new</span>();
+
+    <span class="syntax-keyword">public void</span> AddOrUpdate(TKey key, TValue value, TimeSpan duration)
+    {
+        _lock.EnterWriteLock();
+        <span class="syntax-keyword">try</span>
+        {
+            _cache[key] = <span class="syntax-keyword">new</span> CacheItem { Value = value, Expiration = DateTime.UtcNow.Add(duration) };
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    <span class="syntax-keyword">public bool</span> TryGetValue(TKey key, <span class="syntax-keyword">out</span> TValue value)
+    {
+        _lock.EnterReadLock();
+        <span class="syntax-keyword">try</span>
+        {
+            <span class="syntax-keyword">if</span> (_cache.TryGetValue(key, <span class="syntax-keyword">out var</span> item) && item.Expiration > DateTime.UtcNow)
+            {
+                value = item.Value;
+                <span class="syntax-keyword">return</span> <span class="syntax-keyword">true</span>;
+            }
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitReadLock();
+        }
+        value = <span class="syntax-keyword">default</span>;
+        <span class="syntax-keyword">return false</span>;
+    }
+
+    <span class="syntax-keyword">public void</span> Cleanup()
+    {
+        _lock.EnterWriteLock();
+        <span class="syntax-keyword">try</span>
+        {
+            <span class="syntax-keyword">var</span> expiredKeys = _cache.Keys.Where(k => _cache[k].Expiration <= DateTime.UtcNow).ToList();
+            <span class="syntax-keyword">foreach</span> (<span class="syntax-keyword">var</span> key <span class="syntax-keyword">in</span> expiredKeys)
+            {
+                _cache.Remove(key);
+            }
+            Console.WriteLine($<span class="syntax-string">"Cleaned up {expiredKeys.Count} expired items."</span>);
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <section id="uml" class="mb-12">
+                        <h2 class="text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 mb-6">✅ UML/Schema Task</h2>
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-3">UML: Reader/Writer Lock on Shared DB Table</h3>
+                        <p class="text-gray-700 mb-4">This diagram illustrates how a reader-writer lock pattern can be applied conceptually to a database table. A central `LockManager` service coordinates access. Multiple `DataReadService` instances can obtain read locks simultaneously to query the `ProductInventory` table. However, the `DataWriteService` must obtain an exclusive write lock, blocking all readers and other writers before it can update inventory levels.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-md border">
+                            <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-6">
+                                <!-- Readers -->
+                                <div class="flex flex-col gap-2 items-center w-48">
+                                    <div class="p-3 border-2 border-blue-400 rounded-lg bg-blue-50 w-full text-center">DataReadService 1</div>
+                                    <div class="p-3 border-2 border-blue-400 rounded-lg bg-blue-50 w-full text-center">DataReadService 2</div>
+                                    <div class="p-3 border-2 border-blue-400 rounded-lg bg-blue-50 w-full text-center">... N Readers</div>
+                                </div>
+                        
+                                <!-- Arrow to Manager -->
+                                <div class="flex items-center text-3xl text-gray-400 font-sans">→</div>
+                        
+                                <!-- Central Services Group -->
+                                <div class="flex flex-col md:flex-row flex-wrap justify-center items-center gap-4">
+                                     <div class="p-4 border-2 border-gray-500 rounded-lg bg-gray-100 shadow-lg w-48 text-center">
+                                        <strong class="block">LockManager</strong>
+                                        <span class="text-sm text-gray-600">(using R/W Lock)</span>
+                                    </div>
+                                    <div class="text-3xl text-gray-400 font-sans">↔</div>
+                                     <div class="p-4 border-2 border-green-500 rounded-lg bg-green-50 w-48 text-center">
+                                        <strong class="block">DB Table</strong>
+                                        <span class="text-sm text-gray-600">(ProductInventory)</span>
+                                    </div>
+                                </div>
+                        
+                                <!-- Arrow from Writer -->
+                                 <div class="flex items-center text-3xl text-gray-400 font-sans">←</div>
+                        
+                                <!-- Writer -->
+                                <div class="p-3 border-2 border-red-400 rounded-lg bg-red-50 w-48 text-center">DataWriteService</div>
+                            </div>
+                            <p class="mt-6 text-sm text-gray-600 text-center">Blue arrows indicate concurrent read access; Red arrow indicates exclusive write access.</p>
+                        </div>
+                    </section>
+
+                    <section id="casestudy" class="mb-12">
+                        <h2 class="text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 mb-6">✅ Case Study / Machine Coding</h2>
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-3">Design a Ride-Matching Service</h3>
+                        <p class="text-gray-700 mb-4">Let's design a core component of a ride-sharing app like Uber or Lyft: the service that matches riders with available drivers. This is a perfect use case for a reader-writer lock.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-md border space-y-4">
+                            <div>
+                                <h4 class="text-xl font-semibold text-gray-700">The Scenario</h4>
+                                <ul class="list-disc list-inside text-gray-700 mt-2 ml-4 space-y-1">
+                                    <li><strong>Many Readers:</strong> At any moment, thousands of users (riders) are opening the app and searching for available drivers in their vicinity. This is a read operation.</li>
+                                    <li><strong>Few Writers:</strong> Drivers are constantly changing their status: coming online, going offline, or becoming unavailable because they accepted a ride. This is a write operation.</li>
+                                </ul>
+                                <p class="text-gray-700 mt-2">The number of reads (riders searching) vastly outnumbers the number of writes (drivers changing status). This is the key insight.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-semibold text-gray-700">The Design</h4>
+                                <p class="text-gray-700 mb-2">We can use a `ReaderWriterLockSlim` to protect a shared data structure that stores the locations and statuses of all active drivers. A simple choice would be a `Dictionary<DriverId, DriverInfo>`.</p>
+                                <ol class="list-decimal list-inside text-gray-700 mt-2 ml-4 space-y-2">
+                                    <li>
+                                        <strong>`FindAvailableDrivers(location)` Method (Read Operation):</strong>
+                                        <ul class="list-circle list-inside ml-6 mt-1 text-sm">
+                                            <li>Acquires a <strong class="text-blue-600">read lock</strong> using `_lock.EnterReadLock()`.</li>
+                                            <li>Iterates through the driver dictionary to find drivers who are "Available" and near the specified `location`.</li>
+                                            <li>Multiple rider requests can execute this method concurrently, as they all hold read locks.</li>
+                                            <li>Releases the lock in a `finally` block.</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <strong>`UpdateDriverStatus(driverId, newStatus)` Method (Write Operation):</strong>
+                                        <ul class="list-circle list-inside ml-6 mt-1 text-sm">
+                                            <li>Acquires an exclusive <strong class="text-red-600">write lock</strong> using `_lock.EnterWriteLock()`.</li>
+                                            <li>No other thread (reader or writer) can proceed until this lock is released.</li>
+                                            <li>Finds the driver in the dictionary and updates their status (e.g., from "Available" to "On-Trip").</li>
+                                            <li>Releases the lock in a `finally` block.</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                             <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                                 <p class="text-green-800"><strong class="font-semibold">Benefit:</strong> This design maximizes throughput. Searches for drivers (the most common operation) are not blocked by other searches. The system remains highly responsive for users, only briefly pausing reads when a driver's status must be updated, which is a much less frequent event.</p>
+                             </div>
+                        </div>
+                    </section>
+                     
+                    <section id="quiz" class="mb-12">
+                        <h2 class="text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 mb-6">🧠 Knowledge Check Quiz</h2>
+                        <div id="quiz-container" class="space-y-6">
+                            <!-- Questions will be injected here by JS -->
+                        </div>
+                    </section>
+                    
+                    <section id="challenge" class="mb-12">
+                        <h2 class="text-3xl font-semibold text-gray-800 border-b-2 border-gray-200 pb-2 mb-6">🚀 Self-Assessment Challenge</h2>
+                        <div class="bg-white p-6 rounded-lg shadow-md border">
+                            <h3 class="text-xl font-semibold text-gray-700 mb-2">Task: Multi-threaded Analytics Engine</h3>
+                            <p class="text-gray-700 mb-4">
+                                Create a simple analytics engine. Multiple threads will be logging events (e.g., "PageView", "ButtonClick"). These are write operations. A separate, single analytics thread will periodically read all the data, generate a summary report (e.g., count of each event type), and then clear the data for the next interval.
+                            </p>
+                            <p class="font-semibold text-gray-700">Requirements:</p>
+                             <ul class="list-disc list-inside text-gray-700 mt-2 ml-4 space-y-1">
+                                <li>Create an `AnalyticsService` class.</li>
+                                <li>It should have a `LogEvent(string eventType)` method that can be called by many threads. This method should add the event to an internal list.</li>
+                                <li>It should have a `GenerateReport()` method. This method should acquire a lock, copy all the events, clear the original list, release the lock, and then process the copied data to return a `Dictionary<string, int>` summary.</li>
+                                <li>Use `ReaderWriterLockSlim` to ensure thread safety. Think carefully about which locks to use where. The `LogEvent` is a clear writer. What about `GenerateReport`?</li>
+                            </ul>
+                            <div class="mt-6">
+                                <button id="toggleSolutionBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">Show Solution</button>
+                                <div id="solution" class="hidden mt-4">
+                                    <div class="code-block">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre><code><span class="syntax-keyword">using</span> System;
+<span class="syntax-keyword">using</span> System.Collections.Generic;
+<span class="syntax-keyword">using</span> System.Linq;
+<span class="syntax-keyword">using</span> System.Threading;
+<span class="syntax-keyword">using</span> System.Threading.Tasks;
+
+<span class="syntax-keyword">public class</span> <span class="syntax-type">AnalyticsService</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">List</span>&lt;<span class="syntax-type">string</span>&gt; _events = <span class="syntax-keyword">new</span>();
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">ReaderWriterLockSlim</span> _lock = <span class="syntax-keyword">new</span>();
+
+    <span class="syntax-keyword">public void</span> LogEvent(<span class="syntax-type">string</span> eventType)
+    {
+        _lock.EnterWriteLock();
+        <span class="syntax-keyword">try</span>
+        {
+            _events.Add(eventType);
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitWriteLock();
+        }
+    }
+
+    <span class="syntax-comment">// GenerateReport needs to modify the list (clear it), so it must be a write lock.</span>
+    <span class="syntax-keyword">public</span> <span class="syntax-type">Dictionary</span>&lt;<span class="syntax-type">string</span>, <span class="syntax-type">int</span>&gt; GenerateReport()
+    {
+        _lock.EnterWriteLock();
+        <span class="syntax-type">List</span>&lt;<span class="syntax-type">string</span>&gt; eventsToProcess;
+        <span class="syntax-keyword">try</span>
+        {
+            <span class="syntax-comment">// Quickly copy and clear within the lock to minimize lock duration</span>
+            eventsToProcess = <span class="syntax-keyword">new</span> <span class="syntax-type">List</span>&lt;<span class="syntax-type">string</span>&gt;(_events);
+            _events.Clear();
+        }
+        <span class="syntax-keyword">finally</span>
+        {
+            _lock.ExitWriteLock();
+        }
+
+        <span class="syntax-comment">// Process the data outside the lock to improve concurrency</span>
+        <span class="syntax-keyword">if</span> (eventsToProcess.Count == <span class="syntax-number">0</span>)
+            <span class="syntax-keyword">return new</span> <span class="syntax-type">Dictionary</span>&lt;<span class="syntax-type">string</span>, <span class="syntax-type">int</span>&gt;();
+
+        <span class="syntax-keyword">return</span> eventsToProcess
+            .GroupBy(e => e)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    <span class="syntax-keyword">public static async</span> Task RunDemo()
+    {
+        <span class="syntax-keyword">var</span> analytics = <span class="syntax-keyword">new</span> <span class="syntax-type">AnalyticsService</span>();
+        <span class="syntax-keyword">var</span> eventTypes = <span class="syntax-keyword">new</span>[] { <span class="syntax-string">"PageView"</span>, <span class="syntax-string">"Click"</span>, <span class="syntax-string">"Purchase"</span>, <span class="syntax-string">"Search"</span> };
+        <span class="syntax-keyword">var</span> random = <span class="syntax-keyword">new</span> <span class="syntax-type">Random</span>();
+
+        <span class="syntax-comment">// Start logger tasks</span>
+        <span class="syntax-type">List</span>&lt;Task&gt; loggerTasks = <span class="syntax-keyword">new</span>();
+        <span class="syntax-keyword">for</span>(<span class="syntax-keyword">int</span> i = <span class="syntax-number">0</span>; i &lt; <span class="syntax-number">10</span>; i++)
+        {
+            loggerTasks.Add(Task.Run(() => {
+                <span class="syntax-keyword">for</span> (<span class="syntax-keyword">int</span> j = <span class="syntax-number">0</span>; j &lt; <span class="syntax-number">100</span>; j++)
+                {
+                    analytics.LogEvent(eventTypes[random.Next(eventTypes.Length)]);
+                    Task.Delay(random.Next(<span class="syntax-number">5</span>, <span class="syntax-number">15</span>)).Wait();
+                }
+            }));
+        }
+
+        <span class="syntax-comment">// Start reporter task</span>
+        <span class="syntax-type">Task</span> reporterTask = Task.Run(async () => {
+            <span class="syntax-keyword">for</span>(<span class="syntax-keyword">int</span> i = <span class="syntax-number">0</span>; i &lt; <span class="syntax-number">5</span>; i++)
+            {
+                await Task.Delay(<span class="syntax-number">200</span>);
+                <span class="syntax-keyword">var</span> report = analytics.GenerateReport();
+                Console.WriteLine(<span class="syntax-string">"\n--- Analytics Report ---"</span>);
+                <span class="syntax-keyword">foreach</span>(<span class="syntax-keyword">var</span> entry <span class="syntax-keyword">in</span> report)
+                {
+                    Console.WriteLine($<span class="syntax-string">"{entry.Key}: {entry.Value}"</span>);
+                }
+                Console.WriteLine(<span class="syntax-string">"----------------------\n"</span>);
+            }
+        });
+
+        await Task.WhenAll(loggerTasks.Concat(<span class="syntax-keyword">new</span>[] { reporterTask }));
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </main>
+            
+            <!-- Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:sticky top-20 h-screen">
+                <div class="p-4 bg-white rounded-lg shadow-md border">
+                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
+                    <nav id="toc" class="flex flex-col space-y-2">
+                        <a href="#theory" class="toc-link text-gray-600 hover:text-blue-500 border-l-2 border-transparent pl-2">Theory Topics</a>
+                        <a href="#coding" class="toc-link text-gray-600 hover:text-blue-500 border-l-2 border-transparent pl-2">Coding Practice</a>
+                        <a href="#uml" class="toc-link text-gray-600 hover:text-blue-500 border-l-2 border-transparent pl-2">UML/Schema Task</a>
+                        <a href="#casestudy" class="toc-link text-gray-600 hover:text-blue-500 border-l-2 border-transparent pl-2">Case Study</a>
+                        <a href="#quiz" class="toc-link text-gray-600 hover:text-blue-500 border-l-2 border-transparent pl-2">Knowledge Check</a>
+                        <a href="#challenge" class="toc-link text-gray-600 hover:text-blue-500 border-l-2 border-transparent pl-2">Challenge</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p>&copy; 2025 Multithreading Mastery Course. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Copy-to-Clipboard Functionality ---
+            const allCodeBlocks = document.querySelectorAll('.code-block');
+            allCodeBlocks.forEach(block => {
+                const copyBtn = block.querySelector('.copy-btn');
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', () => {
+                        const code = block.querySelector('pre code').innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                            copyBtn.textContent = 'Copied!';
+                            setTimeout(() => {
+                                copyBtn.textContent = 'Copy';
+                            }, 2000);
+                        });
+                    });
+                }
+            });
+            
+            // --- Sticky ToC Scroll-Spy ---
+            const sections = document.querySelectorAll('main section[id]');
+            const tocLinks = document.querySelectorAll('#toc a');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.3
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // --- Challenge Solution Toggle ---
+            const toggleBtn = document.getElementById('toggleSolutionBtn');
+            const solutionDiv = document.getElementById('solution');
+            if(toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const isHidden = solutionDiv.classList.contains('hidden');
+                    solutionDiv.classList.toggle('hidden');
+                    toggleBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+                });
+            }
+
+            // --- Quiz Functionality ---
+            const quizData = [
+                {
+                    question: "In which scenario is ReaderWriterLockSlim MOST beneficial?",
+                    options: [
+                        "A system with many writers and few readers.",
+                        "A system where read and write operations are roughly equal.",
+                        "A system with very high contention for both reading and writing.",
+                        "A system with a very high number of reads and infrequent writes."
+                    ],
+                    correct: 3
+                },
+                {
+                    question: "What happens if a thread tries to acquire a write lock while other threads hold read locks?",
+                    options: [
+                        "An exception is thrown immediately.",
+                        "The writer thread acquires the lock and runs concurrently with readers.",
+                        "The writer thread blocks until all reader threads have exited their locks.",
+                        "All reader threads are immediately terminated."
+                    ],
+                    correct: 2
+                },
+                 {
+                    question: "Which method must be called within a 'finally' block after `EnterReadLock()`?",
+                    options: [
+                        "`ExitWriteLock()`",
+                        "`ReleaseLock()`",
+                        "`ExitReadLock()`",
+                        "`Dispose()`"
+                    ],
+                    correct: 2
+                },
+                {
+                    question: "Why is `ReaderWriterLockSlim` generally preferred over the older `ReaderWriterLock` class?",
+                    options: [
+                        "It supports more concurrent writers.",
+                        "It is simpler to use with only one method.",
+                        "It has better performance and lower memory usage.",
+                        "It is automatically included in all C# projects."
+                    ],
+                    correct: 2
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            if(quizContainer) {
+                quizData.forEach((q, index) => {
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'bg-white p-6 rounded-lg shadow-md border';
+                    
+                    let optionsHTML = '';
+                    q.options.forEach((opt, optIndex) => {
+                        optionsHTML += `<div class="quiz-option p-3 border rounded-lg cursor-pointer mt-2" data-q="${index}" data-opt="${optIndex}">
+                                            <span class="font-mono text-sm mr-2">${String.fromCharCode(65 + optIndex)}.</span> ${opt}
+                                       </div>`;
+                    });
+
+                    questionEl.innerHTML = `<h4 class="text-lg font-semibold text-gray-800">${index + 1}. ${q.question}</h4>
+                                          <div class="mt-4">${optionsHTML}</div>
+                                          <div class="feedback mt-3 text-sm font-semibold"></div>`;
+                    quizContainer.appendChild(questionEl);
+                });
+
+                quizContainer.addEventListener('click', (e) => {
+                    const option = e.target.closest('.quiz-option');
+                    if (!option || option.parentElement.dataset.answered) return;
+
+                    const qIndex = parseInt(option.dataset.q);
+                    const optIndex = parseInt(option.dataset.opt);
+                    const questionData = quizData[qIndex];
+                    const feedbackEl = option.parentElement.nextElementSibling;
+                    
+                    option.parentElement.dataset.answered = 'true';
+
+                    if (optIndex === questionData.correct) {
+                        option.classList.add('quiz-correct');
+                        feedbackEl.textContent = 'Correct! Great job.';
+                        feedbackEl.className += ' text-green-600';
+                    } else {
+                        option.classList.add('quiz-incorrect');
+                        const correctOption = option.parentElement.querySelector(`[data-opt='${questionData.correct}']`);
+                        correctOption.classList.add('quiz-correct');
+                        feedbackEl.textContent = 'Not quite. The correct answer is highlighted in green.';
+                        feedbackEl.className += ' text-red-600';
+                    }
+                });
+            }
+            
+            // --- Interactive Lock Visualization ---
+            const canvas = document.getElementById('lockVizCanvas');
+            const ctx = canvas.getContext('2d');
+            let threads = [];
+            let resource = { x: 0, y: 0, width: 0, height: 0 };
+            let queueArea = { x: 0, y: 0, width: 0, height: 0 };
+            
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                canvas.width = container.offsetWidth;
+                canvas.height = container.offsetHeight;
+
+                resource.width = canvas.width * 0.4;
+                resource.height = canvas.height * 0.8;
+                resource.x = (canvas.width - resource.width) / 2;
+                resource.y = (canvas.height - resource.height) / 2;
+                
+                queueArea.width = canvas.width * 0.2;
+                queueArea.height = canvas.height;
+                queueArea.x = resource.x - queueArea.width - 20;
+                queueArea.y = 0;
+            }
+
+            class Thread {
+                constructor(type) {
+                    this.type = type; // 'reader' or 'writer'
+                    this.radius = 10;
+                    this.x = 20;
+                    this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
+                    this.targetX = this.x;
+                    this.targetY = this.y;
+                    this.state = 'queued'; // queued, entering, active, leaving
+                    this.color = type === 'reader' ? 'rgba(59, 130, 246, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+                }
+
+                update() {
+                    this.x += (this.targetX - this.x) * 0.05;
+                    this.y += (this.targetY - this.y) * 0.05;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#333';
+                    ctx.stroke();
+                }
+            }
+
+            function processLockRequests() {
+                const activeWriter = threads.find(t => t.type === 'writer' && t.state === 'active');
+                const activeReaders = threads.filter(t => t.type === 'reader' && t.state === 'active').length;
+                const writerInQueue = threads.find(t => t.type === 'writer' && t.state === 'queued');
+
+                threads.forEach(t => {
+                    if (t.state === 'queued') {
+                        if (t.type === 'reader' && !activeWriter && !writerInQueue) {
+                            t.state = 'active';
+                            t.targetX = resource.x + Math.random() * (resource.width - t.radius*2) + t.radius;
+                            t.targetY = resource.y + Math.random() * (resource.height - t.radius*2) + t.radius;
+                        } else if (t.type === 'writer' && !activeWriter && activeReaders === 0) {
+                            t.state = 'active';
+                            t.targetX = resource.x + resource.width / 2;
+                            t.targetY = resource.y + resource.height / 2;
+                        }
+                    }
+                });
+            }
+            
+            function updateQueuePositions() {
+                const queuedThreads = threads.filter(t => t.state === 'queued');
+                queuedThreads.forEach((t, i) => {
+                    t.targetX = queueArea.x + queueArea.width / 2;
+                    t.targetY = 30 + i * 30;
+                });
+            }
+
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw Shared Resource area
+                ctx.strokeStyle = '#047857';
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(resource.x, resource.y, resource.width, resource.height);
+                ctx.fillRect(resource.x, resource.y, resource.width, resource.height);
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '14px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('Shared Resource', resource.x + resource.width / 2, resource.y - 10);
+                
+                // Draw Queue area
+                ctx.strokeStyle = '#D97706';
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.1)';
+                ctx.strokeRect(queueArea.x, queueArea.y, queueArea.width, queueArea.height);
+                ctx.fillRect(queueArea.x, queueArea.y, queueArea.width, queueArea.height);
+                ctx.fillText('Waiting Queue', queueArea.x + queueArea.width / 2, queueArea.y + 15);
+
+
+                processLockRequests();
+                updateQueuePositions();
+
+                threads.forEach(t => {
+                    t.update();
+                    t.draw();
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            document.getElementById('addReader').addEventListener('click', () => threads.push(new Thread('reader')));
+            document.getElementById('addWriter').addEventListener('click', () => threads.push(new Thread('writer')));
+            document.getElementById('resetViz').addEventListener('click', () => threads = []);
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            animate();
+        });
+    </script>
+</body>
+</html>
+

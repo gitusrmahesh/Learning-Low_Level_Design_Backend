@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 11: Thread Synchronization (Mutex & Semaphore)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Warm Neutrals) -->
+    <!-- Application Structure Plan: The application is designed as a single-page, linear educational module to guide the learner progressively. It starts with foundational theory, moves to an interactive visualization for conceptual clarity, then presents practical coding exercises with hidden solutions, a UML diagram, a real-world case study, and finishes with knowledge checks. This structure facilitates a step-by-step learning process. A sticky table of contents on the right provides persistent, easy navigation, allowing users to jump between sections or track their progress, making the dense information highly accessible and user-friendly. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core concepts of Mutex & Semaphore. Goal: Inform/Compare. Method: Detailed text, comparison tables (HTML/Tailwind). Interaction: Reading, cross-referencing. Justification: Tables provide a clear, side-by-side view of nuanced differences.
+        - Report Info: Semaphore mechanism (threads waiting/entering). Goal: Visualize/Engage. Method: Interactive Canvas visualization (Chart.js). Interaction: Start/reset simulation to see threads change state. Justification: A dynamic visual makes the abstract concept of a semaphore tangible and easier to grasp than static text.
+        - Report Info: Coding problems and case studies. Goal: Apply/Practice. Method: HTML content with C# code blocks. Interaction: "Show Solution" buttons toggle visibility; "Copy Code" buttons for convenience. Justification: This encourages active learning by letting users attempt problems before seeing the answer.
+        - Report Info: UML Sequence Diagram. Goal: Organize/Structure. Method: Structured HTML/CSS with Tailwind to create a visual diagram. Justification: Avoids forbidden SVG/Mermaid while still presenting the structural flow clearly.
+        - Report Info: Knowledge check. Goal: Assess. Method: Interactive quiz with radio buttons. Interaction: Instant feedback on selection. Justification: Reinforces learning and provides immediate self-assessment.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Warm off-white */
+            color: #403d39; /* Dark brown-gray */
+        }
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+        }
+        .toc-link.active {
+            color: #e57373; /* Muted red */
+            border-left-color: #e57373;
+            transform: translateX(4px);
+        }
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #718096;
+        }
+        .solution {
+            border: 1px dashed #a0aec0;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+        }
+        .callout {
+            background-color: #FFFBEB; /* Light yellow */
+            border-left: 4px solid #FBBF24; /* Amber */
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .btn {
+            background-color: #81a1c1; /* Muted blue */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        .btn:hover {
+            background-color: #5e81ac;
+        }
+        .quiz-option.correct {
+            background-color: #D1FAE5; /* Light Green */
+            border-color: #10B981; /* Green */
+        }
+        .quiz-option.incorrect {
+            background-color: #FEE2E2; /* Light Red */
+            border-color: #EF4444; /* Red */
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FDFBF8;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header Gap -->
+    <div class="h-16"></div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            <!-- Main Content -->
+            <main class="w-full lg:w-3/4 min-w-0">
+                <article>
+                    <header class="mb-12">
+                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[#252422] mb-4">Day 11: Thread Synchronization</h1>
+                        <p class="text-xl text-gray-600">Mastering coordination between threads with Mutex and Semaphore to prevent chaos and ensure data integrity.</p>
+                    </header>
+
+                    <section id="theory" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ Theory Deep Dive</h2>
+                        <p class="mb-8 text-gray-700">In multithreading, a "race condition" occurs when multiple threads try to access and modify a shared resource (like a variable or file) at the same time. The outcome becomes unpredictable and depends on which thread "wins the race." Synchronization primitives are tools designed to prevent this by enforcing controlled access to these shared resources, ensuring that only one (or a specified number of) thread(s) can enter a "critical section" of code at any given time.</p>
+
+                        <div class="space-y-12">
+                            <div>
+                                <h3 class="text-2xl font-semibold mb-3">What is a Mutex?</h3>
+                                <p class="mb-4">A <span class="font-semibold">Mutex</span> (short for Mutual Exclusion) is like a key to a single-occupancy restroom. Only one person (thread) can have the key and be inside at a time. If another thread wants to enter, it must wait outside until the first thread comes out and returns the key. This ensures exclusive access to a resource.</p>
+                                <p class="mb-4">A key feature of a Mutex is that it has "thread affinity"—the thread that acquires the Mutex must be the one to release it. In .NET, a Mutex can also be system-wide, meaning it can be used to synchronize threads across different processes, not just within a single application.</p>
+                                <div class="callout">
+                                    <p><span class="font-bold">Analogy:</span> Imagine a single microphone on a stage. Only the person holding the microphone can speak. A Mutex ensures only one thread "holds the microphone" for a shared resource at any time.</p>
+                                </div>
+                                <h4 class="font-semibold mt-6 mb-2">Syntax Snippet</h4>
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="p-4 overflow-x-auto"><code class="language-csharp">// 1. Create a Mutex instance
+Mutex mutex = new Mutex();
+
+// 2. Acquire the Mutex (wait for the "key")
+mutex.WaitOne();
+
+try
+{
+    // Critical Section: Code that accesses the shared resource goes here.
+    // Only one thread can execute this block at a time.
+}
+finally
+{
+    // 3. Release the Mutex (return the "key")
+    mutex.ReleaseMutex();
+}
+</code></pre>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-semibold mb-3">Difference between Mutex and lock</h3>
+                                <p class="mb-4">While both `Mutex` and the `lock` keyword (which uses `Monitor` behind the scenes) provide mutual exclusion, they have key differences that make them suitable for different scenarios.</p>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr>
+                                                <th class="border-b-2 p-4 text-lg">Feature</th>
+                                                <th class="border-b-2 p-4 text-lg">Mutex</th>
+                                                <th class="border-b-2 p-4 text-lg">lock (Monitor)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white hover:bg-gray-50">
+                                                <td class="border-b p-4 font-semibold">Scope</td>
+                                                <td class="border-b p-4">System-wide (can sync across processes).</td>
+                                                <td class="border-b p-4">Application-wide (only syncs threads within the same process).</td>
+                                            </tr>
+                                            <tr class="bg-gray-50/50 hover:bg-gray-100">
+                                                <td class="border-b p-4 font-semibold">Performance</td>
+                                                <td class="border-b p-4">Slower. Involves kernel-level operations, making it a "heavyweight" object.</td>
+                                                <td class="border-b p-4">Faster. Primarily operates in user-mode, making it a "lightweight" and more efficient choice for most common cases.</td>
+                                            </tr>
+                                            <tr class="bg-white hover:bg-gray-50">
+                                                <td class="border-b p-4 font-semibold">Usage</td>
+                                                <td class="border-b p-4">Use when you need to synchronize access to a resource shared by multiple applications (e.g., a shared file or hardware device).</td>
+                                                <td class="border-b p-4">Use for the vast majority of intra-app synchronization needs. It's simpler, safer (with `try...finally`), and performs better.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-2xl font-semibold mb-3">Semaphore vs SemaphoreSlim</h3>
+                                <p class="mb-4">A <span class="font-semibold">Semaphore</span> is a more versatile synchronization tool. Instead of a single key, it maintains a count of available "permits" or "slots". A thread can enter the critical section only if it can acquire a permit. If the count is zero, the thread must wait until another thread releases a permit.</p>
+                                <p class="mb-4"><span class="font-semibold">SemaphoreSlim</span> is a lightweight, faster version of `Semaphore` that is recommended for synchronization within a single application. It avoids the performance overhead of kernel-level operations that `Semaphore` requires for inter-process communication.</p>
+                                <div class="callout">
+                                    <p><span class="font-bold">Analogy:</span> Think of a bike rental station with 5 bikes. The semaphore's initial count is 5. Each person (thread) who wants to ride takes a bike (acquires a permit). When all 5 are taken, new people must wait. As riders return, bikes become available again (permits are released).</p>
+                                </div>
+                                <h4 class="font-semibold mt-6 mb-2">Syntax Snippet</h4>
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="p-4 overflow-x-auto"><code class="language-csharp">// 1. Create a SemaphoreSlim with an initial and max count of 3 "slots".
+SemaphoreSlim semaphore = new SemaphoreSlim(3, 3);
+
+// 2. Wait to acquire a slot
+semaphore.Wait();
+
+try
+{
+    // Critical Section: Up to 3 threads can execute this block concurrently.
+}
+finally
+{
+    // 3. Release the slot, making it available for other waiting threads.
+    semaphore.Release();
+}
+</code></pre>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-semibold mb-3">Real-world use: DB Connection Pooling</h3>
+                                <p>A classic real-world application for a semaphore is managing a database connection pool. Establishing a database connection is an expensive and time-consuming operation. A connection pool pre-creates a set of open connections that can be "checked out" by threads, used, and then "returned" to the pool.</p>
+                                <p>A <span class="font-semibold">SemaphoreSlim</span> is perfect for this. If the pool has 10 connections, you initialize the semaphore with a count of 10. When a thread needs a connection, it calls `Wait()` on the semaphore. If a connection is available, it gets one. If all 10 are in use, the thread blocks until another thread releases its connection and calls `Release()` on the semaphore, making a slot available again. This efficiently limits resource usage and prevents overloading the database server.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="visualization" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">⚙️ Interactive Semaphore Simulation</h2>
+                        <p class="mb-6 text-gray-700">This visualization simulates threads competing for a limited number of resources controlled by a semaphore. The semaphore is initialized with 3 available "slots". Click "Start Simulation" to see threads request access. Threads in green have acquired a slot and are in the critical section, while threads in yellow are waiting.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <div class="chart-container" style="position: relative; height:300px; width:100%; max-width: 700px; margin: auto;">
+                                <canvas id="semaphoreChart"></canvas>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="text-lg font-medium">Available Semaphore Slots: <span id="slotsCount" class="font-bold text-2xl text-[#5e81ac]">3</span></p>
+                            </div>
+                            <div class="flex justify-center space-x-4 mt-4">
+                                <button id="startSimBtn" class="btn">Start Simulation</button>
+                                <button id="resetSimBtn" class="btn bg-gray-500 hover:bg-gray-600">Reset</button>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="practice" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ Coding Practice</h2>
+                        <div class="space-y-8">
+                            <div>
+                                <h3 class="text-xl font-semibold">[Easy] Mutex demo for single-thread access</h3>
+                                <p class="mb-4 text-gray-700">Write a program where multiple threads attempt to increment a shared counter, but use a `Mutex` to ensure that only one thread can access it at a time, preventing a race condition.</p>
+                                <button class="toggle-solution btn text-sm">Show Solution</button>
+                                <div class="solution hidden">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading;
+
+public class MutexDemo
+{
+    private static Mutex mutex = new Mutex();
+    private static int sharedCounter = 0;
+
+    public static void Main(string[] args)
+    {
+        Thread[] threads = new Thread[5];
+        for (int i = 0; i < 5; i++)
+        {
+            threads[i] = new Thread(WorkerThread);
+            threads[i].Name = $"Thread {i + 1}";
+            threads[i].Start();
+        }
+
+        foreach (var t in threads)
+        {
+            t.Join();
+        }
+
+        Console.WriteLine($"Final counter value: {sharedCounter}");
+    }
+
+    private static void WorkerThread()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            Console.WriteLine($"{Thread.CurrentThread.Name} is requesting the mutex.");
+            mutex.WaitOne(); // Wait until it is safe to enter.
+            
+            Console.WriteLine($"{Thread.CurrentThread.Name} has entered the critical section.");
+            
+            int temp = sharedCounter;
+            Thread.Sleep(100); // Simulate work
+            sharedCounter = temp + 1;
+            
+            Console.WriteLine($"{Thread.CurrentThread.Name} is leaving the critical section. Counter: {sharedCounter}");
+            mutex.ReleaseMutex(); // Release the Mutex.
+        }
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold">[Medium] Implement semaphore-controlled print queue</h3>
+                                <p class="mb-4 text-gray-700">Simulate a print queue that can handle two print jobs concurrently. Use a `SemaphoreSlim` to limit the number of "printers" to two. Multiple threads will submit print jobs, but only two can be "printing" at once.</p>
+                                <button class="toggle-solution btn text-sm">Show Solution</button>
+                                <div class="solution hidden">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class PrintQueueSimulator
+{
+    // Initialize semaphore for 2 concurrent printers
+    private static SemaphoreSlim printerSemaphore = new SemaphoreSlim(2, 2);
+
+    public static async Task Main(string[] args)
+    {
+        Task[] printJobs = new Task[10];
+        for (int i = 0; i < 10; i++)
+        {
+            int jobId = i + 1;
+            printJobs[i] = Task.Run(() => PrintDocument(jobId));
+        }
+        await Task.WhenAll(printJobs);
+        Console.WriteLine("All print jobs completed.");
+    }
+
+    private static async Task PrintDocument(int documentId)
+    {
+        Console.WriteLine($"Document {documentId} is waiting to print.");
+        
+        await printerSemaphore.WaitAsync(); // Request a printer
+        
+        try
+        {
+            Console.WriteLine($"--> Document {documentId} is now printing...");
+            await Task.Delay(1000); // Simulate printing time
+            Console.WriteLine($"<-- Document {documentId} has finished printing.");
+        }
+        finally
+        {
+            printerSemaphore.Release(); // Release the printer
+        }
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-semibold">[Hard] Thread pool simulation with SemaphoreSlim</h3>
+                                <p class="mb-4 text-gray-700">Implement a basic thread pool that can execute a fixed number of tasks concurrently. Use a `SemaphoreSlim` to control the degree of parallelism (e.g., 3 concurrent tasks). When a task is submitted, it should wait if the pool is full. When a task completes, it should free up a slot for the next waiting task.</p>
+                                <button class="toggle-solution btn text-sm">Show Solution</button>
+                                <div class="solution hidden">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class CustomThreadPool
+{
+    private readonly SemaphoreSlim _poolSemaphore;
+
+    public CustomThreadPool(int degreeOfParallelism)
+    {
+        // Initial count is the max count
+        _poolSemaphore = new SemaphoreSlim(degreeOfParallelism, degreeOfParallelism);
+    }
+
+    public async Task SubmitTask(Func<Task> task)
+    {
+        // Wait for a slot in the pool to become available
+        await _poolSemaphore.WaitAsync();
+        
+        try
+        {
+            // Execute the task once a slot is acquired
+            await task();
+        }
+        finally
+        {
+            // Release the slot back to the pool
+            _poolSemaphore.Release();
+        }
+    }
+}
+
+public class ThreadPoolSimulation
+{
+    public static async Task Main(string[] args)
+    {
+        var pool = new CustomThreadPool(3); // Pool can run 3 tasks at once
+        var tasks = new List<Task>();
+
+        Console.WriteLine("Submitting 10 tasks to a pool of 3 threads...");
+
+        for (int i = 0; i < 10; i++)
+        {
+            int taskNum = i + 1;
+            tasks.Add(pool.SubmitTask(async () =>
+            {
+                Console.WriteLine($"Task {taskNum} started execution.");
+                await Task.Delay(2000); // Simulate long-running work
+                Console.WriteLine($"Task {taskNum} finished execution.");
+            }));
+        }
+
+        await Task.WhenAll(tasks);
+        Console.WriteLine("All tasks processed by the thread pool.");
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ UML/Schema Task: Sequence Diagram</h2>
+                        <p class="mb-6 text-gray-700">This sequence diagram illustrates multiple threads interacting with a semaphore that has a count of 2. It shows how the first two threads acquire a lock successfully, while the third thread is forced to wait until one of the first two releases its lock.</p>
+                        <div class="p-6 bg-white rounded-lg shadow-lg overflow-x-auto">
+                            <div class="flex space-x-8 min-w-[700px]">
+                                <!-- Lifelines -->
+                                <div class="text-center w-1/4">
+                                    <div class="font-bold p-2 bg-gray-200 rounded">:Thread 1</div>
+                                    <div class="h-96 border-l-2 border-dashed border-gray-400 mx-auto mt-2"></div>
+                                </div>
+                                <div class="text-center w-1/4">
+                                    <div class="font-bold p-2 bg-gray-200 rounded">:Thread 2</div>
+                                    <div class="h-96 border-l-2 border-dashed border-gray-400 mx-auto mt-2"></div>
+                                </div>
+                                <div class="text-center w-1/4">
+                                    <div class="font-bold p-2 bg-gray-200 rounded">:Thread 3</div>
+                                    <div class="h-96 border-l-2 border-dashed border-gray-400 mx-auto mt-2"></div>
+                                </div>
+                                <div class="text-center w-1/4">
+                                    <div class="font-bold p-2 bg-blue-200 rounded">:Semaphore (Count=2)</div>
+                                    <div class="h-96 border-l-2 border-dashed border-blue-400 mx-auto mt-2"></div>
+                                </div>
+                            </div>
+                            <!-- Messages -->
+                            <div class="relative -top-[390px] min-w-[700px]">
+                                <div class="absolute w-full" style="top: 20px;">
+                                    <div class="text-sm text-center">Wait() →</div>
+                                    <div class="h-px bg-black" style="width: 62.5%; margin-left: 12.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 45px;">
+                                    <div class="text-sm text-center">← OK (Count=1)</div>
+                                    <div class="h-px bg-black border-dashed" style="width: 62.5%; margin-left: 12.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 80px;">
+                                    <div class="text-sm text-center">Wait() →</div>
+                                    <div class="h-px bg-black" style="width: 37.5%; margin-left: 37.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 105px;">
+                                    <div class="text-sm text-center">← OK (Count=0)</div>
+                                    <div class="h-px bg-black border-dashed" style="width: 37.5%; margin-left: 37.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 140px;">
+                                    <div class="text-sm text-center text-red-600">Wait() →</div>
+                                    <div class="h-px bg-red-600" style="width: 12.5%; margin-left: 62.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 165px;">
+                                    <div class="text-sm text-center text-red-600">← Block/Wait</div>
+                                    <div class="h-px bg-red-600 border-dashed" style="width: 12.5%; margin-left: 62.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 220px;">
+                                    <div class="text-sm text-center text-green-600">← Release()</div>
+                                    <div class="h-px bg-green-600" style="width: 62.5%; margin-left: 12.5%;"></div>
+                                </div>
+                                 <div class="absolute w-full" style="top: 245px;">
+                                    <div class="text-sm text-center text-green-600">OK (Count=1) →</div>
+                                    <div class="h-px bg-green-600 border-dashed" style="width: 62.5%; margin-left: 12.5%;"></div>
+                                </div>
+                                <div class="absolute w-full" style="top: 270px;">
+                                    <div class="text-sm text-center text-green-600">← Unblock Thread 3</div>
+                                    <div class="h-px bg-green-600 border-dashed" style="width: 12.5%; margin-left: 62.5%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="case-study" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ Case Study: Design Parking Lot</h2>
+                        <p class="mb-2 text-gray-700"><strong>Problem:</strong> Design a parking lot system with multiple entry gates. The parking lot has a fixed number of available slots. Use a semaphore to control access, ensuring that cars (threads) can only enter if a slot is available.</p>
+                        <p class="mb-6 text-gray-700"><strong>Design considerations:</strong>
+                            <ul class="list-disc list-inside space-y-2 mb-4">
+                                <li>The parking lot's capacity is the initial count of the semaphore.</li>
+                                <li>Each car trying to enter represents a thread calling `Wait()` on the semaphore.</li>
+                                <li>If the lot is full, cars must queue at the gates (threads will block).</li>
+                                <li>When a car leaves, it calls `Release()` on the semaphore, freeing up a slot for a waiting car.</li>
+                            </ul>
+                        </p>
+                        <button class="toggle-solution btn text-sm">Show Solution</button>
+                        <div class="solution hidden">
+                            <div class="code-block">
+                                <button class="copy-button">Copy</button>
+                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+public class ParkingLot
+{
+    private readonly SemaphoreSlim _gateSemaphore;
+    private readonly int _capacity;
+
+    public ParkingLot(int capacity)
+    {
+        _capacity = capacity;
+        _gateSemaphore = new SemaphoreSlim(capacity, capacity);
+        Console.WriteLine($"Parking lot initialized with {capacity} slots.");
+    }
+
+    public async Task<bool> TryEnter(int carId)
+    {
+        Console.WriteLine($"Car {carId} is approaching the gate.");
+        // Try to enter immediately, but wait up to 1 second if full.
+        if (await _gateSemaphore.WaitAsync(1000))
+        {
+            Console.WriteLine($"-> Car {carId} entered. Slots remaining: {_capacity - (1 + _gateSemaphore.CurrentCount)}");
+            return true;
+        }
+        else
+        {
+            Console.WriteLine($"Car {carId} turned away. Parking lot is full.");
+            return false;
+        }
+    }
+
+    public void Exit(int carId)
+    {
+        Console.WriteLine($"<- Car {carId} is exiting.");
+        _gateSemaphore.Release();
+        Console.WriteLine($"Slot freed. Slots remaining: {_capacity - _gateSemaphore.CurrentCount}");
+    }
+}
+
+public class ParkingLotSimulation
+{
+    public static async Task Main(string[] args)
+    {
+        var parkingLot = new ParkingLot(5); // 5 available slots
+        var carTasks = new List<Task>();
+
+        for (int i = 1; i <= 15; i++)
+        {
+            int carId = i;
+            carTasks.Add(Task.Run(async () =>
+            {
+                // Stagger car arrivals
+                await Task.Delay(new Random().Next(500, 2000));
+                
+                if (await parkingLot.TryEnter(carId))
+                {
+                    // Stay parked for a random duration
+                    await Task.Delay(new Random().Next(3000, 8000));
+                    parkingLot.Exit(carId);
+                }
+            }));
+        }
+
+        await Task.WhenAll(carTasks);
+        Console.WriteLine("Parking lot simulation finished.");
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="quiz" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">🧠 Knowledge Check Quiz</h2>
+                        <div id="quiz-container" class="space-y-6">
+                            <!-- Question 1 -->
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="font-semibold mb-3">1. When would you choose a `Mutex` over a `lock` in C#?</p>
+                                <div class="space-y-2 quiz-options" data-answer="c">
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="a" class="mr-2">For better performance in single-process applications.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="b" class="mr-2">When you need to lock on value types.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="c" class="mr-2">When you need to synchronize threads across different processes.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="d" class="mr-2">Never, `lock` is always superior.</label>
+                                </div>
+                                <p class="quiz-feedback mt-3 text-sm hidden"></p>
+                            </div>
+                            <!-- Question 2 -->
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="font-semibold mb-3">2. What is the primary purpose of a `SemaphoreSlim`?</p>
+                                <div class="space-y-2 quiz-options" data-answer="b">
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="a" class="mr-2">To ensure only one thread can ever access a resource.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="b" class="mr-2">To limit the number of threads that can access a resource or pool of resources concurrently.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="c" class="mr-2">To make threads run faster by giving them more memory.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="d" class="mr-2">To replace the `Task` class for asynchronous operations.</label>
+                                </div>
+                                <p class="quiz-feedback mt-3 text-sm hidden"></p>
+                            </div>
+                            <!-- Question 3 -->
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <p class="font-semibold mb-3">3. In a database connection pool scenario using `SemaphoreSlim`, what does the semaphore's initial count represent?</p>
+                                <div class="space-y-2 quiz-options" data-answer="a">
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="a" class="mr-2">The total number of available connections in the pool.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="b" class="mr-2">The number of threads waiting for a connection.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="c" class="mr-2">The maximum timeout before a connection is dropped.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="d" class="mr-2">Always 1.</label>
+                                </div>
+                                <p class="quiz-feedback mt-3 text-sm hidden"></p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="challenge" class="mb-16">
+                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">🚀 Self-Assessment Challenge</h2>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-xl font-semibold">Web Crawler Throttling</h3>
+                            <p class="mt-2 mb-4 text-gray-700">Imagine you are building a web crawler that scrapes data from a specific website. To avoid overwhelming the website's server and getting your IP address blocked, you need to limit the number of concurrent HTTP requests your crawler makes. Implement a `RateLimiter` class using `SemaphoreSlim` that ensures no more than 4 HTTP requests are active at any given time. Create a simulation with 20 "pages" to crawl, and have each crawl operation take a random amount of time.</p>
+                            <button class="toggle-solution btn text-sm">Reveal Detailed Solution</button>
+                            <div class="solution hidden">
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+// The RateLimiter class manages concurrent access using a SemaphoreSlim.
+public class RateLimiter
+{
+    private readonly SemaphoreSlim _semaphore;
+
+    // The constructor initializes the semaphore with the maximum degree of concurrency.
+    public RateLimiter(int maxConcurrentRequests)
+    {
+        _semaphore = new SemaphoreSlim(maxConcurrentRequests, maxConcurrentRequests);
+    }
+
+    // This method wraps the execution of a crawling task.
+    // It acquires a permit before running and releases it after.
+    public async Task CrawlPage(Func<Task> crawlAction)
+    {
+        // Asynchronously wait to enter the semaphore. 
+        // If all 4 slots are taken, this task will wait here.
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            // Once a permit is acquired, execute the actual crawl logic.
+            await crawlAction();
+        }
+        finally
+        {
+            // Crucially, release the semaphore permit in a finally block.
+            // This ensures the permit is returned even if the crawlAction throws an exception.
+            _semaphore.Release();
+        }
+    }
+}
+
+public class WebCrawlerSimulation
+{
+    public static async Task Main(string[] args)
+    {
+        // Instantiate the limiter to allow a maximum of 4 concurrent requests.
+        var rateLimiter = new RateLimiter(4);
+        var crawlTasks = new List<Task>();
+        int totalPages = 20;
+
+        Console.WriteLine($"Starting to crawl {totalPages} pages with a limit of 4 concurrent requests...");
+
+        for (int i = 1; i <= totalPages; i++)
+        {
+            string pageUrl = $"http://example.com/page/{i}";
+            
+            // For each page, we submit a crawl task to our rate limiter.
+            // The rate limiter itself will handle the queueing and execution.
+            crawlTasks.Add(rateLimiter.CrawlPage(async () =>
+            {
+                Console.WriteLine($"[START] Crawling {pageUrl}...");
+                
+                // Simulate network latency and page processing time.
+                await Task.Delay(new Random().Next(1000, 3000));
+                
+                Console.WriteLine($"[END]   Finished crawling {pageUrl}.");
+            }));
+        }
+
+        // Wait for all the submitted tasks to complete.
+        await Task.WhenAll(crawlTasks);
+
+        Console.WriteLine("\nWeb crawling simulation complete.");
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </main>
+
+            <!-- Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:pl-8">
+                <nav class="sticky top-24">
+                    <h3 class="font-bold mb-4 text-lg">On This Page</h3>
+                    <ul id="toc" class="space-y-2">
+                        <li><a href="#theory" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ Theory Deep Dive</a></li>
+                        <li><a href="#visualization" class="toc-link block p-2 rounded text-gray-600 hover:text-black">⚙️ Interactive Simulation</a></li>
+                        <li><a href="#practice" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ Coding Practice</a></li>
+                        <li><a href="#uml" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ UML/Schema Task</a></li>
+                        <li><a href="#case-study" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block p-2 rounded text-gray-600 hover:text-black">🧠 Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block p-2 rounded text-gray-600 hover:text-black">🚀 Challenge</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-20 py-8 bg-gray-800 text-white">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2025 Multithreading Mastery. All rights reserved.</p>
+            <p class="text-sm text-gray-400 mt-1">A self-contained learning module.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Solution Toggler
+    const toggleButtons = document.querySelectorAll('.toggle-solution');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const solutionDiv = button.nextElementSibling;
+            const isHidden = solutionDiv.classList.contains('hidden');
+            if (isHidden) {
+                solutionDiv.classList.remove('hidden');
+                button.textContent = 'Hide Solution';
+            } else {
+                solutionDiv.classList.add('hidden');
+                button.textContent = button.textContent.replace('Hide', 'Show');
+            }
+        });
+    });
+
+    // Copy-to-Clipboard Functionality
+    const copyButtons = document.querySelectorAll('.copy-button');
+    copyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const code = button.nextElementSibling.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            });
+        });
+    });
+
+    // Sticky TOC Active State
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('section[id]');
+    
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            const id = entry.target.getAttribute('id');
+            const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                tocLinks.forEach(link => link.classList.remove('active'));
+                tocLink.classList.add('active');
+            }
+        });
+    }, { rootMargin: "-50% 0px -50% 0px", threshold: 0.1 });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+    
+    // Quiz Functionality
+    const quizContainers = document.querySelectorAll('.quiz-options');
+    quizContainers.forEach(container => {
+        const radios = container.querySelectorAll('input[type="radio"]');
+        const correctAnswer = container.getAttribute('data-answer');
+        
+        radios.forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                const selectedValue = event.target.value;
+                const parentLabel = event.target.parentElement;
+                const allLabels = container.querySelectorAll('label');
+                const feedbackEl = container.nextElementSibling;
+
+                allLabels.forEach(label => {
+                    label.classList.remove('correct', 'incorrect');
+                    label.style.pointerEvents = 'none'; // Disable further clicks
+                });
+
+                if (selectedValue === correctAnswer) {
+                    parentLabel.classList.add('correct');
+                    feedbackEl.textContent = "Correct! Well done.";
+                    feedbackEl.className = 'quiz-feedback mt-3 text-sm text-green-700 block';
+                } else {
+                    parentLabel.classList.add('incorrect');
+                    const correctLabel = container.querySelector(`input[value="${correctAnswer}"]`).parentElement;
+                    correctLabel.classList.add('correct');
+                    feedbackEl.textContent = `Not quite. The correct answer highlights why Mutex is essential for inter-process communication.`;
+                    feedbackEl.className = 'quiz-feedback mt-3 text-sm text-red-700 block';
+                }
+            });
+        });
+    });
+
+    // Semaphore Visualization
+    const ctx = document.getElementById('semaphoreChart').getContext('2d');
+    const slotsCountEl = document.getElementById('slotsCount');
+    const startSimBtn = document.getElementById('startSimBtn');
+    const resetSimBtn = document.getElementById('resetSimBtn');
+    
+    const colors = {
+        idle: 'rgba(201, 203, 207, 0.6)', // gray
+        waiting: 'rgba(251, 191, 36, 0.8)', // yellow
+        active: 'rgba(52, 211, 153, 0.8)', // green
+    };
+    const borderColors = {
+        idle: 'rgba(201, 203, 207, 1)',
+        waiting: 'rgba(251, 191, 36, 1)',
+        active: 'rgba(52, 211, 153, 1)',
+    };
+    
+    let chart;
+    let simulationInterval;
+    const TOTAL_THREADS = 10;
+    const MAX_ACTIVE = 3;
+    let threads = [];
+    let activeSlots = 0;
+
+    function initializeSimulationState() {
+        threads = Array.from({ length: TOTAL_THREADS }, (_, i) => ({ id: i, state: 'idle' }));
+        activeSlots = 0;
+        slotsCountEl.textContent = MAX_ACTIVE;
+        if (simulationInterval) clearInterval(simulationInterval);
+    }
+
+    function createChart() {
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: threads.map(t => `Thread ${t.id + 1}`),
+                datasets: [{
+                    label: 'Thread State',
+                    data: Array(TOTAL_THREADS).fill(10),
+                    backgroundColor: threads.map(t => colors[t.state]),
+                    borderColor: threads.map(t => borderColors[t.state]),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `State: ${threads[context.dataIndex].state}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { display: false, max: 12 },
+                    x: { ticks: { font: { size: 10 } } }
+                },
+                animation: { duration: 500 }
+            }
+        });
+    }
+
+    function updateSimulation() {
+        // 1. Try to release some active threads
+        threads.forEach(thread => {
+            if (thread.state === 'active' && Math.random() < 0.2) { // 20% chance to release
+                thread.state = 'idle';
+                activeSlots--;
+            }
+        });
+
+        // 2. Try to activate some waiting threads if slots are available
+        threads.forEach(thread => {
+            if (activeSlots < MAX_ACTIVE && thread.state === 'waiting') {
+                thread.state = 'active';
+                activeSlots++;
+            }
+        });
+        
+        // 3. Have idle threads start waiting
+        threads.forEach(thread => {
+            if (thread.state === 'idle' && Math.random() < 0.3) { // 30% chance to start waiting
+                thread.state = 'waiting';
+            }
+        });
+
+        // Update UI
+        slotsCountEl.textContent = MAX_ACTIVE - activeSlots;
+        chart.data.datasets[0].backgroundColor = threads.map(t => colors[t.state]);
+        chart.data.datasets[0].borderColor = threads.map(t => borderColors[t.state]);
+        chart.update();
+    }
+
+    startSimBtn.addEventListener('click', () => {
+        if (simulationInterval) clearInterval(simulationInterval);
+        initializeSimulationState();
+        createChart();
+        simulationInterval = setInterval(updateSimulation, 1200);
+    });
+
+    resetSimBtn.addEventListener('click', () => {
+        if (simulationInterval) clearInterval(simulationInterval);
+        initializeSimulationState();
+        createChart();
+    });
+
+    // Initial setup
+    initializeSimulationState();
+    createChart();
+});
+</script>
+
+</body>
+</html>
