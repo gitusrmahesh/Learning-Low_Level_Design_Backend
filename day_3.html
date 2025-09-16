@@ -112,50 +112,21 @@
     </style>
 </head>
 <body class="w-full">
-    <!-- Gap for custom header -->
-    <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-center text-gray-500">
-        [ Your Custom Header Goes Here ]
-    </div>
+    <header class="text-center mb-10">
+        <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+        <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+    </header>
 
     <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row lg:space-x-8 py-8">
             
-            <!-- Left Column: Sticky Table of Contents -->
-            <aside class="w-full lg:w-1/4 lg:sticky top-8 self-start mb-8 lg:mb-0">
-                <div class="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                    <h3 class="text-lg font-semibold text-[#8D5B4C] mb-4">Lesson Contents</h3>
-                    <nav id="toc-nav">
-                        <ul class="space-y-2">
-                            <li><a href="#introduction" class="toc-link block text-gray-600 hover:text-[#8D5B4C] pl-2">Introduction</a></li>
-                            <li>
-                                <a href="#theory" class="toc-link block font-medium text-gray-800 pl-2">✅ Theory Topics</a>
-                                <ul class="pl-4 mt-2 space-y-2 text-sm">
-                                    <li><a href="#theory-inheritance" class="toc-link block text-gray-600 pl-2">Base & Derived Classes</a></li>
-                                    <li><a href="#theory-abstract-vs-interface" class="toc-link block text-gray-600 pl-2">Abstract Class vs. Interface</a></li>
-                                    <li><a href="#theory-overriding" class="toc-link block text-gray-600 pl-2">Method Overriding</a></li>
-                                    <li><a href="#theory-polymorphism" class="toc-link block text-gray-600 pl-2">Polymorphism in Practice</a></li>
-                                </ul>
-                            </li>
-                            <li>
-                                <a href="#practice" class="toc-link block font-medium text-gray-800 pl-2">💻 Coding Practice</a>
-                                <ul class="pl-4 mt-2 space-y-2 text-sm">
-                                    <li><a href="#practice-shape" class="toc-link block text-gray-600 pl-2">Base: Shape Hierarchy</a></li>
-                                    <li><a href="#practice-animal" class="toc-link block text-gray-600 pl-2">Easy: Animal Hierarchy</a></li>
-                                    <li><a href="#practice-payment" class="toc-link block text-gray-600 pl-2">Medium: Payment Processor</a></li>
-                                    <li><a href="#practice-notification" class="toc-link block text-gray-600 pl-2">Hard: Notification System</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#uml" class="toc-link block font-medium text-gray-800 pl-2">🎨 UML/Schema Task</a></li>
-                            <li><a href="#case-study" class="toc-link block font-medium text-gray-800 pl-2">🚗 Case Study: Ride-Hailing</a></li>
-                            <li><a href="#quiz" class="toc-link block font-medium text-gray-800 pl-2">🧠 Knowledge Check</a></li>
-                            <li><a href="#challenge" class="toc-link block font-medium text-gray-800 pl-2">🚀 Self-Assessment Challenge</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
-
             <!-- Right Column: Main Content -->
             <main class="w-full lg:w-3/4">
+                <a href="lld_homepage.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Return to Homepage
+                </a>
                 
                 <!-- Introduction -->
                 <section id="introduction" class="section-card">
@@ -1051,14 +1022,46 @@ public class Program
                     </div>
                 </section>
             </main>
+            <!-- Left Column: Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:sticky top-8 self-start mb-8 lg:mb-0">
+                <div class="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-semibold text-[#8D5B4C] mb-4">Lesson Contents</h3>
+                    <nav id="toc-nav">
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="toc-link block text-gray-600 hover:text-[#8D5B4C] pl-2">Introduction</a></li>
+                            <li>
+                                <a href="#theory" class="toc-link block font-medium text-gray-800 pl-2">✅ Theory Topics</a>
+                                <ul class="pl-4 mt-2 space-y-2 text-sm">
+                                    <li><a href="#theory-inheritance" class="toc-link block text-gray-600 pl-2">Base & Derived Classes</a></li>
+                                    <li><a href="#theory-abstract-vs-interface" class="toc-link block text-gray-600 pl-2">Abstract Class vs. Interface</a></li>
+                                    <li><a href="#theory-overriding" class="toc-link block text-gray-600 pl-2">Method Overriding</a></li>
+                                    <li><a href="#theory-polymorphism" class="toc-link block text-gray-600 pl-2">Polymorphism in Practice</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="#practice" class="toc-link block font-medium text-gray-800 pl-2">💻 Coding Practice</a>
+                                <ul class="pl-4 mt-2 space-y-2 text-sm">
+                                    <li><a href="#practice-shape" class="toc-link block text-gray-600 pl-2">Base: Shape Hierarchy</a></li>
+                                    <li><a href="#practice-animal" class="toc-link block text-gray-600 pl-2">Easy: Animal Hierarchy</a></li>
+                                    <li><a href="#practice-payment" class="toc-link block text-gray-600 pl-2">Medium: Payment Processor</a></li>
+                                    <li><a href="#practice-notification" class="toc-link block text-gray-600 pl-2">Hard: Notification System</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#uml" class="toc-link block font-medium text-gray-800 pl-2">🎨 UML/Schema Task</a></li>
+                            <li><a href="#case-study" class="toc-link block font-medium text-gray-800 pl-2">🚗 Case Study: Ride-Hailing</a></li>
+                            <li><a href="#quiz" class="toc-link block font-medium text-gray-800 pl-2">🧠 Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block font-medium text-gray-800 pl-2">🚀 Self-Assessment Challenge</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
         </div>
     </div>
     
-    <!-- Consistent Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12">
-        <div class="max-w-screen-xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-            <p>&copy; 2025 OOP Foundations Learning Module. All rights reserved.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
     <script>

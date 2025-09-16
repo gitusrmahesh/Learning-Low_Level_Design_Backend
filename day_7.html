@@ -60,28 +60,20 @@
     </style>
 </head>
 <body class="bg-slate-50">
+    <header class="text-center mb-10">
+        <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+        <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+    </header>
 
     <div class="max-w-screen-xl mx-auto">
         <div class="flex flex-col md:flex-row">
-            <!-- Sidebar Navigation -->
-            <aside class="w-full md:w-64 lg:w-72 bg-white md:h-screen md:sticky md:top-0 border-b md:border-b-0 md:border-r border-slate-200">
-                <div class="p-4">
-                    <h2 class="text-lg font-bold text-indigo-600">Architect's Toolkit</h2>
-                    <p class="text-sm text-slate-500">Static Classes & Records</p>
-                </div>
-                <nav id="sidebar-nav" class="flex flex-col px-4 pb-4">
-                    <a href="#section1" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">1. Static Classes</a>
-                    <a href="#section2" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">2. C# Records</a>
-                    <a href="#section3" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">3. Advanced Topics</a>
-                    <a href="#section4" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">4. Coding Practice</a>
-                    <a href="#section5" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">5. UML Modeling</a>
-                    <a href="#section6" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">6. Case Study</a>
-                    <a href="#section7" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">7. Knowledge Assessment</a>
-                </nav>
-            </aside>
-
             <!-- Main Content -->
             <main class="flex-1 p-6 sm:p-8 lg:p-12">
+                <a href="lld_homepage.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Return to Homepage
+                </a>
                 <header class="mb-12">
                     <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">OOP Foundations, Day 7: Static Classes & Records</h1>
                     <p class="mt-2 text-lg text-slate-600">An interactive guide to the architect's toolkit for utility and data patterns in C#.</p>
@@ -343,8 +335,29 @@ public void HandleRequest()
 
                 </div>
             </main>
+            <!-- Sidebar Navigation -->
+            <aside class="w-full md:w-64 lg:w-72 bg-white md:h-screen md:sticky md:top-0 border-b md:border-b-0 md:border-r border-slate-200">
+                <div class="p-4">
+                    <h2 class="text-lg font-bold text-indigo-600">Architect's Toolkit</h2>
+                    <p class="text-sm text-slate-500">Static Classes & Records</p>
+                </div>
+                <nav id="sidebar-nav" class="flex flex-col px-4 pb-4">
+                    <a href="#section1" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">1. Static Classes</a>
+                    <a href="#section2" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">2. C# Records</a>
+                    <a href="#section3" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">3. Advanced Topics</a>
+                    <a href="#section4" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">4. Coding Practice</a>
+                    <a href="#section5" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">5. UML Modeling</a>
+                    <a href="#section6" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">6. Case Study</a>
+                    <a href="#section7" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">7. Knowledge Assessment</a>
+                </nav>
+            </aside>
         </div>
     </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

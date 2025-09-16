@@ -9,15 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: "Crisp & Clean" - A bright white background with dark sienna text for maximum contrast and readability, accented with teal and sienna for key elements. -->
-    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning ergonomics. A sticky Table of Contents (ToC) on the left provides constant, easy navigation, allowing users to jump between sections or track their progress. The main content area on the right flows logically from theory to practice, mimicking a well-structured textbook chapter. This design supports both linear learning and quick reference, making the complex information highly consumable and user-friendly. Key interactions include copy-to-clipboard for code, an interactive quiz for knowledge reinforcement, and toggleable solutions for self-assessment. -->
-    <!-- Visualization & Content Choices: 
-        - Report Info: UML Diagram for IPaymentProcessor. Goal: Organize/Structure. Viz/Presentation: HTML/CSS diagram. Interaction: Static visual reference. Justification: Avoids external libraries/SVG, directly renders the required structural relationship. Method: Styled divs.
-        - Report Info: Factory Pattern concept. Goal: Explain a process. Viz/Presentation: Bar Chart. Interaction: Hover tooltips. Justification: A Chart.js bar chart visually represents the Factory "delegating" tasks to different classes, making an abstract concept more concrete. Library: Chart.js.
-        - Report Info: Interface implementation concept. Goal: Explain a relationship. Viz/Presentation: Interactive Canvas Diagram. Interaction: Animated elements. Justification: A simple animation dynamically shows how different classes can "plug into" a common interface, illustrating polymorphism and contracts visually. Method: Vanilla JS Canvas API.
-        - Report Info: Coding problems and solutions. Goal: Inform/Educate. Viz/Presentation: Styled code blocks. Interaction: Copy-to-clipboard button. Justification: Essential for a coding tutorial, improves user experience by simplifying code transfer. Method: Vanilla JS.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -53,8 +44,6 @@
             font-family: 'Roboto Mono', monospace;
             font-size: 0.9em;
         }
-
-        /* Syntax Highlighting Tokens */
         .token.keyword { color: #569CD6; }
         .token.type { color: #4EC9B0; }
         .token.string { color: #CE9178; }
@@ -63,8 +52,6 @@
         .token.number { color: #B5CEA8; }
         .token.punctuation { color: #D4D4D4; }
         .token.variable { color: #9CDCFE; }
-
-        /* Button Styles */
         .btn {
             display: inline-block;
             font-weight: 600;
@@ -86,7 +73,7 @@
             position: absolute;
             top: 0.75rem;
             right: 0.75rem;
-            background-color: #4A5568; /* gray-600 */
+            background-color: #4A5568;
             color: white;
             border: none;
             padding: 0.25rem 0.5rem;
@@ -98,10 +85,8 @@
             opacity: 1;
         }
         .copy-btn:hover {
-            background-color: #2D3748; /* gray-800 */
+            background-color: #2D3748;
         }
-
-        /* TOC Styles */
         .toc-link {
             transition: all 0.2s ease-in-out;
             border-left: 2px solid transparent;
@@ -115,8 +100,6 @@
             border-left-color: #C06A47;
             font-weight: 700;
         }
-
-        /* General Prose & Layout */
         .prose-custom { max-width: 80ch; }
         .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
         .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
@@ -127,12 +110,9 @@
             padding: 1rem;
             border-radius: 0.25rem;
         }
-        
-        /* Quiz Styles */
         .quiz-option { transition: background-color 0.2s; }
         .quiz-option.correct { background-color: #C6F6D5; border-color: #38A169; }
         .quiz-option.incorrect { background-color: #FED7D7; border-color: #E53E3E; }
-        
         .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
         .bg-white { background-color: #FFFFFF; }
         .border, .border-t { border-color: #e5e7eb; }
@@ -140,18 +120,38 @@
 </head>
 <body class="antialiased">
 
-    <!-- Custom Header Placeholder -->
-    <div id="custom-header-placeholder" class="h-16"></div>
+    <!-- Header -->
+    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div class="text-2xl font-bold text-sienna-800">
+                    <a href="lld_homepage.html">OOP Foundations</a>
+                </div>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="day_1.html" class="text-gray-600 hover:text-teal-600 transition">Day 1</a>
+                    <a href="day_2.html" class="text-gray-600 hover:text-teal-600 transition">Day 2</a>
+                    <a href="day_3.html" class="text-gray-600 hover:text-teal-600 transition">Day 3</a>
+                    <a href="day_4.html" class="text-gray-600 hover:text-teal-600 transition">Day 4</a>
+                    <a href="day_5.html" class="text-gray-600 hover:text-teal-600 transition">Day 5</a>
+                    <a href="day_6.html" class="font-bold text-teal-600">Day 6</a>
+                    <a href="day_7.html" class="text-gray-600 hover:text-teal-600 transition">Day 7</a>
+                </nav>
+                <div class="hidden md:flex">
+                    <a href="lld_homepage.html" class="btn btn-primary">Return to Homepage</a>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <header class="py-8 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">OOP Foundations</h1>
-            <p class="mt-4 text-xl text-gray-600">Day 6: Interfaces & Partial Classes</p>
-        </header>
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">Day 6: Interfaces & Partial Classes</h1>
+            <p class="mt-4 text-xl text-gray-600">Exploring contracts and code organization in C# for building flexible and maintainable systems.</p>
+        </div>
 
-        <div class="flex flex-col lg:flex-row lg:space-x-12">
+        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
             <!-- Sticky Table of Contents -->
-            <aside class="w-full lg:w-1/4 lg:sticky lg:top-8 self-start mb-12 lg:mb-0">
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
                 <div class="p-4 rounded-lg bg-white shadow-sm border">
                     <h3 class="text-lg font-semibold mb-4">On This Page</h3>
                     <nav id="toc-nav" class="flex flex-col space-y-2">
@@ -166,7 +166,7 @@
             </aside>
 
             <!-- Main Content -->
-            <main class="w-full lg:w-3/4 prose-custom">
+            <div class="w-full lg:w-3/4 prose-custom">
                 <section id="theory" class="scroll-mt-20">
                     <h2 class="text-3xl font-bold border-b pb-2">✅ Theory Topics</h2>
                     <p>Today, we dive into two powerful C# features that promote flexible and maintainable code: Interfaces and Partial Classes. Interfaces define contracts that classes must adhere to, enabling polymorphism and decoupling. Partial classes allow a single class definition to be split across multiple files, which is invaluable for code organization and working with auto-generated code.</p>
@@ -735,14 +735,17 @@
                         </div>
                     </div>
                 </section>
-            </main>
+            </div>
         </div>
-    </div>
+    </main>
 
     <footer class="mt-16 py-8 bg-white border-t">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-            <p>&copy; 2025 OOP Foundations. All Rights Reserved.</p>
-            <p class="text-sm mt-1">A self-contained learning module.</p>
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex justify-center mb-4">
+                <a href="lld_homepage.html" class="btn btn-primary">Return to Homepage</a>
+            </div>
+            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
+            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
         </div>
     </footer>
 
@@ -1057,4 +1060,3 @@
     </script>
 </body>
 </html>
-

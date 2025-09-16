@@ -74,24 +74,20 @@
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
-    <!-- Chosen Palette: "Academic Blue & Slate" -->
-    <!-- Application Structure Plan: A two-column educational document layout was chosen for optimal learning flow. A sticky Table of Contents (TOC) on the left provides persistent, easy navigation, allowing users to jump between complex topics without losing their place. The main content area on the right presents information sequentially, using cards, call-outs, and interactive elements (code copying, quizzes) to break down information into digestible chunks. This structure is superior to a dashboard because the content is narrative and meant to be consumed in a structured, though not strictly linear, order. User interaction is focused on learning and reinforcement rather than data exploration. -->
-    <!-- Visualization & Content Choices: Report Info: C# coding concepts. Goal: Educate developers. Presentation: The lesson uses formatted text, tables for comparison, and highlighted code blocks for practical examples. Interaction: Copy-to-clipboard buttons on code blocks reduce friction. An interactive quiz provides immediate feedback for knowledge retention. Justification: This multi-faceted approach caters to different learning styles—theoretical (text), comparative (tables), practical (code), and kinesthetic (quiz interaction). Library/Method: Vanilla JS for all interactivity and Prism.js for code syntax highlighting, which is crucial for readability. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <header class="text-center mb-10">
+        <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+        <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+    </header>
 
     <div class="container mx-auto px-4 py-8">
         <div class="lg:flex lg:space-x-8">
             
-            <aside class="w-full lg:w-1/4 mb-8 lg:mb-0">
-                <div class="sticky top-8">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">On this page</h3>
-                    <nav id="toc" class="flex flex-col space-y-2">
-                    </nav>
-                </div>
-            </aside>
-
             <main class="w-full lg:w-3/4">
-                <div id="header-gap" class="h-16"></div>
+                <a href="lld_homepage.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Return to Homepage
+                </a>
 
                 <article class="prose max-w-none">
                     <section id="introduction" class="scroll-mt-20 space-y-4">
@@ -566,6 +562,13 @@ public class Program
                 </article>
 
             </main>
+            <aside class="w-full lg:w-1/4 mb-8 lg:mb-0">
+                <div class="sticky top-8">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">On this page</h3>
+                    <nav id="toc" class="flex flex-col space-y-2">
+                    </nav>
+                </div>
+            </aside>
         </div>
     </div>
     
@@ -585,11 +588,10 @@ public class Program
     </div>
 
 
-    <footer class="bg-gray-800 text-white mt-16">
-        <div class="container mx-auto px-4 py-6 text-center">
-            <p>&copy; 2025 OOP Foundations. All rights reserved.</p>
-            <p>A Self-Contained Learning Module</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
