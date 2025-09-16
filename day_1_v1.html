@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 1: Encapsulation & Abstraction</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .problem-tag { font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-block; }
+        .code-block { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.875rem; overflow-x: auto; position: relative; }
+        .code-block .keyword { color: #93c5fd; }
+        .code-block .type { color: #86efac; }
+        .code-block .comment { color: #9ca3af; }
+        .code-block .string { color: #fcd34d; }
+        .copy-button { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #334155; color: #9ca3af; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
+        .copy-button:hover { background-color: #475569; }
+        .answer-toggle { cursor: pointer; color: #0d9488; font-weight: 600; }
+        .answer-content { display: none; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-10">
+            <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+            <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+        </header>
+        
+        <main class="max-w-6xl mx-auto">
+            <div class="mb-8">
+                <a href="roadmap.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Roadmap
+                </a>
+                <h1 class="text-4xl font-extrabold text-slate-800 mt-4 tracking-tight">Day 1: Introduction to OOP: Encapsulation & Abstraction</h1>
+                <p class="mt-2 text-lg text-slate-500">Week 1: OOP Foundations</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Main Content -->
+                <div class="w-full lg:w-3/4 space-y-8">
+                     <section id="theory" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                        <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#128218; Theory Topics</h2>
+                        <div class="space-y-6 pt-2 text-slate-700">
+                           <div>
+                                <h3 class="font-semibold text-lg">1. Objects and Classes in C#</h3>
+                                <p class="mt-1">In Object-Oriented Programming (OOP), a **class** is a blueprint or template for creating objects. It defines a set of properties (data members) and methods (member functions) that the objects of that class will have. An **object** is a real-world entity and an instance of a class. For example, if `Dog` is a class, then a specific dog named "Buddy" would be an object of the `Dog` class.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">2. Access Modifiers & Interactive Visualizer</h3>
+                                <p class="mt-1">Access modifiers control the visibility or accessibility of classes and their members. Use the buttons below to see how they work.</p>
+                                <div class="mt-4 p-4 border rounded-lg bg-slate-50">
+                                    <div class="flex flex-wrap gap-2 mb-4">
+                                        <button onclick="showAccessInfo('public')" class="bg-blue-500 text-white px-3 py-1 rounded-md text-sm">public</button>
+                                        <button onclick="showAccessInfo('private')" class="bg-red-500 text-white px-3 py-1 rounded-md text-sm">private</button>
+                                        <button onclick="showAccessInfo('protected')" class="bg-amber-500 text-white px-3 py-1 rounded-md text-sm">protected</button>
+                                        <button onclick="showAccessInfo('internal')" class="bg-indigo-500 text-white px-3 py-1 rounded-md text-sm">internal</button>
+                                    </div>
+                                    <div id="access-info-box" class="p-4 bg-white rounded shadow-inner min-h-[50px]">Select a modifier to see its description.</div>
+                                </div>
+                            </div>
+                             <div>
+                                <h3 class="font-semibold text-lg">3. Encapsulation (Data Hiding)</h3>
+                                <p class="mt-1">Encapsulation is the principle of bundling an object's data (fields/properties) and the methods that operate on that data into a single unit (the class). It's about hiding the internal state and controlling access through public methods. The primary mechanism for this is using the `private` access modifier on fields.</p>
+                                 <p class="mt-2">**Analogy:** The internal mechanics of a watch are hidden. You don't interact with the gears directly. You use the public interface (the crown) to set the time. The watch case **encapsulates** the complex internal workings.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">4. Abstraction (Complexity Hiding)</h3>
+                                <p class="mt-1">Abstraction is the principle of hiding complex implementation details and exposing only the essential, high-level features of an object. It focuses on **what** an object does, not **how** it does it. This is achieved in C# primarily through `abstract` classes and `interfaces`.</p>
+                                <p class="mt-2">**Analogy:** When you drive a car, you interact with a simple interface: a steering wheel, pedals, and a gear stick. This is the **abstraction**. You don't need to know about the fuel injection system, the engine timing, or the transmission logic to drive. The complexity is hidden.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg">Key Comparison: Encapsulation vs. Abstraction</h3>
+                                <table class="w-full text-left border-collapse mt-2">
+                                    <thead>
+                                        <tr class="bg-slate-100">
+                                            <th class="border p-2">Aspect</th>
+                                            <th class="border p-2">Encapsulation</th>
+                                            <th class="border p-2">Abstraction</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border p-2 font-semibold">Main Goal</td>
+                                            <td class="border p-2">Data Hiding (protecting the state)</td>
+                                            <td class="border p-2">Complexity Hiding (simplifying the interface)</td>
+                                        </tr>
+                                         <tr>
+                                            <td class="border p-2 font-semibold">Focus</td>
+                                            <td class="border p-2">Implementation Level</td>
+                                            <td class="border p-2">Design Level</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border p-2 font-semibold">How it's achieved</td>
+                                            <td class="border p-2">Using `private` access modifiers</td>
+                                            <td class="border p-2">Using `abstract` classes and `interfaces`</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                     <section id="practice" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                        <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#128187; Coding Practice</h2>
+                        <div class="space-y-6 pt-2">
+                            <div>
+                                <p class="text-slate-600 pt-1 mb-4 font-semibold">1. Encapsulation: Implement a `Book` class.</p>
+                                <div class="code-block" id="code-practice-1">
+                                    <button class="copy-button" onclick="copyCode('code-practice-1')">Copy</button>
+<pre><code><span class="keyword">using</span> System;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Book</span>
+{
+    <span class="keyword">public</span> <span class="type">string</span> Title { <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="type">string</span> Author { <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; }
+    <span class="keyword">private</span> <span class="type">decimal</span> _price;
+
+    <span class="keyword">public</span> <span class="type">Book</span>(<span class="type">string</span> title, <span class="type">string</span> author, <span class="type">decimal</span> price)
+    {
+        Title = title; Author = author;
+        _price = price > 0 ? price : 0;
+    }
+    <span class="keyword">public</span> <span class="type">decimal</span> GetPrice() => _price;
+    <span class="keyword">public</span> <span class="keyword">void</span> ApplyDiscount(<span class="type">decimal</span> p) => _price *= (1 - p);
+}
+</code></pre>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-slate-600 pt-1 mb-4 font-semibold">2. Abstraction: Implement a `Vehicle` abstraction.</p>
+                                 <div class="code-block" id="code-practice-2">
+                                    <button class="copy-button" onclick="copyCode('code-practice-2')">Copy</button>
+<pre><code><span class="keyword">using</span> System;
+
+<span class="comment">// Abstract class defines the "what" (a vehicle must be able to start)</span>
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">Vehicle</span>
+{
+    <span class="keyword">public</span> <span class="type">int</span> Year { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> StartEngine(); <span class="comment">// No implementation here</span>
+}
+
+<span class="comment">// Concrete class defines the "how"</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Car</span> : <span class="type">Vehicle</span>
+{
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="keyword">void</span> StartEngine()
+    {
+        Console.WriteLine(<span class="string">"Car engine roars to life!"</span>);
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="problems" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                        <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#128221; Problems & Solutions</h2>
+                        <div class="pt-2 space-y-6">
+                           <div>
+                                <div class="flex items-start mb-2"><span class="problem-tag mr-3 bg-green-100 text-green-700">Easy</span><p class="text-slate-600 flex-1 font-semibold">Implement a Stack using an array (LIFO - Last-In, First-Out).</p></div>
+                                <div class="code-block" id="code-problem-1">
+                                    <button class="copy-button" onclick="copyCode('code-problem-1')">Copy</button>
+<pre><code><span class="keyword">using</span> System;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ArrayStack</span>
+{
+    <span class="keyword">private</span> <span class="type">int</span>[] _items;
+    <span class="keyword">private</span> <span class="type">int</span> _top;
+
+    <span class="keyword">public</span> <span class="type">ArrayStack</span>(<span class="type">int</span> capacity)
+    {
+        _items = <span class="keyword">new</span> <span class="type">int</span>[capacity];
+        _top = -1; <span class="comment">// Stack is initially empty</span>
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> Push(<span class="type">int</span> item)
+    {
+        <span class="keyword">if</span> (_top == _items.Length - 1)
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">StackOverflowException</span>(<span class="string">"Stack is full."</span>);
+        _items[++_top] = item;
+    }
+
+    <span class="keyword">public</span> <span class="type">int</span> Pop()
+    {
+        <span class="keyword">if</span> (IsEmpty())
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">InvalidOperationException</span>(<span class="string">"Stack is empty."</span>);
+        <span class="keyword">return</span> _items[_top--];
+    }
+
+    <span class="keyword">public</span> <span class="type">int</span> Peek()
+    {
+        <span class="keyword">if</span> (IsEmpty())
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">InvalidOperationException</span>(<span class="string">"Stack is empty."</span>);
+        <span class="keyword">return</span> _items[_top];
+    }
+
+    <span class="keyword">public</span> <span class="type">bool</span> IsEmpty() => _top == -1;
+}
+</code></pre>
+                                </div>
+                            </div>
+                             <div>
+                                <div class="flex items-start mb-2"><span class="problem-tag mr-3 bg-yellow-100 text-yellow-700">Medium</span><p class="text-slate-600 flex-1 font-semibold">Implement a Queue using an array with O(1) enqueue/dequeue (FIFO - First-In, First-Out).</p></div>
+                                <p class="text-sm text-slate-500 mb-2">**Approach:** To achieve O(1) for both enqueue and dequeue with an array, we must use a circular array. We maintain two pointers, `head` and `tail`. When `tail` reaches the end of the array, it wraps around to the beginning. This avoids the O(n) cost of shifting all elements on every dequeue.</p>
+                                <div class="code-block" id="code-problem-2">
+                                    <button class="copy-button" onclick="copyCode('code-problem-2')">Copy</button>
+<pre><code><span class="keyword">using</span> System;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">CircularQueue</span>
+{
+    <span class="keyword">private</span> <span class="type">int</span>[] _items;
+    <span class="keyword">private</span> <span class="type">int</span> _head = 0;
+    <span class="keyword">private</span> <span class="type">int</span> _tail = 0;
+    <span class="keyword">private</span> <span class="type">int</span> _count = 0;
+
+    <span class="keyword">public</span> <span class="type">CircularQueue</span>(<span class="type">int</span> capacity)
+    {
+        _items = <span class="keyword">new</span> <span class="type">int</span>[capacity];
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> Enqueue(<span class="type">int</span> item)
+    {
+        <span class="keyword">if</span> (_count == _items.Length)
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">InvalidOperationException</span>(<span class="string">"Queue is full."</span>);
+        _items[_tail] = item;
+        _tail = (_tail + 1) % _items.Length; <span class="comment">// Wrap around</span>
+        _count++;
+    }
+
+    <span class="keyword">public</span> <span class="type">int</span> Dequeue()
+    {
+        <span class="keyword">if</span> (_count == 0)
+            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">InvalidOperationException</span>(<span class="string">"Queue is empty."</span>);
+        <span class="type">int</span> item = _items[_head];
+        _items[_head] = <span class="keyword">default</span>; <span class="comment">// Clear the dequeued slot</span>
+        _head = (_head + 1) % _items.Length; <span class="comment">// Wrap around</span>
+        _count--;
+        <span class="keyword">return</span> item;
+    }
+    
+    <span class="keyword">public</span> <span class="type">int</span> Count => _count;
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section id="uml" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                        <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#128443; UML / Schema Task</h2>
+                        <div class="pt-2 space-y-4">
+                           <p class="text-slate-600 pt-1 mb-2 font-semibold">Class diagram for a Library Management system.</p>
+                            <p class="text-slate-600 mb-4">UML (Unified Modeling Language) is a standard way to visualize the design of a system. This diagram shows the relationships between classes.</p>
+                            <div class="code-block">
+<pre><code>[Book]
+- ISBN: string
+- Title: string
+- Author: string
+
+[Member]
+- MemberId: int
+- Name: string
++ BorrowBook(Book)
++ ReturnBook(Book)
+
+[Loan]
+- LoanDate: Date
+- DueDate: Date
++ CalculateFine()
+
+Relationships:
+(Member) 1 -- 0..* (Loan) : A Member can have many Loans.
+(Book) 1 -- 1 (Loan) : Each Loan is for one specific Book.
+</code></pre>
+                            </div>
+                             <p class="text-slate-600 mt-4">**Explanation:** This design shows three classes. The lines indicate **associations**. A `Member` can have zero or many (`0..*`) `Loan`s, but each `Loan` belongs to exactly one `Member`. Similarly, each `Loan` is for exactly one `Book`. This structure is the basis for tracking who has borrowed which book and when it's due.</p>
+                        </div>
+                    </section>
+                    <section id="casestudy" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                         <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#128193; Case Study Analysis</h2>
+                         <div class="pt-2 space-y-4">
+                            <div>
+                                <p class="font-semibold text-slate-700 text-lg">URL Shortener: First Draft</p>
+                                <p class="text-slate-600">A URL shortener is a classic LLD problem. The goal is to take a long URL and generate a unique, much shorter alias for it.</p>
+                             </div>
+                             <div>
+                                <h3 class="font-semibold">Core Requirements</h3>
+                                 <ul class="list-disc list-inside space-y-1 text-slate-600">
+                                     <li>**Functional:** Shorten a long URL to a short code. Redirect from a short code to the original long URL.</li>
+                                     <li>**Non-Functional:** High availability, low latency on redirects, scalability.</li>
+                                 </ul>
+                             </div>
+                             <div>
+                                <h3 class="font-semibold">Design Choice: Hashing vs. Base62</h3>
+                                <p class="text-slate-600">While hashing (like MD5) can generate a unique code, it's long and can have collisions. A better approach is **Base62 encoding**. We can use a counter (like a database primary key). For each new URL, we increment the counter and convert its decimal value to a Base62 string (`[a-zA-Z0-9]`). This guarantees a short, unique, human-readable code with no collisions.</p>
+                             </div>
+                             <div>
+                                <h3 class="font-semibold">API Design</h3>
+                                 <ul class="list-disc list-inside space-y-1 text-slate-600 font-mono text-sm">
+                                     <li>`POST /api/shorten` - Body: `{ "longUrl": "..." }`, Returns: `{ "shortUrl": "..." }`</li>
+                                     <li>`GET /{shortCode}` - Redirects to the original long URL with a 302 Found status.</li>
+                                 </ul>
+                             </div>
+                         </div>
+                    </section>
+                    <section id="quiz" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                        <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#10067; Knowledge Check</h2>
+                        <div id="quiz-container" class="pt-2 space-y-4"></div>
+                        <button id="submit-quiz" class="mt-4 bg-teal-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-teal-700 transition-colors">Submit Answers</button>
+                        <div id="quiz-results" class="mt-4 font-semibold"></div>
+                    </section>
+                     <section id="assessment" class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                        <h2 class="font-bold text-xl text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">&#127919; Self-Assessment Challenge</h2>
+                         <div class="pt-2 space-y-4">
+                           <p class="text-slate-600">Design a simple `BankAccount` class. It should have a `private` field for the balance. Include `public` methods for `Deposit`, `Withdraw`, and `GetBalance`. The `Withdraw` method should not allow the balance to go below zero. </p>
+                             <p class="answer-toggle" onclick="toggleAnswer(this)">Show Solution</p>
+                             <div class="answer-content">
+                                <div class="code-block" id="assessment-solution">
+                                    <button class="copy-button" onclick="copyCode('assessment-solution')">Copy</button>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">BankAccount</span>
+{
+    <span class="keyword">private</span> <span class="type">double</span> _balance;
+
+    <span class="keyword">public</span> <span class="type">BankAccount</span>(<span class="type">double</span> initialBalance)
+    {
+        _balance = initialBalance >= 0 ? initialBalance : 0;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> Deposit(<span class="type">double</span> amount)
+    {
+        <span class="keyword">if</span> (amount > 0)
+        {
+            _balance += amount;
+        }
+    }
+
+    <span class="keyword">public</span> <span class="type">bool</span> Withdraw(<span class="type">double</span> amount)
+    {
+        <span class="keyword">if</span> (amount > 0 && _balance >= amount)
+        {
+            _balance -= amount;
+            <span class="keyword">return</span> <span class="keyword">true</span>; <span class="comment">// Successful withdrawal</span>
+        }
+        <span class="keyword">return</span> <span class="keyword">false</span>; <span class="comment">// Withdrawal failed</span>
+    }
+
+    <span class="keyword">public</span> <span class="type">double</span> GetBalance()
+    {
+        <span class="keyword">return</span> _balance;
+    }
+}
+</code></pre>
+                                </div>
+                             </div>
+                         </div>
+                    </section>
+                </div>
+
+                <!-- Table of Contents -->
+                <aside class="w-full lg:w-1/4 lg:sticky top-8 self-start">
+                     <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
+                         <h3 class="font-semibold mb-3 border-b pb-2">On This Page</h3>
+                         <nav>
+                             <ul class="space-y-2 text-sm text-slate-600">
+                                 <li><a href="#theory" class="hover:text-teal-600">1. Theory Topics</a></li>
+                                 <li><a href="#practice" class="hover:text-teal-600">2. Coding Practice</a></li>
+                                 <li><a href="#problems" class="hover:text-teal-600">3. Problems & Solutions</a></li>
+                                 <li><a href="#uml" class="hover:text-teal-600">4. UML / Schema Task</a></li>
+                                 <li><a href="#casestudy" class="hover:text-teal-600">5. Case Study Analysis</a></li>
+                                 <li><a href="#quiz" class="hover:text-teal-600">6. Knowledge Check</a></li>
+                                 <li><a href="#assessment" class="hover:text-teal-600">7. Self-Assessment</a></li>
+                             </ul>
+                         </nav>
+                     </div>
+                </aside>
+            </div>
+        </main>
+         <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        const accessModifierData = {
+            public: "<strong>Public:</strong> Members are accessible from any other code. This is the least restrictive access level.",
+            private: "<strong>Private:</strong> Members are accessible only within the body of the class. This is key for encapsulation.",
+            protected: "<strong>Protected:</strong> Members are accessible within its class and by derived classes.",
+            internal: "<strong>Internal:</strong> Members are accessible only within files in the same assembly (.dll or .exe)."
+        };
+        
+        function showAccessInfo(modifier) {
+            document.getElementById('access-info-box').innerHTML = accessModifierData[modifier];
+        }
+
+        function toggleAnswer(element) {
+            const answer = element.nextElementSibling;
+            if (answer.style.display === "block") {
+                answer.style.display = "none";
+                element.textContent = "Show Solution";
+            } else {
+                answer.style.display = "block";
+                element.textContent = "Hide Solution";
+            }
+        }
+
+        function copyCode(elementId) {
+            const code = document.getElementById(elementId).querySelector('pre').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const button = document.getElementById(elementId).querySelector('.copy-button');
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+            });
+        }
+        
+        const quizData = [
+            { question: "What is the primary purpose of Encapsulation?", options: ["To make code run faster.", "To hide the internal state and control access to an object's data.", "To allow classes to inherit from each other.", "To bundle all code into one file."], answer: "To hide the internal state and control access to an object's data." },
+            { question: "What is the primary goal of Abstraction in OOP?", options: ["To hide the internal data of a class using private fields.", "To link two unrelated classes together.", "To hide complex implementation details and show only essential features.", "To ensure 100% code coverage with tests."], answer: "To hide complex implementation details and show only essential features." },
+            { question: "Which access modifier is the MOST restrictive?", options: ["public", "protected", "internal", "private"], answer: "private" },
+            { question: "An object is often described as an 'instance' of a...", options: ["Method", "Namespace", "Class", "Property"], answer: "Class" }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        quizData.forEach((q, index) => {
+            const questionEl = document.createElement('div');
+            questionEl.className = 'quiz-question border-b border-slate-200 pb-4';
+            let optionsHTML = q.options.map(option => `
+                <label class="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-50">
+                    <input type="radio" name="question${index}" value="${option}" class="text-teal-600 focus:ring-teal-500">
+                    <span>${option}</span>
+                </label>`).join('');
+            questionEl.innerHTML = `<p class="font-semibold mb-2">${index + 1}. ${q.question}</p><div class="space-y-1">${optionsHTML}</div><div id="answer-feedback-${index}" class="mt-2 text-sm"></div>`;
+            quizContainer.appendChild(questionEl);
+        });
+        
+        document.getElementById('submit-quiz').addEventListener('click', () => {
+            let score = 0;
+            quizData.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="question${index}"]:checked`);
+                const feedbackEl = document.getElementById(`answer-feedback-${index}`);
+                feedbackEl.innerHTML = ''; 
+
+                if (selected) {
+                    if (selected.value === q.answer) {
+                        score++;
+                        feedbackEl.innerHTML = `<p class="text-green-600 font-semibold">Correct!</p>`;
+                    } else {
+                         feedbackEl.innerHTML = `<p class="text-red-600 font-semibold">Incorrect.</p> <button class="answer-toggle text-xs" onclick="this.nextElementSibling.style.display='block'">Show Correct Answer</button><p class="answer-content text-slate-600 mt-1">The correct answer is: ${q.answer}</p>`;
+                    }
+                } else {
+                    feedbackEl.innerHTML = `<p class="text-amber-600 font-semibold">Not answered.</p>`;
+                }
+            });
+            document.getElementById('quiz-results').innerHTML = `Your score: <span class="text-2xl font-bold ${score / quizData.length >= 0.75 ? 'text-green-600' : 'text-red-600'}">${score}</span> out of ${quizData.length}`;
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const greetingEl = document.getElementById('greeting');
+            const hour = new Date().getHours();
+            if (hour < 12) greetingEl.textContent = "Good Morning!";
+            else if (hour < 18) greetingEl.textContent = "Good Afternoon!";
+            else greetingEl.textContent = "Good Evening!";
+            showAccessInfo('public');
+        });
+    </script>
+</body>
+</html>
+

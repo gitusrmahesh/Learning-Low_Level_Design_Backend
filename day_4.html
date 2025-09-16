@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOP Day 4: Immutability & Value Types</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning. A sticky navigation sidebar on the left provides an 'always-on' table of contents for easy jumping between complex topics, preventing disorientation. The main content area on the right follows a logical, sequential flow from theory to practical application. This structure supports both linear learning for beginners and quick reference for returning users. Interactive elements like a memory visualizer and a quiz are embedded directly within the flow to reinforce concepts immediately after they are introduced, which is a pedagogically sound approach to solidifying technical knowledge. -->
+    <!-- Visualization & Content Choices: Report Info: Value vs. Reference types. Goal: Clarify abstract memory allocation. Viz/Method: Interactive HTML/CSS/JS diagram showing Stack and Heap. Interaction: User clicks buttons to create types, triggering animations that visualize memory pointers vs. direct data storage. Justification: This makes a difficult concept tangible and memorable. Report Info: UML for Order states. Goal: Show state transitions. Viz/Method: Diagram built with styled HTML divs. Interaction: Hovering over states or transitions reveals tooltips with explanations. Justification: Avoids static images or external tools, keeping the module self-contained and interactive. All code examples use custom-styled blocks with a copy-to-clipboard feature for practicality. The quiz uses immediate feedback to enhance learning. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .toc-link.active { color: #0891b2; font-weight: 600; border-left-color: #0891b2; }
+        .code-block { background-color: #1e293b; color: #e2e8f0; border-radius: 0.5rem; overflow: hidden; margin-top: 1rem; margin-bottom: 1rem; }
+        .code-header { background-color: #334155; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .code-header span { font-size: 0.875rem; color: #cbd5e1; }
+        .copy-btn { background-color: #475569; color: #e2e8f0; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.875rem; }
+        .copy-btn:hover { background-color: #64748b; }
+        .code-content { padding: 1rem; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 0.9rem; line-height: 1.5; }
+        .code-content .keyword { color: #93c5fd; } .code-content .type { color: #6ee7b7; } .code-content .comment { color: #6b7280; } .code-content .string { color: #fde047; } .code-content .number { color: #f0abfc; }
+        .tab.active { border-color: #0891b2; background-color: #fff; color: #0891b2; }
+        .tab-content { display: none; } .tab-content.active { display: block; }
+        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; } .quiz-option.incorrect { background-color: #fee2e2; border-color: #ef4444; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .memory-box { border: 2px solid #94a3b8; border-radius: 0.375rem; padding: 0.5rem; text-align: center; transition: all 0.3s ease; }
+        .memory-arrow { position: absolute; height: 2px; background: #0891b2; transform-origin: left center; transition: all 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <!-- CUSTOM HEADER GAP -->
+    <div class="h-16"></div>
+
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:flex lg:space-x-8">
+            <!-- Table of Contents (Sticky) -->
+            <nav id="toc" class="hidden lg:block w-64 shrink-0 sticky top-20 self-start">
+                <div class="space-y-4">
+                    <h3 class="font-semibold text-slate-900 text-lg">On this page</h3>
+                    <ul class="space-y-2 text-slate-500">
+                        <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Core Theory</a></li>
+                        <li><a href="#visualization" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Interactive Visualization</a></li>
+                        <li><a href="#practice" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Coding Practice</a></li>
+                        <li><a href="#uml" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">UML/Schema Task</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Self-Assessment</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="flex-1 min-w-0">
+                <article class="prose lg:prose-xl max-w-none">
+                    <header class="mb-12">
+                        <p class="text-base font-semibold text-cyan-600">OOP Foundations: Day 4</p>
+                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">Immutability & Value Types</h1>
+                        <p class="mt-4 text-lg text-slate-600">Discover the power of immutable data structures. Learn how to build safer, more predictable, and thread-safe applications by understanding the fundamental difference between data that can change and data that cannot.</p>
+                    </header>
+                    
+                    <!-- Core Theory -->
+                    <section id="theory" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Core Theory: The Bedrock of Predictability</h2>
+                        <p class="mb-6">At the heart of immutability is a simple promise: once a piece of data is created, it can never be changed. This seems restrictive, but it unlocks incredible benefits in complex systems, especially when multiple threads or processes are involved. We'll start by exploring the two fundamental ways C# stores data: as values and as references.</p>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">1. Value Types vs. Reference Types</h3>
+                            <p>This is one of the most crucial distinctions in .NET. Understanding it clarifies countless behaviors related to performance, memory, and bugs.</p>
+                            
+                            <div class="grid md:grid-cols-2 gap-6 mt-4">
+                                <div class="border p-4 rounded-lg bg-slate-50">
+                                    <h4 class="font-bold text-lg text-cyan-700">📦 Value Types</h4>
+                                    <p class="mt-2 text-sm">Think of a value type variable as a box that <span class="font-semibold">directly contains its data</span>. When you copy it, you get a completely new box with a duplicate of the data. Changes to the new box don't affect the original.</p>
+                                    <ul class="text-sm list-disc list-inside mt-2 space-y-1">
+                                        <li>Stored on the <span class="font-semibold">Stack</span> (fast memory).</li>
+                                        <li>Examples: `int`, `double`, `bool`, `char`, `struct`, `enum`.</li>
+                                        <li>Passing to a method copies the entire value.</li>
+                                    </ul>
+                                </div>
+                                <div class="border p-4 rounded-lg bg-slate-50">
+                                    <h4 class="font-bold text-lg text-teal-700">🔗 Reference Types</h4>
+                                    <p class="mt-2 text-sm">Think of a reference type variable as a signpost that <span class="font-semibold">points to the data's location</span> elsewhere in memory. When you copy it, you get a new signpost pointing to the <span class="font-semibold">exact same data</span>. Changing the data via one signpost is visible to all others.</p>
+                                    <ul class="text-sm list-disc list-inside mt-2 space-y-1">
+                                        <li>Data is stored on the <span class="font-semibold">Heap</span> (slower, managed memory). The variable on the stack holds a reference (an address) to the heap.</li>
+                                        <li>Examples: `string`, `object`, `class`, `array`, `delegate`.</li>
+                                        <li>Passing to a method copies the reference, not the data.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mt-8">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">2. Creating Immutable Types in C#</h3>
+                            <p>To make a type immutable, we must ensure its state cannot be modified after construction. This is typically achieved by making all fields `readonly` and only setting them in the constructor.</p>
+
+                            <h4 class="font-bold text-lg mt-4">The Classic `class` Approach</h4>
+                            <div class="code-block">
+                                <div class="code-header"><span>C# Immutable Class</span><button class="copy-btn">Copy</button></div>
+                                <div class="code-content">
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ImmutableUser</span>
+{
+    <span class="keyword">public</span> <span class="type">string</span> Name { <span class="keyword">get</span>; }
+    <span class="keyword">public</span> <span class="type">string</span> Email { <span class="keyword">get</span>; }
+
+    <span class="keyword">public</span> <span class="type">ImmutableUser</span>(<span class="type">string</span> name, <span class="type">string</span> email)
+    {
+        Name = name;
+        Email = email;
+    }
+}
+                                </div>
+                            </div>
+                            <p class="text-sm">Here, the properties only have `get` accessors. Their values can only be set once, inside the constructor, and are read-only thereafter.</p>
+
+                            <h4 class="font-bold text-lg mt-6">The Modern `record` Approach (C# 9+)</h4>
+                            <p>Records are a concise way to create immutable reference types. The compiler generates the constructor, properties, and value-based equality members for you.</p>
+                             <div class="code-block">
+                                <div class="code-header"><span>C# Immutable Record</span><button class="copy-btn">Copy</button></div>
+                                <div class="code-content">
+<span class="comment">// This one line is equivalent to the entire class above, plus more!</span>
+<span class="keyword">public</span> <span class="keyword">record</span> <span class="type">User</span>(<span class="type">string</span> Name, <span class="type">string</span> Email);
+                                </div>
+                            </div>
+                            <p class="text-sm">Records also introduce the `with` expression, which allows creating a *copy* of an object with modified properties, reinforcing the immutability pattern.</p>
+                            <div class="code-block">
+                                <div class="code-header"><span>C# 'with' Expression</span><button class="copy-btn">Copy</button></div>
+                                <div class="code-content">
+<span class="keyword">var</span> user1 = <span class="keyword">new</span> <span class="type">User</span>(<span class="string">"Alice"</span>, <span class="string">"alice@example.com"</span>);
+<span class="comment">// Create a new user record by copying user1 and changing the name</span>
+<span class="keyword">var</span> user2 = user1 <span class="keyword">with</span> { Name = <span class="string">"Bob"</span> }; 
+<span class="comment">// user1 remains completely unchanged.</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mt-8">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">3. Benefits vs. Pitfalls</h3>
+                            <div class="grid md:grid-cols-2 gap-6 mt-4">
+                                <div>
+                                    <h4 class="font-bold text-lg text-green-600">✅ Benefits of Immutability</h4>
+                                    <ul class="mt-2 space-y-2 text-sm">
+                                        <li class="flex items-start"><span class="text-green-500 mr-2">✔️</span><div><strong class="font-semibold">Thread Safety:</strong> Since the data never changes, multiple threads can read it concurrently without any need for locks or synchronization. This is a massive simplification for parallel programming.</div></li>
+                                        <li class="flex items-start"><span class="text-green-500 mr-2">✔️</span><div><strong class="font-semibold">Predictability & Readability:</strong> Code is easier to reason about. When you see an immutable object, you know its state is fixed, reducing cognitive load and eliminating a whole class of bugs related to unexpected state changes.</div></li>
+                                        <li class="flex items-start"><span class="text-green-500 mr-2">✔️</span><div><strong class="font-semibold">Safe Sharing:</strong> You can pass immutable objects around freely, knowing they cannot be accidentally modified by other parts of the application.</div></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-lg text-red-600">❌ Pitfalls of Immutability</h4>
+                                    <ul class="mt-2 space-y-2 text-sm">
+                                        <li class="flex items-start"><span class="text-red-500 mr-2">❌</span><div><strong class="font-semibold">Object Creation Overhead:</strong> Every "modification" requires creating a new object. In performance-critical loops, this can lead to increased memory allocation and pressure on the Garbage Collector (GC).</div></li>
+                                        <li class="flex items-start"><span class="text-red-500 mr-2">❌</span><div><strong class="font-semibold">Performance:</strong> For large objects, copying all the data to create a new version can be slower than modifying a field in place. The cost-benefit must be evaluated for your specific use case.</div></li>
+                                        <li class="flex items-start"><span class="text-red-500 mr-2">❌</span><div><strong class="font-semibold">Not a Silver Bullet:</strong> Immutability is a tool, not a universal solution. It excels for data transfer objects (DTOs), state management, and domain entities, but might be overkill for short-lived, internal helper objects.</div></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Interactive Visualization -->
+                    <section id="visualization" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Interactive Visualization: Memory in Action</h2>
+                        <p class="mb-6">Click the buttons below to see a visual representation of how value and reference types are handled in memory. This diagram will help solidify your understanding of the core difference between the Stack and the Heap.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 relative">
+                            <div class="flex justify-center space-x-4 mb-8">
+                                <button id="createValueTypeBtn" class="bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-700 transition">Create Value Type (`Point` struct)</button>
+                                <button id="createRefTypeBtn" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition">Create Reference Type (`User` class)</button>
+                                <button id="resetVizBtn" class="bg-slate-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-600 transition">Reset</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-8 relative min-h-[300px]">
+                                <!-- Stack -->
+                                <div class="text-center">
+                                    <h4 class="font-bold text-lg mb-2">The Stack (Fast)</h4>
+                                    <div id="stack-area" class="bg-slate-100 p-4 rounded-lg h-full space-y-2 flex flex-col items-center">
+                                        <!-- Stack items will be added here -->
+                                    </div>
+                                </div>
+                                <!-- Heap -->
+                                <div class="text-center">
+                                    <h4 class="font-bold text-lg mb-2">The Heap (Managed)</h4>
+                                    <div id="heap-area" class="bg-slate-200 p-4 rounded-lg h-full space-y-2 flex flex-col items-center">
+                                        <!-- Heap items will be added here -->
+                                    </div>
+                                </div>
+                                <!-- Arrows will be added dynamically -->
+                                <div id="arrow-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Coding Practice -->
+                    <section id="practice" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Coding Practice</h2>
+                        <p class="mb-6">Time to apply the theory. Work through these problems, which increase in complexity. Try to solve them yourself before revealing the solution.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                             <div class="border-b border-gray-200 mb-4">
+                                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                    <button class="tab active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm" data-tab="easy">Easy</button>
+                                    <button class="tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm" data-tab="medium">Medium</button>
+                                    <button class="tab whitespace-nowrap py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium text-sm" data-tab="hard">Hard</button>
+                                </nav>
+                            </div>
+
+                            <!-- Easy Problem -->
+                            <div id="tab-easy" class="tab-content active">
+                                <h3 class="text-xl font-semibold text-slate-800">🎯 [Easy] Implement an Immutable Point</h3>
+                                <p class="mt-2">Create an immutable `Point` <span class="font-mono bg-slate-100 p-1 rounded">struct</span> with `X` and `Y` integer coordinates. The coordinates should be set at creation and never change.</p>
+                                <div class="mt-4">
+                                    <button class="accordion-toggle bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition text-sm">Show/Hide Solution</button>
+                                    <div class="accordion-content">
+                                        <div class="code-block">
+                                            <div class="code-header"><span>C# Solution: Point Struct</span><button class="copy-btn">Copy</button></div>
+                                            <div class="code-content">
+<span class="keyword">public</span> <span class="keyword">readonly</span> <span class="keyword">struct</span> <span class="type">Point</span>
+{
+    <span class="comment">// Properties are readonly thanks to the struct being readonly</span>
+    <span class="keyword">public</span> <span class="type">int</span> X { <span class="keyword">get</span>; }
+    <span class="keyword">public</span> <span class="type">int</span> Y { <span class="keyword">get</span>; }
+
+    <span class="keyword">public</span> <span class="type">Point</span>(<span class="type">int</span> x, <span class="type">int</span> y)
+    {
+        X = x;
+        Y = y;
+    }
+
+    <span class="comment">// Example of a non-mutating method: returns a new Point</span>
+    <span class="keyword">public</span> <span class="type">Point</span> <span class="type">Move</span>(<span class="type">int</span> dx, <span class="type">int</span> dy)
+    {
+        <span class="keyword">return</span> <span class="keyword">new</span> <span class="type">Point</span>(X + dx, Y + dy);
+    }
+}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Medium Problem -->
+                            <div id="tab-medium" class="tab-content">
+                                <h3 class="text-xl font-semibold text-slate-800">🎯 [Medium] Producer-Consumer with `BlockingCollection`</h3>
+                                <p class="mt-2">Implement a classic producer-consumer scenario. One or more "producer" threads add items to a shared collection, and one "consumer" thread processes them. Use `BlockingCollection&lt;T&gt;`, which is thread-safe, to manage the shared data.</p>
+                                <div class="mt-4">
+                                    <button class="accordion-toggle bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition text-sm">Show/Hide Solution</button>
+                                    <div class="accordion-content">
+                                        <div class="code-block">
+                                            <div class="code-header"><span>C# Solution: Producer-Consumer</span><button class="copy-btn">Copy</button></div>
+                                            <div class="code-content">
+<span class="keyword">using</span> System.Collections.Concurrent;
+<span class="keyword">using</span> System.Threading;
+<span class="keyword">using</span> System.Threading.Tasks;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ProducerConsumer</span>
+{
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="type">Run</span>()
+    {
+        <span class="comment">// BlockingCollection is a thread-safe producer/consumer collection.</span>
+        <span class="keyword">using</span> (<span class="keyword">var</span> queue = <span class="keyword">new</span> <span class="type">BlockingCollection</span><<span class="type">int</span>>())
+        {
+            <span class="comment">// Producer task</span>
+            <span class="keyword">var</span> producer = <span class="type">Task</span>.<span class="type">Run</span>(() =>
+            {
+                <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i < <span class="number">10</span>; i++)
+                {
+                    queue.<span class="type">Add</span>(i);
+                    <span class="type">Console</span>.<span class="type">WriteLine</span>($<span class="string">"Produced: {i}"</span>);
+                    <span class="type">Thread</span>.<span class="type">Sleep</span>(<span class="number">100</span>); <span class="comment">// Simulate work</span>
+                }
+                <span class="comment">// Signal that production is complete</span>
+                queue.<span class="type">CompleteAdding</span>();
+            });
+
+            <span class="comment">// Consumer task</span>
+            <span class="keyword">var</span> consumer = <span class="type">Task</span>.<span class="type">Run</span>(() =>
+            {
+                <span class="comment">// GetConsumingEnumerable blocks until an item is available</span>
+                <span class="comment">// or CompleteAdding is called and the queue is empty.</span>
+                <span class="keyword">foreach</span> (<span class="keyword">var</span> item <span class="keyword">in</span> queue.<span class="type">GetConsumingEnumerable</span>())
+                {
+                    <span class="type">Console</span>.<span class="type">WriteLine</span>($<span class="string">"Consumed: {item}"</span>);
+                    <span class="type">Thread</span>.<span class="type">Sleep</span>(<span class="number">200</span>); <span class="comment">// Simulate work</span>
+                }
+            });
+
+            <span class="type">Task</span>.<span class="type">WaitAll</span>(producer, consumer);
+        }
+    }
+}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hard Problem -->
+                            <div id="tab-hard" class="tab-content">
+                                <h3 class="text-xl font-semibold text-slate-800">🎯 [Hard] Thread-Safe In-Memory Cache</h3>
+                                <p class="mt-2">Implement a generic in-memory cache class `InMemoryCache&lt;TKey, TValue&gt;` that is safe to be accessed by multiple threads concurrently. It should have `Get`, `Set`, and `Remove` methods.</p>
+                                <div class="mt-4">
+                                    <button class="accordion-toggle bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition text-sm">Show/Hide Solution</button>
+                                    <div class="accordion-content">
+                                         <div class="code-block">
+                                            <div class="code-header"><span>C# Solution: Thread-Safe Cache</span><button class="copy-btn">Copy</button></div>
+                                            <div class="code-content">
+<span class="keyword">using</span> System.Collections.Concurrent;
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">InMemoryCache</span><<span class="type">TKey</span>, <span class="type">TValue</span>> <span class="keyword">where</span> <span class="type">TKey</span> : <span class="keyword">notnull</span>
+{
+    <span class="comment">// ConcurrentDictionary is the perfect tool for thread-safe key-value storage.</span>
+    <span class="keyword">private</span> <span class="keyword">readonly</span> <span class="type">ConcurrentDictionary</span><<span class="type">TKey</span>, <span class="type">TValue</span>> _cache = <span class="keyword">new</span>();
+
+    <span class="keyword">public</span> <span class="type">TValue</span> <span class="type">Get</span>(<span class="type">TKey</span> key)
+    {
+        <span class="keyword">return</span> _cache.<span class="type">TryGetValue</span>(key, <span class="keyword">out</span> <span class="keyword">var</span> value) ? value : <span class="keyword">default</span>;
+    }
+
+    <span class="comment">// Get a value, or create it if it doesn't exist, in an atomic (thread-safe) way.</span>
+    <span class="keyword">public</span> <span class="type">TValue</span> <span class="type">GetOrAdd</span>(<span class="type">TKey</span> key, <span class="type">Func</span><<span class="type">TKey</span>, <span class="type">TValue</span>> valueFactory)
+    {
+        <span class="keyword">return</span> _cache.<span class="type">GetOrAdd</span>(key, valueFactory);
+    }
+    
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="type">Set</span>(<span class="type">TKey</span> key, <span class="type">TValue</span> value)
+    {
+        _cache[key] = value; <span class="comment">// Or use .AddOrUpdate for more complex logic</span>
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="type">Remove</span>(<span class="type">TKey</span> key)
+    {
+        _cache.<span class="type">TryRemove</span>(key, <span class="keyword">out</span> _);
+    }
+}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                     <!-- UML/Schema Task -->
+                    <section id="uml" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">UML/Schema Task: Immutable Order</h2>
+                        <p class="mb-4">Below is a UML class diagram for an immutable `Order` object. The key design principle is that instead of modifying an order's status, you create a *new* order object that represents the next state. This prevents invalid state transitions and makes the history of an order an explicit sequence of objects.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col items-center">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-6">Order State Transition Diagram</h3>
+                            <div class="flex items-center justify-center space-x-4 md:space-x-8">
+                                <!-- Created State -->
+                                <div class="p-4 border-2 border-cyan-500 rounded-lg bg-cyan-50 text-center shadow-md">
+                                    <p class="font-bold text-cyan-800">Order (Created)</p>
+                                    <hr class="my-2">
+                                    <p class="text-sm text-cyan-700">- OrderId</p>
+                                    <p class="text-sm text-cyan-700">- Items</p>
+                                    <p class="text-sm text-cyan-700">- Status = "Created"</p>
+                                </div>
+
+                                <div class="flex flex-col items-center">
+                                    <p class="text-sm font-semibold text-slate-600 mb-1">Pay()</p>
+                                    <div class="text-4xl text-slate-400">→</div>
+                                </div>
+
+                                <!-- Paid State -->
+                                <div class="p-4 border-2 border-green-500 rounded-lg bg-green-50 text-center shadow-md">
+                                    <p class="font-bold text-green-800">Order (Paid)</p>
+                                    <hr class="my-2">
+                                    <p class="text-sm text-green-700">- OrderId</p>
+                                    <p class="text-sm text-green-700">- Items</p>
+                                    <p class="text-sm text-green-700">- Status = "Paid"</p>
+                                </div>
+
+                                <div class="flex flex-col items-center">
+                                    <p class="text-sm font-semibold text-slate-600 mb-1">Ship()</p>
+                                    <div class="text-4xl text-slate-400">→</div>
+                                </div>
+                                
+                                <!-- Shipped State -->
+                                <div class="p-4 border-2 border-slate-500 rounded-lg bg-slate-100 text-center shadow-md">
+                                    <p class="font-bold text-slate-800">Order (Shipped)</p>
+                                    <hr class="my-2">
+                                    <p class="text-sm text-slate-700">- OrderId</p>
+                                    <p class="text-sm text-slate-700">- Items</p>
+                                    <p class="text-sm text-slate-700">- Status = "Shipped"</p>
+                                </div>
+                            </div>
+                             <p class="mt-6 text-center text-sm text-slate-600 max-w-2xl">Each transition method (e.g., `Pay()`) does not change the current object. Instead, it validates the current state and, if valid, returns a <span class="font-semibold">new</span> `Order` instance with the updated status and other relevant information (like a payment date).</p>
+                        </div>
+                    </section>
+
+                    <!-- Case Study -->
+                    <section id="case-study" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Case Study: E-commerce Order Processing</h2>
+                        <p class="mb-6">Let's design a simplified e-commerce backend system using the principles of immutability for order processing. This design ensures that once an order is in a particular state (e.g., Shipped), it cannot be accidentally or maliciously reverted, providing a reliable audit trail.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800">System Design & Logic</h3>
+                            <p class="mt-2">The core of the system is the immutable `Order` record. State transitions are handled by service methods that return new instances of the `Order` record.</p>
+
+                             <div class="code-block">
+                                <div class="code-header"><span>C# Order State Records</span><button class="copy-btn">Copy</button></div>
+                                <div class="code-content">
+<span class="comment">// Base record for shared properties</span>
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">record</span> <span class="type">Order</span>(<span class="type">Guid</span> OrderId, <span class="type">List</span><<span class="type">string</span>> Items);
+
+<span class="comment">// Specific records for each state</span>
+<span class="keyword">public</span> <span class="keyword">record</span> <span class="type">CreatedOrder</span>(<span class="type">Guid</span> OrderId, <span class="type">List</span><<span class="type">string</span>> Items) : <span class="type">Order</span>(OrderId, Items);
+<span class="keyword">public</span> <span class="keyword">record</span> <span class="type">PaidOrder</span>(<span class="type">Guid</span> OrderId, <span class="type">List</span><<span class="type">string</span>> Items, <span class="type">DateTime</span> PaidAt) : <span class="type">Order</span>(OrderId, Items);
+<span class="keyword">public</span> <span class="keyword">record</span> <span class="type">ShippedOrder</span>(<span class="type">Guid</span> OrderId, <span class="type">List</span><<span class="type">string</span>> Items, <span class="type">DateTime</span> PaidAt, <span class="type">DateTime</span> ShippedAt) : <span class="type">Order</span>(OrderId, Items);
+                                </div>
+                            </div>
+
+                            <h3 class="text-xl font-semibold text-slate-800 mt-6">API Endpoints & Logic Flow</h3>
+                             <div class="space-y-4 mt-4">
+                                <div class="border p-4 rounded-lg">
+                                    <h4 class="font-semibold text-slate-900">1. `POST /api/orders` (CreateOrder)</h4>
+                                    <p class="text-sm mt-1">Accepts a list of items. Creates a `CreatedOrder` record with a new `OrderId` and saves it to the database. Returns the new order details.</p>
+                                </div>
+                                <div class="border p-4 rounded-lg">
+                                    <h4 class="font-semibold text-slate-900">2. `POST /api/orders/{id}/pay` (PayOrder)</h4>
+                                    <p class="text-sm mt-1">
+                                        - Fetches the current order state from the database.
+                                        - <span class="font-semibold">Validates:</span> Checks if the order is a `CreatedOrder`. If not (e.g., it's already paid or shipped), it returns an error.
+                                        - <span class="font-semibold">Transitions:</span> Creates a <span class="font-semibold">new</span> `PaidOrder` instance using the data from the `CreatedOrder`, adding a `PaidAt` timestamp.
+                                        - Saves the new `PaidOrder` state, effectively replacing the old one. Returns the paid order details.
+                                    </p>
+                                </div>
+                                 <div class="border p-4 rounded-lg">
+                                    <h4 class="font-semibold text-slate-900">3. `POST /api/orders/{id}/ship` (ShipOrder)</h4>
+                                    <p class="text-sm mt-1">
+                                        - Fetches the current order state.
+                                        - <span class="font-semibold">Validates:</span> Checks if the order is a `PaidOrder`. If not, returns an error. A shipped order cannot be re-shipped, and an unpaid order cannot be shipped.
+                                        - <span class="font-semibold">Transitions:</span> Creates a <span class="font-semibold">new</span> `ShippedOrder` instance, copying data from the `PaidOrder` and adding a `ShippedAt` timestamp.
+                                        - Saves the new `ShippedOrder` state. This is the final state; no further transitions are possible.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Knowledge Check -->
+                    <section id="quiz" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Knowledge Check</h2>
+                        <p class="mb-6">Test your understanding of the key concepts with this quick quiz.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-6">
+                            <!-- Question 1 -->
+                            <div class="quiz-question">
+                                <p class="font-semibold">1. Which of the following is a primary benefit of immutability?</p>
+                                <div class="mt-2 space-y-2" data-answer="b">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="a">A) Reduced memory usage</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="b">B) Inherent thread safety</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="c">C) Faster object modification</button>
+                                </div>
+                                <div class="quiz-feedback hidden mt-2 p-2 text-sm rounded-lg"></div>
+                            </div>
+                             <!-- Question 2 -->
+                            <div class="quiz-question">
+                                <p class="font-semibold">2. Where are value types typically stored in memory?</p>
+                                <div class="mt-2 space-y-2" data-answer="a">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="a">A) The Stack</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="b">B) The Heap</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="c">C) The Registry</button>
+                                </div>
+                                <div class="quiz-feedback hidden mt-2 p-2 text-sm rounded-lg"></div>
+                            </div>
+                             <!-- Question 3 -->
+                            <div class="quiz-question">
+                                <p class="font-semibold">3. In C# 9+, what is the most concise way to define a simple immutable type?</p>
+                                <div class="mt-2 space-y-2" data-answer="c">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="a">A) A `class` with private setters</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="b">B) A `struct` with readonly fields</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="c">C) A positional `record`</button>
+                                </div>
+                                <div class="quiz-feedback hidden mt-2 p-2 text-sm rounded-lg"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Self-Assessment Challenge -->
+                    <section id="challenge" class="scroll-mt-20 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Self-Assessment Challenge</h2>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800">Challenge: An Immutable, Versioned Document</h3>
+                            <p class="mt-2">Design and implement an immutable `Document` class. This class should hold a `Title` (string), `Content` (string), and a `Version` (int). Create a method called `UpdateContent(string newContent)` that does not modify the existing document. Instead, it should return a <span class="font-semibold">new</span> `Document` instance with the updated content and an incremented version number. This pattern is common in systems that need a full audit history, like wikis or content management systems.</p>
+                             <div class="mt-4">
+                                <button class="accordion-toggle bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition text-sm">Reveal Detailed Solution</button>
+                                <div class="accordion-content">
+                                    <p class="mt-4">Here is a complete solution using an immutable record, which is perfectly suited for this task.</p>
+                                    <div class="code-block">
+                                        <div class="code-header"><span>C# Solution: Versioned Document</span><button class="copy-btn">Copy</button></div>
+                                        <div class="code-content">
+<span class="keyword">public</span> <span class="keyword">record</span> <span class="type">Document</span>
+{
+    <span class="keyword">public</span> <span class="type">string</span> Title { <span class="keyword">get</span>; }
+    <span class="keyword">public</span> <span class="type">string</span> Content { <span class="keyword">get</span>; }
+    <span class="keyword">public</span> <span class="type">int</span> Version { <span class="keyword">get</span>; }
+
+    <span class="comment">// Constructor for the initial version</span>
+    <span class="keyword">public</span> <span class="type">Document</span>(<span class="type">string</span> title, <span class="type">string</span> content)
+    {
+        Title = title;
+        Content = content;
+        Version = <span class="number">1</span>;
+    }
+
+    <span class="comment">// Private constructor for internal state transitions</span>
+    <span class="keyword">private</span> <span class="type">Document</span>(<span class="type">string</span> title, <span class="type">string</span> content, <span class="type">int</span> version)
+    {
+        Title = title;
+        Content = content;
+        Version = version;
+    }
+    
+    <span class="comment">// The update method returns a NEW instance</span>
+    <span class="keyword">public</span> <span class="type">Document</span> <span class="type">UpdateContent</span>(<span class="type">string</span> newContent)
+    {
+        <span class="keyword">return</span> <span class="keyword">new</span> <span class="type">Document</span>(this.Title, newContent, this.Version + <span class="number">1</span>);
+    }
+
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="type">ToString</span>()
+    {
+        <span class="keyword">return</span> $<span class="string">"'{Title}' (v{Version}): {Content}"</span>;
+    }
+}
+
+<span class="comment">// Example Usage:</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">DocumentDemo</span>
+{
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="type">Run</span>()
+    {
+        <span class="keyword">var</span> docV1 = <span class="keyword">new</span> <span class="type">Document</span>(<span class="string">"My Report"</span>, <span class="string">"Initial draft."</span>);
+        <span class="type">Console</span>.<span class="type">WriteLine</span>(docV1); <span class="comment">// 'My Report' (v1): Initial draft.</span>
+
+        <span class="keyword">var</span> docV2 = docV1.<span class="type">UpdateContent</span>(<span class="string">"Added a new section."</span>);
+        <span class="type">Console</span>.<span class="type">WriteLine</span>(docV2); <span class="comment">// 'My Report' (v2): Added a new section.</span>
+        
+        <span class="comment">// Crucially, the original document is unchanged.</span>
+        <span class="type">Console</span>.<span class="type">WriteLine</span>(docV1); <span class="comment">// 'My Report' (v1): Initial draft.</span>
+    }
+}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </article>
+            </main>
+        </div>
+    </div>
+    
+    <!-- FOOTER -->
+    <footer class="mt-20 py-8 bg-slate-100 border-t">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500">
+            <p>&copy; 2025 OOP Foundations Learning Module. All rights reserved.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Copy-to-Clipboard Functionality ---
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const codeContent = button.closest('.code-block').querySelector('.code-content');
+            const textToCopy = codeContent.innerText;
+            
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = 'Copy';
+            }, 2000);
+        });
+    });
+
+    // --- Tabs Functionality ---
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.getAttribute('data-tab');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            tabContents.forEach(content => {
+                if (content.id === `tab-${target}`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // --- Accordion Functionality ---
+    document.querySelectorAll('.accordion-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.nextElementSibling;
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            }
+        });
+    });
+
+    // --- Quiz Functionality ---
+    document.querySelectorAll('.quiz-option').forEach(button => {
+        button.addEventListener('click', () => {
+            const questionDiv = button.closest('.quiz-question');
+            const optionsContainer = button.parentElement;
+            const correctAnswer = optionsContainer.getAttribute('data-answer');
+            const selectedOption = button.getAttribute('data-option');
+            const feedbackDiv = questionDiv.querySelector('.quiz-feedback');
+
+            optionsContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.disabled = true;
+                opt.classList.remove('hover:bg-slate-100');
+            });
+            
+            if (selectedOption === correctAnswer) {
+                button.classList.add('correct');
+                feedbackDiv.textContent = 'Correct! This is the main advantage for concurrent programming.';
+                if(correctAnswer === 'a') feedbackDiv.textContent = 'Correct! Value types are allocated on the fast stack memory.';
+                if(correctAnswer === 'c') feedbackDiv.textContent = 'Correct! Records provide the most modern and concise syntax for immutability.';
+                feedbackDiv.className = 'quiz-feedback mt-2 p-2 text-sm rounded-lg bg-green-100 text-green-800';
+            } else {
+                button.classList.add('incorrect');
+                const correctButton = optionsContainer.querySelector(`[data-option="${correctAnswer}"]`);
+                correctButton.classList.add('correct');
+                feedbackDiv.textContent = 'Not quite. The correct answer is highlighted in green.';
+                feedbackDiv.className = 'quiz-feedback mt-2 p-2 text-sm rounded-lg bg-red-100 text-red-800';
+            }
+        });
+    });
+
+    // --- Table of Contents Active Link Highlighting ---
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('section');
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                tocLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                });
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+
+    // --- Interactive Visualization Logic ---
+    const createValueTypeBtn = document.getElementById('createValueTypeBtn');
+    const createRefTypeBtn = document.getElementById('createRefTypeBtn');
+    const resetVizBtn = document.getElementById('resetVizBtn');
+    const stackArea = document.getElementById('stack-area');
+    const heapArea = document.getElementById('heap-area');
+    const arrowContainer = document.getElementById('arrow-container');
+
+    let valueCount = 0;
+    let refCount = 0;
+    
+    const resetViz = () => {
+        valueCount = 0;
+        refCount = 0;
+        stackArea.innerHTML = '';
+        heapArea.innerHTML = '';
+        arrowContainer.innerHTML = '';
+    };
+    
+    const createArrow = (startElem, endElem) => {
+        const arrow = document.createElement('div');
+        arrow.className = 'memory-arrow';
+        arrowContainer.appendChild(arrow);
+    
+        const updateArrow = () => {
+            const startRect = startElem.getBoundingClientRect();
+            const endRect = endElem.getBoundingClientRect();
+            const containerRect = arrowContainer.getBoundingClientRect();
+    
+            const startX = startRect.right - containerRect.left;
+            const startY = startRect.top + startRect.height / 2 - containerRect.top;
+            const endX = endRect.left - containerRect.left;
+            const endY = endRect.top + endRect.height / 2 - containerRect.top;
+            
+            const dx = endX - startX;
+            const dy = endY - startY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            arrow.style.left = `${startX}px`;
+            arrow.style.top = `${startY}px`;
+            arrow.style.width = `${length}px`;
+            arrow.style.transform = `rotate(${angle}deg)`;
+        };
+
+        // Call once to position and then again if window resizes
+        updateArrow();
+        window.addEventListener('resize', updateArrow);
+    };
+
+    createValueTypeBtn.addEventListener('click', () => {
+        valueCount++;
+        const id = `point${valueCount}`;
+        const stackItem = document.createElement('div');
+        stackItem.id = `stack-${id}`;
+        stackItem.className = 'memory-box bg-cyan-100 border-cyan-500 w-4/5';
+        stackItem.innerHTML = `<span class="font-mono text-sm font-semibold">${id}</span><div class="text-xs text-cyan-800">Point { X: ${Math.floor(Math.random()*10)}, Y: ${Math.floor(Math.random()*10)} }</div>`;
+        stackArea.appendChild(stackItem);
+    });
+
+    createRefTypeBtn.addEventListener('click', () => {
+        refCount++;
+        const id = `user${refCount}`;
+        const address = `0x${Math.floor(Math.random() * 0xFFF).toString(16).toUpperCase()}`;
+
+        const stackItem = document.createElement('div');
+        stackItem.id = `stack-${id}`;
+        stackItem.className = 'memory-box bg-teal-100 border-teal-500 w-4/5';
+        stackItem.innerHTML = `<span class="font-mono text-sm font-semibold">${id}</span><div class="text-xs text-teal-800">ref: ${address}</div>`;
+        stackArea.appendChild(stackItem);
+        
+        const heapItem = document.createElement('div');
+        heapItem.id = `heap-${id}`;
+        heapItem.className = 'memory-box bg-emerald-100 border-emerald-500 w-4/5';
+        heapItem.innerHTML = `<span class="font-mono text-xs">${address}</span><div class="text-sm font-semibold">User Object</div><div class="text-xs text-emerald-800">{ Name: "...", Email: "..." }</div>`;
+        heapArea.appendChild(heapItem);
+        
+        // Timeout to allow elements to render before drawing arrow
+        setTimeout(() => createArrow(stackItem, heapItem), 100);
+    });
+
+    resetVizBtn.addEventListener('click', resetViz);
+});
+</script>
+</body>
+</html>

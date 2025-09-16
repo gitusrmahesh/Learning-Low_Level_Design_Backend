@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOP Foundations: Static Classes & Records</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Indigo Accent -->
+    <!-- Application Structure Plan: A responsive sidebar navigation structure is used to break the dense document into its logical sections (Static Classes, Records, Advanced Topics, etc.). This architecture was chosen to transform a long, linear document into a user-driven, non-linear learning module. It enhances usability by allowing users to instantly jump to specific topics of interest without excessive scrolling, and provides a clear map of the content. On mobile, the sidebar collapses into an accessible menu. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: Core concepts of static classes and records. Goal: Inform/Organize. Viz/Method: Styled text sections with interactive sidebar navigation. Interaction: Clicking nav links smoothly scrolls to the relevant section. Justification: Provides clear structure and easy navigation for a text-heavy document. Library/Method: HTML/CSS/JS.
+        2. Report Info: Code examples in C#. Goal: Inform/Utility. Viz/Method: Styled code blocks. Interaction: A "Copy" button on each block copies the code to the clipboard. Justification: Improves the practical utility of the guide for developers. Library/Method: Vanilla JS.
+        3. Report Info: Analogies for complex concepts. Goal: Clarify. Viz/Method: Visually distinct callout boxes (HTML/Tailwind). Interaction: None. Justification: Breaks up the text and highlights important conceptual aids. Library/Method: N/A.
+        4. Report Info: UML Diagram. Goal: Visualize structure. Viz/Method: Structured HTML and Tailwind CSS to mimic a class diagram. Interaction: None. Justification: Provides a visual representation without external libraries, adhering to constraints. Static members are underlined per UML spec. Library/Method: HTML/Tailwind.
+        5. Report Info: Knowledge Check Quiz. Goal: Assess/Engage. Viz/Method: Interactive multiple-choice form. Interaction: Users select answers and click "Check Answers". The UI provides immediate visual feedback (correct/incorrect) and reveals explanations. Justification: Transforms a static quiz into an active learning tool. Library/Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1f2937; /* gray-800 */
+        }
+        pre, code {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .section-target {
+            scroll-margin-top: 80px;
+        }
+        .nav-link.active {
+            background-color: #eef2ff; /* indigo-50 */
+            color: #4338ca; /* indigo-700 */
+            font-weight: 600;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4b5563; /* gray-600 */
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .uml-underline {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="max-w-screen-xl mx-auto">
+        <div class="flex flex-col md:flex-row">
+            <!-- Sidebar Navigation -->
+            <aside class="w-full md:w-64 lg:w-72 bg-white md:h-screen md:sticky md:top-0 border-b md:border-b-0 md:border-r border-slate-200">
+                <div class="p-4">
+                    <h2 class="text-lg font-bold text-indigo-600">Architect's Toolkit</h2>
+                    <p class="text-sm text-slate-500">Static Classes & Records</p>
+                </div>
+                <nav id="sidebar-nav" class="flex flex-col px-4 pb-4">
+                    <a href="#section1" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">1. Static Classes</a>
+                    <a href="#section2" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">2. C# Records</a>
+                    <a href="#section3" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">3. Advanced Topics</a>
+                    <a href="#section4" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">4. Coding Practice</a>
+                    <a href="#section5" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">5. UML Modeling</a>
+                    <a href="#section6" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">6. Case Study</a>
+                    <a href="#section7" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">7. Knowledge Assessment</a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6 sm:p-8 lg:p-12">
+                <header class="mb-12">
+                    <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">OOP Foundations, Day 7: Static Classes & Records</h1>
+                    <p class="mt-2 text-lg text-slate-600">An interactive guide to the architect's toolkit for utility and data patterns in C#.</p>
+                </header>
+
+                <div class="prose prose-slate max-w-none prose-h3:text-slate-800 prose-h3:font-semibold prose-h4:text-indigo-600 prose-h4:font-semibold prose-a:text-indigo-600">
+                    
+                    <section id="section1" class="section-target mb-16">
+                        <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 1: The Utility Pattern — Static Classes in .NET</h3>
+                        <p>In the landscape of object-oriented programming, the primary unit of organization is the class, a blueprint for creating objects that encapsulate both state (data) and behavior (methods). However, a common design challenge arises: where should one place functionality that is inherently stateless and does not logically belong to any specific object instance? Consider fundamental operations like calculating the absolute value of a number or checking if a file exists on disk. These are pure actions, not entities with identities. Forcing such functions into an instantiable class can feel artificial and lead to cumbersome code, requiring developers to create an object for the sole purpose of calling a single method.</p>
+                        <p>This is the problem space that static classes in C# are designed to solve. They represent a pragmatic "compromise between pure object-oriented design and simplicity," serving as a dedicated, organized container for methods and data that are global to an application's scope.</p>
+                        
+                        <h4 class="mt-8">1.1. Motivation: Why Do We Need Classes We Can't Instantiate?</h4>
+                        <p>The motivation for static classes stems from the need to group related, stateless utility functions. The .NET Framework itself provides a canonical example with the <code>System.Math</code> class. It contains a collection of mathematical operations (<code>Sqrt</code>, <code>Max</code>, <code>Sin</code>, etc.) that operate purely on their input parameters without needing to store or retrieve any internal instance data. It would be illogical and inefficient to require a developer to write <code>Math myMath = new Math(); double root = myMath.Sqrt(25);</code>. Instead, the static design allows for the direct, intuitive call: <code>double root = Math.Sqrt(25);</code>.</p>
+                        
+                        <div class="mt-6 p-4 bg-indigo-50 border-l-4 border-indigo-400 rounded-r-lg">
+                            <p class="font-semibold text-indigo-800">Analogy: The Public Workshop</p>
+                            <p class="text-slate-700 mt-2">Think of a static class as a public workshop, fully equipped with a collection of specialized tools (its static methods). Anyone in the community can walk in and use the drill press, the table saw, or the lathe without needing to build their own personal workshop (<code>new Workshop()</code>). The tools are shared, globally accessible, and their function doesn't depend on who is using them. The workshop itself isn't an object you possess; it's a location you go to for specific, stateless functions.</p>
+                        </div>
+                        
+                        <h4 class="mt-8">1.2. Anatomy of a Static Class: Core Principles & Compiler Guarantees</h4>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><strong>The <code>static</code> Keyword:</strong> The defining characteristic is the <code>static</code> modifier on the class declaration itself: <code>public static class MyUtils {...}</code>.</li>
+                            <li><strong>Non-Instantiable:</strong> The compiler strictly prohibits the creation of instances of a static class. Any attempt to use the <code>new</code> operator will result in a compile-time error.</li>
+                            <li><strong>Static-Only Members:</strong> All members declared inside a static class—be they fields, properties, methods, or events—must also be declared as <code>static</code>.</li>
+                            <li><strong>Implicitly <code>sealed</code> and <code>abstract</code>:</strong> The compiler automatically treats static classes as if they were declared <code>sealed</code>, meaning they cannot be inherited from.</li>
+                            <li><strong>The Static Constructor:</strong> A static class can have a single, parameterless static constructor, invoked automatically by the CLR at most once before the first time any static member of the class is accessed.</li>
+                        </ul>
+
+                        <div class="code-block mt-6">
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public static class MathUtils
+{
+    public static readonly double PI = 3.14159;
+
+    static MathUtils()
+    {
+        Console.WriteLine("MathUtils initialized.");
+    }
+
+    public static int Add(int a, int b)
+    {
+        return a + b;
+    }
+}</code></pre>
+                        </div>
+                        
+                        <h4 class="mt-8">1.4. Architectural Crossroads: Static Class vs. Singleton Pattern</h4>
+                        <p>The core distinction is this: <strong>static classes are for stateless behavior</strong>, while <strong>singletons are for managing a single instance of a stateful object</strong>. A static class with mutable static fields is often an anti-pattern—a poorly implemented, untestable singleton.</p>
+                        <div class="overflow-x-auto mt-4">
+                            <table class="min-w-full divide-y divide-slate-200 border border-slate-200 rounded-lg">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Feature</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Static Class</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Singleton Pattern</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    <tr><td class="px-6 py-4 font-semibold">Core Intent</td><td class="px-6 py-4">Stateless utility functions.</td><td class="px-6 py-4">Ensures one instance of a stateful object.</td></tr>
+                                    <tr><td class="px-6 py-4 font-semibold">Inheritance/Interfaces</td><td class="px-6 py-4">Cannot implement interfaces.</td><td class="px-6 py-4">Can implement interfaces.</td></tr>
+                                    <tr><td class="px-6 py-4 font-semibold">Testability</td><td class="px-6 py-4">Very difficult to mock.</td><td class="px-6 py-4">Easier to mock via its interface.</td></tr>
+                                    <tr><td class="px-6 py-4 font-semibold">Dependency Injection</td><td class="px-6 py-4">Incompatible.</td><td class="px-6 py-4">Compatible.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    
+                    <section id="section2" class="section-target mb-16">
+                        <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 2: The Data Pattern — Records in C# 9+</h3>
+                        <p>Introduced in C# 9, <strong>records</strong> are a new reference type specifically designed to create types whose primary role is encapsulating data, with three core pillars: concise syntax, value-based equality, and immutability.</p>
+                        
+                        <h4 class="mt-8">2.2. The Three Pillars of Records</h4>
+                        <p><strong>Pillar 1: Concise Syntax (Positional Records)</strong></p>
+                        <p>The following line of code instructs the compiler to generate a full-fledged <code>Person</code> type with a constructor, init-only properties, a deconstructor, and overrides for <code>Equals</code>, <code>GetHashCode</code>, and <code>ToString</code>.</p>
+                        <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg"><code class="language-csharp">public record Person(string FirstName, string LastName);</code></pre>
+                        </div>
+                        
+                        <p class="mt-6"><strong>Pillar 2: Value-Based Equality</strong></p>
+                        <p>Unlike classes (which use reference equality), two record instances are considered equal if they are of the same type and all their public properties have the same values.</p>
+                        <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg"><code class="language-csharp">var person1 = new Person("John", "Doe");
+var person2 = new Person("John", "Doe");
+Console.WriteLine(person1 == person2); // Output: True</code></pre>
+                        </div>
+
+                        <p class="mt-6"><strong>Pillar 3: Immutability by Default</strong></p>
+                        <p>Properties generated from positional parameters use an <code>init</code> accessor, meaning they can only be assigned a value during object construction. This makes objects inherently more thread-safe and predictable.</p>
+                        
+                        <h4 class="mt-8">2.3. Non-Destructive Mutation: The Power of the <code>with</code> Expression</h4>
+                        <p>To work with immutable data, the <code>with</code> expression creates a new record instance that is a shallow copy of an existing one, but with specified properties changed. The original record remains untouched.</p>
+                        <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg"><code class="language-csharp">var originalUser = new User("Bob", "Reader");
+var updatedUser = originalUser with { Name = "Robert" };
+Console.WriteLine(originalUser.Name);   // Output: Bob
+Console.WriteLine(updatedUser.Name);    // Output: Robert</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="section3" class="section-target mb-16">
+                         <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 3: Advanced Topics & Hazard Analysis</h3>
+                         <p>While static classes are invaluable for creating utilities, their misuse, particularly regarding state management, introduces some of the most severe and difficult-to-diagnose bugs in software development. The global, shared nature of static members makes them a magnet for concurrency issues in multithreaded applications.</p>
+                         
+                         <h4 class="mt-8">3.1. The Perils of Shared State: Why Static Fields Are a Concurrency Magnet</h4>
+                         <p>A <code>static</code> field creates a single variable shared across <em>all threads</em>. When multiple threads attempt to read and modify this shared data concurrently without proper synchronization, race conditions can occur, leading to data corruption.</p>
+                         <div class="code-block mt-4">
+                             <pre class="bg-slate-800 text-white p-4 rounded-lg"><code class="language-csharp">public static class WebMetrics
+{
+    public static int TotalRequests = 0;
+}
+// In a web controller:
+public void HandleRequest()
+{
+    WebMetrics.TotalRequests++; // DANGER: This is not thread-safe!
+}</code></pre>
+                         </div>
+                         <div class="mt-6 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                            <p class="font-semibold text-amber-800">Analogy: The Public Whiteboard</p>
+                            <p class="text-slate-700 mt-2">A static field is like a single public whiteboard in a busy office. If two employees (threads) try to update the "Total Sales" number at the exact same time, one update can be lost. One employee reads 100, the other reads 100. Both add their sale and write 101 back. A sale has been lost. Without a strict "one at a time" rule (a lock), the whiteboard's data becomes unreliable.</p>
+                        </div>
+                        <h4 class="mt-8">3.2. Deep Dive: Race Conditions and Solutions</h4>
+                        <p>The operation <code>TotalRequests++</code> is not atomic. It involves a read, a modify, and a write step. To prevent race conditions, these operations must be made atomic using synchronization mechanisms.</p>
+                        <ul class="list-disc pl-5 space-y-2 mt-4">
+                            <li><strong>The <code>lock</code> Statement:</strong> Ensures that only one thread can enter a block of code at a time, providing mutual exclusion. It's a robust but potentially performance-intensive solution.</li>
+                            <li><strong>The <code>Interlocked</code> Class:</strong> Provides highly efficient, lock-free atomic operations for simple arithmetic (e.g., <code>Interlocked.Increment(ref TotalRequests)</code>). It's significantly faster than <code>lock</code> for these specific scenarios.</li>
+                        </ul>
+                    </section>
+
+                    <section id="section4" class="section-target mb-16">
+                        <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 4: Coding Practice — From Theory to Implementation</h3>
+                        
+                        <h4 class="mt-8">4.1. Foundational: Implementing the <code>MathUtils</code> Static Class</h4>
+                         <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public static class MathUtils
+{
+    public static long Factorial(int n)
+    {
+        if (n < 0) throw new ArgumentOutOfRangeException(nameof(n));
+        if (n == 0) return 1;
+        long result = 1;
+        for (int i = 1; i <= n; i++) result *= i;
+        return result;
+    }
+
+    public static bool IsPrime(int number)
+    {
+        if (number <= 1) return false;
+        if (number == 2) return true;
+        if (number % 2 == 0) return false;
+        var boundary = (int)Math.Floor(Math.Sqrt(number));
+        for (int i = 3; i <= boundary; i += 2)
+            if (number % i == 0) return false;
+        return true;
+    }
+}</code></pre>
+                        </div>
+
+                        <h4 class="mt-8">4.2. [Easy] Solution: Crafting a <code>Reverse()</code> String Extension Method</h4>
+                         <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public static class StringExtensions
+{
+    public static string Reverse(this string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        char[] charArray = input.ToCharArray();
+        Array.Reverse(charArray);
+        return new string(charArray);
+    }
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="section5" class="section-target mb-16">
+                        <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 5: System Modeling with UML</h3>
+                        <p>In UML, static members (attributes and methods) are denoted by <strong>underlining</strong> their names. A static class itself can be marked with the <strong><code>&lt;&lt;utility&gt;&gt;</code></strong> stereotype.</p>
+                        
+                        <div class="mt-6 p-4 border border-slate-300 rounded-lg bg-white shadow-sm">
+                            <p class="text-center font-mono text-sm text-slate-500 mb-2">UML Diagram: Static Helper Classes</p>
+                            <div class="flex flex-col md:flex-row gap-6 justify-center">
+                                <div class="border border-slate-400 bg-slate-50 p-3 rounded">
+                                    <p class="text-center font-semibold">&lt;&lt;utility&gt;&gt;</p>
+                                    <p class="text-center font-bold text-lg">MathUtils</p>
+                                    <hr class="my-2 border-slate-400">
+                                    <p class="font-mono text-sm"><span class="uml-underline">+ PI: double</span></p>
+                                    <hr class="my-2 border-slate-400">
+                                    <p class="font-mono text-sm"><span class="uml-underline">+ Factorial(n: int): long</span></p>
+                                    <p class="font-mono text-sm"><span class="uml-underline">+ IsPrime(number: int): bool</span></p>
+                                </div>
+                                <div class="border border-slate-400 bg-slate-50 p-3 rounded">
+                                    <p class="text-center font-semibold">&lt;&lt;utility&gt;&gt;</p>
+                                    <p class="text-center font-bold text-lg">DateUtils</p>
+                                    <hr class="my-2 border-slate-400">
+                                    <hr class="my-2 border-transparent">
+                                    <p class="font-mono text-sm"><span class="uml-underline">+ IsLeapYear(year: int): bool</span></p>
+                                    <p class="font-mono text-sm"><span class="uml-underline">+ DaysInMonth(year: int, month: int): int</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="section6" class="section-target mb-16">
+                        <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 6: Machine Coding — A Payment Processing Service</h3>
+                        <p>This case study synthesizes the concepts. We will design a simple payment processing service leveraging each C# feature for its intended purpose: records for immutable data representation, static classes for stateless utility functions, and regular classes for stateful services.</p>
+                        <h4 class="mt-8">Architectural Blueprint</h4>
+                        <ol class="list-decimal pl-5 space-y-2">
+                          <li><strong><code>Transaction</code> Record:</strong> To represent an immutable payment transaction. A transaction is a historical fact and should not be altered.</li>
+                          <li><strong><code>CurrencyConverter</code> Static Class:</strong> To provide pure, stateless functions for converting between currencies. This logic requires no instance state.</li>
+                          <li><strong><code>PaymentService</code> Class:</strong> A standard, instantiable class to orchestrate the payment process, containing the core business logic.</li>
+                        </ol>
+                        
+                        <h4 class="mt-8">Implementation</h4>
+                        <p><strong>Transaction.cs (Record)</strong></p>
+                         <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public record Transaction(
+    string TransactionId,
+    decimal Amount,
+    string Currency,
+    DateTime Timestamp,
+    string Status,
+    string PaymentGatewayId
+);</code></pre>
+                        </div>
+                        
+                        <p class="mt-6"><strong>CurrencyConverter.cs (Static Class)</strong></p>
+                        <div class="code-block mt-4">
+                           <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public static class CurrencyConverter
+{
+    private static readonly Dictionary<string, decimal> _exchangeRatesToUsd = new()
+    {
+        { "USD", 1.0m }, { "EUR", 1.08m }, { "GBP", 1.25m }
+    };
+
+    public static decimal Convert(decimal amount, string from, string to)
+    {
+        decimal amountInUsd = amount * _exchangeRatesToUsd[from];
+        return Math.Round(amountInUsd / _exchangeRatesToUsd[to], 2);
+    }
+}</code></pre>
+                        </div>
+                    </section>
+                    
+                    <section id="section7" class="section-target">
+                        <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 7: Knowledge Assessment</h3>
+                        <p>Complete the quiz to check your grasp of the key concepts. Select an answer for each question and then click "Check Answers" to see your score and the correct solutions.</p>
+                        
+                        <div id="quiz-container" class="mt-8 space-y-8 bg-white p-6 rounded-lg shadow">
+                            <!-- Quiz questions will be injected here by JS -->
+                        </div>
+                        
+                        <div class="mt-6 text-center">
+                            <button id="check-quiz-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Check Answers</button>
+                        </div>
+
+                        <div id="quiz-results" class="mt-6 hidden">
+                            <h4 id="quiz-score" class="text-2xl font-bold text-center"></h4>
+                            <div id="quiz-feedback" class="mt-4 space-y-4"></div>
+                        </div>
+                    </section>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Code Block Copy Functionality ---
+    const codeBlocks = document.querySelectorAll('.code-block');
+    codeBlocks.forEach(block => {
+        const pre = block.querySelector('pre');
+        const code = pre.querySelector('code');
+        const button = document.createElement('button');
+        button.textContent = 'Copy';
+        button.className = 'copy-button';
+        block.appendChild(button);
+
+        button.addEventListener('click', () => {
+            navigator.clipboard.writeText(code.innerText).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+    });
+
+    // --- Sidebar Navigation Active State ---
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.section-target');
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.3
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                });
+            }
+        });
+    }, observerOptions);
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    // --- Quiz Functionality ---
+    const quizData = [
+        {
+            question: "Which of the following is NOT a feature of a C# static class?",
+            options: ["Cannot be instantiated.", "Can implement interfaces.", "Is implicitly sealed.", "Can only contain static members."],
+            answer: 1,
+            explanation: "Static classes cannot be instantiated, so they cannot fulfill an interface contract."
+        },
+        {
+            question: "When is the static constructor of a class called?",
+            options: ["Every time a static method is called.", "Only once, before the first time any member of the class is accessed.", "Every time an object of the class is created.", "It must be called manually."],
+            answer: 1,
+            explanation: "The CLR guarantees this behavior for thread-safe initialization, calling it at most once before the first member access."
+        },
+        {
+            question: "What is the primary purpose of the `record` type in C#?",
+            options: ["To define classes with complex, stateful behavior.", "To create types that are optimized for performance-critical calculations.", "To provide a concise syntax for creating immutable, data-centric types with value equality.", "To replace the need for structs."],
+            answer: 2,
+            explanation: "This is the core design motivation for records: data-centric types with minimal boilerplate."
+        },
+        {
+            question: "True or False: Two record instances with identical property values will be considered equal by the `==` operator.",
+            options: ["True", "False"],
+            answer: 0,
+            explanation: "Records have compiler-synthesized value equality, which includes an override for the `==` operator."
+        },
+        {
+            question: "What does the `with` expression do when used with a record?",
+            options: ["It modifies the properties of the existing record instance.", "It creates a new record instance by copying the original and applying changes.", "It can only be used to change one property at a time.", "It converts a record to a class."],
+            answer: 1,
+            explanation: "This is called non-destructive mutation and is key to working with immutable types."
+        },
+        {
+            question: "What is the primary risk of using a mutable public static field in a multithreaded application?",
+            options: ["Poor performance due to garbage collection.", "A StackOverflowException.", "Race conditions leading to data corruption.", "Inability to access the field from other assemblies."],
+            answer: 2,
+            explanation: "Unsynchronized access to shared mutable state is a primary cause of concurrency bugs."
+        },
+        {
+            question: "In a UML class diagram, what is the standard way to denote a static method?",
+            options: ["Writing the method name in italics.", "Underlining the method name.", "Prefixing the method name with a * symbol.", "Using the <<static>> stereotype next to the method."],
+            answer: 1,
+            explanation: "Underlining is the standard UML convention for all static members (attributes and operations)."
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const checkBtn = document.getElementById('check-quiz-btn');
+    const resultsContainer = document.getElementById('quiz-results');
+    const scoreEl = document.getElementById('quiz-score');
+    const feedbackEl = document.getElementById('quiz-feedback');
+
+    function buildQuiz() {
+        quizData.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.id = `question-${index}`;
+            let optionsHTML = '';
+            q.options.forEach((option, i) => {
+                optionsHTML += `
+                    <label class="block flex items-center p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <input type="radio" name="q${index}" value="${i}" class="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                        <span>${option}</span>
+                    </label>
+                `;
+            });
+
+            questionDiv.innerHTML = `
+                <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+                <div class="mt-3 space-y-2">${optionsHTML}</div>
+            `;
+            quizContainer.appendChild(questionDiv);
+        });
+    }
+
+    function checkAnswers() {
+        let score = 0;
+        feedbackEl.innerHTML = ''; 
+
+        quizData.forEach((q, index) => {
+            const questionDiv = document.getElementById(`question-${index}`);
+            const selected = questionDiv.querySelector(`input[name="q${index}"]:checked`);
+            
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'p-4 rounded-lg';
+
+            if (!selected) {
+                 feedbackDiv.innerHTML = `<p class="font-bold">${index + 1}. ${q.question}</p><p class="mt-1 text-amber-700">No answer selected.</p>`;
+                 feedbackDiv.classList.add('bg-amber-50');
+            } else {
+                const userAnswer = parseInt(selected.value);
+                const labels = questionDiv.querySelectorAll('label');
+
+                labels.forEach((label, i) => {
+                    label.classList.remove('bg-red-100', 'border-red-300', 'bg-green-100', 'border-green-300');
+                    if (i === q.answer) { 
+                        label.classList.add('bg-green-100', 'border-green-300');
+                    }
+                    if (i === userAnswer && userAnswer !== q.answer) {
+                        label.classList.add('bg-red-100', 'border-red-300');
+                    }
+                });
+
+                if (userAnswer === q.answer) {
+                    score++;
+                    feedbackDiv.innerHTML = `<p class="font-bold">${index + 1}. Correct!</p><p class="mt-1">${q.explanation}</p>`;
+                    feedbackDiv.classList.add('bg-green-50');
+                } else {
+                    feedbackDiv.innerHTML = `<p class="font-bold">${index + 1}. Incorrect.</p><p class="mt-1">${q.explanation}</p>`;
+                    feedbackDiv.classList.add('bg-red-50');
+                }
+            }
+            feedbackEl.appendChild(feedbackDiv);
+        });
+
+        scoreEl.textContent = `Your Score: ${score} out of ${quizData.length}`;
+        resultsContainer.classList.remove('hidden');
+        resultsContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    buildQuiz();
+    checkBtn.addEventListener('click', checkAnswers);
+});
+</script>
+
+</body>
+</html>

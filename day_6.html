@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 6: Interfaces & Partial Classes - OOP Foundations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Crisp & Clean" - A bright white background with dark sienna text for maximum contrast and readability, accented with teal and sienna for key elements. -->
+    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning ergonomics. A sticky Table of Contents (ToC) on the left provides constant, easy navigation, allowing users to jump between sections or track their progress. The main content area on the right flows logically from theory to practice, mimicking a well-structured textbook chapter. This design supports both linear learning and quick reference, making the complex information highly consumable and user-friendly. Key interactions include copy-to-clipboard for code, an interactive quiz for knowledge reinforcement, and toggleable solutions for self-assessment. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: UML Diagram for IPaymentProcessor. Goal: Organize/Structure. Viz/Presentation: HTML/CSS diagram. Interaction: Static visual reference. Justification: Avoids external libraries/SVG, directly renders the required structural relationship. Method: Styled divs.
+        - Report Info: Factory Pattern concept. Goal: Explain a process. Viz/Presentation: Bar Chart. Interaction: Hover tooltips. Justification: A Chart.js bar chart visually represents the Factory "delegating" tasks to different classes, making an abstract concept more concrete. Library: Chart.js.
+        - Report Info: Interface implementation concept. Goal: Explain a relationship. Viz/Presentation: Interactive Canvas Diagram. Interaction: Animated elements. Justification: A simple animation dynamically shows how different classes can "plug into" a common interface, illustrating polymorphism and contracts visually. Method: Vanilla JS Canvas API.
+        - Report Info: Coding problems and solutions. Goal: Inform/Educate. Viz/Presentation: Styled code blocks. Interaction: Copy-to-clipboard button. Justification: Essential for a coding tutorial, improves user experience by simplifying code transfer. Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFFFF;
+            color: #3D352E;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+        }
+        pre {
+            background-color: #1E1E1E;
+            color: #D4D4D4;
+            font-family: 'Roboto Mono', monospace;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            position: relative;
+            overflow-x: auto;
+            border: 1px solid #3a404a;
+        }
+        pre code {
+            background-color: transparent !important;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+            border-radius: 0;
+        }
+        .prose-custom :not(pre) > code {
+            background-color: #F3F4F6;
+            color: #C06A47;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        /* Syntax Highlighting Tokens */
+        .token.keyword { color: #569CD6; }
+        .token.type { color: #4EC9B0; }
+        .token.string { color: #CE9178; }
+        .token.comment { color: #6A9955; }
+        .token.method { color: #DCDCAA; }
+        .token.number { color: #B5CEA8; }
+        .token.punctuation { color: #D4D4D4; }
+        .token.variable { color: #9CDCFE; }
+
+        /* Button Styles */
+        .btn {
+            display: inline-block;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #C06A47; /* Sienna */
+            color: #FFFFFF;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover {
+            background-color: #A95A3A; /* Darker Sienna */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #4A5568; /* gray-600 */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            background-color: #2D3748; /* gray-800 */
+        }
+
+        /* TOC Styles */
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+        }
+        .toc-link:hover {
+            color: #3E8A86; /* Teal */
+            border-left-color: #3E8A86;
+        }
+        .toc-link.active {
+            color: #C06A47; /* Sienna */
+            border-left-color: #C06A47;
+            font-weight: 700;
+        }
+
+        /* General Prose & Layout */
+        .prose-custom { max-width: 80ch; }
+        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
+        .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
+        .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
+        .callout {
+            background-color: #F3F4F6;
+            border-left: 4px solid #C06A47;
+            padding: 1rem;
+            border-radius: 0.25rem;
+        }
+        
+        /* Quiz Styles */
+        .quiz-option { transition: background-color 0.2s; }
+        .quiz-option.correct { background-color: #C6F6D5; border-color: #38A169; }
+        .quiz-option.incorrect { background-color: #FED7D7; border-color: #E53E3E; }
+        
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .bg-white { background-color: #FFFFFF; }
+        .border, .border-t { border-color: #e5e7eb; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Custom Header Placeholder -->
+    <div id="custom-header-placeholder" class="h-16"></div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <header class="py-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">OOP Foundations</h1>
+            <p class="mt-4 text-xl text-gray-600">Day 6: Interfaces & Partial Classes</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            <!-- Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-8 self-start mb-12 lg:mb-0">
+                <div class="p-4 rounded-lg bg-white shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
+                    <nav id="toc-nav" class="flex flex-col space-y-2">
+                        <a href="#theory" class="toc-link pl-2 text-gray-600">Theory Topics</a>
+                        <a href="#coding-practice" class="toc-link pl-2 text-gray-600">Coding Practice</a>
+                        <a href="#uml-task" class="toc-link pl-2 text-gray-600">UML/Schema Task</a>
+                        <a href="#case-study" class="toc-link pl-2 text-gray-600">Case Study</a>
+                        <a href="#knowledge-check" class="toc-link pl-2 text-gray-600">Knowledge Check</a>
+                        <a href="#self-assessment" class="toc-link pl-2 text-gray-600">Self-Assessment Challenge</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="w-full lg:w-3/4 prose-custom">
+                <section id="theory" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2">✅ Theory Topics</h2>
+                    <p>Today, we dive into two powerful C# features that promote flexible and maintainable code: Interfaces and Partial Classes. Interfaces define contracts that classes must adhere to, enabling polymorphism and decoupling. Partial classes allow a single class definition to be split across multiple files, which is invaluable for code organization and working with auto-generated code.</p>
+
+                    <h3 class="text-2xl font-semibold">1. Interfaces in C#</h3>
+                    <p>Think of an interface as a <strong>contract</strong> or a <strong>blueprint</strong> for a class. It defines a set of public members (methods, properties, events, indexers) that a class or struct must implement. It doesn't provide any implementation itself—it only specifies the "what," not the "how."</p>
+                    
+                    <div class="callout">
+                        <p class="font-bold">Analogy: The Wall Socket</p>
+                        <p>A wall socket is an interface. It guarantees a specific shape and a standard voltage. Any appliance manufacturer (a class) can create a plug (an implementation) that fits this socket. The socket doesn't care if it's a toaster or a laptop; as long as the plug conforms to the standard, it will work. This allows for incredible flexibility and interoperability.</p>
+                    </div>
+
+                    <h4 class="text-xl font-semibold mt-6">Why Use Interfaces?</h4>
+                    <ul>
+                        <li><strong>Multiple Inheritance:</strong> C# doesn't allow a class to inherit from more than one base class. However, a class can implement multiple interfaces, providing a clean way to achieve a form of multiple inheritance.</li>
+                        <li><strong>Decoupling:</strong> By programming to an interface rather than a concrete class, you reduce dependencies. Your code interacts with the contract, not the specific implementation, making it easier to swap out implementations later.</li>
+                        <li><strong>Polymorphism:</strong> You can treat objects of different classes that implement the same interface in a uniform way.</li>
+                    </ul>
+
+                    <h5 class="text-lg font-semibold mt-4">Syntax Snippet: Defining an Interface</h5>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IEngine</span>
+{
+    <span class="token type">void</span> <span class="token method">Start</span>()<span class="token punctuation">;</span>
+    <span class="token type">void</span> <span class="token method">Stop</span>()<span class="token punctuation">;</span>
+    <span class="token type">int</span> <span class="token variable">Horsepower</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> }
+}
+</code></pre>
+
+                    <h5 class="text-lg font-semibold mt-4">Syntax Snippet: Implementing an Interface</h5>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">ElectricEngine</span> <span class="token punctuation">:</span> <span class="token type">IEngine</span>
+{
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Horsepower</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">private</span> <span class="token keyword">set</span><span class="token punctuation">;</span> } <span class="token punctuation">=</span> <span class="token number">250</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Start</span>()
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Electric engine hums to life silently."</span>)<span class="token punctuation">;</span>
+    }
+
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Stop</span>()
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Electric engine powers down."</span>)<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">GasEngine</span> <span class="token punctuation">:</span> <span class="token type">IEngine</span>
+{
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Horsepower</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">private</span> <span class="token keyword">set</span><span class="token punctuation">;</span> } <span class="token punctuation">=</span> <span class="token number">180</span><span class="token punctuation">;</span>
+    
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Start</span>()
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Gas engine roars to life!"</span>)<span class="token punctuation">;</span>
+    }
+
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Stop</span>()
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Gas engine sputters to a stop."</span>)<span class="token punctuation">;</span>
+    }
+}
+</code></pre>
+
+                    <h4 class="text-xl font-semibold mt-6">Interactive Visualization: The Interface Contract</h4>
+                    <p>The canvas below illustrates how different classes can "plug into" a single interface contract. Each class provides its own unique implementation, but they all conform to the `IDrawable` standard, allowing a single renderer to handle them all.</p>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border my-6 chart-container mx-auto" style="height: 300px; max-width: 600px;">
+                        <canvas id="interfaceCanvas"></canvas>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold mt-12">2. Partial Classes</h3>
+                    <p>Partial classes provide a way to split the definition of a class, struct, interface, or method over two or more source files. Each source file contains a section of the type or method definition, and all parts are combined when the application is compiled.</p>
+
+                    <h4 class="text-xl font-semibold mt-6">Why Use Partial Classes?</h4>
+                    <ul>
+                        <li><strong>Large Projects:</strong> For very large classes, splitting them into separate files can improve readability and maintainability. Different team members can work on different parts of the same class simultaneously.</li>
+                        <li><strong>Separating Generated Code:</strong> This is the most common use case. When working with source generators or designer tools (like Windows Forms or ASP.NET), the tool generates one part of the class, and you write your custom logic in another. This prevents your code from being overwritten when the tool regenerates its file.</li>
+                    </ul>
+                    
+                    <h5 class="text-lg font-semibold mt-4">Syntax Snippet: Defining a Partial Class</h5>
+                    <p>Both files must use the <code>partial</code> keyword.</p>
+                    <p><strong>File: Employee.cs</strong></p>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">partial</span> <span class="token keyword">class</span> <span class="token type">Employee</span>
+{
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Id</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token variable">Name</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+}
+</code></pre>
+                    <p><strong>File: Employee.Logic.cs</strong></p>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">partial</span> <span class="token keyword">class</span> <span class="token type">Employee</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Promote</span>()
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"</span>{<span class="token variable">Name</span>}<span class="token string"> has been promoted!"</span>)<span class="token punctuation">;</span>
+    }
+}
+</code></pre>
+                    <p>At compile time, these two parts are combined into a single <code>Employee</code> class.</p>
+
+                    <h3 class="text-2xl font-semibold mt-12">3. The Interface Segregation Principle (ISP)</h3>
+                    <p>ISP is one of the five SOLID principles of object-oriented design. It states that <strong>"no client should be forced to depend on methods it does not use."</strong> In simpler terms, it's better to have many small, specific interfaces than one large, general-purpose one.</p>
+
+                    <h4 class="text-xl font-semibold mt-6">The "Fat Interface" Problem</h4>
+                    <p>Imagine an interface for a multi-function printer:</p>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IMultiFunctionDevice</span>
+{
+    <span class="token type">void</span> <span class="token method">Print</span>()<span class="token punctuation">;</span>
+    <span class="token type">void</span> <span class="token method">Scan</span>()<span class="token punctuation">;</span>
+    <span class="token type">void</span> <span class="token method">Fax</span>()<span class="token punctuation">;</span>
+}
+</code></pre>
+                    <p>This works fine for a high-end office machine. But what if you have a cheap, print-only printer? It would be forced to implement <code>Scan()</code> and <code>Fax()</code>, likely by throwing a <code>NotImplementedException</code>. This is a design smell.</p>
+
+                    <h4 class="text-xl font-semibold mt-6">The ISP Solution</h4>
+                    <p>Break the large interface into smaller, more cohesive ones:</p>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IPrinter</span> { <span class="token type">void</span> <span class="token method">Print</span>()<span class="token punctuation">;</span> }
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IScanner</span> { <span class="token type">void</span> <span class="token method">Scan</span>()<span class="token punctuation">;</span> }
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IFaxer</span> { <span class="token type">void</span> <span class="token method">Fax</span>()<span class="token punctuation">;</span> }
+</code></pre>
+                    <p>Now, classes can implement only the interfaces they need:</p>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">SimplePrinter</span> <span class="token punctuation">:</span> <span class="token type">IPrinter</span> { <span class="token punctuation">...</span> }
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Photocopier</span> <span class="token punctuation">:</span> <span class="token type">IPrinter</span><span class="token punctuation">,</span> <span class="token type">IScanner</span> { <span class="token punctuation">...</span> }
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">OfficeHub</span> <span class="token punctuation">:</span> <span class="token type">IPrinter</span><span class="token punctuation">,</span> <span class="token type">IScanner</span><span class="token punctuation">,</span> <span class="token type">IFaxer</span> { <span class="token punctuation">...</span> }
+</code></pre>
+                    <p>This leads to a much cleaner, more flexible, and decoupled design.</p>
+                </section>
+
+                <section id="coding-practice" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2">✅ Coding Practice</h2>
+                    <p>Time to apply the theory. Here are some problems to solve, ranging from easy to hard. Complete solutions are provided for you to check your work.</p>
+
+                    <h3 class="text-2xl font-semibold">[Easy] Define Multiple Small Interfaces</h3>
+                    <p>Following the Interface Segregation Principle, define three separate interfaces: <code>IPrint</code>, <code>IScan</code>, and <code>IFax</code>. Then, create a <code>MultiFunctionPrinter</code> class that implements all three and a <code>BasicPrinter</code> that only implements <code>IPrint</code>.</p>
+                    
+                    <h4 class="text-xl font-semibold mt-4">Solution</h4>
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+
+<span class="token comment">// 1. Define small, specific interfaces</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IPrint</span>
+{
+    <span class="token type">void</span> <span class="token method">Print</span>(<span class="token type">string</span> <span class="token variable">document</span>)<span class="token punctuation">;</span>
+}
+
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IScan</span>
+{
+    <span class="token type">void</span> <span class="token method">Scan</span>(<span class="token type">string</span> <span class="token variable">document</span>)<span class="token punctuation">;</span>
+}
+
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IFax</span>
+{
+    <span class="token type">void</span> <span class="token method">Fax</span>(<span class="token type">string</span> <span class="token variable">document</span>)<span class="token punctuation">;</span>
+}
+
+<span class="token comment">// 2. Implement all interfaces for a multi-function device</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">MultiFunctionPrinter</span> <span class="token punctuation">:</span> <span class="token type">IPrint</span><span class="token punctuation">,</span> <span class="token type">IScan</span><span class="token punctuation">,</span> <span class="token type">IFax</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Print</span>(<span class="token type">string</span> <span class="token variable">document</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Printing: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+    }
+
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Scan</span>(<span class="token type">string</span> <span class="token variable">document</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Scanning: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+    }
+
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Fax</span>(<span class="token type">string</span> <span class="token variable">document</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Faxing: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token comment">// 3. Implement only the necessary interface for a basic device</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">BasicPrinter</span> <span class="token punctuation">:</span> <span class="token type">IPrint</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Print</span>(<span class="token type">string</span> <span class="token variable">document</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Basic Printer Printing: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>(<span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">args</span>)
+    {
+        <span class="token type">MultiFunctionPrinter</span> <span class="token variable">mfp</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">MultiFunctionPrinter</span>()<span class="token punctuation">;</span>
+        <span class="token variable">mfp</span><span class="token punctuation">.</span><span class="token method">Print</span>(<span class="token string">"Annual Report"</span>)<span class="token punctuation">;</span>
+        <span class="token variable">mfp</span><span class="token punctuation">.</span><span class="token method">Scan</span>(<span class="token string">"Invoice"</span>)<span class="token punctuation">;</span>
+        <span class="token variable">mfp</span><span class="token punctuation">.</span><span class="token method">Fax</span>(<span class="token string">"Contract"</span>)<span class="token punctuation">;</span>
+
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"\n--- Using Basic Printer ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">BasicPrinter</span> <span class="token variable">bp</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">BasicPrinter</span>()<span class="token punctuation">;</span>
+        <span class="token variable">bp</span><span class="token punctuation">.</span><span class="token method">Print</span>(<span class="token string">"Shopping List"</span>)<span class="token punctuation">;</span>
+        <span class="token comment">// bp.Scan("Receipt"); // This would cause a compile-time error, which is good!</span>
+    }
+}
+</code></pre>
+                    <h3 class="text-2xl font-semibold mt-8">[Medium] Implement Factory Pattern for Payments</h3>
+                    <p>Create an <code>IPaymentProcessor</code> interface with a method <code>ProcessPayment(decimal amount)</code>. Implement <code>PayPalProcessor</code> and <code>StripeProcessor</code> classes. Then, create a <code>PaymentFactory</code> class with a static method <code>GetPaymentProcessor(string type)</code> that returns an instance of the correct processor based on the input string ("paypal" or "stripe").</p>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border my-6 chart-container mx-auto" style="height: 400px; max-width: 700px;">
+                        <canvas id="factoryChart"></canvas>
+                    </div>
+
+                    <h4 class="text-xl font-semibold mt-4">Solution</h4>
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+
+<span class="token comment">// The contract for all payment processors</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IPaymentProcessor</span>
+{
+    <span class="token type">void</span> <span class="token method">ProcessPayment</span>(<span class="token type">decimal</span> <span class="token variable">amount</span>)<span class="token punctuation">;</span>
+}
+
+<span class="token comment">// Concrete implementation for PayPal</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">PayPalProcessor</span> <span class="token punctuation">:</span> <span class="token type">IPaymentProcessor</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">ProcessPayment</span>(<span class="token type">decimal</span> <span class="token variable">amount</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Processing $</span>{<span class="token variable">amount</span>}<span class="token string"> payment via PayPal."</span>)<span class="token punctuation">;</span>
+        <span class="token comment">// Logic to interact with PayPal API would go here</span>
+    }
+}
+
+<span class="token comment">// Concrete implementation for Stripe</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">StripeProcessor</span> <span class="token punctuation">:</span> <span class="token type">IPaymentProcessor</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">ProcessPayment</span>(<span class="token type">decimal</span> <span class="token variable">amount</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Processing $</span>{<span class="token variable">amount</span>}<span class="token string"> payment via Stripe."</span>)<span class="token punctuation">;</span>
+        <span class="token comment">// Logic to interact with Stripe API would go here</span>
+    }
+}
+
+<span class="token comment">// The Factory class to create processor objects</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token type">PaymentFactory</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">IPaymentProcessor</span> <span class="token method">GetPaymentProcessor</span>(<span class="token type">string</span> <span class="token variable">processorType</span>)
+    {
+        <span class="token keyword">switch</span> (<span class="token variable">processorType</span><span class="token punctuation">.</span><span class="token method">ToLower</span>())
+        {
+            <span class="token keyword">case</span> <span class="token string">"paypal"</span><span class="token punctuation">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token method">PayPalProcessor</span>()<span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token string">"stripe"</span><span class="token punctuation">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token method">StripeProcessor</span>()<span class="token punctuation">;</span>
+            <span class="token keyword">default</span><span class="token punctuation">:</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token method">ArgumentException</span>(<span class="token string">"Invalid payment processor type"</span><span class="token punctuation">,</span> <span class="token keyword">nameof</span>(<span class="token variable">processorType</span>))<span class="token punctuation">;</span>
+        }
+    }
+}
+
+<span class="token comment">// Client code that uses the factory</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>(<span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">args</span>)
+    {
+        <span class="token comment">// The client code doesn't need to know about the concrete classes.</span>
+        <span class="token comment">// It just requests a processor from the factory.</span>
+        
+        <span class="token type">string</span> <span class="token variable">paymentMethod</span> <span class="token punctuation">=</span> <span class="token string">"stripe"</span><span class="token punctuation">;</span> <span class="token comment">// This could come from user input or a config file</span>
+        
+        <span class="token type">IPaymentProcessor</span> <span class="token variable">processor</span> <span class="token punctuation">=</span> <span class="token type">PaymentFactory</span><span class="token punctuation">.</span><span class="token method">GetPaymentProcessor</span>(<span class="token variable">paymentMethod</span>)<span class="token punctuation">;</span>
+        <span class="token variable">processor</span><span class="token punctuation">.</span><span class="token method">ProcessPayment</span>(<span class="token number">99.99m</span>)<span class="token punctuation">;</span>
+
+        <span class="token variable">paymentMethod</span> <span class="token punctuation">=</span> <span class="token string">"paypal"</span><span class="token punctuation">;</span>
+        <span class="token variable">processor</span> <span class="token punctuation">=</span> <span class="token type">PaymentFactory</span><span class="token punctuation">.</span><span class="token method">GetPaymentProcessor</span>(<span class="token variable">paymentMethod</span>)<span class="token punctuation">;</span>
+        <span class="token variable">processor</span><span class="token punctuation">.</span><span class="token method">ProcessPayment</span>(<span class="token number">12.50m</span>)<span class="token punctuation">;</span>
+    }
+}
+</code></pre>
+                </section>
+                
+                <section id="uml-task" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2">✅ UML/Schema Task</h2>
+                    <p>A UML (Unified Modeling Language) diagram is a visual way to represent the design of a system. The diagram below shows the relationship for our <code>IPaymentProcessor</code> interface and its implementing classes. It clearly illustrates the contract-based design.</p>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm border my-6 text-center">
+                        <h4 class="text-lg font-semibold mb-4">UML Diagram: IPaymentProcessor</h4>
+                        <div class="flex flex-col items-center space-y-4">
+                            <!-- Interface -->
+                            <div class="p-4 border-2 border-dashed border-gray-500 bg-gray-100 rounded-md w-64">
+                                <p class="font-semibold italic">&lt;&lt;interface&gt;&gt;</p>
+                                <p class="font-bold">IPaymentProcessor</p>
+                                <hr class="my-2 border-gray-400">
+                                <p class="text-left font-mono text-sm">+ ProcessPayment(amount: decimal): void</p>
+                            </div>
+                            
+                            <!-- Arrow Lines -->
+                            <div class="relative w-full h-12">
+                                <div class="absolute top-0 left-1/2 w-px h-6 bg-gray-500"></div>
+                                <div class="absolute top-6 left-1/4 w-1/2 h-px bg-gray-500"></div>
+                                <div class="absolute top-6 left-1/4 w-px h-6 bg-gray-500"></div>
+                                <div class="absolute top-6 right-1/4 w-px h-6 bg-gray-500"></div>
+                                
+                                <!-- Arrowheads -->
+                                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-0 h-0 
+                                    border-l-8 border-l-transparent
+                                    border-r-8 border-r-transparent
+                                    border-b-8 border-b-white" style="border-bottom-color: white; filter: drop-shadow(0 1px 0 rgb(107 114 128));"></div>
+
+                            </div>
+                            
+                            <!-- Implementing Classes -->
+                            <div class="flex justify-center space-x-8 w-full">
+                                <div class="p-4 border-2 border-solid border-blue-500 bg-blue-50 rounded-md w-64">
+                                    <p class="font-bold">PayPalProcessor</p>
+                                    <hr class="my-2 border-blue-400">
+                                    <p class="text-left font-mono text-sm">+ ProcessPayment(amount: decimal): void</p>
+                                </div>
+                                <div class="p-4 border-2 border-solid border-green-500 bg-green-50 rounded-md w-64">
+                                    <p class="font-bold">StripeProcessor</p>
+                                    <hr class="my-2 border-green-400">
+                                    <p class="text-left font-mono text-sm">+ ProcessPayment(amount: decimal): void</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <p><strong>Key:</strong> A dashed line with a hollow arrow pointing from a class to an interface means "implements" or "realizes".</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="case-study" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2">✅ Case Study / Machine Coding</h2>
+                    <p>Let's tackle a more comprehensive design problem. This simulates a small-scale, real-world task you might encounter in a job.</p>
+
+                    <h3 class="text-2xl font-semibold">Design a Chat Service with an IMessageSender Interface</h3>
+                    <p><strong>Requirements:</strong></p>
+                    <ol class="list-decimal list-inside">
+                        <li>Design a system that can send notifications through various channels.</li>
+                        <li>The core of the system should be an <code>IMessageSender</code> interface. This interface must define a method <code>SendMessage(string recipient, string message)</code>.</li>
+                        <li>Create three concrete classes that implement this interface: <code>EmailSender</code>, <code>SmsSender</code>, and <code>PushNotificationSender</code>.</li>
+                        <li>Implement a <code>MessageSenderFactory</code> to create instances of these senders based on a requested type (e.g., "email", "sms").</li>
+                        <li>Write a client (e.g., a <code>NotificationService</code>) that uses the factory to get a sender and send a message, without knowing the concrete implementation details.</li>
+                    </ol>
+
+                    <h4 class="text-xl font-semibold mt-6">Solution Breakdown</h4>
+                    <p>This design is highly modular. If we need to add a new notification method tomorrow (like Slack or Teams), we just need to create a new class that implements <code>IMessageSender</code> and update the factory. The <code>NotificationService</code> client code remains completely unchanged.</p>
+
+                    <h5 class="text-lg font-semibold mt-4">1. The `IMessageSender` Interface (The Contract)</h5>
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IMessageSender</span>
+{
+    <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)<span class="token punctuation">;</span>
+}
+</code></pre>
+
+                    <h5 class="text-lg font-semibold mt-4">2. Concrete Implementations</h5>
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">EmailSender</span> <span class="token punctuation">:</span> <span class="token type">IMessageSender</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"--- EMAIL ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"To: </span>{<span class="token variable">recipient</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Body: </span>{<span class="token variable">message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Email sent successfully.\n"</span>)<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">SmsSender</span> <span class="token punctuation">:</span> <span class="token type">IMessageSender</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"--- SMS ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"To Phone Number: </span>{<span class="token variable">recipient</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Message: </span>{<span class="token variable">message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"SMS sent successfully.\n"</span>)<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">PushNotificationSender</span> <span class="token punctuation">:</span> <span class="token type">IMessageSender</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"--- PUSH NOTIFICATION ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"To Device Token: </span>{<span class="token variable">recipient</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Notification: </span>{<span class="token variable">message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Push notification sent successfully.\n"</span>)<span class="token punctuation">;</span>
+    }
+}
+</code></pre>
+                    <h5 class="text-lg font-semibold mt-4">3. The `MessageSenderFactory`</h5>
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token type">MessageSenderFactory</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">IMessageSender</span> <span class="token method">GetSender</span>(<span class="token type">string</span> <span class="token variable">type</span>)
+    {
+        <span class="token keyword">return</span> <span class="token variable">type</span><span class="token punctuation">.</span><span class="token method">ToLower</span>() <span class="token keyword">switch</span>
+        {
+            <span class="token string">"email"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">EmailSender</span>()<span class="token punctuation">,</span>
+            <span class="token string">"sms"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">SmsSender</span>()<span class="token punctuation">,</span>
+            <span class="token string">"push"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">PushNotificationSender</span>()<span class="token punctuation">,</span>
+            <span class="token variable">_</span> <span class="token punctuation">=></span> <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token method">ArgumentException</span>(<span class="token string">"Invalid sender type specified."</span>)<span class="token punctuation">,</span>
+        }<span class="token punctuation">;</span>
+    }
+}
+</code></pre>
+                    <h5 class="text-lg font-semibold mt-4">4. Client Code: `NotificationService`</h5>
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">NotificationService</span>
+{
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendNotification</span>(<span class="token type">string</span> <span class="token variable">type</span>, <span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
+    {
+        <span class="token keyword">try</span>
+        {
+            <span class="token type">IMessageSender</span> <span class="token variable">sender</span> <span class="token punctuation">=</span> <span class="token type">MessageSenderFactory</span><span class="token punctuation">.</span><span class="token method">GetSender</span>(<span class="token variable">type</span>)<span class="token punctuation">;</span>
+            <span class="token variable">sender</span><span class="token punctuation">.</span><span class="token method">SendMessage</span>(<span class="token variable">recipient</span>, <span class="token variable">message</span>)<span class="token punctuation">;</span>
+        }
+        <span class="token keyword">catch</span> (<span class="token type">ArgumentException</span> <span class="token variable">ex</span>)
+        {
+            <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Error: </span>{<span class="token variable">ex</span><span class="token punctuation">.</span><span class="token variable">Message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        }
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>(<span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">args</span>)
+    {
+        <span class="token type">NotificationService</span> <span class="token variable">notificationService</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">NotificationService</span>()<span class="token punctuation">;</span>
+
+        <span class="token comment">// Send an email</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"email"</span>, <span class="token string">"test@example.com"</span>, <span class="token string">"Your order has shipped!"</span>)<span class="token punctuation">;</span>
+
+        <span class="token comment">// Send an SMS</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"sms"</span>, <span class="token string">"+15551234567"</span>, <span class="token string">"Your package is out for delivery."</span>)<span class="token punctuation">;</span>
+
+        <span class="token comment">// Send a push notification</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"push"</span>, <span class="token string">"device_token_abc123"</span>, <span class="token string">"You have a new friend request."</span>)<span class="token punctuation">;</span>
+        
+        <span class="token comment">// Try to send an invalid type</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"telegram"</span>, <span class="token string">"user_id_xyz"</span>, <span class="token string">"This will fail."</span>)<span class="token punctuation">;</span>
+    }
+}
+</code></pre>
+                </section>
+                
+                <section id="knowledge-check" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2">✅ Knowledge Check Quiz</h2>
+                    <p>Test your understanding of today's topics. Select an answer for each question to see immediate feedback.</p>
+                    <div id="quiz-container" class="space-y-6 mt-6">
+                        <!-- Quiz questions will be injected here by JS -->
+                    </div>
+                </section>
+                
+                <section id="self-assessment" class="scroll-mt-20">
+                    <h2 class="text-3xl font-bold border-b pb-2">✅ Self-Assessment Challenge</h2>
+                    <p>Here's a final challenge to integrate everything you've learned. Try to solve it on your own before looking at the solution.</p>
+
+                    <h3 class="text-2xl font-semibold">Challenge: Data Exporter System</h3>
+                    <p><strong>Scenario:</strong> You are building a feature for an application that needs to export user data in various formats (CSV, JSON, XML). Your task is to design a flexible system using interfaces and a factory to handle this.</p>
+                    <p><strong>Requirements:</strong></p>
+                    <ul class="list-disc list-inside">
+                        <li>Define an interface <code>IDataExporter</code> with one method: <code>string Export(object data)</code>.</li>
+                        <li>Create three classes that implement this interface: <code>CsvExporter</code>, <code>JsonExporter</code>, and <code>XmlExporter</code>.</li>
+                        <li>Each class's <code>Export</code> method should return a string representing the data in the corresponding format (you can just use a simple placeholder string for the output).</li>
+                        <li>Create an <code>ExporterFactory</code> to produce the correct exporter based on an enum or string type.</li>
+                        <li>Write a client that uses the factory to export a sample piece of data to all three formats.</li>
+                    </ul>
+
+                    <div class="mt-6">
+                        <button id="toggle-solution-btn" class="btn btn-primary">Show Solution</button>
+                        <div id="solution-content" class="hidden mt-4">
+                            <h4 class="text-xl font-semibold">Challenge Solution</h4>
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+<span class="token keyword">using</span> <span class="token type">System<span class="token punctuation">.</span>Collections<span class="token punctuation">.</span>Generic</span><span class="token punctuation">;</span>
+
+<span class="token comment">// --- Data Model ---</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">User</span>
+{
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Id</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token variable">Username</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token variable">Email</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+}
+
+<span class="token comment">// --- Interfaces ---</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IDataExporter</span>
+{
+    <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)<span class="token punctuation">;</span>
+}
+
+<span class="token comment">// --- Concrete Implementations ---</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">CsvExporter</span> <span class="token punctuation">:</span> <span class="token type">IDataExporter</span>
+{
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Exporting data to CSV format..."</span>)<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token variable">lines</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">string</span><span class="token punctuation">&gt;</span> { <span class="token string">"Id,Username,Email"</span> }<span class="token punctuation">;</span>
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">user</span> <span class="token keyword">in</span> <span class="token variable">data</span>)
+        {
+            <span class="token variable">lines</span><span class="token punctuation">.</span><span class="token method">Add</span>(<span class="token string">$"</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Id</span>}<span class="token string">,</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Username</span>}<span class="token string">,</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Email</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        }
+        <span class="token keyword">return</span> <span class="token type">string</span><span class="token punctuation">.</span><span class="token method">Join</span>(<span class="token string">"\n"</span>, <span class="token variable">lines</span>)<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">JsonExporter</span> <span class="token punctuation">:</span> <span class="token type">IDataExporter</span>
+{
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Exporting data to JSON format..."</span>)<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token variable">userStrings</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">string</span><span class="token punctuation">&gt;</span>()<span class="token punctuation">;</span>
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">user</span> <span class="token keyword">in</span> <span class="token variable">data</span>)
+        {
+            <span class="token variable">userStrings</span><span class="token punctuation">.</span><span class="token method">Add</span>(<span class="token string">$"  {{\n    \"Id\": </span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Id</span>}<span class="token string">,\n    \"Username\": \"</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Username</span>}<span class="token string">\",\n    \"Email\": \"</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Email</span>}<span class="token string">\"\n  }}"</span>)<span class="token punctuation">;</span>
+        }
+        <span class="token keyword">return</span> <span class="token string">"[\n"</span> <span class="token punctuation">+</span> <span class="token type">string</span><span class="token punctuation">.</span><span class="token method">Join</span>(<span class="token string">",\n"</span>, <span class="token variable">userStrings</span>) <span class="token punctuation">+</span> <span class="token string">"\n]"</span><span class="token punctuation">;</span>
+    }
+}
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">XmlExporter</span> <span class="token punctuation">:</span> <span class="token type">IDataExporter</span>
+{
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)
+    {
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Exporting data to XML format..."</span>)<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token variable">userElements</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">string</span><span class="token punctuation">&gt;</span>()<span class="token punctuation">;</span>
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">user</span> <span class="token keyword">in</span> <span class="token variable">data</span>)
+        {
+            <span class="token variable">userElements</span><span class="token punctuation">.</span><span class="token method">Add</span>(<span class="token string">$"  &lt;User&gt;\n    &lt;Id&gt;</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Id</span>}<span class="token string">&lt;/Id&gt;\n    &lt;Username&gt;</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Username</span>}<span class="token string">&lt;/Username&gt;\n    &lt;Email&gt;</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Email</span>}<span class="token string">&lt;/Email&gt;\n  &lt;/User&gt;"</span>)<span class="token punctuation">;</span>
+        }
+        <span class="token keyword">return</span> <span class="token string">"&lt;Users&gt;\n"</span> <span class="token punctuation">+</span> <span class="token type">string</span><span class="token punctuation">.</span><span class="token method">Join</span>(<span class="token string">"\n"</span>, <span class="token variable">userElements</span>) <span class="token punctuation">+</span> <span class="token string">"\n&lt;/Users&gt;"</span><span class="token punctuation">;</span>
+    }
+}
+
+<span class="token comment">// --- Factory ---</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token type">ExporterFactory</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">IDataExporter</span> <span class="token method">GetExporter</span>(<span class="token type">string</span> <span class="token variable">format</span>)
+    {
+        <span class="token keyword">return</span> <span class="token variable">format</span><span class="token punctuation">.</span><span class="token method">ToLower</span>() <span class="token keyword">switch</span>
+        {
+            <span class="token string">"csv"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">CsvExporter</span>()<span class="token punctuation">,</span>
+            <span class="token string">"json"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">JsonExporter</span>()<span class="token punctuation">,</span>
+            <span class="token string">"xml"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">XmlExporter</span>()<span class="token punctuation">,</span>
+            <span class="token variable">_</span> <span class="token punctuation">=></span> <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token method">NotSupportedException</span>(<span class="token string">$"Format '</span>{<span class="token variable">format</span>}<span class="token string">' is not supported."</span>)<span class="token punctuation">,</span>
+        }<span class="token punctuation">;</span>
+    }
+}
+
+<span class="token comment">// --- Client ---</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>()
+    {
+        <span class="token keyword">var</span> <span class="token variable">users</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span>
+        {
+            <span class="token keyword">new</span> <span class="token type">User</span> { <span class="token variable">Id</span> <span class="token punctuation">=</span> <span class="token number">1</span>, <span class="token variable">Username</span> <span class="token punctuation">=</span> <span class="token string">"alice"</span>, <span class="token variable">Email</span> <span class="token punctuation">=</span> <span class="token string">"alice@example.com"</span> }<span class="token punctuation">,</span>
+            <span class="token keyword">new</span> <span class="token type">User</span> { <span class="token variable">Id</span> <span class="token punctuation">=</span> <span class="token number">2</span>, <span class="token variable">Username</span> <span class="token punctuation">=</span> <span class="token string">"bob"</span>, <span class="token variable">Email</span> <span class="token punctuation">=</span> <span class="token string">"bob@example.com"</span> }
+        }<span class="token punctuation">;</span>
+
+        <span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">formats</span> <span class="token punctuation">=</span> { <span class="token string">"csv"</span><span class="token punctuation">,</span> <span class="token string">"json"</span><span class="token punctuation">,</span> <span class="token string">"xml"</span> }<span class="token punctuation">;</span>
+
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">format</span> <span class="token keyword">in</span> <span class="token variable">formats</span>)
+        {
+            <span class="token keyword">try</span>
+            {
+                <span class="token type">IDataExporter</span> <span class="token variable">exporter</span> <span class="token punctuation">=</span> <span class="token type">ExporterFactory</span><span class="token punctuation">.</span><span class="token method">GetExporter</span>(<span class="token variable">format</span>)<span class="token punctuation">;</span>
+                <span class="token type">string</span> <span class="token variable">exportedData</span> <span class="token punctuation">=</span> <span class="token variable">exporter</span><span class="token punctuation">.</span><span class="token method">Export</span>(<span class="token variable">users</span>)<span class="token punctuation">;</span>
+                <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"\n--- </span>{<span class="token variable">format</span><span class="token punctuation">.</span><span class="token method">ToUpper</span>()}<span class="token string"> OUTPUT ---\n</span>{<span class="token variable">exportedData</span>}<span class="token string">\n"</span>)<span class="token punctuation">;</span>
+            }
+            <span class="token keyword">catch</span> (<span class="token type">NotSupportedException</span> <span class="token variable">ex</span>)
+            {
+                <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token variable">ex</span><span class="token punctuation">.</span><span class="token variable">Message</span>)<span class="token punctuation">;</span>
+            }
+        }
+    }
+}
+</code></pre>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer class="mt-16 py-8 bg-white border-t">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2025 OOP Foundations. All Rights Reserved.</p>
+            <p class="text-sm mt-1">A self-contained learning module.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Copy-to-Clipboard Functionality ---
+            document.querySelectorAll('pre').forEach(block => {
+                const code = block.querySelector('code');
+                if (code) {
+                    const copyButton = document.createElement('button');
+                    copyButton.textContent = 'Copy';
+                    copyButton.className = 'copy-btn btn';
+                    block.appendChild(copyButton);
+
+                    copyButton.addEventListener('click', () => {
+                        const textArea = document.createElement('textarea');
+                        textArea.value = code.innerText;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+
+                        copyButton.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy';
+                        }, 2000);
+                    });
+                }
+            });
+            
+            // --- Sticky ToC Active State Logic ---
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const sections = document.querySelectorAll('main section');
+
+            const tocObserver = new IntersectionObserver((entries) => {
+                let activeSectionId = null;
+                
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        activeSectionId = entry.target.id;
+                        break;
+                    }
+                }
+                
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (activeSectionId && link.getAttribute('href') === `#${activeSectionId}`) {
+                        link.classList.add('active');
+                    }
+                });
+
+            }, { rootMargin: '0px 0px -80% 0px', threshold: 0 });
+
+            sections.forEach(section => {
+                tocObserver.observe(section);
+            });
+
+            // --- Solution Toggle ---
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionContent = document.getElementById('solution-content');
+            if (toggleBtn && solutionContent) {
+                toggleBtn.addEventListener('click', () => {
+                    const isHidden = solutionContent.classList.contains('hidden');
+                    if (isHidden) {
+                        solutionContent.classList.remove('hidden');
+                        toggleBtn.textContent = 'Hide Solution';
+                    } else {
+                        solutionContent.classList.add('hidden');
+                        toggleBtn.textContent = 'Show Solution';
+                    }
+                });
+            }
+
+            // --- Quiz Data and Logic ---
+            const quizData = [
+                {
+                    question: "What is the primary purpose of an interface in C#?",
+                    options: [
+                        "To provide a base implementation for derived classes.",
+                        "To define a contract of members that a class must implement.",
+                        "To allow a class definition to be split across multiple files.",
+                        "To directly instantiate objects."
+                    ],
+                    correctAnswer: "To define a contract of members that a class must implement."
+                },
+                {
+                    question: "Can a C# class inherit from multiple classes and implement multiple interfaces?",
+                    options: [
+                        "Yes, it can inherit from multiple classes and implement multiple interfaces.",
+                        "No, it can only inherit from one class but can implement multiple interfaces.",
+                        "Yes, it can inherit from multiple classes but can only implement one interface.",
+                        "No, it can only inherit from one class and implement one interface."
+                    ],
+                    correctAnswer: "No, it can only inherit from one class but can implement multiple interfaces."
+                },
+                {
+                    question: "What is the main benefit of using Partial Classes?",
+                    options: [
+                        "To improve runtime performance.",
+                        "To enforce a strict contract on a class.",
+                        "To separate auto-generated code from developer-written code.",
+                        "To enable multiple inheritance."
+                    ],
+                    correctAnswer: "To separate auto-generated code from developer-written code."
+                },
+                {
+                    question: "The Interface Segregation Principle (ISP) suggests that...",
+                    options: [
+                        "Interfaces should be as large as possible to cover all use cases.",
+                        "Classes should not be forced to implement interfaces they do not use.",
+                        "A class should have only one reason to change.",
+                        "Objects should be replaceable with their subtypes without altering correctness."
+                    ],
+                    correctAnswer: "Classes should not be forced to implement interfaces they do not use."
+                },
+                 {
+                    question: "In a Factory Pattern, what is the role of the interface?",
+                    options: [
+                        "The factory itself must implement an interface.",
+                        "The interface is not used in the Factory Pattern.",
+                        "It serves as the return type for the factory method, decoupling the client from concrete classes.",
+                        "It holds the logic for creating objects."
+                    ],
+                    correctAnswer: "It serves as the return type for the factory method, decoupling the client from concrete classes."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            if (quizContainer) {
+                quizData.forEach((q, index) => {
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'bg-white p-6 rounded-lg shadow-sm border';
+                    
+                    let optionsHtml = '';
+                    q.options.forEach(option => {
+                        optionsHtml += `<div class="quiz-option border rounded-md p-3 mt-2 cursor-pointer hover:bg-gray-100" data-question="${index}">${option}</div>`;
+                    });
+
+                    questionEl.innerHTML = `
+                        <p class="font-semibold text-lg">${index + 1}. ${q.question}</p>
+                        <div class="mt-4 space-y-2">${optionsHtml}</div>
+                        <div id="feedback-${index}" class="mt-3 text-sm font-medium"></div>
+                    `;
+                    quizContainer.appendChild(questionEl);
+                });
+
+                quizContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('quiz-option')) {
+                        const questionIndex = e.target.getAttribute('data-question');
+                        const selectedAnswer = e.target.textContent;
+                        const questionData = quizData[questionIndex];
+                        const feedbackEl = document.getElementById(`feedback-${questionIndex}`);
+                        
+                        const allOptions = document.querySelectorAll(`.quiz-option[data-question="${questionIndex}"]`);
+                        allOptions.forEach(opt => {
+                            opt.classList.remove('correct', 'incorrect');
+                            opt.style.pointerEvents = 'none'; 
+                        });
+
+                        if (selectedAnswer === questionData.correctAnswer) {
+                            e.target.classList.add('correct');
+                            feedbackEl.textContent = 'Correct!';
+                            feedbackEl.style.color = '#38A169';
+                        } else {
+                            e.target.classList.add('incorrect');
+                            feedbackEl.textContent = `Incorrect. The correct answer is: "${questionData.correctAnswer}"`;
+                            feedbackEl.style.color = '#E53E3E';
+                            allOptions.forEach(opt => {
+                                if(opt.textContent === questionData.correctAnswer) {
+                                    opt.classList.add('correct');
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // --- Interactive Canvas Visualization (Performance Optimized) ---
+            const canvas = document.getElementById('interfaceCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                let frame = 0;
+                let animationFrameId;
+
+                const resizeCanvas = () => {
+                    const container = canvas.parentElement;
+                    canvas.width = container.clientWidth;
+                    canvas.height = container.clientHeight;
+                };
+
+                const interfaceBox = { x: 50, y: 120, w: 150, h: 60 };
+                const classBoxes = [
+                    { x: 350, y: 30, w: 120, h: 50, name: 'Circle' },
+                    { x: 350, y: 125, w: 120, h: 50, name: 'Square' },
+                    { x: 350, y: 220, w: 120, h: 50, name: 'Triangle' },
+                ];
+
+                function draw() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    ctx.fillStyle = '#3D352E';
+                    ctx.strokeStyle = '#C06A47';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(interfaceBox.x, interfaceBox.y, interfaceBox.w, interfaceBox.h);
+                    ctx.font = '14px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('IDrawable', interfaceBox.x + interfaceBox.w / 2, interfaceBox.y + 25);
+                    ctx.font = '12px "Roboto Mono"';
+                    ctx.fillText('+ Draw()', interfaceBox.x + interfaceBox.w / 2, interfaceBox.y + 45);
+
+                    classBoxes.forEach((box, i) => {
+                        const progress = Math.min(1, Math.max(0, (frame - i * 30) / 60));
+                        
+                        if (progress > 0) {
+                            const currentX = interfaceBox.x + interfaceBox.w + (box.x - (interfaceBox.x + interfaceBox.w)) * progress;
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(interfaceBox.x + interfaceBox.w, interfaceBox.y + interfaceBox.h / 2);
+                            ctx.bezierCurveTo(interfaceBox.x + interfaceBox.w + 50, interfaceBox.y + interfaceBox.h / 2, currentX - 50, box.y + box.h / 2, currentX, box.y + box.h / 2);
+                            ctx.strokeStyle = '#3E8A86';
+                            ctx.setLineDash([5, 5]);
+                            ctx.stroke();
+                            ctx.setLineDash([]);
+                            
+                            if(progress === 1) {
+                                ctx.strokeStyle = '#3E8A86';
+                                ctx.strokeRect(box.x, box.y, box.w, box.h);
+                                ctx.fillStyle = '#3D352E';
+                                ctx.font = '14px Inter';
+                                ctx.fillText(box.name, box.x + box.w / 2, box.y + 20);
+                                ctx.font = '12px "Roboto Mono"';
+                                ctx.fillText('+ Draw() { ... }', box.x + box.w / 2, box.y + 40);
+                            }
+                        }
+                    });
+
+                    frame++;
+                    if (frame > 300) frame = 0;
+                    animationFrameId = requestAnimationFrame(draw);
+                }
+                
+                const canvasObserver = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        frame = 0; // Restart animation when it comes into view
+                        if (!animationFrameId) {
+                            animationFrameId = requestAnimationFrame(draw);
+                        }
+                    } else {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                }, { threshold: 0.1 });
+
+                canvasObserver.observe(canvas);
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
+            }
+
+            // --- Factory Chart.js Visualization ---
+            const factoryCtx = document.getElementById('factoryChart');
+            if(factoryCtx) {
+                new Chart(factoryCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['PayPalProcessor', 'StripeProcessor', 'FutureProcessor'],
+                        datasets: [{
+                            label: 'Objects Created by Factory',
+                            data: [120, 185, 0],
+                            backgroundColor: [
+                                'rgba(62, 138, 134, 0.6)',
+                                'rgba(192, 106, 71, 0.6)',
+                                'rgba(150, 150, 150, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgb(62, 138, 134)',
+                                'rgb(192, 106, 71)',
+                                'rgb(150, 150, 150)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Factory Pattern: Decoupling Client from Concrete Classes',
+                                font: { size: 16 }
+                            },
+                            subtitle: {
+                                display: true,
+                                text: 'The client requests an IPaymentProcessor, and the factory provides a concrete instance.',
+                                padding: { bottom: 20 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    footer: (tooltipItems) => 'The client code does not know or care which specific class instance it received.'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>
+
