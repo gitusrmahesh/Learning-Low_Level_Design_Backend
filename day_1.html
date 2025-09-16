@@ -1,70 +1,155 @@
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OOP Foundations: Day 1 - Intro, Encapsulation & Abstraction</title>
-    <!-- Chosen Palette: Light Slate & Soft Indigo -->
-    <!-- Application Structure Plan: A single-page educational module with a two-column layout. The left column features a sticky table of contents for easy navigation through the lesson's sections. The right column contains the main, scrollable content. This structure was chosen because it mirrors a textbook chapter's flow, which is ideal for learning. The user can either progress linearly by scrolling or jump to specific topics like Theory, Practice, UML Design, or the interactive Quiz. This non-linear access via the sticky nav empowers users to learn at their own pace and revisit sections easily, enhancing usability for a dense technical topic. -->
-    <!-- Visualization & Content Choices: 
-        - Theory (Objects, Classes, etc.): Goal: Inform. Method: Styled text blocks and syntax-highlighted code snippets. Interaction: Copy-to-clipboard button. Justification: Provides clear, readable explanations and makes code easily accessible.
-        - Encapsulation vs. Abstraction: Goal: Compare. Method: HTML table. Interaction: None. Justification: A table offers the most direct and effective side-by-side comparison.
-        - UML/Sequence Diagrams: Goal: Organize. Method: Custom HTML/CSS divs and flexbox to simulate diagrams. Interaction: None. Justification: This approach visually represents complex structures without using forbidden SVG/image files, keeping the app self-contained.
-        - Interactive Quiz & Challenge: Goal: Assess & Apply. Method: JS-powered quiz with instant feedback and a revealable solution for the challenge. Interaction: Click to answer/reveal. Justification: Active recall and self-assessment are powerful learning tools; this interactivity makes the learning process more engaging and effective.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>Day 1: Intro, Encapsulation & Abstraction - OOP Foundations</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #334155; }
-        .toc-link.active { color: #6366f1; font-weight: 600; border-left-color: #6366f1; transform: translateX(4px); }
-        .toc-link { transition: all 0.2s ease-in-out; }
-        .code-block { position: relative; }
-        .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background-color: #334155; color: #e2e8f0; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; opacity: 0; transition: all 0.2s; border: 1px solid #475569; }
-        .code-block:hover .copy-btn { opacity: 1; }
-        .copy-btn:hover { background-color: #475569; }
-        .quiz-option { cursor: pointer; transition: all 0.2s ease-in-out; }
-        .quiz-option:hover { background-color: #eef2ff; border-color: #818cf8; transform: scale(1.02); }
-        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; color: #15803d; font-weight: 500; }
-        .quiz-option.incorrect { background-color: #fee2e2; border-color: #ef4444; color: #b91c1c; font-weight: 500; }
-        .quiz-option.reveal { border-color: #22c55e !important; }
-        .solution-toggle { cursor: pointer; }
-        .uml-class, .uml-actor, .uml-obj, .seq-obj { border: 2px solid #94a3b8; padding: 0.75rem; text-align: center; background-color: #f8fafc; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-        .uml-class .title { font-weight: 700; color: #1e293b; border-bottom: 2px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
-        .uml-connector { position: relative; display: flex; align-items: center; justify-content: center; margin: 1rem 0; height: 2px; background-color: #94a3b8; }
-        .uml-connector-v { width: 2px; background-color: #94a3b8; margin: 0 auto; }
-        .uml-label { position: absolute; background-color: #f1f5f9; padding: 0 0.5rem; color: #475569; font-size: 0.875rem; font-weight: 500; }
-        .seq-line { border-left: 2px dashed #94a3b8; height: 100%; position: absolute; left: 50%; transform: translateX(-1px); }
-        .seq-arrow { width: 100%; height: 2px; background-color: #3b82f6; position: relative; }
-        .seq-arrow::after { content: '▶'; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); color: #3b82f6; font-size: 1.1rem; }
-        .seq-arrow-return { background-color: #64748b; border-top: 2px dashed #64748b; }
-        .seq-arrow-return::after { content: '◀'; color: #64748b; font-size: 1.1rem; left: -4px; }
-
-        pre code.hljs { border-radius: 0.5rem; padding: 1.25rem !important; }
-        .content-card { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05); overflow: hidden; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFFFF;
+            color: #3D352E;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+        }
+        pre {
+            background-color: #1E1E1E;
+            color: #D4D4D4;
+            font-family: 'Roboto Mono', monospace;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            position: relative;
+            overflow-x: auto;
+            border: 1px solid #3a404a;
+        }
+        pre code {
+            background-color: transparent !important;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+            border-radius: 0;
+        }
+        .prose-custom :not(pre) > code {
+            background-color: #F3F4F6;
+            color: #C06A47;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #C06A47; /* Sienna */
+            color: #FFFFFF;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover {
+            background-color: #A95A3A; /* Darker Sienna */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #4A5568;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            background-color: #2D3748;
+        }
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+        }
+        .toc-link:hover {
+            color: #3E8A86; /* Teal */
+            border-left-color: #3E8A86;
+        }
+        .toc-link.active {
+            color: #C06A47; /* Sienna */
+            border-left-color: #C06A47;
+            font-weight: 700;
+        }
+        .prose-custom { max-width: 80ch; }
+        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
+        .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
+        .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .bg-white { background-color: #FFFFFF; }
+        .border, .border-t { border-color: #e5e7eb; }
     </style>
 </head>
 <body class="antialiased">
-    <header class="text-center mb-10">
-            <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
-            <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
-        </header>
-        
 
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div class="flex flex-col md:flex-row md:space-x-8 lg:space-x-12">
-            <main class="w-full md:w-3/4 lg:w-4/5 mt-8 md:mt-0">
-                <a href="lld_homepage.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Return to Homepage
-                </a>
-                <div class="mb-12">
-                    <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">OOP Foundations: Day 1</h1>
-                    <p class="mt-2 text-xl text-slate-600">An Introduction to Encapsulation & Abstraction in C#</p>
+    <!-- Header -->
+    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div class="text-2xl font-bold text-sienna-800">
+                    <a href="roadmap.html">OOP Foundations</a>
                 </div>
-                
+                <nav class="hidden md:flex space-x-4">
+                    <a href="day_1.html" class="font-bold text-teal-600">Day 1</a>
+                    <a href="day_2.html" class="text-gray-600 hover:text-teal-600 transition">Day 2</a>
+                    <a href="day_3.html" class="text-gray-600 hover:text-teal-600 transition">Day 3</a>
+                    <a href="day_4.html" class="text-gray-600 hover:text-teal-600 transition">Day 4</a>
+                    <a href="day_5.html" class="text-gray-600 hover:text-teal-600 transition">Day 5</a>
+                    <a href="day_6.html" class="text-gray-600 hover:text-teal-600 transition">Day 6</a>
+                    <a href="day_7.html" class="text-gray-600 hover:text-teal-600 transition">Day 7</a>
+                </nav>
+                <!-- Return to Homepage button removed from here -->
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+        <div class="flex justify-between items-center mb-12">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">Day 1: Intro, Encapsulation & Abstraction</h1>
+                <p class="mt-4 text-xl text-gray-600">An Introduction to Encapsulation & Abstraction in C#</p>
+            </div>
+            <a href="roadmap.html" class="btn btn-primary whitespace-nowrap">Return to Homepage</a>
+        </div>
+
+        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
+                <div class="p-4 rounded-lg bg-white shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
+                    <nav id="toc-nav" class="flex flex-col space-y-2">
+                        <a href="#theory" class="toc-link pl-2 text-gray-600">Theory Deep Dive</a>
+                        <a href="#practice" class="toc-link pl-2 text-gray-600">Coding Practice</a>
+                        <a href="#problems" class="toc-link pl-2 text-gray-600">Problem Solving</a>
+                        <a href="#uml" class="toc-link pl-2 text-gray-600">UML/Schema Design</a>
+                        <a href="#case-study" class="toc-link pl-2 text-gray-600">Case Study</a>
+                        <a href="#quiz" class="toc-link pl-2 text-gray-600">Knowledge Check</a>
+                        <a href="#challenge" class="toc-link pl-2 text-gray-600">Self-Assessment</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="w-full lg:w-3/4 prose-custom">
                 <section id="theory" class="scroll-mt-24 space-y-12">
                     <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3">Theory Deep Dive</h2>
                     
@@ -693,170 +778,50 @@ public class VendingMachine
                         </div>
                      </article>
                 </section>
-            </main>
-            <aside class="w-full md:w-1/4 lg:w-1/5">
-                <nav id="toc" class="sticky top-24">
-                    <h3 class="font-bold text-slate-900 mb-4 text-lg">Table of Contents</h3>
-                    <ul class="space-y-2">
-                        <li><a href="#theory" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Theory Deep Dive</a></li>
-                        <li><a href="#practice" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Coding Practice</a></li>
-                        <li><a href="#problems" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Problem Solving</a></li>
-                        <li><a href="#uml" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">UML/Schema Design</a></li>
-                        <li><a href="#case-study" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Case Study</a></li>
-                        <li><a href="#quiz" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Knowledge Check</a></li>
-                        <li><a href="#challenge" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Self-Assessment</a></li>
-                    </ul>
-                </nav>
-            </aside>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <footer class="text-center mt-16 py-8 border-t border-slate-200">
-        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
-        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
-        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    <footer class="mt-16 py-8 bg-white border-t">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex justify-center mb-4">
+                <a href="roadmap.html" class="btn btn-primary">Return to Homepage</a>
+            </div>
+            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
+            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
+        </div>
     </footer>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        hljs.highlightAll();
-
-        const tocLinks = document.querySelectorAll('.toc-link');
-        const sections = document.querySelectorAll('main section');
-
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.3
-        };
-
-        const observer = new IntersectionObserver((entries, obs) => {
-            entries.forEach(entry => {
-                if(entry.isIntersecting) {
-                    tocLinks.forEach(link => {
-                        link.classList.remove('active');
-                        if(link.getAttribute('href').substring(1) === entry.target.id) {
-                            link.classList.add('active');
-                        }
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Copy-to-Clipboard ---
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.parentElement.querySelector('pre code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => btn.textContent = 'Copy', 2000);
                     });
-                }
-            });
-        }, observerOptions);
-
-        sections.forEach(section => {
-            observer.observe(section);
-        });
-
-        const copyButtons = document.querySelectorAll('.copy-btn');
-        copyButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const code = button.previousElementSibling.textContent;
-                const tempTextArea = document.createElement('textarea');
-                tempTextArea.value = code;
-                document.body.appendChild(tempTextArea);
-                tempTextArea.select();
-                try {
-                    document.execCommand('copy');
-                    button.textContent = 'Copied!';
-                } catch (err) {
-                    button.textContent = 'Error';
-                    console.error('Failed to copy text: ', err);
-                }
-                document.body.removeChild(tempTextArea);
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
-        });
-
-        const solutionToggle = document.getElementById('solution-toggle');
-        const solutionContent = document.getElementById('solution-content');
-        const solutionArrow = document.getElementById('solution-arrow');
-        solutionToggle.addEventListener('click', () => {
-            const isHidden = solutionContent.classList.contains('hidden');
-            solutionContent.classList.toggle('hidden');
-            solutionArrow.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
-        });
-
-        const quizData = [
-            {
-                question: "Which principle is primarily concerned with hiding data and restricting access?",
-                options: ["Abstraction", "Inheritance", "Encapsulation", "Polymorphism"],
-                answer: "Encapsulation"
-            },
-            {
-                question: "What is the default access modifier for a class member in C# if none is specified?",
-                options: ["public", "internal", "protected", "private"],
-                answer: "private"
-            },
-            {
-                question: "An `interface` in C# is a pure form of which OOP concept?",
-                options: ["Polymorphism", "Abstraction", "Encapsulation", "Inheritance"],
-                answer: "Abstraction"
-            },
-            {
-                question: "If a class `Dog` inherits from a class `Animal`, which access modifier allows members of `Animal` to be accessed in `Dog` but not from outside?",
-                options: ["private", "public", "internal", "protected"],
-                answer: "protected"
-            }
-        ];
-        
-        const quizContainer = document.getElementById('quiz-container');
-        const quizResults = document.getElementById('quiz-results');
-        let score = 0;
-        let questionsAnswered = 0;
-
-        quizData.forEach((q, index) => {
-            const questionElement = document.createElement('article');
-            questionElement.innerHTML = `
-                <h3 class="font-semibold text-slate-800 text-base">${index + 1}. ${q.question}</h3>
-                <div class="mt-4 space-y-3">
-                    ${q.options.map(opt => `<div class="quiz-option border-2 border-slate-200 rounded-md p-3 hover:bg-slate-50">${opt}</div>`).join('')}
-                </div>
-                <div class="quiz-feedback mt-3 text-sm font-medium hidden p-3 rounded-md"></div>
-            `;
-            quizContainer.appendChild(questionElement);
-
-            const options = questionElement.querySelectorAll('.quiz-option');
-            const feedback = questionElement.querySelector('.quiz-feedback');
-            
-            options.forEach(option => {
-                option.addEventListener('click', () => {
-                    if (questionElement.classList.contains('answered')) return;
-                    questionElement.classList.add('answered');
-                    questionsAnswered++;
-                    
-                    const selectedAnswer = option.textContent;
-                    const correctAnswer = q.answer;
-                    
-                    if (selectedAnswer === correctAnswer) {
-                        option.classList.add('correct');
-                        feedback.textContent = '✅ Correct!';
-                        feedback.classList.add('bg-green-50', 'text-green-700');
-                        score++;
-                    } else {
-                        option.classList.add('incorrect');
-                        feedback.textContent = `❌ Incorrect. The correct answer is "${correctAnswer}".`;
-                        feedback.classList.add('bg-red-50', 'text-red-700');
-                    }
-                    
-                    options.forEach(opt => {
-                        if (opt.textContent === correctAnswer) {
-                           opt.classList.add('reveal');
-                        }
-                    });
-
-                    feedback.classList.remove('hidden');
-
-                    if(questionsAnswered === quizData.length) {
-                        quizResults.textContent = `Quiz Complete! You scored ${score} out of ${quizData.length}.`;
-                        quizResults.classList.remove('hidden');
-                    }
                 });
             });
+
+            // --- Active TOC Link ---
+            const sections = document.querySelectorAll('main section');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${entry.target.id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-40% 0px -60% 0px' });
+            sections.forEach(section => observer.observe(section));
         });
-    });
     </script>
 </body>
 </html>
-

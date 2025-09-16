@@ -3,85 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OOP Foundations: Static Classes & Records</title>
+    <title>Day 7: Static Classes & Records - OOP Foundations</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Neutrals with Indigo Accent -->
-    <!-- Application Structure Plan: A responsive sidebar navigation structure is used to break the dense document into its logical sections (Static Classes, Records, Advanced Topics, etc.). This architecture was chosen to transform a long, linear document into a user-driven, non-linear learning module. It enhances usability by allowing users to instantly jump to specific topics of interest without excessive scrolling, and provides a clear map of the content. On mobile, the sidebar collapses into an accessible menu. -->
-    <!-- Visualization & Content Choices: 
-        1. Report Info: Core concepts of static classes and records. Goal: Inform/Organize. Viz/Method: Styled text sections with interactive sidebar navigation. Interaction: Clicking nav links smoothly scrolls to the relevant section. Justification: Provides clear structure and easy navigation for a text-heavy document. Library/Method: HTML/CSS/JS.
-        2. Report Info: Code examples in C#. Goal: Inform/Utility. Viz/Method: Styled code blocks. Interaction: A "Copy" button on each block copies the code to the clipboard. Justification: Improves the practical utility of the guide for developers. Library/Method: Vanilla JS.
-        3. Report Info: Analogies for complex concepts. Goal: Clarify. Viz/Method: Visually distinct callout boxes (HTML/Tailwind). Interaction: None. Justification: Breaks up the text and highlights important conceptual aids. Library/Method: N/A.
-        4. Report Info: UML Diagram. Goal: Visualize structure. Viz/Method: Structured HTML and Tailwind CSS to mimic a class diagram. Interaction: None. Justification: Provides a visual representation without external libraries, adhering to constraints. Static members are underlined per UML spec. Library/Method: HTML/Tailwind.
-        5. Report Info: Knowledge Check Quiz. Goal: Assess/Engage. Viz/Method: Interactive multiple-choice form. Interaction: Users select answers and click "Check Answers". The UI provides immediate visual feedback (correct/incorrect) and reveals explanations. Justification: Transforms a static quiz into an active learning tool. Library/Method: Vanilla JS.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* slate-50 */
-            color: #1f2937; /* gray-800 */
+            background-color: #FFFFFF;
+            color: #3D352E;
         }
-        pre, code {
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+        }
+        pre {
+            background-color: #1E1E1E;
+            color: #D4D4D4;
             font-family: 'Roboto Mono', monospace;
-        }
-        .section-target {
-            scroll-margin-top: 80px;
-        }
-        .nav-link.active {
-            background-color: #eef2ff; /* indigo-50 */
-            color: #4338ca; /* indigo-700 */
-            font-weight: 600;
-        }
-        .code-block {
+            border-radius: 0.5rem;
+            padding: 1.25rem;
             position: relative;
+            overflow-x: auto;
+            border: 1px solid #3a404a;
         }
-        .copy-button {
+        pre code {
+            background-color: transparent !important;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+            border-radius: 0;
+        }
+        .prose-custom :not(pre) > code {
+            background-color: #F3F4F6;
+            color: #C06A47;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #C06A47; /* Sienna */
+            color: #FFFFFF;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover {
+            background-color: #A95A3A; /* Darker Sienna */
+        }
+        .copy-btn {
             position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background-color: #4b5563; /* gray-600 */
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #4A5568;
             color: white;
+            border: none;
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
             font-size: 0.75rem;
-            cursor: pointer;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
         }
-        .code-block:hover .copy-button {
+        pre:hover .copy-btn {
             opacity: 1;
         }
-        .uml-underline {
-            text-decoration: underline;
+        .copy-btn:hover {
+            background-color: #2D3748;
         }
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+        }
+        .toc-link:hover {
+            color: #3E8A86; /* Teal */
+            border-left-color: #3E8A86;
+        }
+        .toc-link.active {
+            color: #C06A47; /* Sienna */
+            border-left-color: #C06A47;
+            font-weight: 700;
+        }
+        .prose-custom { max-width: 80ch; }
+        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
+        .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
+        .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .bg-white { background-color: #FFFFFF; }
+        .border, .border-t { border-color: #e5e7eb; }
     </style>
 </head>
-<body class="bg-slate-50">
-    <header class="text-center mb-10">
-        <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
-        <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div class="text-2xl font-bold text-sienna-800">
+                    <a href="roadmap.html">OOP Foundations</a>
+                </div>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="day_1.html" class="text-gray-600 hover:text-teal-600 transition">Day 1</a>
+                    <a href="day_2.html" class="text-gray-600 hover:text-teal-600 transition">Day 2</a>
+                    <a href="day_3.html" class="text-gray-600 hover:text-teal-600 transition">Day 3</a>
+                    <a href="day_4.html" class="text-gray-600 hover:text-teal-600 transition">Day 4</a>
+                    <a href="day_5.html" class="text-gray-600 hover:text-teal-600 transition">Day 5</a>
+                    <a href="day_6.html" class="text-gray-600 hover:text-teal-600 transition">Day 6</a>
+                    <a href="day_7.html" class="font-bold text-teal-600">Day 7</a>
+                </nav>
+                <!-- Return to Homepage button removed from here -->
+            </div>
+        </div>
     </header>
 
-    <div class="max-w-screen-xl mx-auto">
-        <div class="flex flex-col md:flex-row">
-            <!-- Main Content -->
-            <main class="flex-1 p-6 sm:p-8 lg:p-12">
-                <a href="lld_homepage.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Return to Homepage
-                </a>
-                <header class="mb-12">
-                    <h1 class="text-4xl font-extrabold tracking-tight text-slate-900">OOP Foundations, Day 7: Static Classes & Records</h1>
-                    <p class="mt-2 text-lg text-slate-600">An interactive guide to the architect's toolkit for utility and data patterns in C#.</p>
-                </header>
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+        <div class="flex justify-between items-center mb-12">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">Day 7: Static Classes & Records</h1>
+                <p class="mt-4 text-xl text-gray-600">An interactive guide to the architect's toolkit for utility and data patterns in C#.</p>
+            </div>
+            <a href="roadmap.html" class="btn btn-primary whitespace-nowrap">Return to Homepage</a>
+        </div>
 
-                <div class="prose prose-slate max-w-none prose-h3:text-slate-800 prose-h3:font-semibold prose-h4:text-indigo-600 prose-h4:font-semibold prose-a:text-indigo-600">
-                    
-                    <section id="section1" class="section-target mb-16">
+        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
+                <div class="p-4 rounded-lg bg-white shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
+                    <nav id="toc-nav" class="flex flex-col space-y-2">
+                        <a href="#section1" class="toc-link pl-2 text-gray-600">1. Static Classes</a>
+                        <a href="#section2" class="toc-link pl-2 text-gray-600">2. C# Records</a>
+                        <a href="#section3" class="toc-link pl-2 text-gray-600">3. Advanced Topics</a>
+                        <a href="#section4" class="toc-link pl-2 text-gray-600">4. Coding Practice</a>
+                        <a href="#section5" class="toc-link pl-2 text-gray-600">5. UML Modeling</a>
+                        <a href="#section6" class="toc-link pl-2 text-gray-600">6. Case Study</a>
+                        <a href="#section7" class="toc-link pl-2 text-gray-600">7. Knowledge Assessment</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="w-full lg:w-3/4 prose-custom">
+                 <section id="section1" class="section-target mb-16">
                         <h3 class="text-2xl border-b border-slate-200 pb-2 mb-6">Section 1: The Utility Pattern — Static Classes in .NET</h3>
                         <p>In the landscape of object-oriented programming, the primary unit of organization is the class, a blueprint for creating objects that encapsulate both state (data) and behavior (methods). However, a common design challenge arises: where should one place functionality that is inherently stateless and does not logically belong to any specific object instance? Consider fundamental operations like calculating the absolute value of a number or checking if a file exists on disk. These are pure actions, not entities with identities. Forcing such functions into an instantiable class can feel artificial and lead to cumbersome code, requiring developers to create an object for the sole purpose of calling a single method.</p>
                         <p>This is the problem space that static classes in C# are designed to solve. They represent a pragmatic "compromise between pure object-oriented design and simplicity," serving as a dedicated, organized container for methods and data that are global to an application's scope.</p>
@@ -332,203 +401,50 @@ public void HandleRequest()
                             <div id="quiz-feedback" class="mt-4 space-y-4"></div>
                         </div>
                     </section>
-
-                </div>
-            </main>
-            <!-- Sidebar Navigation -->
-            <aside class="w-full md:w-64 lg:w-72 bg-white md:h-screen md:sticky md:top-0 border-b md:border-b-0 md:border-r border-slate-200">
-                <div class="p-4">
-                    <h2 class="text-lg font-bold text-indigo-600">Architect's Toolkit</h2>
-                    <p class="text-sm text-slate-500">Static Classes & Records</p>
-                </div>
-                <nav id="sidebar-nav" class="flex flex-col px-4 pb-4">
-                    <a href="#section1" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">1. Static Classes</a>
-                    <a href="#section2" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">2. C# Records</a>
-                    <a href="#section3" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">3. Advanced Topics</a>
-                    <a href="#section4" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">4. Coding Practice</a>
-                    <a href="#section5" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">5. UML Modeling</a>
-                    <a href="#section6" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">6. Case Study</a>
-                    <a href="#section7" class="nav-link text-slate-600 hover:bg-slate-100 rounded-md px-3 py-2 transition-colors duration-150 text-sm">7. Knowledge Assessment</a>
-                </nav>
-            </aside>
+            </div>
         </div>
-    </div>
-    <footer class="text-center mt-16 py-8 border-t border-slate-200">
-        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
-        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
-        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </main>
+
+    <footer class="mt-16 py-8 bg-white border-t">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex justify-center mb-4">
+                <a href="roadmap.html" class="btn btn-primary">Return to Homepage</a>
+            </div>
+            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
+            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
+        </div>
     </footer>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Code Block Copy Functionality ---
-    const codeBlocks = document.querySelectorAll('.code-block');
-    codeBlocks.forEach(block => {
-        const pre = block.querySelector('pre');
-        const code = pre.querySelector('code');
-        const button = document.createElement('button');
-        button.textContent = 'Copy';
-        button.className = 'copy-button';
-        block.appendChild(button);
-
-        button.addEventListener('click', () => {
-            navigator.clipboard.writeText(code.innerText).then(() => {
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
-        });
-    });
-
-    // --- Sidebar Navigation Active State ---
-    const navLinks = document.querySelectorAll('.nav-link');
-    const sections = document.querySelectorAll('.section-target');
-
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.3
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = entry.target.getAttribute('id');
-                navLinks.forEach(link => {
-                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Copy-to-Clipboard ---
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.parentElement.querySelector('pre code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => btn.textContent = 'Copy', 2000);
+                    });
                 });
-            }
-        });
-    }, observerOptions);
-
-    sections.forEach(section => {
-        observer.observe(section);
-    });
-
-    // --- Quiz Functionality ---
-    const quizData = [
-        {
-            question: "Which of the following is NOT a feature of a C# static class?",
-            options: ["Cannot be instantiated.", "Can implement interfaces.", "Is implicitly sealed.", "Can only contain static members."],
-            answer: 1,
-            explanation: "Static classes cannot be instantiated, so they cannot fulfill an interface contract."
-        },
-        {
-            question: "When is the static constructor of a class called?",
-            options: ["Every time a static method is called.", "Only once, before the first time any member of the class is accessed.", "Every time an object of the class is created.", "It must be called manually."],
-            answer: 1,
-            explanation: "The CLR guarantees this behavior for thread-safe initialization, calling it at most once before the first member access."
-        },
-        {
-            question: "What is the primary purpose of the `record` type in C#?",
-            options: ["To define classes with complex, stateful behavior.", "To create types that are optimized for performance-critical calculations.", "To provide a concise syntax for creating immutable, data-centric types with value equality.", "To replace the need for structs."],
-            answer: 2,
-            explanation: "This is the core design motivation for records: data-centric types with minimal boilerplate."
-        },
-        {
-            question: "True or False: Two record instances with identical property values will be considered equal by the `==` operator.",
-            options: ["True", "False"],
-            answer: 0,
-            explanation: "Records have compiler-synthesized value equality, which includes an override for the `==` operator."
-        },
-        {
-            question: "What does the `with` expression do when used with a record?",
-            options: ["It modifies the properties of the existing record instance.", "It creates a new record instance by copying the original and applying changes.", "It can only be used to change one property at a time.", "It converts a record to a class."],
-            answer: 1,
-            explanation: "This is called non-destructive mutation and is key to working with immutable types."
-        },
-        {
-            question: "What is the primary risk of using a mutable public static field in a multithreaded application?",
-            options: ["Poor performance due to garbage collection.", "A StackOverflowException.", "Race conditions leading to data corruption.", "Inability to access the field from other assemblies."],
-            answer: 2,
-            explanation: "Unsynchronized access to shared mutable state is a primary cause of concurrency bugs."
-        },
-        {
-            question: "In a UML class diagram, what is the standard way to denote a static method?",
-            options: ["Writing the method name in italics.", "Underlining the method name.", "Prefixing the method name with a * symbol.", "Using the <<static>> stereotype next to the method."],
-            answer: 1,
-            explanation: "Underlining is the standard UML convention for all static members (attributes and operations)."
-        }
-    ];
-
-    const quizContainer = document.getElementById('quiz-container');
-    const checkBtn = document.getElementById('check-quiz-btn');
-    const resultsContainer = document.getElementById('quiz-results');
-    const scoreEl = document.getElementById('quiz-score');
-    const feedbackEl = document.getElementById('quiz-feedback');
-
-    function buildQuiz() {
-        quizData.forEach((q, index) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.id = `question-${index}`;
-            let optionsHTML = '';
-            q.options.forEach((option, i) => {
-                optionsHTML += `
-                    <label class="block flex items-center p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
-                        <input type="radio" name="q${index}" value="${i}" class="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
-                        <span>${option}</span>
-                    </label>
-                `;
             });
 
-            questionDiv.innerHTML = `
-                <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
-                <div class="mt-3 space-y-2">${optionsHTML}</div>
-            `;
-            quizContainer.appendChild(questionDiv);
-        });
-    }
-
-    function checkAnswers() {
-        let score = 0;
-        feedbackEl.innerHTML = ''; 
-
-        quizData.forEach((q, index) => {
-            const questionDiv = document.getElementById(`question-${index}`);
-            const selected = questionDiv.querySelector(`input[name="q${index}"]:checked`);
-            
-            const feedbackDiv = document.createElement('div');
-            feedbackDiv.className = 'p-4 rounded-lg';
-
-            if (!selected) {
-                 feedbackDiv.innerHTML = `<p class="font-bold">${index + 1}. ${q.question}</p><p class="mt-1 text-amber-700">No answer selected.</p>`;
-                 feedbackDiv.classList.add('bg-amber-50');
-            } else {
-                const userAnswer = parseInt(selected.value);
-                const labels = questionDiv.querySelectorAll('label');
-
-                labels.forEach((label, i) => {
-                    label.classList.remove('bg-red-100', 'border-red-300', 'bg-green-100', 'border-green-300');
-                    if (i === q.answer) { 
-                        label.classList.add('bg-green-100', 'border-green-300');
-                    }
-                    if (i === userAnswer && userAnswer !== q.answer) {
-                        label.classList.add('bg-red-100', 'border-red-300');
+            // --- Active TOC Link ---
+            const sections = document.querySelectorAll('main section');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${entry.target.id}`) {
+                                link.classList.add('active');
+                            }
+                        });
                     }
                 });
-
-                if (userAnswer === q.answer) {
-                    score++;
-                    feedbackDiv.innerHTML = `<p class="font-bold">${index + 1}. Correct!</p><p class="mt-1">${q.explanation}</p>`;
-                    feedbackDiv.classList.add('bg-green-50');
-                } else {
-                    feedbackDiv.innerHTML = `<p class="font-bold">${index + 1}. Incorrect.</p><p class="mt-1">${q.explanation}</p>`;
-                    feedbackDiv.classList.add('bg-red-50');
-                }
-            }
-            feedbackEl.appendChild(feedbackDiv);
+            }, { rootMargin: '-40% 0px -60% 0px' });
+            sections.forEach(section => observer.observe(section));
         });
-
-        scoreEl.textContent = `Your Score: ${score} out of ${quizData.length}`;
-        resultsContainer.classList.remove('hidden');
-        resultsContainer.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    buildQuiz();
-    checkBtn.addEventListener('click', checkAnswers);
-});
-</script>
-
+    </script>
 </body>
 </html>

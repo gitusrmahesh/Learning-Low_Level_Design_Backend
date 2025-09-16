@@ -5,131 +5,152 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Day 3: Inheritance & Polymorphism - OOP Foundations</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: "Serene Sienna" - a mix of warm neutrals (alabaster, sienna) with a calm blue accent. -->
-    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning experience. The left column features a sticky Table of Contents for seamless navigation through the extensive content. The right column presents the main lesson, logically segmented into Theory, Practice, Design, and Assessment. This structure allows users to easily jump between concepts, review exercises, and test their knowledge without losing context, promoting a non-linear, self-paced learning flow superior to a simple top-to-bottom page. -->
-    <!-- Visualization & Content Choices: 
-        1. Report Info: Abstract Class vs. Interface comparison. -> Goal: Compare/Contrast. -> Viz: Interactive Radar Chart (Chart.js) + detailed HTML table. -> Interaction: Buttons to filter chart data, focusing on unique/shared features. -> Justification: The interactive chart provides a memorable visual "fingerprint" for each concept, while the table offers detailed reference. This dual-approach caters to different learning styles.
-        2. Report Info: UML Diagram. -> Goal: Organize/Visualize hierarchy. -> Viz: HTML/Tailwind-styled divs to mimic a UML diagram. -> Interaction: None (static visual). -> Justification: This method avoids SVG/image dependencies, adhering to constraints while delivering a clear, standard representation of the class structure.
-        3. Report Info: Coding Problems & Solutions. -> Goal: Apply knowledge. -> Viz: Collapsible sections for solutions using HTML/JS. -> Interaction: User clicks to reveal solution. -> Justification: Encourages active problem-solving by hiding the answer, a key pedagogical technique.
-        4. Report Info: Quiz. -> Goal: Test comprehension. -> Viz: Interactive quiz form. -> Interaction: User selects answers and gets immediate JS-driven feedback. -> Justification: Instant feedback reinforces learning concepts immediately and effectively. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F8F5F2; /* Alabaster */
-            color: #3D352E; /* Umber */
+            background-color: #FFFFFF;
+            color: #3D352E;
         }
-        .font-mono {
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+        }
+        pre {
+            background-color: #1E1E1E;
+            color: #D4D4D4;
             font-family: 'Roboto Mono', monospace;
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            position: relative;
+            overflow-x: auto;
+            border: 1px solid #3a404a;
+        }
+        pre code {
+            background-color: transparent !important;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+            border-radius: 0;
+        }
+        .prose-custom :not(pre) > code {
+            background-color: #F3F4F6;
+            color: #C06A47;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+        }
+        .btn {
+            display: inline-block;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #C06A47; /* Sienna */
+            color: #FFFFFF;
+            border: 1px solid transparent;
+        }
+        .btn-primary:hover {
+            background-color: #A95A3A; /* Darker Sienna */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #4A5568;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            background-color: #2D3748;
         }
         .toc-link {
             transition: all 0.2s ease-in-out;
             border-left: 2px solid transparent;
         }
-        .toc-link:hover, .toc-link.active {
-            color: #8D5B4C; /* Sienna */
-            border-left-color: #8D5B4C;
-            transform: translateX(4px);
+        .toc-link:hover {
+            color: #3E8A86; /* Teal */
+            border-left-color: #3E8A86;
         }
-        .code-block {
-            background-color: #2D2D2D;
-            color: #EAEAEA;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            position: relative;
+        .toc-link.active {
+            color: #C06A47; /* Sienna */
+            border-left-color: #C06A47;
+            font-weight: 700;
         }
-        .copy-btn {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background-color: #4A4A4A;
-            color: white;
-            border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.75rem;
-            transition: background-color 0.2s;
-        }
-        .copy-btn:hover {
-            background-color: #6A6A6A;
-        }
-        .section-card {
-            background-color: #FFFFFF;
-            border: 1px solid #E5E0DA; /* Light Beige */
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
-            margin-bottom: 2rem;
-            padding: 2rem;
-        }
-        .callout {
-            background-color: #E9F1F7; /* Pale Blue */
-            border-left: 4px solid #6B9AC4; /* Steel Blue */
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin: 1.5rem 0;
-        }
-        .syntax-snippet {
-            background-color: #F8F5F2;
-            border: 1px solid #E5E0DA;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin: 1rem 0;
-        }
-        .quiz-option {
-            transition: all 0.2s;
-        }
-        .quiz-option.correct {
-            background-color: #D1FAE5;
-            border-color: #10B981;
-        }
-        .quiz-option.incorrect {
-            background-color: #FEE2E2;
-            border-color: #EF4444;
-        }
-        .solution-toggle {
-            cursor: pointer;
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background-color: #6B9AC4;
-            color: white;
-            border-radius: 0.375rem;
-            transition: background-color 0.2s;
-        }
-        .solution-toggle:hover {
-            background-color: #5A83A9;
-        }
-        .solution-content {
-            display: none;
-            margin-top: 1rem;
-            border-left: 2px solid #E5E0DA;
-            padding-left: 1rem;
-        }
+        .prose-custom { max-width: 80ch; }
+        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
+        .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
+        .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .bg-white { background-color: #FFFFFF; }
+        .border, .border-t { border-color: #e5e7eb; }
     </style>
 </head>
-<body class="w-full">
-    <header class="text-center mb-10">
-        <h2 id="greeting" class="text-xl text-slate-500">Good Evening!</h2>
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
-        <p class="mt-3 text-slate-500 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div class="text-2xl font-bold text-sienna-800">
+                    <a href="roadmap.html">OOP Foundations</a>
+                </div>
+                <nav class="hidden md:flex space-x-4">
+                    <a href="day_1.html" class="text-gray-600 hover:text-teal-600 transition">Day 1</a>
+                    <a href="day_2.html" class="text-gray-600 hover:text-teal-600 transition">Day 2</a>
+                    <a href="day_3.html" class="font-bold text-teal-600">Day 3</a>
+                    <a href="day_4.html" class="text-gray-600 hover:text-teal-600 transition">Day 4</a>
+                    <a href="day_5.html" class="text-gray-600 hover:text-teal-600 transition">Day 5</a>
+                    <a href="day_6.html" class="text-gray-600 hover:text-teal-600 transition">Day 6</a>
+                    <a href="day_7.html" class="text-gray-600 hover:text-teal-600 transition">Day 7</a>
+                </nav>
+                <!-- Return to Homepage button removed from here -->
+            </div>
+        </div>
     </header>
 
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col lg:flex-row lg:space-x-8 py-8">
-            
-            <!-- Right Column: Main Content -->
-            <main class="w-full lg:w-3/4">
-                <a href="lld_homepage.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200 inline-flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Return to Homepage
-                </a>
-                
-                <!-- Introduction -->
-                <section id="introduction" class="section-card">
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+        <div class="flex justify-between items-center mb-12">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">Day 3: Inheritance & Polymorphism</h1>
+                <p class="mt-4 text-xl text-gray-600">Building on yesterday's foundations, today we explore two cornerstone principles of OOP that enable code reuse and flexibility: Inheritance and Polymorphism.</p>
+            </div>
+            <a href="roadmap.html" class="btn btn-primary whitespace-nowrap">Return to Homepage</a>
+        </div>
+
+        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
+                <div class="p-4 rounded-lg bg-white shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
+                    <nav id="toc-nav" class="flex flex-col space-y-2">
+                        <a href="#introduction" class="toc-link pl-2 text-gray-600">Introduction</a>
+                        <a href="#theory" class="toc-link pl-2 text-gray-600">✅ Theory Topics</a>
+                        <a href="#practice" class="toc-link pl-2 text-gray-600">💻 Coding Practice</a>
+                        <a href="#uml" class="toc-link pl-2 text-gray-600">🎨 UML/Schema Task</a>
+                        <a href="#case-study" class="toc-link pl-2 text-gray-600">🚗 Case Study: Ride-Hailing</a>
+                        <a href="#quiz" class="toc-link pl-2 text-gray-600">🧠 Knowledge Check</a>
+                        <a href="#challenge" class="toc-link pl-2 text-gray-600">🚀 Self-Assessment Challenge</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="w-full lg:w-3/4 prose-custom">
+                 <section id="introduction" class="section-card">
                     <h1 class="text-4xl font-bold text-[#8D5B4C] mb-2">Day 3: Inheritance & Polymorphism</h1>
                     <p class="text-lg text-gray-600">Building on yesterday's foundations, today we explore two cornerstone principles of OOP that enable code reuse and flexibility: Inheritance and Polymorphism.</p>
                     <div class="callout">
@@ -198,14 +219,6 @@ myCar.Move(); // Inherited from Vehicle
 
                         <h4 class="font-semibold text-gray-700 my-4">Interactive Comparison</h4>
                         <p class="text-sm text-gray-600 mb-2">Click the buttons to see how features are distributed between Abstract Classes and Interfaces.</p>
-                        <div class="flex space-x-2 mb-4">
-                            <button id="showAllBtn" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-full">Show All</button>
-                            <button id="showAbstractBtn" class="px-3 py-1 bg-gray-200 text-sm rounded-full">Abstract Class</button>
-                            <button id="showInterfaceBtn" class="px-3 py-1 bg-gray-200 text-sm rounded-full">Interface</button>
-                        </div>
-                        <div class="chart-container relative h-96 w-full max-w-lg mx-auto">
-                            <canvas id="comparisonChart"></canvas>
-                        </div>
                         
                         <div class="overflow-x-auto mt-6">
                             <table class="w-full text-left border-collapse">
@@ -1021,199 +1034,49 @@ public class Program
                             </div>
                     </div>
                 </section>
-            </main>
-            <!-- Left Column: Sticky Table of Contents -->
-            <aside class="w-full lg:w-1/4 lg:sticky top-8 self-start mb-8 lg:mb-0">
-                <div class="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                    <h3 class="text-lg font-semibold text-[#8D5B4C] mb-4">Lesson Contents</h3>
-                    <nav id="toc-nav">
-                        <ul class="space-y-2">
-                            <li><a href="#introduction" class="toc-link block text-gray-600 hover:text-[#8D5B4C] pl-2">Introduction</a></li>
-                            <li>
-                                <a href="#theory" class="toc-link block font-medium text-gray-800 pl-2">✅ Theory Topics</a>
-                                <ul class="pl-4 mt-2 space-y-2 text-sm">
-                                    <li><a href="#theory-inheritance" class="toc-link block text-gray-600 pl-2">Base & Derived Classes</a></li>
-                                    <li><a href="#theory-abstract-vs-interface" class="toc-link block text-gray-600 pl-2">Abstract Class vs. Interface</a></li>
-                                    <li><a href="#theory-overriding" class="toc-link block text-gray-600 pl-2">Method Overriding</a></li>
-                                    <li><a href="#theory-polymorphism" class="toc-link block text-gray-600 pl-2">Polymorphism in Practice</a></li>
-                                </ul>
-                            </li>
-                            <li>
-                                <a href="#practice" class="toc-link block font-medium text-gray-800 pl-2">💻 Coding Practice</a>
-                                <ul class="pl-4 mt-2 space-y-2 text-sm">
-                                    <li><a href="#practice-shape" class="toc-link block text-gray-600 pl-2">Base: Shape Hierarchy</a></li>
-                                    <li><a href="#practice-animal" class="toc-link block text-gray-600 pl-2">Easy: Animal Hierarchy</a></li>
-                                    <li><a href="#practice-payment" class="toc-link block text-gray-600 pl-2">Medium: Payment Processor</a></li>
-                                    <li><a href="#practice-notification" class="toc-link block text-gray-600 pl-2">Hard: Notification System</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#uml" class="toc-link block font-medium text-gray-800 pl-2">🎨 UML/Schema Task</a></li>
-                            <li><a href="#case-study" class="toc-link block font-medium text-gray-800 pl-2">🚗 Case Study: Ride-Hailing</a></li>
-                            <li><a href="#quiz" class="toc-link block font-medium text-gray-800 pl-2">🧠 Knowledge Check</a></li>
-                            <li><a href="#challenge" class="toc-link block font-medium text-gray-800 pl-2">🚀 Self-Assessment Challenge</a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
+            </div>
         </div>
-    </div>
-    
-    <footer class="text-center mt-16 py-8 border-t border-slate-200">
-        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
-        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
-        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </main>
+
+    <footer class="mt-16 py-8 bg-white border-t">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex justify-center mb-4">
+                <a href="roadmap.html" class="btn btn-primary">Return to Homepage</a>
+            </div>
+            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
+            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
+        </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Copy-to-clipboard functionality
-            document.querySelectorAll('.copy-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const code = button.nextElementSibling.querySelector('code').innerText;
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Copy-to-Clipboard ---
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.parentElement.querySelector('pre code').innerText;
                     navigator.clipboard.writeText(code).then(() => {
-                        button.innerText = 'Copied!';
-                        setTimeout(() => {
-                            button.innerText = 'Copy';
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Failed to copy text: ', err);
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => btn.textContent = 'Copy', 2000);
                     });
                 });
             });
 
-            // Solution toggling
-            window.toggleSolution = (id) => {
-                const content = document.getElementById(id);
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                } else {
-                    content.style.display = 'block';
-                }
-            };
-            
-            // Quiz functionality
-            document.querySelectorAll('.quiz-question').forEach(question => {
-                const options = question.querySelectorAll('input[type="radio"]');
-                const correctAnswerIndex = parseInt(question.dataset.correct, 10);
-                const feedbackEl = question.querySelector('.quiz-feedback');
-                
-                options.forEach((option, index) => {
-                    option.addEventListener('change', () => {
-                        // Reset styles
-                        options.forEach(opt => opt.parentElement.classList.remove('correct', 'incorrect'));
-                        
-                        if(index === correctAnswerIndex) {
-                            option.parentElement.classList.add('correct');
-                            feedbackEl.textContent = 'Correct! Great job.';
-                            feedbackEl.className = 'quiz-feedback text-sm mt-2 text-green-600 block';
-                        } else {
-                            option.parentElement.classList.add('incorrect');
-                            options[correctAnswerIndex].parentElement.classList.add('correct');
-                            feedbackEl.textContent = 'Not quite. The correct answer is highlighted in green.';
-                            feedbackEl.className = 'quiz-feedback text-sm mt-2 text-red-600 block';
-                        }
-                    });
-                });
-            });
-
-            // TOC Active State Scrolling
+            // --- Active TOC Link ---
+            const sections = document.querySelectorAll('main section');
             const tocLinks = document.querySelectorAll('.toc-link');
-            const sections = document.querySelectorAll('section, div[id^="theory-"]');
-            
-            const observer = new IntersectionObserver((entries) => {
+            const observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        const id = entry.target.getAttribute('id');
                         tocLinks.forEach(link => {
                             link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${id}`) {
+                            if (link.getAttribute('href') === `#${entry.target.id}`) {
                                 link.classList.add('active');
                             }
                         });
                     }
                 });
-            }, { rootMargin: '-20% 0px -80% 0px', threshold: 0 });
-
-            sections.forEach(section => {
-                observer.observe(section);
-            });
-            
-            // Chart.js Visualization
-            const ctx = document.getElementById('comparisonChart').getContext('2d');
-            
-            const fullData = {
-                labels: ['Fields', 'Constructors', 'Method Implementation', 'Access Modifiers', 'Multiple Inheritance', 'Abstract Members'],
-                datasets: [{
-                    label: 'Abstract Class',
-                    data: [1, 1, 1, 1, 0, 1],
-                    backgroundColor: 'rgba(107, 154, 196, 0.2)',
-                    borderColor: 'rgba(107, 154, 196, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(107, 154, 196, 1)'
-                }, {
-                    label: 'Interface',
-                    data: [0, 0, 0, 0, 1, 1],
-                    backgroundColor: 'rgba(141, 91, 76, 0.2)',
-                    borderColor: 'rgba(141, 91, 76, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(141, 91, 76, 1)'
-                }]
-            };
-
-            let comparisonChart = new Chart(ctx, {
-                type: 'radar',
-                data: JSON.parse(JSON.stringify(fullData)),
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            angleLines: {
-                                color: '#E5E0DA'
-                            },
-                            grid: {
-                                color: '#E5E0DA'
-                            },
-                            pointLabels: {
-                                font: {
-                                    size: 12
-                                },
-                                color: '#3D352E'
-                            },
-                            ticks: {
-                                backdropColor: '#F8F5F2',
-                                color: '#8D5B4C',
-                                stepSize: 1,
-                                display: false
-                            },
-                            beginAtZero: true,
-                            max: 1
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                             callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + (context.raw === 1 ? 'Yes' : 'No');
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            const updateChartData = (datasetsToShow) => {
-                 const newData = JSON.parse(JSON.stringify(fullData));
-                 newData.datasets = fullData.datasets.filter(ds => datasetsToShow.includes(ds.label));
-                 comparisonChart.data = newData;
-                 comparisonChart.update();
-            }
-
-            document.getElementById('showAllBtn').addEventListener('click', () => updateChartData(['Abstract Class', 'Interface']));
-            document.getElementById('showAbstractBtn').addEventListener('click', () => updateChartData(['Abstract Class']));
-            document.getElementById('showInterfaceBtn').addEventListener('click', () => updateChartData(['Interface']));
+            }, { rootMargin: '-40% 0px -60% 0px' });
+            sections.forEach(section => observer.observe(section));
         });
     </script>
 </body>
