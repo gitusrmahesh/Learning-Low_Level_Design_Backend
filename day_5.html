@@ -3,154 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day 5: Method Overloading, Overriding & Extension Methods - OOP Foundations</title>
+    <title>OOP Day 5: Overloading, Overriding & Extension Methods</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #FFFFFF;
-            color: #3D352E;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-        }
-        pre {
-            background-color: #1E1E1E;
-            color: #D4D4D4;
-            font-family: 'Roboto Mono', monospace;
-            border-radius: 0.5rem;
-            padding: 1.25rem;
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .toc-link.active { color: #0891b2; font-weight: 600; border-left-color: #0891b2; }
+        pre[class*="language-"] {
             position: relative;
-            overflow-x: auto;
-            border: 1px solid #3a404a;
+            overflow: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.25rem;
+            padding-top: 3rem;
         }
-        pre code {
-            background-color: transparent !important;
-            color: inherit;
-            padding: 0;
-            font-size: inherit;
-            border-radius: 0;
-        }
-        .prose-custom :not(pre) > code {
-            background-color: #F3F4F6;
-            color: #C06A47;
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
+        code[class*="language-"] {
             font-family: 'Roboto Mono', monospace;
-            font-size: 0.9em;
+            font-size: 0.875rem;
         }
-        .btn {
-            display: inline-block;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            text-align: center;
-        }
-        .btn-primary {
-            background-color: #C06A47; /* Sienna */
-            color: #FFFFFF;
-            border: 1px solid transparent;
-        }
-        .btn-primary:hover {
-            background-color: #A95A3A; /* Darker Sienna */
-        }
-        .copy-btn {
+        .code-actions {
             position: absolute;
             top: 0.75rem;
             right: 0.75rem;
-            background-color: #4A5568;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .code-btn {
+            background-color: #4a5568;
             color: white;
             border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
             font-size: 0.75rem;
-            opacity: 0;
-            transition: all 0.2s;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease;
         }
-        pre:hover .copy-btn {
-            opacity: 1;
+        pre:hover .code-btn { opacity: 1; }
+        .code-btn:hover { background-color: #2d3748; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #0891b2;
+            animation: spin 1s ease infinite;
         }
-        .copy-btn:hover {
-            background-color: #2D3748;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .toc-link {
-            transition: all 0.2s ease-in-out;
-            border-left: 2px solid transparent;
-        }
-        .toc-link:hover {
-            color: #3E8A86; /* Teal */
-            border-left-color: #3E8A86;
-        }
-        .toc-link.active {
-            color: #C06A47; /* Sienna */
-            border-left-color: #C06A47;
-            font-weight: 700;
-        }
-        .prose-custom { max-width: 80ch; }
-        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
-        .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
-        .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
-        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-        .bg-white { background-color: #FFFFFF; }
-        .border, .border-t { border-color: #e5e7eb; }
     </style>
 </head>
-<body class="antialiased">
+<body class="text-slate-700">
 
-    <!-- Header -->
-    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-3">
-                <div class="text-2xl font-bold text-sienna-800">
-                    <a href="roadmap.html">OOP Foundations</a>
+    <!-- HEADER -->
+    <header class="bg-slate-800 text-white shadow-lg">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="roadmap.html" class="text-xl font-bold hover:text-cyan-400 transition-colors">OOP Learning Roadmap</a>
                 </div>
-                <nav class="hidden md:flex space-x-4">
-                    <a href="day_1.html" class="text-gray-600 hover:text-teal-600 transition">Day 1</a>
-                    <a href="day_2.html" class="text-gray-600 hover:text-teal-600 transition">Day 2</a>
-                    <a href="day_3.html" class="text-gray-600 hover:text-teal-600 transition">Day 3</a>
-                    <a href="day_4.html" class="text-gray-600 hover:text-teal-600 transition">Day 4</a>
-                    <a href="day_5.html" class="font-bold text-teal-600">Day 5</a>
-                    <a href="day_6.html" class="text-gray-600 hover:text-teal-600 transition">Day 6</a>
-                    <a href="day_7.html" class="text-gray-600 hover:text-teal-600 transition">Day 7</a>
-                </nav>
-                <!-- Return to Homepage button removed from here -->
+                <div class="flex items-center">
+                    <a href="roadmap.html" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">
+                        Return to Homepage
+                    </a>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <div class="flex justify-between items-center mb-12">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">Day 5: Method Overloading, Overriding & Extension Methods</h1>
-                <p class="mt-4 text-xl text-gray-600">Welcome to Day 5 of our OOP Foundations course. Today, we delve into three powerful C# features that provide flexibility and extensibility to your code: method overloading, method overriding, and extension methods. Mastering these concepts is key to writing clean, intuitive, and maintainable object-oriented programs.</p>
-            </div>
-            <a href="roadmap.html" class="btn btn-primary whitespace-nowrap">Return to Homepage</a>
-        </div>
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="lg:flex lg:space-x-8">
 
-        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
-            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
-                <div class="p-4 rounded-lg bg-white shadow-sm border">
-                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
-                    <nav id="toc-nav" class="flex flex-col space-y-2">
-                        <a href="#introduction" class="toc-link pl-2 text-gray-600">Introduction</a>
-                        <a href="#theory-topics" class="toc-link pl-2 text-gray-600">Theory Topics</a>
-                        <a href="#coding-practice" class="toc-link pl-2 text-gray-600">Coding Practice & Problems</a>
-                        <a href="#uml-task" class="toc-link pl-2 text-gray-600">UML Task</a>
-                        <a href="#case-study" class="toc-link pl-2 text-gray-600">Case Study: Online Library System APIs</a>
-                        <a href="#knowledge-check" class="toc-link pl-2 text-gray-600">Knowledge Check</a>
-                        <a href="#self-assessment" class="toc-link pl-2 text-gray-600">Self-Assessment Challenge</a>
-                    </nav>
-                </div>
-            </aside>
-
-            <div class="w-full lg:w-3/4 prose-custom">
-                <section id="introduction" class="scroll-mt-20 space-y-4">
+            <!-- Main Content -->
+            <main class="flex-1 min-w-0">
+                <article class="prose max-w-none">
+                    <section id="introduction" class="scroll-mt-20 space-y-4">
                         <h1 class="text-4xl font-bold tracking-tight text-gray-900">Day 5: Method Overloading, Overriding & Extension Methods</h1>
                         <p class="text-lg text-gray-600">Welcome to Day 5 of our OOP Foundations course. Today, we delve into three powerful C# features that provide flexibility and extensibility to your code: method overloading, method overriding, and extension methods. Mastering these concepts is key to writing clean, intuitive, and maintainable object-oriented programs.</p>
                         <div class="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-700 p-4 rounded-r-lg" role="alert">
@@ -165,9 +97,7 @@
                         <div id="overloading-vs-overriding" class="space-y-4 pt-6">
                             <h3 class="text-2xl font-semibold text-gray-800">Method Overloading vs. Overriding</h3>
                             <p>While their names sound similar, overloading and overriding represent two different forms of polymorphism. Overloading is resolved at compile-time (static polymorphism), while overriding is resolved at run-time (dynamic polymorphism).</p>
-
                             <p><strong>Method Overloading</strong> means creating multiple methods in the same class with the same name but different signatures (i.e., different parameter lists - either number of parameters or type of parameters). It's a way to provide multiple ways to call a method for different data types.</p>
-                            
                             <p><strong>Method Overriding</strong> means providing a specific implementation for a method in a derived class that is already defined in its base class. The method in the derived class must have the same name, return type, and parameters as the one in the base class. It requires an inheritance hierarchy.</p>
                              <button id="analogy-btn" class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors">
                                 ✨ Explain with Analogy
@@ -619,50 +549,203 @@ public class Program
                             </div>
                         </div>
                     </section>
+                </article>
+            </main>
+
+            <!-- Table of Contents (Sticky) -->
+            <aside class="hidden lg:block w-64 shrink-0 sticky top-20 self-start">
+                <nav id="toc">
+                    <h3 class="font-semibold text-slate-900 text-lg mb-4">On this page</h3>
+                    <ul class="space-y-2 text-slate-500">
+                        <li><a href="#introduction" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Introduction</a></li>
+                        <li><a href="#theory-topics" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Theory Topics</a></li>
+                        <li><a href="#coding-practice" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Coding Practice & Problems</a></li>
+                        <li><a href="#uml-task" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">UML Task</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Case Study</a></li>
+                        <li><a href="#knowledge-check" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Knowledge Check</a></li>
+                        <li><a href="#self-assessment" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Self-Assessment Challenge</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+
+    <!-- AI Modal -->
+    <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="ai-modal-title" class="text-xl font-semibold">✨ AI Generated Explanation</h3>
+                <button id="ai-modal-close" class="text-gray-500 hover:text-gray-800">&times;</button>
+            </div>
+            <div id="ai-modal-content" class="p-6 overflow-y-auto">
+                <div class="flex items-center justify-center h-48">
+                    <div class="spinner"></div>
+                </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <footer class="mt-16 py-8 bg-white border-t">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="flex justify-center mb-4">
-                <a href="roadmap.html" class="btn btn-primary">Return to Homepage</a>
-            </div>
-            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
-            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
+    <!-- FOOTER -->
+    <footer class="mt-20 py-8 bg-slate-100 border-t">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500">
+            <p>&copy; 2025 OOP Foundations Learning Module. All rights reserved.</p>
+            <p class="mt-2 text-sm">Part of the <a href="roadmap.html" class="text-cyan-600 hover:underline">LLD C# Roadmap</a></p>
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // --- Copy-to-Clipboard ---
-            document.querySelectorAll('.copy-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const code = btn.parentElement.querySelector('pre code').innerText;
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Table of Contents Active Link Highlighting ---
+        const tocLinks = document.querySelectorAll('.toc-link');
+        const sections = document.querySelectorAll('main section');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    if(tocLink) tocLink.classList.add('active');
+                }
+            });
+        }, { threshold: 0.5 });
+
+        sections.forEach(section => {
+            if(section.id) {
+                observer.observe(section);
+            }
+        });
+
+        const addCodeBlockActions = () => {
+            const codeBlocks = document.querySelectorAll('pre');
+            codeBlocks.forEach(block => {
+                const actionsContainer = document.createElement('div');
+                actionsContainer.className = 'code-actions';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.innerText = 'Copy';
+                copyBtn.className = 'code-btn';
+
+                copyBtn.addEventListener('click', () => {
+                    const code = block.querySelector('code').innerText;
                     navigator.clipboard.writeText(code).then(() => {
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => btn.textContent = 'Copy', 2000);
+                        copyBtn.innerText = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerText = 'Copy';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
                     });
                 });
-            });
 
-            // --- Active TOC Link ---
-            const sections = document.querySelectorAll('main section');
-            const tocLinks = document.querySelectorAll('.toc-link');
-            const observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        tocLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${entry.target.id}`) {
-                                link.classList.add('active');
-                            }
-                        });
-                    }
+                const explainBtn = document.createElement('button');
+                explainBtn.innerHTML = '✨ Explain Code';
+                explainBtn.className = 'code-btn';
+
+                explainBtn.addEventListener('click', () => {
+                    const code = block.querySelector('code').innerText;
+                    const concept = block.closest('div[id]')?.querySelector('h3')?.textContent || 'this C# code';
+                    const prompt = `Act as an expert C# developer and teacher. Explain the following code snippet step-by-step in a clear, concise way for a beginner. Focus on the concept of "${concept}" if it's relevant.\n\nCode:\n\`\`\`csharp\n${code}\n\`\`\``;
+                    showAiModal('✨ AI Code Explanation', prompt);
                 });
-            }, { rootMargin: '-40% 0px -60% 0px' });
-            sections.forEach(section => observer.observe(section));
+
+                actionsContainer.appendChild(explainBtn);
+                actionsContainer.appendChild(copyBtn);
+                block.prepend(actionsContainer);
+            });
+        };
+
+        const handleQuiz = () => {
+            const checkButtons = document.querySelectorAll('.quiz-check-btn');
+            checkButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const questionId = btn.dataset.question;
+                    const correctAnswer = btn.dataset.answer;
+                    const questionDiv = document.getElementById(`quiz-question-${questionId}`);
+                    const selectedOption = questionDiv.querySelector(`input[name="q${questionId}"]:checked`);
+                    const feedbackDiv = questionDiv.querySelector('.quiz-feedback');
+
+                    const correctMessages = {
+                        '1': '<strong>Correct!</strong> Method overriding is about providing a specific implementation in a child class for a method from its parent class.',
+                        '2': '<strong>Correct!</strong> Extension methods must be static, reside in a static class, and use the \'this\' modifier on the first parameter to specify which type they extend.',
+                        '3': '<strong>Correct!</strong> Overloading improves the usability and readability of an API by allowing a single method name to perform the same general action on different sets of inputs.'
+                    };
+
+                    if (!selectedOption) {
+                        feedbackDiv.textContent = 'Please select an answer.';
+                        feedbackDiv.className = 'quiz-feedback mt-2 p-3 rounded-md bg-yellow-100 text-yellow-800';
+                        feedbackDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (selectedOption.value === correctAnswer) {
+                        feedbackDiv.innerHTML = correctMessages[questionId];
+                        feedbackDiv.className = 'quiz-feedback mt-2 p-3 rounded-md bg-green-100 text-green-800';
+                    } else {
+                        feedbackDiv.innerHTML = `<strong>Incorrect.</strong> The correct answer is not (${selectedOption.value}). Please review the theory section and try again.`;
+                        feedbackDiv.className = 'quiz-feedback mt-2 p-3 rounded-md bg-red-100 text-red-800';
+                    }
+                    feedbackDiv.classList.remove('hidden');
+                });
+            });
+        };
+
+        const handleSolutionToggle = () => {
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionCode = document.getElementById('solution-code');
+
+            if (toggleBtn && solutionCode) {
+                toggleBtn.addEventListener('click', () => {
+                    const isHidden = solutionCode.classList.contains('hidden');
+                    solutionCode.classList.toggle('hidden');
+                    toggleBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+                    if(!isHidden) Prism.highlightAll();
+                });
+            }
+        };
+
+        const modal = document.getElementById('ai-modal');
+        const modalTitle = document.getElementById('ai-modal-title');
+        const modalContent = document.getElementById('ai-modal-content');
+        const modalCloseBtn = document.getElementById('ai-modal-close');
+
+        const showAiModal = (title, prompt) => {
+            modalTitle.textContent = title;
+            modalContent.innerHTML = `<div class="flex items-center justify-center h-48"><div class="spinner"></div></div>`;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        const hideAiModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modalContent.innerHTML = '';
+        };
+
+        modalCloseBtn.addEventListener('click', hideAiModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                hideAiModal();
+            }
         });
+
+        const handleAnalogyButton = () => {
+            const analogyBtn = document.getElementById('analogy-btn');
+            analogyBtn.addEventListener('click', () => {
+                const prompt = `Explain the difference between method overloading and method overriding in C# using a simple, real-world analogy. Structure the explanation with clear headings for "Method Overloading" and "Method Overriding". Keep it concise and easy for a beginner to understand.`;
+                showAiModal('✨ AI Generated Analogy', prompt);
+            });
+        };
+
+        addCodeBlockActions();
+        handleQuiz();
+        handleSolutionToggle();
+        handleAnalogyButton();
+        Prism.highlightAll();
+    });
     </script>
 </body>
 </html>

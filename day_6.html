@@ -5,19 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Day 6: Interfaces & Partial Classes - OOP Foundations</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #FFFFFF;
-            color: #3D352E;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #3D352E; }
+        .toc-link.active { color: #C06A47; font-weight: 700; border-left-color: #C06A47; }
+        .toc-link { transition: all 0.2s ease-in-out; border-left: 2px solid transparent; }
+        .toc-link:hover { color: #3E8A86; border-left-color: #3E8A86; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Inter', sans-serif; font-weight: 700; }
         pre {
             background-color: #1E1E1E;
             color: #D4D4D4;
@@ -28,14 +25,8 @@
             overflow-x: auto;
             border: 1px solid #3a404a;
         }
-        pre code {
-            background-color: transparent !important;
-            color: inherit;
-            padding: 0;
-            font-size: inherit;
-            border-radius: 0;
-        }
-        .prose-custom :not(pre) > code {
+        pre code { background-color: transparent !important; color: inherit; padding: 0; font-size: inherit; border-radius: 0; }
+        .prose :not(pre) > code {
             background-color: #F3F4F6;
             color: #C06A47;
             padding: 0.2em 0.4em;
@@ -43,113 +34,43 @@
             font-family: 'Roboto Mono', monospace;
             font-size: 0.9em;
         }
-        .btn {
-            display: inline-block;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            text-align: center;
-        }
-        .btn-primary {
-            background-color: #C06A47; /* Sienna */
-            color: #FFFFFF;
-            border: 1px solid transparent;
-        }
-        .btn-primary:hover {
-            background-color: #A95A3A; /* Darker Sienna */
-        }
-        .copy-btn {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #4A5568;
-            color: white;
-            border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: all 0.2s;
-        }
-        pre:hover .copy-btn {
-            opacity: 1;
-        }
-        .copy-btn:hover {
-            background-color: #2D3748;
-        }
-        .toc-link {
-            transition: all 0.2s ease-in-out;
-            border-left: 2px solid transparent;
-        }
-        .toc-link:hover {
-            color: #3E8A86; /* Teal */
-            border-left-color: #3E8A86;
-        }
-        .toc-link.active {
-            color: #C06A47; /* Sienna */
-            border-left-color: #C06A47;
-            font-weight: 700;
-        }
-        .prose-custom { max-width: 80ch; }
-        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
-        .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
-        .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
-        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-        .bg-white { background-color: #FFFFFF; }
-        .border, .border-t { border-color: #e5e7eb; }
+        .token.keyword { color: #569CD6; } .token.type { color: #4EC9B0; } .token.string { color: #CE9178; } .token.comment { color: #6A9955; } .token.method { color: #DCDCAA; } .token.number { color: #B5CEA8; } .token.punctuation { color: #D4D4D4; } .token.variable { color: #9CDCFE; }
+        .btn { display: inline-block; font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.375rem; transition: all 0.2s ease-in-out; cursor: pointer; text-align: center; }
+        .btn-primary { background-color: #C06A47; color: #FFFFFF; border: 1px solid transparent; }
+        .btn-primary:hover { background-color: #A95A3A; }
+        .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background-color: #4A5568; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; opacity: 0.7; }
+        pre:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { background-color: #2D3748; }
+        .callout { background-color: #F3F4F6; border-left: 4px solid #C06A47; padding: 1rem; border-radius: 0.25rem; }
+        .quiz-option { transition: background-color 0.2s; }
+        .quiz-option.correct { background-color: #C6F6D5; border-color: #38A169; }
+        .quiz-option.incorrect { background-color: #FED7D7; border-color: #E53E3E; }
     </style>
 </head>
-<body class="antialiased">
+<body class="text-slate-700 antialiased">
 
-    <!-- Header -->
-    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-3">
-                <div class="text-2xl font-bold text-sienna-800">
-                    <a href="roadmap.html">OOP Foundations</a>
+    <!-- HEADER -->
+    <header class="bg-slate-800 text-white shadow-lg">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="roadmap.html" class="text-xl font-bold hover:text-cyan-400 transition-colors">OOP Learning Roadmap</a>
                 </div>
-                <nav class="hidden md:flex space-x-4">
-                    <a href="day_1.html" class="text-gray-600 hover:text-teal-600 transition">Day 1</a>
-                    <a href="day_2.html" class="text-gray-600 hover:text-teal-600 transition">Day 2</a>
-                    <a href="day_3.html" class="text-gray-600 hover:text-teal-600 transition">Day 3</a>
-                    <a href="day_4.html" class="text-gray-600 hover:text-teal-600 transition">Day 4</a>
-                    <a href="day_5.html" class="text-gray-600 hover:text-teal-600 transition">Day 5</a>
-                    <a href="day_6.html" class="font-bold text-teal-600">Day 6</a>
-                    <a href="day_7.html" class="text-gray-600 hover:text-teal-600 transition">Day 7</a>
-                </nav>
-                <!-- Return to Homepage button removed from here -->
+                <div class="flex items-center">
+                    <a href="roadmap.html" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">
+                        Return to Homepage
+                    </a>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <div class="flex justify-between items-center mb-12">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">Day 6: Interfaces & Partial Classes</h1>
-                <p class="mt-4 text-xl text-gray-600">Exploring contracts and code organization in C# for building flexible and maintainable systems.</p>
-            </div>
-            <a href="roadmap.html" class="btn btn-primary whitespace-nowrap">Return to Homepage</a>
-        </div>
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="lg:flex lg:space-x-8">
 
-        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
-            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
-                <div class="p-4 rounded-lg bg-white shadow-sm border">
-                    <h3 class="text-lg font-semibold mb-4">On This Page</h3>
-                    <nav id="toc-nav" class="flex flex-col space-y-2">
-                        <a href="#theory" class="toc-link pl-2 text-gray-600">Theory Topics</a>
-                        <a href="#coding-practice" class="toc-link pl-2 text-gray-600">Coding Practice</a>
-                        <a href="#uml-task" class="toc-link pl-2 text-gray-600">UML/Schema Task</a>
-                        <a href="#case-study" class="toc-link pl-2 text-gray-600">Case Study</a>
-                        <a href="#knowledge-check" class="toc-link pl-2 text-gray-600">Knowledge Check</a>
-                        <a href="#self-assessment" class="toc-link pl-2 text-gray-600">Self-Assessment Challenge</a>
-                    </nav>
-                </div>
-            </aside>
-
-            <div class="w-full lg:w-3/4 prose-custom">
-                 <section id="theory" class="scroll-mt-20">
+            <!-- Main Content -->
+            <main class="flex-1 min-w-0 prose">
+                <section id="theory" class="scroll-mt-20">
                     <h2 class="text-3xl font-bold border-b pb-2">✅ Theory Topics</h2>
                     <p>Today, we dive into two powerful C# features that promote flexible and maintainable code: Interfaces and Partial Classes. Interfaces define contracts that classes must adhere to, enabling polymorphism and decoupling. Partial classes allow a single class definition to be split across multiple files, which is invaluable for code organization and working with auto-generated code.</p>
 
@@ -169,42 +90,42 @@
                     </ul>
 
                     <h5 class="text-lg font-semibold mt-4">Syntax Snippet: Defining an Interface</h5>
-<pre><code class="language-csharp">public interface IEngine
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IEngine</span>
 {
-    void Start();
-    void Stop();
-    int Horsepower { get; }
+    <span class="token type">void</span> <span class="token method">Start</span>()<span class="token punctuation">;</span>
+    <span class="token type">void</span> <span class="token method">Stop</span>()<span class="token punctuation">;</span>
+    <span class="token type">int</span> <span class="token variable">Horsepower</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> }
 }
 </code></pre>
 
                     <h5 class="text-lg font-semibold mt-4">Syntax Snippet: Implementing an Interface</h5>
-<pre><code class="language-csharp">public class ElectricEngine : IEngine
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">ElectricEngine</span> <span class="token punctuation">:</span> <span class="token type">IEngine</span>
 {
-    public int Horsepower { get; private set; } = 250;
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Horsepower</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">private</span> <span class="token keyword">set</span><span class="token punctuation">;</span> } <span class="token punctuation">=</span> <span class="token number">250</span><span class="token punctuation">;</span>
 
-    public void Start()
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Start</span>()
     {
-        Console.WriteLine("Electric engine hums to life silently.");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Electric engine hums to life silently."</span>)<span class="token punctuation">;</span>
     }
 
-    public void Stop()
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Stop</span>()
     {
-        Console.WriteLine("Electric engine powers down.");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Electric engine powers down."</span>)<span class="token punctuation">;</span>
     }
 }
 
-public class GasEngine : IEngine
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">GasEngine</span> <span class="token punctuation">:</span> <span class="token type">IEngine</span>
 {
-    public int Horsepower { get; private set; } = 180;
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Horsepower</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">private</span> <span class="token keyword">set</span><span class="token punctuation">;</span> } <span class="token punctuation">=</span> <span class="token number">180</span><span class="token punctuation">;</span>
     
-    public void Start()
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Start</span>()
     {
-        Console.WriteLine("Gas engine roars to life!");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Gas engine roars to life!"</span>)<span class="token punctuation">;</span>
     }
 
-    public void Stop()
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Stop</span>()
     {
-        Console.WriteLine("Gas engine sputters to a stop.");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Gas engine sputters to a stop."</span>)<span class="token punctuation">;</span>
     }
 }
 </code></pre>
@@ -227,18 +148,18 @@ public class GasEngine : IEngine
                     <h5 class="text-lg font-semibold mt-4">Syntax Snippet: Defining a Partial Class</h5>
                     <p>Both files must use the <code>partial</code> keyword.</p>
                     <p><strong>File: Employee.cs</strong></p>
-<pre><code class="language-csharp">public partial class Employee
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">partial</span> <span class="token keyword">class</span> <span class="token type">Employee</span>
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Id</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token variable">Name</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
 }
 </code></pre>
                     <p><strong>File: Employee.Logic.cs</strong></p>
-<pre><code class="language-csharp">public partial class Employee
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">partial</span> <span class="token keyword">class</span> <span class="token type">Employee</span>
 {
-    public void Promote()
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Promote</span>()
     {
-        Console.WriteLine($"{Name} has been promoted!");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"</span>{<span class="token variable">Name</span>}<span class="token string"> has been promoted!"</span>)<span class="token punctuation">;</span>
     }
 }
 </code></pre>
@@ -249,25 +170,25 @@ public class GasEngine : IEngine
 
                     <h4 class="text-xl font-semibold mt-6">The "Fat Interface" Problem</h4>
                     <p>Imagine an interface for a multi-function printer:</p>
-<pre><code class="language-csharp">public interface IMultiFunctionDevice
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IMultiFunctionDevice</span>
 {
-    void Print();
-    void Scan();
-    void Fax();
+    <span class="token type">void</span> <span class="token method">Print</span>()<span class="token punctuation">;</span>
+    <span class="token type">void</span> <span class="token method">Scan</span>()<span class="token punctuation">;</span>
+    <span class="token type">void</span> <span class="token method">Fax</span>()<span class="token punctuation">;</span>
 }
 </code></pre>
                     <p>This works fine for a high-end office machine. But what if you have a cheap, print-only printer? It would be forced to implement <code>Scan()</code> and <code>Fax()</code>, likely by throwing a <code>NotImplementedException</code>. This is a design smell.</p>
 
                     <h4 class="text-xl font-semibold mt-6">The ISP Solution</h4>
                     <p>Break the large interface into smaller, more cohesive ones:</p>
-<pre><code class="language-csharp">public interface IPrinter { void Print(); }
-public interface IScanner { void Scan(); }
-public interface IFaxer { void Fax(); }
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IPrinter</span> { <span class="token type">void</span> <span class="token method">Print</span>()<span class="token punctuation">;</span> }
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IScanner</span> { <span class="token type">void</span> <span class="token method">Scan</span>()<span class="token punctuation">;</span> }
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IFaxer</span> { <span class="token type">void</span> <span class="token method">Fax</span>()<span class="token punctuation">;</span> }
 </code></pre>
                     <p>Now, classes can implement only the interfaces they need:</p>
-<pre><code class="language-csharp">public class SimplePrinter : IPrinter { ... }
-public class Photocopier : IPrinter, IScanner { ... }
-public class OfficeHub : IPrinter, IScanner, IFaxer { ... }
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">SimplePrinter</span> <span class="token punctuation">:</span> <span class="token type">IPrinter</span> { <span class="token punctuation">...</span> }
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Photocopier</span> <span class="token punctuation">:</span> <span class="token type">IPrinter</span><span class="token punctuation">,</span> <span class="token type">IScanner</span> { <span class="token punctuation">...</span> }
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">OfficeHub</span> <span class="token punctuation">:</span> <span class="token type">IPrinter</span><span class="token punctuation">,</span> <span class="token type">IScanner</span><span class="token punctuation">,</span> <span class="token type">IFaxer</span> { <span class="token punctuation">...</span> }
 </code></pre>
                     <p>This leads to a much cleaner, more flexible, and decoupled design.</p>
                 </section>
@@ -280,65 +201,65 @@ public class OfficeHub : IPrinter, IScanner, IFaxer { ... }
                     <p>Following the Interface Segregation Principle, define three separate interfaces: <code>IPrint</code>, <code>IScan</code>, and <code>IFax</code>. Then, create a <code>MultiFunctionPrinter</code> class that implements all three and a <code>BasicPrinter</code> that only implements <code>IPrint</code>.</p>
                     
                     <h4 class="text-xl font-semibold mt-4">Solution</h4>
-<pre><code class="language-csharp">using System;
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
 
-// 1. Define small, specific interfaces
-public interface IPrint
+<span class="token comment">// 1. Define small, specific interfaces</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IPrint</span>
 {
-    void Print(string document);
+    <span class="token type">void</span> <span class="token method">Print</span>(<span class="token type">string</span> <span class="token variable">document</span>)<span class="token punctuation">;</span>
 }
 
-public interface IScan
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IScan</span>
 {
-    void Scan(string document);
+    <span class="token type">void</span> <span class="token method">Scan</span>(<span class="token type">string</span> <span class="token variable">document</span>)<span class="token punctuation">;</span>
 }
 
-public interface IFax
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IFax</span>
 {
-    void Fax(string document);
+    <span class="token type">void</span> <span class="token method">Fax</span>(<span class="token type">string</span> <span class="token variable">document</span>)<span class="token punctuation">;</span>
 }
 
-// 2. Implement all interfaces for a multi-function device
-public class MultiFunctionPrinter : IPrint, IScan, IFax
+<span class="token comment">// 2. Implement all interfaces for a multi-function device</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">MultiFunctionPrinter</span> <span class="token punctuation">:</span> <span class="token type">IPrint</span><span class="token punctuation">,</span> <span class="token type">IScan</span><span class="token punctuation">,</span> <span class="token type">IFax</span>
 {
-    public void Print(string document)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Print</span>(<span class="token type">string</span> <span class="token variable">document</span>)
     {
-        Console.WriteLine($"Printing: {document}");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Printing: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
     }
 
-    public void Scan(string document)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Scan</span>(<span class="token type">string</span> <span class="token variable">document</span>)
     {
-        Console.WriteLine($"Scanning: {document}");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Scanning: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
     }
 
-    public void Fax(string document)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Fax</span>(<span class="token type">string</span> <span class="token variable">document</span>)
     {
-        Console.WriteLine($"Faxing: {document}");
-    }
-}
-
-// 3. Implement only the necessary interface for a basic device
-public class BasicPrinter : IPrint
-{
-    public void Print(string document)
-    {
-        Console.WriteLine($"Basic Printer Printing: {document}");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Faxing: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
     }
 }
 
-public class Program
+<span class="token comment">// 3. Implement only the necessary interface for a basic device</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">BasicPrinter</span> <span class="token punctuation">:</span> <span class="token type">IPrint</span>
 {
-    public static void Main(string[] args)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">Print</span>(<span class="token type">string</span> <span class="token variable">document</span>)
     {
-        MultiFunctionPrinter mfp = new MultiFunctionPrinter();
-        mfp.Print("Annual Report");
-        mfp.Scan("Invoice");
-        mfp.Fax("Contract");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Basic Printer Printing: </span>{<span class="token variable">document</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+    }
+}
 
-        Console.WriteLine("\n--- Using Basic Printer ---");
-        BasicPrinter bp = new BasicPrinter();
-        bp.Print("Shopping List");
-        // bp.Scan("Receipt"); // This would cause a compile-time error, which is good!
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
+{
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>(<span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">args</span>)
+    {
+        <span class="token type">MultiFunctionPrinter</span> <span class="token variable">mfp</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">MultiFunctionPrinter</span>()<span class="token punctuation">;</span>
+        <span class="token variable">mfp</span><span class="token punctuation">.</span><span class="token method">Print</span>(<span class="token string">"Annual Report"</span>)<span class="token punctuation">;</span>
+        <span class="token variable">mfp</span><span class="token punctuation">.</span><span class="token method">Scan</span>(<span class="token string">"Invoice"</span>)<span class="token punctuation">;</span>
+        <span class="token variable">mfp</span><span class="token punctuation">.</span><span class="token method">Fax</span>(<span class="token string">"Contract"</span>)<span class="token punctuation">;</span>
+
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"\n--- Using Basic Printer ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">BasicPrinter</span> <span class="token variable">bp</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">BasicPrinter</span>()<span class="token punctuation">;</span>
+        <span class="token variable">bp</span><span class="token punctuation">.</span><span class="token method">Print</span>(<span class="token string">"Shopping List"</span>)<span class="token punctuation">;</span>
+        <span class="token comment">// bp.Scan("Receipt"); // This would cause a compile-time error, which is good!</span>
     }
 }
 </code></pre>
@@ -349,67 +270,67 @@ public class Program
                     </div>
 
                     <h4 class="text-xl font-semibold mt-4">Solution</h4>
-<pre><code class="language-csharp">using System;
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
 
-// The contract for all payment processors
-public interface IPaymentProcessor
+<span class="token comment">// The contract for all payment processors</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IPaymentProcessor</span>
 {
-    void ProcessPayment(decimal amount);
+    <span class="token type">void</span> <span class="token method">ProcessPayment</span>(<span class="token type">decimal</span> <span class="token variable">amount</span>)<span class="token punctuation">;</span>
 }
 
-// Concrete implementation for PayPal
-public class PayPalProcessor : IPaymentProcessor
+<span class="token comment">// Concrete implementation for PayPal</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">PayPalProcessor</span> <span class="token punctuation">:</span> <span class="token type">IPaymentProcessor</span>
 {
-    public void ProcessPayment(decimal amount)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">ProcessPayment</span>(<span class="token type">decimal</span> <span class="token variable">amount</span>)
     {
-        Console.WriteLine($"Processing ${amount} payment via PayPal.");
-        // Logic to interact with PayPal API would go here
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Processing $</span>{<span class="token variable">amount</span>}<span class="token string"> payment via PayPal."</span>)<span class="token punctuation">;</span>
+        <span class="token comment">// Logic to interact with PayPal API would go here</span>
     }
 }
 
-// Concrete implementation for Stripe
-public class StripeProcessor : IPaymentProcessor
+<span class="token comment">// Concrete implementation for Stripe</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">StripeProcessor</span> <span class="token punctuation">:</span> <span class="token type">IPaymentProcessor</span>
 {
-    public void ProcessPayment(decimal amount)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">ProcessPayment</span>(<span class="token type">decimal</span> <span class="token variable">amount</span>)
     {
-        Console.WriteLine($"Processing ${amount} payment via Stripe.");
-        // Logic to interact with Stripe API would go here
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Processing $</span>{<span class="token variable">amount</span>}<span class="token string"> payment via Stripe."</span>)<span class="token punctuation">;</span>
+        <span class="token comment">// Logic to interact with Stripe API would go here</span>
     }
 }
 
-// The Factory class to create processor objects
-public static class PaymentFactory
+<span class="token comment">// The Factory class to create processor objects</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token type">PaymentFactory</span>
 {
-    public static IPaymentProcessor GetPaymentProcessor(string processorType)
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">IPaymentProcessor</span> <span class="token method">GetPaymentProcessor</span>(<span class="token type">string</span> <span class="token variable">processorType</span>)
     {
-        switch (processorType.ToLower())
+        <span class="token keyword">switch</span> (<span class="token variable">processorType</span><span class="token punctuation">.</span><span class="token method">ToLower</span>())
         {
-            case "paypal":
-                return new PayPalProcessor();
-            case "stripe":
-                return new StripeProcessor();
-            default:
-                throw new ArgumentException("Invalid payment processor type", nameof(processorType));
+            <span class="token keyword">case</span> <span class="token string">"paypal"</span><span class="token punctuation">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token method">PayPalProcessor</span>()<span class="token punctuation">;</span>
+            <span class="token keyword">case</span> <span class="token string">"stripe"</span><span class="token punctuation">:</span>
+                <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token method">StripeProcessor</span>()<span class="token punctuation">;</span>
+            <span class="token keyword">default</span><span class="token punctuation">:</span>
+                <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token method">ArgumentException</span>(<span class="token string">"Invalid payment processor type"</span><span class="token punctuation">,</span> <span class="token keyword">nameof</span>(<span class="token variable">processorType</span>))<span class="token punctuation">;</span>
         }
     }
 }
 
-// Client code that uses the factory
-public class Program
+<span class="token comment">// Client code that uses the factory</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
 {
-    public static void Main(string[] args)
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>(<span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">args</span>)
     {
-        // The client code doesn't need to know about the concrete classes.
-        // It just requests a processor from the factory.
+        <span class="token comment">// The client code doesn't need to know about the concrete classes.</span>
+        <span class="token comment">// It just requests a processor from the factory.</span>
         
-        string paymentMethod = "stripe"; // This could come from user input or a config file
+        <span class="token type">string</span> <span class="token variable">paymentMethod</span> <span class="token punctuation">=</span> <span class="token string">"stripe"</span><span class="token punctuation">;</span> <span class="token comment">// This could come from user input or a config file</span>
         
-        IPaymentProcessor processor = PaymentFactory.GetPaymentProcessor(paymentMethod);
-        processor.ProcessPayment(99.99m);
+        <span class="token type">IPaymentProcessor</span> <span class="token variable">processor</span> <span class="token punctuation">=</span> <span class="token type">PaymentFactory</span><span class="token punctuation">.</span><span class="token method">GetPaymentProcessor</span>(<span class="token variable">paymentMethod</span>)<span class="token punctuation">;</span>
+        <span class="token variable">processor</span><span class="token punctuation">.</span><span class="token method">ProcessPayment</span>(<span class="token number">99.99m</span>)<span class="token punctuation">;</span>
 
-        paymentMethod = "paypal";
-        processor = PaymentFactory.GetPaymentProcessor(paymentMethod);
-        processor.ProcessPayment(12.50m);
+        <span class="token variable">paymentMethod</span> <span class="token punctuation">=</span> <span class="token string">"paypal"</span><span class="token punctuation">;</span>
+        <span class="token variable">processor</span> <span class="token punctuation">=</span> <span class="token type">PaymentFactory</span><span class="token punctuation">.</span><span class="token method">GetPaymentProcessor</span>(<span class="token variable">paymentMethod</span>)<span class="token punctuation">;</span>
+        <span class="token variable">processor</span><span class="token punctuation">.</span><span class="token method">ProcessPayment</span>(<span class="token number">12.50m</span>)<span class="token punctuation">;</span>
     }
 }
 </code></pre>
@@ -483,101 +404,101 @@ public class Program
                     <p>This design is highly modular. If we need to add a new notification method tomorrow (like Slack or Teams), we just need to create a new class that implements <code>IMessageSender</code> and update the factory. The <code>NotificationService</code> client code remains completely unchanged.</p>
 
                     <h5 class="text-lg font-semibold mt-4">1. The `IMessageSender` Interface (The Contract)</h5>
-<pre><code class="language-csharp">public interface IMessageSender
+<pre><code class="language-csharp"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IMessageSender</span>
 {
-    void SendMessage(string recipient, string message);
+    <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)<span class="token punctuation">;</span>
 }
 </code></pre>
 
                     <h5 class="text-lg font-semibold mt-4">2. Concrete Implementations</h5>
-<pre><code class="language-csharp">using System;
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
 
-public class EmailSender : IMessageSender
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">EmailSender</span> <span class="token punctuation">:</span> <span class="token type">IMessageSender</span>
 {
-    public void SendMessage(string recipient, string message)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
     {
-        Console.WriteLine($"--- EMAIL ---");
-        Console.WriteLine($"To: {recipient}");
-        Console.WriteLine($"Body: {message}");
-        Console.WriteLine($"Email sent successfully.\n");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"--- EMAIL ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"To: </span>{<span class="token variable">recipient</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Body: </span>{<span class="token variable">message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Email sent successfully.\n"</span>)<span class="token punctuation">;</span>
     }
 }
 
-public class SmsSender : IMessageSender
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">SmsSender</span> <span class="token punctuation">:</span> <span class="token type">IMessageSender</span>
 {
-    public void SendMessage(string recipient, string message)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
     {
-        Console.WriteLine($"--- SMS ---");
-        Console.WriteLine($"To Phone Number: {recipient}");
-        Console.WriteLine($"Message: {message}");
-        Console.WriteLine($"SMS sent successfully.\n");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"--- SMS ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"To Phone Number: </span>{<span class="token variable">recipient</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Message: </span>{<span class="token variable">message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"SMS sent successfully.\n"</span>)<span class="token punctuation">;</span>
     }
 }
 
-public class PushNotificationSender : IMessageSender
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">PushNotificationSender</span> <span class="token punctuation">:</span> <span class="token type">IMessageSender</span>
 {
-    public void SendMessage(string recipient, string message)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendMessage</span>(<span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
     {
-        Console.WriteLine($"--- PUSH NOTIFICATION ---");
-        Console.WriteLine($"To Device Token: {recipient}");
-        Console.WriteLine($"Notification: {message}");
-        Console.WriteLine($"Push notification sent successfully.\n");
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"--- PUSH NOTIFICATION ---"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"To Device Token: </span>{<span class="token variable">recipient</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Notification: </span>{<span class="token variable">message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Push notification sent successfully.\n"</span>)<span class="token punctuation">;</span>
     }
 }
 </code></pre>
                     <h5 class="text-lg font-semibold mt-4">3. The `MessageSenderFactory`</h5>
-<pre><code class="language-csharp">using System;
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
 
-public static class MessageSenderFactory
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token type">MessageSenderFactory</span>
 {
-    public static IMessageSender GetSender(string type)
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">IMessageSender</span> <span class="token method">GetSender</span>(<span class="token type">string</span> <span class="token variable">type</span>)
     {
-        return type.ToLower() switch
+        <span class="token keyword">return</span> <span class="token variable">type</span><span class="token punctuation">.</span><span class="token method">ToLower</span>() <span class="token keyword">switch</span>
         {
-            "email" => new EmailSender(),
-            "sms" => new SmsSender(),
-            "push" => new PushNotificationSender(),
-            _ => throw new ArgumentException("Invalid sender type specified."),
-        };
+            <span class="token string">"email"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">EmailSender</span>()<span class="token punctuation">,</span>
+            <span class="token string">"sms"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">SmsSender</span>()<span class="token punctuation">,</span>
+            <span class="token string">"push"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">PushNotificationSender</span>()<span class="token punctuation">,</span>
+            <span class="token variable">_</span> <span class="token punctuation">=></span> <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token method">ArgumentException</span>(<span class="token string">"Invalid sender type specified."</span>)<span class="token punctuation">,</span>
+        }<span class="token punctuation">;</span>
     }
 }
 </code></pre>
                     <h5 class="text-lg font-semibold mt-4">4. Client Code: `NotificationService`</h5>
-<pre><code class="language-csharp">using System;
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
 
-public class NotificationService
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">NotificationService</span>
 {
-    public void SendNotification(string type, string recipient, string message)
+    <span class="token keyword">public</span> <span class="token type">void</span> <span class="token method">SendNotification</span>(<span class="token type">string</span> <span class="token variable">type</span>, <span class="token type">string</span> <span class="token variable">recipient</span>, <span class="token type">string</span> <span class="token variable">message</span>)
     {
-        try
+        <span class="token keyword">try</span>
         {
-            IMessageSender sender = MessageSenderFactory.GetSender(type);
-            sender.SendMessage(recipient, message);
+            <span class="token type">IMessageSender</span> <span class="token variable">sender</span> <span class="token punctuation">=</span> <span class="token type">MessageSenderFactory</span><span class="token punctuation">.</span><span class="token method">GetSender</span>(<span class="token variable">type</span>)<span class="token punctuation">;</span>
+            <span class="token variable">sender</span><span class="token punctuation">.</span><span class="token method">SendMessage</span>(<span class="token variable">recipient</span>, <span class="token variable">message</span>)<span class="token punctuation">;</span>
         }
-        catch (ArgumentException ex)
+        <span class="token keyword">catch</span> (<span class="token type">ArgumentException</span> <span class="token variable">ex</span>)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"Error: </span>{<span class="token variable">ex</span><span class="token punctuation">.</span><span class="token variable">Message</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
         }
     }
 }
 
-public class Program
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
 {
-    public static void Main(string[] args)
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>(<span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">args</span>)
     {
-        NotificationService notificationService = new NotificationService();
+        <span class="token type">NotificationService</span> <span class="token variable">notificationService</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">NotificationService</span>()<span class="token punctuation">;</span>
 
-        // Send an email
-        notificationService.SendNotification("email", "test@example.com", "Your order has shipped!");
+        <span class="token comment">// Send an email</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"email"</span>, <span class="token string">"test@example.com"</span>, <span class="token string">"Your order has shipped!"</span>)<span class="token punctuation">;</span>
 
-        // Send an SMS
-        notificationService.SendNotification("sms", "+15551234567", "Your package is out for delivery.");
+        <span class="token comment">// Send an SMS</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"sms"</span>, <span class="token string">"+15551234567"</span>, <span class="token string">"Your package is out for delivery."</span>)<span class="token punctuation">;</span>
 
-        // Send a push notification
-        notificationService.SendNotification("push", "device_token_abc123", "You have a new friend request.");
+        <span class="token comment">// Send a push notification</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"push"</span>, <span class="token string">"device_token_abc123"</span>, <span class="token string">"You have a new friend request."</span>)<span class="token punctuation">;</span>
         
-        // Try to send an invalid type
-        notificationService.SendNotification("telegram", "user_id_xyz", "This will fail.");
+        <span class="token comment">// Try to send an invalid type</span>
+        <span class="token variable">notificationService</span><span class="token punctuation">.</span><span class="token method">SendNotification</span>(<span class="token string">"telegram"</span>, <span class="token string">"user_id_xyz"</span>, <span class="token string">"This will fail."</span>)<span class="token punctuation">;</span>
     }
 }
 </code></pre>
@@ -610,105 +531,105 @@ public class Program
                         <button id="toggle-solution-btn" class="btn btn-primary">Show Solution</button>
                         <div id="solution-content" class="hidden mt-4">
                             <h4 class="text-xl font-semibold">Challenge Solution</h4>
-<pre><code class="language-csharp">using System;
-using System.Collections.Generic;
+<pre><code class="language-csharp"><span class="token keyword">using</span> <span class="token type">System</span><span class="token punctuation">;</span>
+<span class="token keyword">using</span> <span class="token type">System<span class="token punctuation">.</span>Collections<span class="token punctuation">.</span>Generic</span><span class="token punctuation">;</span>
 
-// --- Data Model ---
-public class User
+<span class="token comment">// --- Data Model ---</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">User</span>
 {
-    public int Id { get; set; }
-    public string Username { get; set; }
-    public string Email { get; set; }
+    <span class="token keyword">public</span> <span class="token type">int</span> <span class="token variable">Id</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token variable">Username</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token variable">Email</span> { <span class="token keyword">get</span><span class="token punctuation">;</span> <span class="token keyword">set</span><span class="token punctuation">;</span> }
 }
 
-// --- Interfaces ---
-public interface IDataExporter
+<span class="token comment">// --- Interfaces ---</span>
+<span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token type">IDataExporter</span>
 {
-    string Export(IEnumerable&lt;User&gt; data);
+    <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)<span class="token punctuation">;</span>
 }
 
-// --- Concrete Implementations ---
-public class CsvExporter : IDataExporter
+<span class="token comment">// --- Concrete Implementations ---</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">CsvExporter</span> <span class="token punctuation">:</span> <span class="token type">IDataExporter</span>
 {
-    public string Export(IEnumerable&lt;User&gt; data)
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)
     {
-        Console.WriteLine("Exporting data to CSV format...");
-        var lines = new List&lt;string&gt; { "Id,Username,Email" };
-        foreach (var user in data)
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Exporting data to CSV format..."</span>)<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token variable">lines</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">string</span><span class="token punctuation">&gt;</span> { <span class="token string">"Id,Username,Email"</span> }<span class="token punctuation">;</span>
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">user</span> <span class="token keyword">in</span> <span class="token variable">data</span>)
         {
-            lines.Add($"{user.Id},{user.Username},{user.Email}");
+            <span class="token variable">lines</span><span class="token punctuation">.</span><span class="token method">Add</span>(<span class="token string">$"</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Id</span>}<span class="token string">,</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Username</span>}<span class="token string">,</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Email</span>}<span class="token string">"</span>)<span class="token punctuation">;</span>
         }
-        return string.Join("\n", lines);
+        <span class="token keyword">return</span> <span class="token type">string</span><span class="token punctuation">.</span><span class="token method">Join</span>(<span class="token string">"\n"</span>, <span class="token variable">lines</span>)<span class="token punctuation">;</span>
     }
 }
 
-public class JsonExporter : IDataExporter
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">JsonExporter</span> <span class="token punctuation">:</span> <span class="token type">IDataExporter</span>
 {
-    public string Export(IEnumerable&lt;User&gt; data)
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)
     {
-        Console.WriteLine("Exporting data to JSON format...");
-        var userStrings = new List&lt;string&gt;();
-        foreach (var user in data)
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Exporting data to JSON format..."</span>)<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token variable">userStrings</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">string</span><span class="token punctuation">&gt;</span>()<span class="token punctuation">;</span>
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">user</span> <span class="token keyword">in</span> <span class="token variable">data</span>)
         {
-            userStrings.Add($"  {{\n    \"Id\": {user.Id},\n    \"Username\": \"{user.Username}\",\n    \"Email\": \"{user.Email}\"\n  }}");
+            <span class="token variable">userStrings</span><span class="token punctuation">.</span><span class="token method">Add</span>(<span class="token string">$"  {{\n    \"Id\": </span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Id</span>}<span class="token string">,\n    \"Username\": \"</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Username</span>}<span class="token string">\",\n    \"Email\": \"</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Email</span>}<span class="token string">\"\n  }}"</span>)<span class="token punctuation">;</span>
         }
-        return "[\n" + string.Join(",\n", userStrings) + "\n]";
+        <span class="token keyword">return</span> <span class="token string">"[\n"</span> <span class="token punctuation">+</span> <span class="token type">string</span><span class="token punctuation">.</span><span class="token method">Join</span>(<span class="token string">",\n"</span>, <span class="token variable">userStrings</span>) <span class="token punctuation">+</span> <span class="token string">"\n]"</span><span class="token punctuation">;</span>
     }
 }
 
-public class XmlExporter : IDataExporter
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">XmlExporter</span> <span class="token punctuation">:</span> <span class="token type">IDataExporter</span>
 {
-    public string Export(IEnumerable&lt;User&gt; data)
+    <span class="token keyword">public</span> <span class="token type">string</span> <span class="token method">Export</span>(<span class="token type">IEnumerable</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span> <span class="token variable">data</span>)
     {
-        Console.WriteLine("Exporting data to XML format...");
-        var userElements = new List&lt;string&gt;();
-        foreach (var user in data)
+        <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">"Exporting data to XML format..."</span>)<span class="token punctuation">;</span>
+        <span class="token keyword">var</span> <span class="token variable">userElements</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">string</span><span class="token punctuation">&gt;</span>()<span class="token punctuation">;</span>
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">user</span> <span class="token keyword">in</span> <span class="token variable">data</span>)
         {
-            userElements.Add($"  &lt;User&gt;\n    &lt;Id&gt;{user.Id}&lt;/Id&gt;\n    &lt;Username&gt;{user.Username}&lt;/Username&gt;\n    &lt;Email&gt;{user.Email}&lt;/Email&gt;\n  &lt;/User&gt;");
+            <span class="token variable">userElements</span><span class="token punctuation">.</span><span class="token method">Add</span>(<span class="token string">$"  &lt;User&gt;\n    &lt;Id&gt;</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Id</span>}<span class="token string">&lt;/Id&gt;\n    &lt;Username&gt;</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Username</span>}<span class="token string">&lt;/Username&gt;\n    &lt;Email&gt;</span>{<span class="token variable">user</span><span class="token punctuation">.</span><span class="token variable">Email</span>}<span class="token string">&lt;/Email&gt;\n  &lt;/User&gt;"</span>)<span class="token punctuation">;</span>
         }
-        return "&lt;Users&gt;\n" + string.Join("\n", userElements) + "\n&lt;/Users&gt;";
+        <span class="token keyword">return</span> <span class="token string">"&lt;Users&gt;\n"</span> <span class="token punctuation">+</span> <span class="token type">string</span><span class="token punctuation">.</span><span class="token method">Join</span>(<span class="token string">"\n"</span>, <span class="token variable">userElements</span>) <span class="token punctuation">+</span> <span class="token string">"\n&lt;/Users&gt;"</span><span class="token punctuation">;</span>
     }
 }
 
-// --- Factory ---
-public static class ExporterFactory
+<span class="token comment">// --- Factory ---</span>
+<span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">class</span> <span class="token type">ExporterFactory</span>
 {
-    public static IDataExporter GetExporter(string format)
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">IDataExporter</span> <span class="token method">GetExporter</span>(<span class="token type">string</span> <span class="token variable">format</span>)
     {
-        return format.ToLower() switch
+        <span class="token keyword">return</span> <span class="token variable">format</span><span class="token punctuation">.</span><span class="token method">ToLower</span>() <span class="token keyword">switch</span>
         {
-            "csv" => new CsvExporter(),
-            "json" => new JsonExporter(),
-            "xml" => new XmlExporter(),
-            _ => throw new NotSupportedException($"Format '{format}' is not supported."),
-        };
+            <span class="token string">"csv"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">CsvExporter</span>()<span class="token punctuation">,</span>
+            <span class="token string">"json"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">JsonExporter</span>()<span class="token punctuation">,</span>
+            <span class="token string">"xml"</span> <span class="token punctuation">=></span> <span class="token keyword">new</span> <span class="token method">XmlExporter</span>()<span class="token punctuation">,</span>
+            <span class="token variable">_</span> <span class="token punctuation">=></span> <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token method">NotSupportedException</span>(<span class="token string">$"Format '</span>{<span class="token variable">format</span>}<span class="token string">' is not supported."</span>)<span class="token punctuation">,</span>
+        }<span class="token punctuation">;</span>
     }
 }
 
-// --- Client ---
-public class Program
+<span class="token comment">// --- Client ---</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token type">Program</span>
 {
-    public static void Main()
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token type">void</span> <span class="token method">Main</span>()
     {
-        var users = new List&lt;User&gt;
+        <span class="token keyword">var</span> <span class="token variable">users</span> <span class="token punctuation">=</span> <span class="token keyword">new</span> <span class="token method">List</span><span class="token punctuation">&lt;</span><span class="token type">User</span><span class="token punctuation">&gt;</span>
         {
-            new User { Id = 1, Username = "alice", Email = "alice@example.com" },
-            new User { Id = 2, Username = "bob", Email = "bob@example.com" }
-        };
+            <span class="token keyword">new</span> <span class="token type">User</span> { <span class="token variable">Id</span> <span class="token punctuation">=</span> <span class="token number">1</span>, <span class="token variable">Username</span> <span class="token punctuation">=</span> <span class="token string">"alice"</span>, <span class="token variable">Email</span> <span class="token punctuation">=</span> <span class="token string">"alice@example.com"</span> }<span class="token punctuation">,</span>
+            <span class="token keyword">new</span> <span class="token type">User</span> { <span class="token variable">Id</span> <span class="token punctuation">=</span> <span class="token number">2</span>, <span class="token variable">Username</span> <span class="token punctuation">=</span> <span class="token string">"bob"</span>, <span class="token variable">Email</span> <span class="token punctuation">=</span> <span class="token string">"bob@example.com"</span> }
+        }<span class="token punctuation">;</span>
 
-        string[] formats = { "csv", "json", "xml" };
+        <span class="token type">string</span><span class="token punctuation">[]</span> <span class="token variable">formats</span> <span class="token punctuation">=</span> { <span class="token string">"csv"</span><span class="token punctuation">,</span> <span class="token string">"json"</span><span class="token punctuation">,</span> <span class="token string">"xml"</span> }<span class="token punctuation">;</span>
 
-        foreach (var format in formats)
+        <span class="token keyword">foreach</span> (<span class="token keyword">var</span> <span class="token variable">format</span> <span class="token keyword">in</span> <span class="token variable">formats</span>)
         {
-            try
+            <span class="token keyword">try</span>
             {
-                IDataExporter exporter = ExporterFactory.GetExporter(format);
-                string exportedData = exporter.Export(users);
-                Console.WriteLine($"\n--- {format.ToUpper()} OUTPUT ---\n{exportedData}\n");
+                <span class="token type">IDataExporter</span> <span class="token variable">exporter</span> <span class="token punctuation">=</span> <span class="token type">ExporterFactory</span><span class="token punctuation">.</span><span class="token method">GetExporter</span>(<span class="token variable">format</span>)<span class="token punctuation">;</span>
+                <span class="token type">string</span> <span class="token variable">exportedData</span> <span class="token punctuation">=</span> <span class="token variable">exporter</span><span class="token punctuation">.</span><span class="token method">Export</span>(<span class="token variable">users</span>)<span class="token punctuation">;</span>
+                <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token string">$"\n--- </span>{<span class="token variable">format</span><span class="token punctuation">.</span><span class="token method">ToUpper</span>()}<span class="token string"> OUTPUT ---\n</span>{<span class="token variable">exportedData</span>}<span class="token string">\n"</span>)<span class="token punctuation">;</span>
             }
-            catch (NotSupportedException ex)
+            <span class="token keyword">catch</span> (<span class="token type">NotSupportedException</span> <span class="token variable">ex</span>)
             {
-                Console.WriteLine(ex.Message);
+                <span class="token type">Console</span><span class="token punctuation">.</span><span class="token method">WriteLine</span>(<span class="token variable">ex</span><span class="token punctuation">.</span><span class="token variable">Message</span>)<span class="token punctuation">;</span>
             }
         }
     }
@@ -717,49 +638,154 @@ public class Program
                         </div>
                     </div>
                 </section>
-            </div>
-        </div>
-    </main>
+            </main>
 
-    <footer class="mt-16 py-8 bg-white border-t">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="flex justify-center mb-4">
-                <a href="roadmap.html" class="btn btn-primary">Return to Homepage</a>
-            </div>
-            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
-            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
+            <!-- Table of Contents (Sticky) -->
+            <aside class="hidden lg:block w-64 shrink-0 sticky top-20 self-start">
+                <nav id="toc">
+                    <h3 class="font-semibold text-slate-900 text-lg mb-4">On this page</h3>
+                    <ul class="space-y-2 text-slate-500">
+                        <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Theory Topics</a></li>
+                        <li><a href="#coding-practice" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Coding Practice</a></li>
+                        <li><a href="#uml-task" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">UML/Schema Task</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Case Study</a></li>
+                        <li><a href="#knowledge-check" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Knowledge Check</a></li>
+                        <li><a href="#self-assessment" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Self-Assessment Challenge</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="mt-20 py-8 bg-slate-100 border-t">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500">
+            <p>&copy; 2025 OOP Foundations Learning Module. All rights reserved.</p>
+            <p class="mt-2 text-sm">Part of the <a href="roadmap.html" class="text-cyan-600 hover:underline">LLD C# Roadmap</a></p>
         </div>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- Copy-to-Clipboard ---
-            document.querySelectorAll('.copy-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const code = btn.parentElement.querySelector('pre code').innerText;
-                    navigator.clipboard.writeText(code).then(() => {
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => btn.textContent = 'Copy', 2000);
+            // --- Copy-to-Clipboard Functionality ---
+            document.querySelectorAll('pre').forEach(block => {
+                const code = block.querySelector('code');
+                if (code) {
+                    const copyButton = document.createElement('button');
+                    copyButton.textContent = 'Copy';
+                    copyButton.className = 'copy-btn btn';
+                    block.appendChild(copyButton);
+
+                    copyButton.addEventListener('click', () => {
+                        navigator.clipboard.writeText(code.innerText).then(() => {
+                            copyButton.textContent = 'Copied!';
+                            setTimeout(() => { copyButton.textContent = 'Copy'; }, 2000);
+                        });
                     });
-                });
+                }
             });
 
-            // --- Active TOC Link ---
-            const sections = document.querySelectorAll('main section');
+            // --- Sticky ToC Active State Logic ---
             const tocLinks = document.querySelectorAll('.toc-link');
-            const observer = new IntersectionObserver(entries => {
+            const sections = document.querySelectorAll('main section[id]');
+            const tocObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        tocLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${entry.target.id}`) {
-                                link.classList.add('active');
-                            }
-                        });
+                    const id = entry.target.getAttribute('id');
+                    const link = document.querySelector(`.toc-link[href="#${id}"]`);
+                    if (entry.isIntersecting && link) {
+                        tocLinks.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
                     }
                 });
-            }, { rootMargin: '-40% 0px -60% 0px' });
-            sections.forEach(section => observer.observe(section));
+            }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
+            sections.forEach(section => { tocObserver.observe(section); });
+
+            // --- Solution Toggle ---
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionContent = document.getElementById('solution-content');
+            if (toggleBtn && solutionContent) {
+                toggleBtn.addEventListener('click', () => {
+                    solutionContent.classList.toggle('hidden');
+                    toggleBtn.textContent = solutionContent.classList.contains('hidden') ? 'Show Solution' : 'Hide Solution';
+                });
+            }
+
+            // --- Quiz Logic ---
+            const quizData = [
+                { question: "What is the primary purpose of an interface in C#?", options: ["To provide a base implementation for derived classes.", "To define a contract of members that a class must implement.", "To allow a class definition to be split across multiple files.", "To directly instantiate objects."], correctAnswer: "To define a contract of members that a class must implement." },
+                { question: "Can a C# class inherit from multiple classes and implement multiple interfaces?", options: ["Yes, it can inherit from multiple classes and implement multiple interfaces.", "No, it can only inherit from one class but can implement multiple interfaces.", "Yes, it can inherit from multiple classes but can only implement one interface.", "No, it can only inherit from one class and implement one interface."], correctAnswer: "No, it can only inherit from one class but can implement multiple interfaces." },
+                { question: "What is the main benefit of using Partial Classes?", options: ["To improve runtime performance.", "To enforce a strict contract on a class.", "To separate auto-generated code from developer-written code.", "To enable multiple inheritance."], correctAnswer: "To separate auto-generated code from developer-written code." },
+                { question: "The Interface Segregation Principle (ISP) suggests that...", options: ["Interfaces should be as large as possible to cover all use cases.", "Classes should not be forced to implement interfaces they do not use.", "A class should have only one reason to change.", "Objects should be replaceable with their subtypes without altering correctness."], correctAnswer: "Classes should not be forced to implement interfaces they do not use." },
+                { question: "In a Factory Pattern, what is the role of the interface?", options: ["The factory itself must implement an interface.", "The interface is not used in the Factory Pattern.", "It serves as the return type for the factory method, decoupling the client from concrete classes.", "It holds the logic for creating objects."], correctAnswer: "It serves as the return type for the factory method, decoupling the client from concrete classes." }
+            ];
+            const quizContainer = document.getElementById('quiz-container');
+            if (quizContainer) {
+                quizData.forEach((q, index) => {
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'bg-white p-6 rounded-lg shadow-sm border';
+                    let optionsHtml = q.options.map(option => `<div class="quiz-option border rounded-md p-3 mt-2 cursor-pointer hover:bg-gray-100" data-question="${index}">${option}</div>`).join('');
+                    questionEl.innerHTML = `<p class="font-semibold text-lg">${index + 1}. ${q.question}</p><div class="mt-4 space-y-2">${optionsHtml}</div><div id="feedback-${index}" class="mt-3 text-sm font-medium"></div>`;
+                    quizContainer.appendChild(questionEl);
+                });
+                quizContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('quiz-option')) {
+                        const questionIndex = e.target.getAttribute('data-question');
+                        const selectedAnswer = e.target.textContent;
+                        const questionData = quizData[questionIndex];
+                        const feedbackEl = document.getElementById(`feedback-${questionIndex}`);
+                        const allOptions = document.querySelectorAll(`.quiz-option[data-question="${questionIndex}"]`);
+                        allOptions.forEach(opt => { opt.style.pointerEvents = 'none'; });
+                        if (selectedAnswer === questionData.correctAnswer) {
+                            e.target.classList.add('correct');
+                            feedbackEl.textContent = 'Correct!';
+                            feedbackEl.style.color = '#38A169';
+                        } else {
+                            e.target.classList.add('incorrect');
+                            feedbackEl.textContent = `Incorrect. The correct answer is: "${questionData.correctAnswer}"`;
+                            feedbackEl.style.color = '#E53E3E';
+                            allOptions.forEach(opt => { if(opt.textContent === questionData.correctAnswer) { opt.classList.add('correct'); } });
+                        }
+                    }
+                });
+            }
+
+            // --- Interactive Canvas Visualization ---
+            const canvas = document.getElementById('interfaceCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                let frame = 0;
+                let animationFrameId;
+                const resizeCanvas = () => { canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight; };
+                const interfaceBox = { x: 50, y: 120, w: 150, h: 60 };
+                const classBoxes = [{ x: 350, y: 30, w: 120, h: 50, name: 'Circle' }, { x: 350, y: 125, w: 120, h: 50, name: 'Square' }, { x: 350, y: 220, w: 120, h: 50, name: 'Triangle' }];
+                function draw() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.strokeStyle = '#C06A47'; ctx.lineWidth = 2; ctx.strokeRect(interfaceBox.x, interfaceBox.y, interfaceBox.w, interfaceBox.h);
+                    ctx.fillStyle = '#3D352E'; ctx.font = '14px Inter'; ctx.textAlign = 'center'; ctx.fillText('IDrawable', interfaceBox.x + interfaceBox.w / 2, interfaceBox.y + 25); ctx.font = '12px "Roboto Mono"'; ctx.fillText('+ Draw()', interfaceBox.x + interfaceBox.w / 2, interfaceBox.y + 45);
+                    classBoxes.forEach((box, i) => {
+                        const progress = Math.min(1, Math.max(0, (frame - i * 30) / 60));
+                        if (progress > 0) {
+                            const currentX = interfaceBox.x + interfaceBox.w + (box.x - (interfaceBox.x + interfaceBox.w)) * progress;
+                            ctx.beginPath(); ctx.moveTo(interfaceBox.x + interfaceBox.w, interfaceBox.y + interfaceBox.h / 2); ctx.bezierCurveTo(interfaceBox.x + interfaceBox.w + 50, interfaceBox.y + interfaceBox.h / 2, currentX - 50, box.y + box.h / 2, currentX, box.y + box.h / 2);
+                            ctx.strokeStyle = '#3E8A86'; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+                            if(progress === 1) {
+                                ctx.strokeStyle = '#3E8A86'; ctx.strokeRect(box.x, box.y, box.w, box.h);
+                                ctx.fillStyle = '#3D352E'; ctx.font = '14px Inter'; ctx.fillText(box.name, box.x + box.w / 2, box.y + 20); ctx.font = '12px "Roboto Mono"'; ctx.fillText('+ Draw() { ... }', box.x + box.w / 2, box.y + 40);
+                            }
+                        }
+                    });
+                    frame++; if (frame > 300) frame = 0;
+                    animationFrameId = requestAnimationFrame(draw);
+                }
+                const canvasObserver = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) { if (!animationFrameId) { frame = 0; animationFrameId = requestAnimationFrame(draw); } } else { cancelAnimationFrame(animationFrameId); animationFrameId = null; } }, { threshold: 0.1 });
+                canvasObserver.observe(canvas); window.addEventListener('resize', resizeCanvas); resizeCanvas();
+            }
+
+            // --- Factory Chart.js Visualization ---
+            const factoryCtx = document.getElementById('factoryChart');
+            if(factoryCtx) {
+                new Chart(factoryCtx, { type: 'bar', data: { labels: ['PayPalProcessor', 'StripeProcessor', 'FutureProcessor'], datasets: [{ label: 'Objects Created by Factory', data: [120, 185, 0], backgroundColor: ['rgba(62, 138, 134, 0.6)', 'rgba(192, 106, 71, 0.6)', 'rgba(150, 150, 150, 0.6)'], borderColor: ['rgb(62, 138, 134)', 'rgb(192, 106, 71)', 'rgb(150, 150, 150)'], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { title: { display: true, text: 'Factory Pattern: Decoupling Client from Concrete Classes', font: { size: 16 } }, subtitle: { display: true, text: 'The client requests an IPaymentProcessor, and the factory provides a concrete instance.', padding: { bottom: 20 } }, tooltip: { callbacks: { footer: (tooltipItems) => 'The client code does not know or care which specific class instance it received.' } } } } });
+            }
         });
     </script>
 </body>

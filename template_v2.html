@@ -11,8 +11,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FFFFFF;
-            color: #3D352E;
+            background-color: #f8fafc; /* slate-50 from roadmap */
+            color: #1e293b; /* slate-800 from roadmap */
         }
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Inter', sans-serif;
@@ -52,84 +52,56 @@
             cursor: pointer;
             text-align: center;
         }
-        .btn-primary {
-            background-color: #C06A47; /* Sienna */
-            color: #FFFFFF;
-            border: 1px solid transparent;
+        .btn-header {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #334155; /* slate-700 */
+            border: 1px solid #cbd5e1; /* slate-300 */
         }
-        .btn-primary:hover {
-            background-color: #A95A3A; /* Darker Sienna */
-        }
-        .copy-btn {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #4A5568;
-            color: white;
-            border: none;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: all 0.2s;
-        }
-        pre:hover .copy-btn {
-            opacity: 1;
-        }
-        .copy-btn:hover {
-            background-color: #2D3748;
+        .btn-header:hover {
+            background-color: #cbd5e1; /* slate-300 */
         }
         .toc-link {
             transition: all 0.2s ease-in-out;
             border-left: 2px solid transparent;
         }
         .toc-link:hover {
-            color: #3E8A86; /* Teal */
-            border-left-color: #3E8A86;
+            color: #0d9488; /* teal-600 */
+            border-left-color: #0d9488;
         }
         .toc-link.active {
-            color: #C06A47; /* Sienna */
-            border-left-color: #C06A47;
-            font-weight: 700;
+            color: #0f766e; /* teal-700 */
+            border-left-color: #0f766e;
+            font-weight: 600;
         }
         .prose-custom { max-width: 80ch; }
-        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; }
+        .prose-custom h2 { margin-top: 2.5em; margin-bottom: 1em; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
         .prose-custom h3 { margin-top: 2em; margin-bottom: 0.8em; }
         .prose-custom p, .prose-custom ul, .prose-custom ol { line-height: 1.7; }
-        .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
-        .bg-white { background-color: #FFFFFF; }
-        .border, .border-t { border-color: #e5e7eb; }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- Header -->
-    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+    <header class="bg-white shadow-md fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-3">
-                <div class="text-2xl font-bold text-sienna-800">
-                    <a href="roadmap.html">OOP Foundations</a>
+                <div class="text-2xl font-bold text-slate-800">
+                    <a href="roadmap.html">Low-Level Design Bootcamp</a>
                 </div>
-                <nav class="hidden md:flex space-x-4">
-                    __DAY_NAV_LINKS__
-                </nav>
-                <!-- Return to Homepage button removed from here -->
+                <a href="roadmap.html" class="btn btn-header whitespace-nowrap">Return to Roadmap</a>
             </div>
         </div>
     </header>
 
     <main class="container mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <div class="flex justify-between items-center mb-12">
-            <div class="text-center">
-                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-sienna-800">__PAGE_TITLE__</h1>
-                <p class="mt-4 text-xl text-gray-600">__PAGE_SUBTITLE__</p>
-            </div>
-            <a href="roadmap.html" class="btn btn-primary whitespace-nowrap">Return to Homepage</a>
+        <div class="text-center my-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">__PAGE_TITLE__</h1>
+            <p class="mt-4 text-xl text-slate-600 max-w-3xl mx-auto">__PAGE_SUBTITLE__</p>
         </div>
 
-        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
+        <div class="flex flex-col lg:flex-row-reverse lg:gap-x-12">
             <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 self-start mb-12 lg:mb-0">
-                <div class="p-4 rounded-lg bg-white shadow-sm border">
+                <div class="p-4 rounded-lg bg-white shadow-sm border border-slate-200/80">
                     <h3 class="text-lg font-semibold mb-4">On This Page</h3>
                     <nav id="toc-nav" class="flex flex-col space-y-2">
                         __TOC_LINKS__
@@ -143,44 +115,32 @@
         </div>
     </main>
 
-    <footer class="mt-16 py-8 bg-white border-t">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="flex justify-center mb-4">
-                <a href="roadmap.html" class="btn btn-primary">Return to Homepage</a>
-            </div>
-            <p class="text-gray-500">&copy; 2025 OOP Foundations. All Rights Reserved.</p>
-            <p class="text-sm mt-1 text-gray-500">A self-contained learning module.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- Copy-to-Clipboard ---
-            document.querySelectorAll('.copy-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const code = btn.parentElement.querySelector('pre code').innerText;
-                    navigator.clipboard.writeText(code).then(() => {
-                        btn.textContent = 'Copied!';
-                        setTimeout(() => btn.textContent = 'Copy', 2000);
-                    });
-                });
-            });
-
-            // --- Active TOC Link ---
+            // --- Active TOC Link Highlighting ---
             const sections = document.querySelectorAll('main section');
             const tocLinks = document.querySelectorAll('.toc-link');
             const observer = new IntersectionObserver(entries => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
+                        const id = entry.target.id;
                         tocLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${entry.target.id}`) {
+                            const linkHref = link.getAttribute('href');
+                            if (linkHref === `#${id}`) {
                                 link.classList.add('active');
+                            } else {
+                                link.classList.remove('active');
                             }
                         });
                     }
                 });
-            }, { rootMargin: '-40% 0px -60% 0px' });
+            }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
             sections.forEach(section => observer.observe(section));
         });
     </script>
