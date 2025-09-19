@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 30: Singleton Pattern - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A two-column, single-page vertical scroll layout was chosen for this educational module. The main content area provides a linear learning path from theory to practice, which is intuitive for study. A sticky Table of Contents in the right sidebar provides non-linear navigation, allowing users to quickly revisit sections or jump to specific topics. This dual navigation approach caters to both first-time learners and those reviewing the material. Interactions like quizzes and code challenges are embedded sequentially to reinforce learning at each stage. -->
+    <!-- Visualization & Content Choices: 1. Lazy/Eager Loading: Report Info -> Comparison -> Presentation -> Interactive Tabs -> Justification -> Allows direct side-by-side comparison of code and concepts without scrolling, enhancing comprehension. Method: HTML/JS. 2. Thread-Safety: Report Info -> Problem Demo -> Viz -> Animated Log Simulation -> Justification -> Visually demonstrates the abstract concept of a race condition in a tangible way, showing multiple instances being created erroneously. Method: HTML/JS. 3. UML Diagram: Report Info -> Structure -> Viz -> HTML/CSS Diagram -> Justification -> Keeps the diagram integrated with the page's style, responsive, and avoids static image files, maintaining the single-file constraint. Method: HTML/CSS. 4. Connection Pool: Report Info -> Case Study -> Viz -> Interactive Connection State UI -> Justification -> Provides a hands-on, visual simulation of how the connection pool works, making the complex case study easier to understand. Method: HTML/JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0ea5e9;
+            font-weight: 600;
+            border-left-color: #0ea5e9;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #334155;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .quiz-option.reveal-correct {
+             background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .solution {
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        .solution.show {
+            max-height: 2000px;
+        }
+        .hljs-comment { color: #9ca3af; }
+        .hljs-keyword { color: #818cf8; }
+        .hljs-class .hljs-title { color: #60a5fa; }
+        .hljs-title.function_ { color: #facc15; }
+        .hljs-string { color: #a3e635; }
+        .hljs-number { color: #f0abfc; }
+        .hljs-meta { color: #fb923c; }
+        .hljs-property { color: #93c5fd; }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="flex flex-col lg:flex-row lg:space-x-12">
+                <div class="lg:w-3/4">
+                    <article class="space-y-12">
+                        <section id="intro">
+                            <div class="p-6 bg-sky-50 border-l-4 border-sky-400 rounded-r-lg">
+                                <h2 class="font-lexend text-3xl font-bold text-slate-800">Day 30: Singleton Pattern</h2>
+                                <p class="mt-3 text-slate-600 text-lg">Ensure a class has only one instance, and provide a global point of access to it.</p>
+                            </div>
+                            <p class="mt-6 text-slate-700">
+                                The Singleton pattern is one of the simplest yet most powerful creational design patterns. Its primary goal is to restrict the instantiation of a class to a single object. This is useful when exactly one object is needed to coordinate actions across the system—for example, a database connection pool, a configuration manager, or a logging service. This lesson will guide you through its definition, common implementation challenges like thread safety, and practical applications in modern software development.
+                            </p>
+                        </section>
+
+                        <section id="theory" class="space-y-8">
+                            <h2 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 pb-2 border-slate-200">✅ Theory Topics</h2>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold font-lexend text-slate-700">Definition of Singleton</h3>
+                                <p class="mt-2 text-slate-700">
+                                    The Singleton pattern ensures that a class has only one instance and provides a global access point to this instance. It achieves this by:
+                                </p>
+                                <ul class="mt-3 list-disc list-inside space-y-2 text-slate-700">
+                                    <li>Making the constructor <code class="bg-slate-200 text-sm font-mono p-1 rounded">private</code> to prevent direct instantiation with the <code class="bg-slate-200 text-sm font-mono p-1 rounded">new</code> keyword.</li>
+                                    <li>Creating a static method (commonly named <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetInstance</code>) that acts as a constructor. This method calls the private constructor to create an object if one doesn't already exist and returns the single instance.</li>
+                                    <li>Storing the single instance in a private static field within the class.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-semibold font-lexend text-slate-700">Lazy vs. Eager Loading</h3>
+                                <p class="mt-2 text-slate-700">
+                                    A key decision when implementing a Singleton is *when* to create the instance. This leads to two main strategies:
+                                </p>
+                                <div class="mt-4">
+                                    <div class="border-b border-gray-200">
+                                        <nav class="-mb-px flex space-x-6" id="loadingTabs">
+                                            <button data-tab="lazy" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-sky-600 border-sky-500">Lazy Loading</button>
+                                            <button data-tab="eager" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">Eager Loading</button>
+                                        </nav>
+                                    </div>
+                                    <div id="tabContent" class="mt-4">
+                                        <div id="lazyContent">
+                                            <p class="text-slate-700">The instance is created only when the <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetInstance</code> method is first called. This is efficient if the Singleton is not always needed, as it saves resources. However, it introduces complexity, especially in multi-threaded environments.</p>
+                                        </div>
+                                        <div id="eagerContent" class="hidden">
+                                             <p class="text-slate-700">The instance is created when the class is loaded by the .NET CLR, typically at application startup. This approach is simpler and inherently thread-safe in C#, but it might create an object that is never used, consuming memory unnecessarily.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl font-semibold font-lexend text-slate-700">Thread-Safety Issues</h3>
+                                <p class="mt-2 text-slate-700">
+                                    In a multi-threaded application, a lazy-loaded Singleton without proper locking can fail. If two threads call <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetInstance</code> simultaneously when the instance is null, both might pass the null check and create their own instances, violating the pattern. This is known as a race condition.
+                                </p>
+                                <div class="mt-4 p-4 border border-amber-300 bg-amber-50 rounded-lg">
+                                    <h4 class="font-semibold text-amber-800">Visualizing a Race Condition</h4>
+                                    <p class="text-sm text-amber-700 mt-1">Click the button below to simulate two threads trying to create a Singleton instance at the same time without any thread-safety measures.</p>
+                                    <div class="mt-3 flex items-center space-x-4">
+                                        <button id="runRaceCondition" class="bg-amber-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors">Run Simulation</button>
+                                        <div class="font-mono text-sm" id="raceConditionResult">Instances Created: 0</div>
+                                    </div>
+                                    <div id="raceConditionLog" class="mt-2 text-xs font-mono bg-slate-800 text-slate-300 p-2 rounded max-h-32 overflow-y-auto"></div>
+                                </div>
+                                <p class="mt-4 text-slate-700">Classic solutions include using the <code class="bg-slate-200 text-sm font-mono p-1 rounded">lock</code> keyword (often in a pattern called "double-checked locking"). However, this can be complex to implement correctly.</p>
+                                <div class="mt-4 p-4 bg-sky-50 border-l-4 border-sky-400 rounded-r-lg">
+                                    <h4 class="font-semibold text-sky-800">Simplification: The Modern Approach with Lazy&lt;T&gt;</h4>
+                                    <p class="mt-1 text-sky-700">In modern C# (.NET 4 and later), the easiest and most reliable way to achieve thread-safe lazy loading is with the <code class="bg-sky-200 text-sm font-mono p-1 rounded">System.Lazy&lt;T&gt;</code> class. It handles all the complex locking logic for you internally, making your code cleaner and safer.</p>
+                                    <div class="code-block mt-3 bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SafeSingleton</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> Lazy&lt;SafeSingleton&gt; lazyInstance = 
+        <span class="hljs-keyword">new</span> Lazy&lt;SafeSingleton&gt;(() => <span class="hljs-keyword">new</span> <span class="hljs-title">SafeSingleton</span>());
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> SafeSingleton Instance { <span class="hljs-keyword">get</span> { <span class="hljs-keyword">return</span> lazyInstance.Value; } }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">SafeSingleton</span>() { }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-semibold font-lexend text-slate-700">Singleton in .NET Core DI</h3>
+                                <p class="mt-2 text-slate-700">
+                                    While the classic Singleton pattern is still relevant, modern applications often use Dependency Injection (DI) containers. In .NET Core, you can register a service with a "Singleton" lifetime. The DI container then guarantees that only one instance of that service is created and shared throughout the application's lifetime for all requests.
+                                </p>
+                                 <div class="code-block mt-4 bg-slate-900 rounded-lg overflow-hidden">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-comment">// In Startup.cs or Program.cs</span>
+<span class="hljs-function">builder.Services.<span class="hljs-title">AddSingleton</span>&lt;<span class="hljs-title">ILoggerService</span>, <span class="hljs-title">LoggerService</span>&gt;()</span>;</code></pre>
+                                </div>
+                                <p class="mt-3 text-sm text-slate-600">This approach is generally preferred as it decouples your classes from the Singleton implementation, making the code more testable and maintainable.</p>
+                            </div>
+                        </section>
+
+                        <section id="uml" class="space-y-4">
+                            <h2 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 pb-2 border-slate-200">✅ UML Diagram</h2>
+                            <p class="text-slate-700">The UML diagram for the Singleton pattern is straightforward. It consists of a single class with a private static field for the instance, a private constructor, and a public static method to get the instance.</p>
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg flex justify-center items-center">
+                                <div class="w-64 bg-slate-50 border-2 border-slate-700 shadow-lg font-mono text-sm">
+                                    <div class="text-center py-2 border-b-2 border-slate-700 font-bold bg-slate-200">Singleton</div>
+                                    <div class="p-3 border-b-2 border-slate-700">
+                                        <p>- instance: Singleton (static)</p>
+                                    </div>
+                                    <div class="p-3">
+                                        <p>- Singleton()</p>
+                                        <p>+ GetInstance(): Singleton (static)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="practice" class="space-y-8">
+                            <h2 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 pb-2 border-slate-200">✅ Coding Practice</h2>
+                            
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h3 class="text-lg font-semibold font-lexend text-slate-700">[Easy] Singleton Logger</h3>
+                                <p class="mt-2 text-slate-600">Create a simple logger class that can be accessed from anywhere in the application to log messages. Use the basic lazy loading approach.</p>
+                                <button data-solution="loggerSolution" class="toggle-solution-btn mt-4 bg-sky-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-600 transition-colors">Show Solution</button>
+                                <div id="loggerSolution" class="solution mt-4">
+                                     <div class="code-block bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Logger</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Logger _instance;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> List&lt;<span class="hljs-keyword">string</span>&gt; _logs = <span class="hljs-keyword">new</span>();
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">Logger</span>() { }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> Logger <span class="hljs-title">GetInstance</span>()
+    {
+        <span class="hljs-keyword">if</span> (_instance == <span class="hljs-keyword">null</span>)
+        {
+            _instance = <span class="hljs-keyword">new</span> <span class="hljs-title">Logger</span>();
+        }
+        <span class="hljs-keyword">return</span> _instance;
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Log</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> message</span>)</span>
+    {
+        _logs.Add($<span class="hljs-string">"[{DateTime.Now}]</span>: {message}"</span>);
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h3 class="text-lg font-semibold font-lexend text-slate-700">[Easy] AppConfig Singleton</h3>
+                                <p class="mt-2 text-slate-600">A very common use case. Create a singleton to hold application-wide configuration settings that are loaded from a source once and then accessed globally.</p>
+                                <button data-solution="appConfigSolution" class="toggle-solution-btn mt-4 bg-sky-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-600 transition-colors">Show Solution</button>
+                                <div id="appConfigSolution" class="solution mt-4">
+                                     <div class="code-block bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppConfig</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> Lazy&lt;AppConfig&gt; lazyInstance =
+        <span class="hljs-keyword">new</span> Lazy&lt;AppConfig&gt;(() => <span class="hljs-keyword">new</span> <span class="hljs-title">AppConfig</span>());
+
+    <span class="hljs-keyword">public</span> Dictionary&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt; Settings { <span class="hljs-keyword">get</span>; }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">AppConfig</span>()
+    {
+        <span class="hljs-comment">// Simulate loading config from a file/database</span>
+        Console.WriteLine(<span class="hljs-string">"Loading application configuration..."</span>);
+        Settings = <span class="hljs-keyword">new</span> Dictionary&lt;<span class="hljs-keyword">string</span>, <span class="hljs-keyword">string</span>&gt;
+        {
+            { <span class="hljs-string">"DatabaseHost"</span>, <span class="hljs-string">"localhost"</span> },
+            { <span class="hljs-string">"ApiKey"</span>, <span class="hljs-string">"XYZ123"</span> },
+            { <span class="hljs-string">"Timeout"</span>, <span class="hljs-string">"30"</span> }
+        };
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> AppConfig Instance => lazyInstance.Value;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">string</span> <span class="hljs-title">GetSetting</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> key</span>)</span>
+    {
+        <span class="hljs-keyword">return</span> Settings.GetValueOrDefault(key, <span class="hljs-string">"Setting not found"</span>);
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h3 class="text-lg font-semibold font-lexend text-slate-700">[Medium] Thread-safe Logger</h3>
+                                <p class="mt-2 text-slate-600">Modify the simple logger to be thread-safe using the classic double-checked locking pattern. This helps understand the problem that <code class="bg-slate-200 text-sm font-mono p-1 rounded">Lazy&lt;T&gt;</code> solves.</p>
+                                <button data-solution="threadSafeLoggerSolution" class="toggle-solution-btn mt-4 bg-sky-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-600 transition-colors">Show Solution</button>
+                                <div id="threadSafeLoggerSolution" class="solution mt-4">
+                                     <div class="code-block bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ThreadSafeLogger</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> ThreadSafeLogger _instance;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> <span class="hljs-keyword">object</span> _lock = <span class="hljs-keyword">new</span>();
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">ThreadSafeLogger</span>() { }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> ThreadSafeLogger <span class="hljs-title">GetInstance</span>()
+    {
+        <span class="hljs-keyword">if</span> (_instance == <span class="hljs-keyword">null</span>) <span class="hljs-comment">// First check (no lock)</span>
+        {
+            <span class="hljs-keyword">lock</span> (_lock)
+            {
+                <span class="hljs-keyword">if</span> (_instance == <span class="hljs-keyword">null</span>) <span class="hljs-comment">// Second check (with lock)</span>
+                {
+                    _instance = <span class="hljs-keyword">new</span> <span class="hljs-title">ThreadSafeLogger</span>();
+                }
+            }
+        }
+        <span class="hljs-keyword">return</span> _instance;
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h3 class="text-lg font-semibold font-lexend text-slate-700">[Medium] GameSettings Singleton</h3>
+                                <p class="mt-2 text-slate-600">In game development, a Singleton is often used to manage global settings like volume, graphics quality, and difficulty, making them accessible from any game script.</p>
+                                <button data-solution="gameSettingsSolution" class="toggle-solution-btn mt-4 bg-sky-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-600 transition-colors">Show Solution</button>
+                                <div id="gameSettingsSolution" class="solution mt-4">
+                                     <div class="code-block bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GameSettings</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> GameSettings _instance = <span class="hljs-keyword">new</span> <span class="hljs-title">GameSettings</span>();
+
+    <span class="hljs-comment">// Eager loading is often fine for game settings</span>
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> GameSettings Instance => _instance;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">float</span> MusicVolume { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">string</span> Difficulty { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">GameSettings</span>()
+    {
+        <span class="hljs-comment">// Load default or saved settings</span>
+        MusicVolume = <span class="hljs-number">0.75f</span>;
+        Difficulty = <span class="hljs-string">"Normal"</span>;
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">SaveSettings</span>()</span>
+    {
+        Console.WriteLine($<span class="hljs-string">"Saving settings: Volume={MusicVolume}, Difficulty='{Difficulty}'"</span>);
+        <span class="hljs-comment">// Logic to save to a file would go here</span>
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h3 class="text-lg font-semibold font-lexend text-slate-700">[Hard] Connection Pool Singleton</h3>
+                                <p class="mt-2 text-slate-600">Implement a database connection pool that manages a fixed number of connections. The pool itself should be a Singleton. Use an eager loading approach for simplicity and guaranteed availability.</p>
+                                <button data-solution="connectionPoolSolution" class="toggle-solution-btn mt-4 bg-sky-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-600 transition-colors">Show Solution</button>
+                                <div id="connectionPoolSolution" class="solution mt-4">
+                                     <div class="code-block bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-comment">// Assume a simple Connection class exists</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Connection</span> </span>{ <span class="hljs-keyword">public</span> <span class="hljs-keyword">bool</span> <span class="hljs-title">IsInUse</span> { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; } }
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ConnectionPool</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> ConnectionPool _instance = <span class="hljs-keyword">new</span> <span class="hljs-title">ConnectionPool</span>();
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">readonly</span> List&lt;Connection&gt; _connections;
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> POOL_SIZE = <span class="hljs-number">5</span>;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">ConnectionPool</span>()
+    {
+        _connections = <span class="hljs-keyword">new</span> List&lt;Connection&gt;();
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; POOL_SIZE; i++)
+        {
+            _connections.Add(<span class="hljs-keyword">new</span> <span class="hljs-title">Connection</span>());
+        }
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> ConnectionPool <span class="hljs-title">GetInstance</span>() => _instance;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function">Connection <span class="hljs-title">GetConnection</span>()</span>
+    {
+        <span class="hljs-keyword">lock</span>(_connections)
+        {
+            <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> conn <span class="hljs-keyword">in</span> _connections)
+            {
+                <span class="hljs-keyword">if</span> (!conn.IsInUse)
+                {
+                    conn.IsInUse = <span class="hljs-literal">true</span>;
+                    <span class="hljs-keyword">return</span> conn;
+                }
+            }
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>; <span class="hljs-comment">// No available connections</span>
+        }
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ReleaseConnection</span>(<span class="hljs-params">Connection conn</span>)</span>
+    {
+        conn.IsInUse = <span class="hljs-literal">false</span>;
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <section id="case-study" class="space-y-4">
+                             <h2 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 pb-2 border-slate-200">✅ Case Study: Database Connection Pool</h2>
+                            <p class="text-slate-700">Let's explore the connection pool concept interactively. Opening and closing database connections is expensive. A connection pool pre-initializes a set of connections and keeps them ready. When the application needs a connection, it borrows one from the pool. When finished, it returns the connection instead of closing it. This system is a perfect use case for a Singleton because the entire application should share a single pool of connections.</p>
+                            
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h4 class="font-semibold text-slate-800">Connection Pool Simulator</h4>
+                                <p class="text-sm text-slate-600 mt-1">This simulator manages a pool of 5 connections. Use the buttons to see how the Singleton pattern provides a central point of management.</p>
+                                <div id="connectionPoolVisual" class="my-4 flex flex-wrap gap-4"></div>
+                                <div class="flex space-x-4">
+                                    <button id="getConnectionBtn" class="bg-green-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Get Connection</button>
+                                    <button id="releaseConnectionBtn" class="bg-blue-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors" disabled>Release Connection</button>
+                                </div>
+                                <div id="poolLog" class="mt-4 text-sm font-mono bg-slate-100 p-2 rounded max-h-40 overflow-y-auto text-slate-700"></div>
+                            </div>
+                        </section>
+
+
+                        <section id="quiz" class="space-y-4">
+                            <h2 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 pb-2 border-slate-200">🧠 Knowledge Check</h2>
+                            <div id="quizContainer" class="space-y-6"></div>
+                        </section>
+
+                        <section id="challenge" class="space-y-4">
+                            <h2 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 pb-2 border-slate-200">🏆 Self-Assessment Challenge</h2>
+                            <div class="bg-white p-6 border border-slate-200 rounded-lg">
+                                <h3 class="text-lg font-semibold font-lexend text-slate-700">UI Theme Manager Singleton</h3>
+                                <p class="mt-2 text-slate-600">
+                                    Your task is to create a <code class="bg-slate-200 text-sm font-mono p-1 rounded">ThemeManager</code> Singleton for a UI application. This class will manage the application's current theme (e.g., "Light Mode" or "Dark Mode") and notify other parts of the app when the theme changes.
+                                </p>
+                                <ul class="mt-3 list-disc list-inside space-y-2 text-slate-600 text-sm">
+                                    <li>It must be a thread-safe Singleton, accessible via <code class="bg-slate-200 text-sm font-mono p-1 rounded">ThemeManager.Instance</code>.</li>
+                                    <li>It should hold the current theme as a string property, e.g., <code class="bg-slate-200 text-sm font-mono p-1 rounded">CurrentTheme</code>.</li>
+                                    <li>Implement a method <code class="bg-slate-200 text-sm font-mono p-1 rounded">ToggleTheme()</code> that switches between "Light" and "Dark".</li>
+                                    <li>Use a C# <code class="bg-slate-200 text-sm font-mono p-1 rounded">event</code> to allow other UI components to subscribe to theme changes.</li>
+                                </ul>
+                                 <button data-solution="challengeSolution" class="toggle-solution-btn mt-4 bg-indigo-500 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors">Show Solution</button>
+                                <div id="challengeSolution" class="solution mt-4">
+                                     <div class="code-block bg-slate-900 rounded-lg overflow-hidden">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="p-4 text-sm text-white overflow-x-auto"><code class="language-csharp"><span class="hljs-keyword">public</span> <span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ThemeManager</span></span>
+{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">readonly</span> Lazy&lt;ThemeManager&gt; lazyInstance =
+        <span class="hljs-keyword">new</span> Lazy&lt;ThemeManager&gt;(() => <span class="hljs-keyword">new</span> <span class="hljs-title">ThemeManager</span>());
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> ThemeManager Instance => lazyInstance.Value;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">event</span> Action&lt;<span class="hljs-keyword">string</span>&gt; ThemeChanged;
+
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">string</span> CurrentTheme { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">private</span> <span class="hljs-keyword">set</span>; }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-title">ThemeManager</span>()
+    {
+        CurrentTheme = <span class="hljs-string">"Light"</span>; <span class="hljs-comment">// Default theme</span>
+    }
+
+    <span class="hljs-keyword">public</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">ToggleTheme</span>()</span>
+    {
+        CurrentTheme = (CurrentTheme == <span class="hljs-string">"Light"</span>) ? <span class="hljs-string">"Dark"</span> : <span class="hljs-string">"Light"</span>;
+        Console.WriteLine($<span class="hljs-string">"Theme changed to: {CurrentTheme}"</span>);
+        ThemeChanged?.Invoke(CurrentTheme);
+    }
+}
+
+<span class="hljs-comment">// Example Usage:</span>
+<span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HeaderComponent</span>
+</span>{
+    <span class="hljs-keyword">public</span> <span class="hljs-title">HeaderComponent</span>()
+    {
+        ThemeManager.Instance.ThemeChanged += OnThemeUpdated;
+    }
+
+    <span class="hljs-keyword">private</span> <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">OnThemeUpdated</span>(<span class="hljs-params"><span class="hljs-keyword">string</span> newTheme</span>)</span>
+    {
+        Console.WriteLine($<span class="hljs-string">"HeaderComponent: Applying '{newTheme}' theme."</span>);
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </article>
+                </div>
+
+                <aside class="lg:w-1/4 lg:sticky lg:top-8 self-start mt-12 lg:mt-0">
+                    <nav class="space-y-4">
+                        <h3 class="font-lexend font-semibold text-slate-800">On this page</h3>
+                        <ul id="toc" class="space-y-2">
+                            <li><a href="#intro" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Introduction</a></li>
+                            <li><a href="#theory" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Theory Topics</a></li>
+                            <li><a href="#uml" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">UML Diagram</a></li>
+                            <li><a href="#practice" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Coding Practice</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Challenge</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+
+            </div>
+        </main>
+        
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const copyToClipboard = (text) => {
+                navigator.clipboard.writeText(text).then(() => {}, (err) => {
+                    console.error('Could not copy text: ', err);
+                });
+            };
+
+            document.querySelectorAll('.copy-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const codeBlock = e.target.closest('.code-block');
+                    const code = codeBlock.querySelector('code').innerText;
+                    copyToClipboard(code);
+                    const originalText = button.innerText;
+                    button.innerText = 'Copied!';
+                    setTimeout(() => {
+                        button.innerText = originalText;
+                    }, 2000);
+                });
+            });
+
+            document.querySelectorAll('.toggle-solution-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const solutionId = button.dataset.solution;
+                    const solutionDiv = document.getElementById(solutionId);
+                    solutionDiv.classList.toggle('show');
+                    button.textContent = solutionDiv.classList.contains('show') ? 'Hide Solution' : 'Show Solution';
+                });
+            });
+            
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const sections = document.querySelectorAll('section[id]');
+
+            const onScroll = () => {
+                const scrollPos = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+                
+                sections.forEach(section => {
+                    if (section.offsetTop <= scrollPos + 100 && section.offsetTop + section.offsetHeight > scrollPos + 100) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (section.getAttribute('id') === link.getAttribute('href').substring(1)) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            };
+            window.addEventListener('scroll', onScroll);
+            onScroll();
+
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetId = tab.dataset.tab;
+                    
+                    tabs.forEach(t => {
+                        t.classList.remove('text-sky-600', 'border-sky-500');
+                        t.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                    });
+                    
+                    tab.classList.add('text-sky-600', 'border-sky-500');
+                    tab.classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+
+                    document.getElementById('lazyContent').classList.toggle('hidden', targetId !== 'lazy');
+                    document.getElementById('eagerContent').classList.toggle('hidden', targetId !== 'eager');
+                });
+            });
+
+            const raceConditionBtn = document.getElementById('runRaceCondition');
+            const raceConditionResult = document.getElementById('raceConditionResult');
+            const raceConditionLog = document.getElementById('raceConditionLog');
+            let instanceCount = 0;
+            let logCount = 0;
+
+            raceConditionBtn.addEventListener('click', () => {
+                raceConditionBtn.disabled = true;
+                raceConditionLog.innerHTML = '';
+                raceConditionResult.textContent = 'Instances Created: 0';
+                instanceCount = 0;
+                logCount = 0;
+                let instance = null;
+
+                const getInstanceSim = (threadId) => {
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            const logEntry = document.createElement('div');
+                            logEntry.textContent = `[Thread ${threadId}] Checking instance...`;
+                            raceConditionLog.appendChild(logEntry);
+                             raceConditionLog.scrollTop = raceConditionLog.scrollHeight;
+
+                            if (instance === null) {
+                                const logEntry2 = document.createElement('div');
+                                logEntry2.textContent = `[Thread ${threadId}] Instance is null. Creating new one...`;
+                                raceConditionLog.appendChild(logEntry2);
+                                raceConditionLog.scrollTop = raceConditionLog.scrollHeight;
+                                instanceCount++;
+                                instance = { id: instanceCount };
+                                raceConditionResult.textContent = `Instances Created: ${instanceCount}`;
+                            }
+                            resolve();
+                        }, Math.random() * 50);
+                    });
+                };
+                
+                Promise.all([getInstanceSim(1), getInstanceSim(2)]).then(() => {
+                     raceConditionBtn.disabled = false;
+                });
+            });
+
+            const quizData = [
+                {
+                    question: "What is the primary purpose of the Singleton pattern?",
+                    options: ["To create multiple instances of a class", "To ensure a class has only one instance and provide a global access point", "To decouple an abstraction from its implementation", "To create objects without specifying the exact class"],
+                    answer: "To ensure a class has only one instance and provide a global access point"
+                },
+                {
+                    question: "Which of the following is a key characteristic of a classic Singleton implementation?",
+                    options: ["A public constructor", "A private constructor", "A static, non-global access method", "It cannot have any fields"],
+                    answer: "A private constructor"
+                },
+                {
+                    question: "In a multi-threaded environment, which Singleton loading strategy is most likely to cause a race condition if not handled carefully?",
+                    options: ["Eager Loading", "Lazy Loading", "Both are equally risky", "Neither are risky"],
+                    answer: "Lazy Loading"
+                },
+                {
+                    question: "What is the modern, recommended approach for managing Singleton lifetimes in a .NET Core application?",
+                    options: ["Using double-checked locking", "Using the static constructor for eager loading", "Registering the service with a Singleton lifetime in the DI container", "Using a global static variable"],
+                    answer: "Registering the service with a Singleton lifetime in the DI container"
+                },
+                {
+                    question: "Which .NET class provides a simple, built-in way to implement a thread-safe, lazy-loaded Singleton?",
+                    options: ["Lock<T>", "ThreadSafe<T>", "Lazy<T>", "Singleton<T>"],
+                    answer: "Lazy<T>"
+                }
+            ];
+
+            const quizContainer = document.getElementById('quizContainer');
+            quizData.forEach((q, index) => {
+                const quizCard = document.createElement('div');
+                quizCard.className = 'bg-white p-6 border border-slate-200 rounded-lg';
+                let optionsHtml = '';
+                q.options.forEach(opt => {
+                    optionsHtml += `<button class="quiz-option w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition-colors">${opt}</button>`;
+                });
+
+                quizCard.innerHTML = `
+                    <h4 class="font-semibold text-slate-800">${index + 1}. ${q.question}</h4>
+                    <div class="mt-4 space-y-2 options-container">${optionsHtml}</div>
+                    <div class="answer-feedback mt-3 text-sm font-medium hidden"></div>
+                `;
+
+                quizContainer.appendChild(quizCard);
+
+                const optionsContainer = quizCard.querySelector('.options-container');
+                optionsContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('quiz-option')) {
+                        const feedbackDiv = quizCard.querySelector('.answer-feedback');
+                        optionsContainer.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true);
+                        
+                        const selectedAnswer = e.target.textContent;
+                        if (selectedAnswer === q.answer) {
+                            e.target.classList.add('correct');
+                            feedbackDiv.innerHTML = `<span class="text-green-700">Correct!</span> ${q.answer}`;
+                        } else {
+                            e.target.classList.add('incorrect');
+                            feedbackDiv.innerHTML = `<span class="text-red-700">Incorrect.</span> The correct answer is: ${q.answer}`;
+                             optionsContainer.querySelectorAll('.quiz-option').forEach(btn => {
+                                if(btn.textContent === q.answer) {
+                                    btn.classList.add('reveal-correct');
+                                }
+                            });
+                        }
+                        feedbackDiv.classList.remove('hidden');
+                    }
+                });
+            });
+
+            const poolSize = 5;
+            const connections = Array.from({ length: poolSize }, (_, i) => ({ id: i + 1, inUse: false }));
+            let usedConnections = [];
+            const poolVisual = document.getElementById('connectionPoolVisual');
+            const getBtn = document.getElementById('getConnectionBtn');
+            const releaseBtn = document.getElementById('releaseConnectionBtn');
+            const poolLog = document.getElementById('poolLog');
+
+            const logToPool = (message) => {
+                const entry = document.createElement('div');
+                entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                poolLog.prepend(entry);
+            };
+
+            const renderPool = () => {
+                poolVisual.innerHTML = '';
+                connections.forEach(conn => {
+                    const connDiv = document.createElement('div');
+                    connDiv.className = `w-20 h-14 rounded-lg flex flex-col items-center justify-center font-bold text-white shadow-md transition-all ${conn.inUse ? 'bg-red-500' : 'bg-green-500'}`;
+                    connDiv.innerHTML = `
+                        <span class="text-xs opacity-80">Conn ${conn.id}</span>
+                        <span>${conn.inUse ? 'In Use' : 'Free'}</span>
+                    `;
+                    poolVisual.appendChild(connDiv);
+                });
+            };
+
+            getBtn.addEventListener('click', () => {
+                const availableConn = connections.find(c => !c.inUse);
+                if (availableConn) {
+                    availableConn.inUse = true;
+                    usedConnections.push(availableConn);
+                    logToPool(`Connection ${availableConn.id} acquired.`);
+                    renderPool();
+                    releaseBtn.disabled = false;
+                    if (!connections.some(c => !c.inUse)) {
+                        getBtn.disabled = true;
+                        logToPool(`All connections are in use. Pool is full.`);
+                    }
+                }
+            });
+
+            releaseBtn.addEventListener('click', () => {
+                if (usedConnections.length > 0) {
+                    const connToRelease = usedConnections.shift();
+                    connToRelease.inUse = false;
+                    logToPool(`Connection ${connToRelease.id} released.`);
+                    renderPool();
+                    getBtn.disabled = false;
+                    if (usedConnections.length === 0) {
+                        releaseBtn.disabled = true;
+                    }
+                }
+            });
+
+            renderPool();
+            logToPool('Connection pool initialized.');
+
+        });
+    </script>
+</body>
+</html>
+
