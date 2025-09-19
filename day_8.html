@@ -123,10 +123,23 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
     <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 border-b border-slate-200">
         <div class="container mx-auto px-4 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                 <h1 class="text-2xl font-bold font-lexend text-slate-900">.NET Concurrency Masterclass</h1>
+                 <h2 class="text-2xl font-bold font-lexend text-slate-900 m-0 p-0 border-none">.NET Concurrency Masterclass</h2>
                  <span class="text-sm font-medium text-amber-600">Day 8: Advanced Concepts</span>
             </div>
         </div>
@@ -202,17 +215,26 @@
                         <div class="mt-6">
                             <div class="code-block" data-lang="csharp">
                                 <button class="copy-btn">Copy</button>
-                                <pre><code class="language-csharp">// 'async' enables the use of 'await' inside the method and changes how the method's result is handled.
-public async Task&lt;string&gt; DownloadWebsiteContentAsync(string url)
+                                <pre><code class="language-csharp">using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+public class AsyncAwaitExample
 {
-    using var client = new HttpClient();
-    
-    // 'await' suspends the method's execution and returns control to the caller.
-    // The thread is NOT blocked; it's released back to the ThreadPool.
-    string content = await client.GetStringAsync(url);
-    
-    // Once GetStringAsync completes, execution resumes here on a context-captured thread.
-    return content.Substring(0, 100);
+    // 'async' enables the use of 'await' inside the method and changes how the method's result is handled.
+    public static async Task&lt;string&gt; DownloadWebsiteContentAsync(string url)
+    {
+        using var client = new HttpClient();
+        
+        Console.WriteLine($"Starting download from {url}...");
+        // 'await' suspends the method's execution and returns control to the caller.
+        // The thread is NOT blocked; it's released back to the ThreadPool.
+        string content = await client.GetStringAsync(url);
+        
+        // Once GetStringAsync completes, execution resumes here on a context-captured thread.
+        Console.WriteLine("Download complete. Processing content...");
+        return content.Substring(0, Math.Min(content.Length, 100));
+    }
 }</code></pre>
                             </div>
                         </div>
@@ -262,7 +284,9 @@ public async Task&lt;string&gt; DownloadWebsiteContentAsync(string url)
                             <p class="mb-4 text-slate-600">This example demonstrates the core pattern of starting multiple `Task` objects and then awaiting them all with `Task.WhenAll()` for maximum efficiency.</p>
                             <div class="code-block" data-lang="csharp">
                                 <button class="copy-btn">Copy</button>
-                                <pre><code class="language-csharp">using System.Net.Http;
+                                <pre><code class="language-csharp">using System;
+using System.Diagnostics;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 public class ConcurrentApiFetcher
@@ -271,18 +295,25 @@ public class ConcurrentApiFetcher
 
     public static async Task Main()
     {
+        var stopwatch = Stopwatch.StartNew();
+        Console.WriteLine("Starting concurrent API calls...");
+
         // Start the tasks immediately and concurrently. Don't await them yet.
         Task&lt;string&gt; userTask = client.GetStringAsync("https://jsonplaceholder.typicode.com/users/1");
         Task&lt;string&gt; postTask = client.GetStringAsync("https://jsonplaceholder.typicode.com/posts/1");
 
         // Now, asynchronously wait for all of them to complete.
+        // The thread is released here, free to do other work.
         await Task.WhenAll(userTask, postTask);
         
         // The results are now available without additional blocking.
         string user = await userTask; 
         string post = await postTask;
         
-        Console.WriteLine("\n--- Both API calls completed ---");
+        stopwatch.Stop();
+        Console.WriteLine($"--- Both API calls completed in {stopwatch.ElapsedMilliseconds}ms ---");
+        Console.WriteLine($"User data has {user.Length} characters.");
+        Console.WriteLine($"Post data has {post.Length} characters.");
     }
 }
 </code></pre>
@@ -297,8 +328,41 @@ public class ConcurrentApiFetcher
                                 <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
                                     <div class="code-block" data-lang="csharp">
                                         <button class="copy-btn">Copy</button>
-                                        <pre><code class="language-csharp">using System.Threading;
-// ... (code as before)
+                                        <pre><code class="language-csharp">using System;
+using System.Threading;
+
+public class EasyParallel
+{
+    public static void Main()
+    {
+        Console.WriteLine("Starting two threads in parallel...");
+        
+        // Create new thread instances, passing the method to execute via a lambda.
+        var t1 = new Thread(() => Work("Method 1", 100));
+        var t2 = new Thread(() => Work("Method 2", 150));
+        
+        // Start the threads. The OS scheduler will begin executing them.
+        t1.Start();
+        t2.Start();
+        
+        // Block the main thread until t1 and t2 complete their execution.
+        // Without Join(), the Main method would exit before the threads finish.
+        t1.Join();
+        t2.Join();
+        
+        Console.WriteLine("Both methods have completed.");
+    }
+    
+    public static void Work(string name, int delay)
+    {
+        for(int i = 0; i < 5; i++)
+        {
+            Console.WriteLine($"{name} executing step {i + 1}...");
+            Thread.Sleep(delay); // This blocks the current thread.
+        }
+        Console.WriteLine($"--- {name} finished ---");
+    }
+}
 </code></pre>
                                     </div>
                                </div>
@@ -313,8 +377,33 @@ public class ConcurrentApiFetcher
                                 <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
                                     <div class="code-block" data-lang="csharp">
                                         <button class="copy-btn">Copy</button>
-                                        <pre><code class="language-csharp">using System.IO;
-// ... (code as before)
+                                        <pre><code class="language-csharp">using System;
+using System.IO;
+using System.Threading.Tasks;
+
+public class MediumAsyncFileIO
+{
+    public static async Task Main()
+    {
+        string filePath = "async-demo.txt";
+        string content = $"Hello from async file I/O at {DateTime.UtcNow:O}.";
+        
+        Console.WriteLine("Writing to file asynchronously...");
+        // This operation does not block the calling thread.
+        await File.WriteAllTextAsync(filePath, content);
+        Console.WriteLine("Write complete.");
+        
+        Console.WriteLine("Reading from file asynchronously...");
+        string readContent = await File.ReadAllTextAsync(filePath);
+        Console.WriteLine("Read complete.");
+
+        Console.WriteLine($"\nContent read from file: \"{readContent}\"");
+        
+        // Clean up the created file.
+        File.Delete(filePath);
+        Console.WriteLine("\nFile deleted.");
+    }
+}
 </code></pre>
                                     </div>
                                </div>
@@ -329,8 +418,59 @@ public class ConcurrentApiFetcher
                                 <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
                                     <div class="code-block" data-lang="csharp">
                                         <button class="copy-btn">Copy</button>
-                                        <pre><code class="language-csharp">using System.Diagnostics;
-// ... (code as before)
+                                        <pre><code class="language-csharp">using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
+public class HardParallelMatrix
+{
+    public static void Main()
+    {
+        const int MatrixSize = 256;
+        var matrixA = InitializeMatrix(MatrixSize, MatrixSize);
+        var matrixB = InitializeMatrix(MatrixSize, MatrixSize);
+        var result = new double[MatrixSize, MatrixSize];
+
+        Console.WriteLine($"Multiplying {MatrixSize}x{MatrixSize} matrices...");
+        var stopwatch = Stopwatch.StartNew();
+
+        int rowsA = matrixA.GetLength(0);
+        int colsA = matrixA.GetLength(1);
+        int colsB = matrixB.GetLength(1);
+
+        // Use Parallel.For to distribute the outer loop across available cores.
+        // This is highly efficient for data parallelism on multi-core CPUs.
+        Parallel.For(0, rowsA, i =>
+        {
+            for (int j = 0; j < colsB; j++)
+            {
+                double sum = 0;
+                for (int k = 0; k < colsA; k++)
+                {
+                    sum += matrixA[i, k] * matrixB[k, j];
+                }
+                result[i, j] = sum;
+            }
+        });
+
+        stopwatch.Stop();
+        Console.WriteLine($"Parallel multiplication completed in {stopwatch.ElapsedMilliseconds} ms.");
+    }
+
+    public static double[,] InitializeMatrix(int rows, int cols)
+    {
+        var matrix = new double[rows, cols];
+        var rand = new Random();
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                matrix[i, j] = rand.NextDouble() * 10;
+            }
+        }
+        return matrix;
+    }
+}
 </code></pre>
                                     </div>
                                </div>
@@ -347,7 +487,7 @@ public class ConcurrentApiFetcher
                         
                         <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 mt-10">
                             <div class="text-center mb-8">
-                                <button id="play-sequence-btn" class="bg-sky-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-sky-700 transition-transform duration-200 hover:scale-105 shadow-md">Play Animation</button>
+                                <button id="play-sequence-btn" class="bg-amber-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-amber-600 transition-transform duration-200 hover:scale-105 shadow-md">Play Animation</button>
                             </div>
                             <div id="sequence-diagram-container" class="sequence-diagram relative h-96">
                                 <div class="flex justify-around items-start h-full">
@@ -434,8 +574,73 @@ public class ConcurrentApiFetcher
                                 <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
                                     <div class="code-block" data-lang="csharp">
                                         <button class="copy-btn">Copy</button>
-                                        <pre><code class="language-csharp">using System.Collections.Generic;
-// ... (code as before)
+                                        <pre><code class="language-csharp">using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+public class ParallelAggregator
+{
+    private static readonly HttpClient client = new();
+    private const string WordToCount = "Microsoft";
+
+    public static async Task Main()
+    {
+        var urls = new List&lt;string&gt;
+        {
+            "https://www.microsoft.com/en-us/",
+            "https://azure.microsoft.com/en-us/",
+            "https://news.microsoft.com/",
+            "https://devblogs.microsoft.com/dotnet/",
+            "https://www.xbox.com/", // This one likely has fewer mentions
+            "https://www.github.com" // Also owned by Microsoft
+        };
+
+        Console.WriteLine($"Starting concurrent search for the word '{WordToCount}' across {urls.Count} sites...");
+        var stopwatch = Stopwatch.StartNew();
+
+        // 1. Create a list of tasks, one for each URL.
+        // This starts all downloads concurrently by calling the async method.
+        IEnumerable&lt;Task&lt;int&gt;&gt; countTasks = 
+            urls.Select(url => GetWordCountAsync(url, WordToCount));
+
+        // 2. Asynchronously wait for ALL tasks to complete.
+        // The results will be an array of integers, in the same order as the urls.
+        int[] counts = await Task.WhenAll(countTasks);
+
+        // 3. Sum the results.
+        int totalCount = counts.Sum();
+        stopwatch.Stop();
+
+        Console.WriteLine($"\n--- Process Complete ---");
+        Console.WriteLine($"Total occurrences of '{WordToCount}': {totalCount}");
+        Console.WriteLine($"Completed in {stopwatch.ElapsedMilliseconds} ms.");
+    }
+
+    public static async Task&lt;int&gt; GetWordCountAsync(string url, string word)
+    {
+        try
+        {
+            Console.WriteLine($"   - Starting download: {url}");
+            string content = await client.GetStringAsync(url);
+            
+            // This is a CPU-bound operation, but it's fast enough here.
+            // For a more intensive CPU operation, we would use Task.Run().
+            int count = Regex.Matches(content, word, RegexOptions.IgnoreCase).Count;
+            Console.WriteLine($"   - SUCCESS: Found {count} occurrences at {url}");
+            return count;
+        }
+        catch (HttpRequestException ex)
+        {
+            // Gracefully handle failed downloads.
+            Console.WriteLine($"   - FAILED: Could not fetch {url}. Error: {ex.Message}");
+            return 0; 
+        }
+    }
+}
 </code></pre>
                                     </div>
                                </div>
@@ -446,7 +651,7 @@ public class ConcurrentApiFetcher
             </div>
 
             <!-- Sticky Table of Contents -->
-            <div class="hidden lg:block lg:w-1/4">
+            <div class="hidden lg:block lg:w-1/f">
                 <aside class="sticky top-24">
                     <h3 class="text-lg font-semibold mb-4 text-slate-900 font-lexend">On This Page</h3>
                     <nav id="toc" class="flex flex-col space-y-1 border-l-2 border-slate-200">
@@ -462,11 +667,11 @@ public class ConcurrentApiFetcher
         </div>
     </div>
     
-    <footer class="bg-slate-800 text-slate-300 mt-24 py-12">
-        <div class="container mx-auto px-4 lg:px-8 text-center">
-            <p class="font-semibold">&copy; 2025 .NET Concurrency Masterclass</p>
-            <p class="text-sm text-slate-400 mt-2">Elevating developers with advanced, practical learning modules.</p>
-        </div>
+     <!-- Footer -->
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
     <script>

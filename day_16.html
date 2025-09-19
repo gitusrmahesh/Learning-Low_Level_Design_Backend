@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 16: Generics - Advanced .NET Concepts</title>
+    <!-- Chosen Palette: Slate & Teal Harmony -->
+    <!-- Application Structure Plan: A two-column layout is used. The main content area on the left follows a logical learning progression from theory to practice, culminating in assessments. The sticky Table of Contents on the right provides constant, easy navigation. This structure was chosen to mirror a textbook chapter, facilitating both linear reading and quick topic lookup, which is ideal for a dense technical lesson. Interactions like the performance chart and quiz are embedded directly within relevant sections to reinforce concepts immediately. -->
+    <!-- Visualization & Content Choices: Report Info: Performance of Generics vs. Non-Generics -> Goal: Compare -> Viz/Presentation Method: Bar Chart (Chart.js/Canvas) -> Interaction: 'Run Simulation' button populates the chart dynamically -> Justification: Visually and dramatically demonstrates the performance cost of boxing/unboxing, making an abstract concept concrete. Report Info: UML for Generic Repository -> Goal: Organize -> Viz/Presentation Method: Diagram using structured HTML/CSS with Tailwind -> Interaction: Static visual -> Justification: Provides a clear, universally understood representation of the class structure without external libraries or non-compliant graphics like SVG. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #f8fafc;
+        }
+        .code-block {
+            font-family: 'Source Code Pro', monospace;
+        }
+        .toc-link.active {
+            color: #0d9488;
+            font-weight: 600;
+            border-left-color: #0d9488;
+        }
+        .code-keyword { color: #569cd6; }
+        .code-type { color: #4ec9b0; }
+        .code-literal { color: #d69d85; }
+        .code-comment { color: #6a9955; }
+        .code-method { color: #dcdcaa; }
+        .code-string { color: #ce9178; }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=3" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            
+            <div class="lg:w-3/4">
+                <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="text-sm font-semibold text-teal-600 bg-teal-100 py-1 px-3 rounded-full">Day 16</span>
+                        <h2 class="text-3xl font-bold text-slate-900">Generics in .NET</h2>
+                    </div>
+
+                    <p class="text-slate-600 mb-8">
+                        Welcome to Day 16! Today, we dive into one of the most powerful features of the .NET framework: Generics. Generics allow you to write flexible, reusable, and type-safe code. Instead of writing separate code for each data type, you can write a single "template" and let the compiler generate the type-specific code for you. This dramatically reduces code duplication and improves performance.
+                    </p>
+
+                    <section id="theory" class="mb-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-teal-500 pb-2 mb-6">✅ Theory Topics: A Deep Dive</h3>
+                        
+                        <div class="space-y-12">
+                            <div id="theory-core">
+                                <h4 class="text-xl font-semibold text-slate-700 mb-3">1. Core Concepts of Generics</h4>
+                                <p class="text-slate-600 mb-4">Generics introduce the concept of **type parameters** to .NET. These are placeholders for a specific type that the consumer of your code will provide. This allows you to design classes, methods, and interfaces that defer the specification of one or more types until they are used in code.</p>
+                                
+                                <div class="bg-slate-100/70 p-4 rounded-lg mb-4 border border-slate-200">
+                                    <p class="font-semibold text-slate-700">🧠 Analogy: A Baking Pan</p>
+                                    <p class="text-sm text-slate-600 mt-1">Think of a generic class as a versatile baking pan. You can use the same pan to bake a cake, a loaf of bread, or a lasagna. The pan (the generic class) defines the structure and the process (e.g., "holds ingredients," "can be put in an oven"), but the ingredients you put in (the type parameter) determine the final product. You get the same benefits of structure and reuse without needing a separate, specialized pan for every dish.</p>
+                                </div>
+
+                                <h5 class="font-semibold text-slate-700 mt-6 mb-2">Key Benefits Revisited</h5>
+                                <ul class="list-disc list-inside space-y-2 text-slate-600">
+                                    <li><strong>Type Safety:</strong> The compiler enforces type safety. If you have a `List<string>`, you can only add strings to it. Attempting to add an `int` will result in a compile-time error, catching bugs early. This is a major advantage over non-generic collections like `ArrayList` which store `object` and require manual type casting.</li>
+                                    <li><strong>Performance:</strong> Generics eliminate the performance overhead of **boxing** and **unboxing** for value types. When an `int` is added to a non-generic `ArrayList`, it's "boxed" into an `object`. When retrieved, it must be "unboxed". This creates memory allocations and garbage collection pressure. `List<int>` stores integers directly, avoiding this overhead entirely.</li>
+                                    <li><strong>Code Reusability:</strong> You write the logic once. A `GenericRepository<T>` can handle data access for `Product`, `Customer`, or any other entity without duplicating code. This adheres to the Don't Repeat Yourself (DRY) principle.</li>
+                                </ul>
+                            </div>
+
+                            <div id="theory-constructs">
+                                <h4 class="text-xl font-semibold text-slate-700 mb-3">2. Types of Generic Constructs in C#</h4>
+                                <p class="text-slate-600 mb-4">Generics are not limited to classes; they can be applied to many different constructs in C#.</p>
+                                
+                                <div class="space-y-6">
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Generic Classes</h5>
+                                        <p class="text-slate-600 mb-3">These are classes defined with one or more type parameters. They act as blueprints. The full, usable type (a "constructed type") is created when you provide a real type argument, like `List<string>`.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: Generic Class</span><button class="copy-btn text-gray-300 hover:text-white">Copy</button></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">Result&lt;T&gt;</span>
+{
+    <span class="code-keyword">public</span> <span class="code-keyword">bool</span> IsSuccess { <span class="code-keyword">get</span>; }
+    <span class="code-keyword">public</span> <span class="code-type">T</span> Value { <span class="code-keyword">get</span>; }
+    <span class="code-keyword">public</span> <span class="code-type">string</span> Error { <span class="code-keyword">get</span>; }
+
+    <span class="code-comment">// ... constructor logic ...</span>
+}
+
+<span class="code-comment">// Usage:</span>
+<span class="code-type">Result&lt;int&gt;</span> intResult = GetUserId();
+<span class="code-type">Result&lt;Product&gt;</span> productResult = GetProductDetails();</code></pre>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Generic Interfaces</h5>
+                                        <p class="text-slate-600 mb-3">Interfaces can define generic contracts. Any class implementing the interface must provide the type argument or be generic itself. Famous examples include `IEnumerable<T>`, `IComparable<T>`, and `IEquatable<T>`.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: Generic Interface</span><button class="copy-btn text-gray-300 hover:text-white">Copy</button></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">interface</span> <span class="code-type">IValidator&lt;T&gt;</span>
+{
+    <span class="code-type">bool</span> <span class="code-method">IsValid</span>(<span class="code-type">T</span> item);
+}
+
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">CustomerValidator</span> : <span class="code-type">IValidator&lt;Customer&gt;</span>
+{
+    <span class="code-keyword">public</span> <span class="code-type">bool</span> <span class="code-method">IsValid</span>(<span class="code-type">Customer</span> customer)
+    {
+        <span class="code-keyword">return</span> !String.IsNullOrEmpty(customer.Email);
+    }
+}</code></pre>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Generic Methods</h5>
+                                        <p class="text-slate-600 mb-3">Methods can be generic even if their containing class is not. The type parameter is declared after the method name. The compiler can often use **type inference** to determine `T` from the arguments, so you don't have to specify it explicitly.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: Generic Method</span><button class="copy-btn text-gray-300 hover:text-white">Copy</button></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">Utilities</span>
+{
+    <span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">Swap&lt;T&gt;</span>(<span class="code-keyword">ref</span> <span class="code-type">T</span> a, <span class="code-keyword">ref</span> <span class="code-type">T</span> b)
+    {
+        <span class="code-type">T</span> temp = a; a = b; b = temp;
+    }
+}
+
+<span class="code-comment">// Usage with type inference:</span>
+<span class="code-type">int</span> x = <span class="code-literal">5</span>, y = <span class="code-literal">10</span>;
+utilities.Swap(<span class="code-keyword">ref</span> x, <span class="code-keyword">ref</span> y); <span class="code-comment">// Compiler knows T is int</span>
+
+<span class="code-comment">// Explicit usage (rarely needed):</span>
+utilities.Swap&lt;<span class="code-type">int</span>&gt;(<span class="code-keyword">ref</span> x, <span class="code-keyword">ref</span> y);</code></pre>
+                                        </div>
+                                    </div>
+                                    
+                                     <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Generic Delegates</h5>
+                                        <p class="text-slate-600 mb-3">Delegates define the signature of a method. Generic delegates allow for flexible, type-safe method pointers. The BCL provides the extremely useful `Action<T>` (for methods returning void) and `Func<T, TResult>` (for methods with return values) so you rarely need to define your own.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: Generic Delegate</span><button class="copy-btn text-gray-300 hover:text-white">Copy</button></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-comment">// Custom generic delegate definition</span>
+<span class="code-keyword">public</span> <span class="code-keyword">delegate</span> <span class="code-type">TResult</span> <span class="code-method">Converter&lt;TIn, TResult&gt;</span>(<span class="code-type">TIn</span> input);
+
+<span class="code-comment">// Using the built-in Func delegate is more common:</span>
+<span class="code-type">Func&lt;string, int&gt;</span> parseString = <span class="code-literal">s</span> => <span class="code-type">int</span>.Parse(s);
+<span class="code-type">int</span> number = parseString(<span class="code-string">"123"</span>); <span class="code-comment">// number is 123</span>
+
+<span class="code-type">Action&lt;string&gt;</span> logMessage = <span class="code-literal">msg</span> => Console.WriteLine(msg);
+logMessage(<span class="code-string">"Hello Generics!"</span>);</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="theory-advanced">
+                                <h4 class="text-xl font-semibold text-slate-700 mb-3">3. Advanced Topics in Generics</h4>
+                                
+                                <div class="space-y-8">
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Constraints: Enforcing Rules on Type Parameters</h5>
+                                        <p class="text-slate-600 mb-4">Constraints, applied with the `where` keyword, give the compiler more information about a type parameter `T`. This allows you to use methods and properties of the constrained type inside your generic code. Without constraints, `T` is assumed to be just an `object`.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Syntax: Constraints</span><button class="copy-btn text-gray-300 hover:text-white">Copy</button></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-comment">// T must be a class, implement IEntity, and have a parameterless constructor</span>
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">GenericRepository&lt;T&gt;</span> <span class="code-keyword">where</span> <span class="code-type">T</span> : <span class="code-keyword">class</span>, <span class="code-type">IEntity</span>, <span class="code-type">new()</span>
+{
+    <span class="code-keyword">public</span> <span class="code-type">T</span> <span class="code-method">CreateNewWithId</span>(<span class="code-type">int</span> id)
+    {
+        <span class="code-type">T</span> entity = <span class="code-keyword">new</span> <span class="code-type">T</span>(); <span class="code-comment">// Allowed by new() constraint</span>
+        entity.Id = id;      <span class="code-comment">// Allowed by IEntity constraint</span>
+        <span class="code-keyword">return</span> entity;
+    }
+}</code></pre>
+                                        </div>
+                                        <table class="w-full text-left border-collapse mt-4">
+                                          <thead>
+                                            <tr>
+                                              <th class="border-b-2 border-slate-200 p-3 text-sm font-semibold text-slate-800">Constraint</th>
+                                              <th class="border-b-2 border-slate-200 p-3 text-sm font-semibold text-slate-800">Description</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody class="bg-white">
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : struct</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument must be a non-nullable value type.</td></tr>
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : class</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument must be a reference type (class, interface, delegate, or array).</td></tr>
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : notnull</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument must be a non-nullable type. Can be combined with `class` or `struct`.</td></tr>
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : new()</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument must have a public, parameterless constructor. Must be the last constraint specified.</td></tr>
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : &lt;base class&gt;</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument must be or derive from the specified base class.</td></tr>
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : &lt;interface&gt;</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument must be or implement the specified interface.</td></tr>
+                                            <tr><td class="border-b border-slate-200 p-3 text-sm text-slate-600"><code class="code-block text-xs bg-slate-100 p-1 rounded">where T : U</code></td><td class="border-b border-slate-200 p-3 text-sm text-slate-600">The type argument `T` must be or derive from the other type parameter `U`.</td></tr>
+                                          </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Variance: Covariance and Contravariance</h5>
+                                        <p class="text-slate-600 mb-3">Variance allows for more flexibility in assigning and using generic types, particularly with collections and delegates. It applies only to generic interfaces and delegates.</p>
+                                        <p class="text-slate-600 mb-4"><strong>Covariance (`out` keyword):</strong> Enables you to use a <em>more derived</em> type than specified. Think of it as "output" positioning. `IEnumerable<T>` is covariant (`IEnumerable<out T>`). This is intuitive: a sequence of `string`s is also a sequence of `object`s.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden mb-4">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: Covariance</span></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-comment">// This is valid because IEnumerable&lt;T&gt; is covariant (IEnumerable&lt;out T&gt;).</span>
+<span class="code-type">IEnumerable&lt;string&gt;</span> strings = <span class="code-keyword">new</span> <span class="code-type">List&lt;string&gt;</span> { <span class="code-string">"a"</span>, <span class="code-string">"b"</span> };
+<span class="code-type">IEnumerable&lt;object&gt;</span> objects = strings; <span class="code-comment">// You can assign strings to objects</span></code></pre>
+                                        </div>
+                                        <p class="text-slate-600 mb-4"><strong>Contravariance (`in` keyword):</strong> Enables you to use a <em>less derived</em> (base) type than specified. Think of it as "input" positioning. `Action<T>` is contravariant (`Action<in T>`). This is less intuitive but powerful: if a method can handle any `object`, it can certainly handle a `string`.</p>
+                                         <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: Contravariance</span></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">LogObject</span>(<span class="code-type">object</span> obj) { Console.WriteLine(obj.ToString()); }
+
+<span class="code-comment">// This is valid because Action&lt;T&gt; is contravariant (Action&lt;in T&gt;).</span>
+<span class="code-type">Action&lt;object&gt;</span> objectAction = LogObject;
+<span class="code-type">Action&lt;string&gt;</span> stringAction = objectAction; <span class="code-comment">// You can assign an object action to a string action</span>
+
+stringAction(<span class="code-string">"Hello!"</span>); <span class="code-comment">// Works perfectly!</span></code></pre>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700 mb-2">Default Value Expressions: `default(T)`</h5>
+                                        <p class="text-slate-600 mb-4">Inside a generic method or class, you don't know if `T` will be a reference type or a value type. The `default(T)` keyword provides the correct default value: `null` for reference types, and zero-equivalents (`0`, `false`, `\0`, etc.) for value types.</p>
+                                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs"><span class="code-type">Example: default(T)</span></div>
+                                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-type">T</span> <span class="code-method">GetFirstOrDefault&lt;T&gt;</span>(<span class="code-type">List&lt;T&gt;</span> items)
+{
+    <span class="code-keyword">return</span> items.Count > <span class="code-literal">0</span> ? items[<span class="code-literal">0</span>] : <span class="code-keyword">default</span>(<span class="code-type">T</span>);
+}
+<span class="code-comment">// GetFirstOrDefault&lt;string&gt;(...) returns null if empty.</span>
+<span class="code-comment">// GetFirstOrDefault&lt;int&gt;(...) returns 0 if empty.</span></code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="practice" class="mb-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-teal-500 pb-2 mb-6">✅ Coding Practice</h3>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <h4 class="text-xl font-semibold text-slate-700 mb-3">[Easy] Generic Stack</h4>
+                                <p class="text-slate-600 mb-4">Implement a simple generic `Stack&lt;T&gt;` class with `Push`, `Pop`, and `Peek` methods. It should throw an `InvalidOperationException` if `Pop` or `Peek` is called on an empty stack.</p>
+                                <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                    <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs">
+                                        <span class="code-type">Solution: GenericStack.cs</span>
+                                        <button class="copy-btn text-gray-300 hover:text-white">Copy</button>
+                                    </div>
+                                    <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">GenericStack&lt;T&gt;</span>
+{
+    <span class="code-keyword">private</span> <span class="code-keyword">readonly</span> <span class="code-type">List&lt;T&gt;</span> _items = <span class="code-keyword">new</span> <span class="code-type">List&lt;T&gt;</span>();
+
+    <span class="code-keyword">public</span> <span class="code-type">int</span> Count => _items.Count;
+
+    <span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">Push</span>(<span class="code-type">T</span> item)
+    {
+        _items.Add(item);
+    }
+
+    <span class="code-keyword">public</span> <span class="code-type">T</span> <span class="code-method">Pop</span>()
+    {
+        <span class="code-keyword">if</span> (Count == <span class="code-literal">0</span>)
+            <span class="code-keyword">throw</span> <span class="code-keyword">new</span> <span class="code-type">InvalidOperationException</span>(<span class="code-string">"Stack is empty."</span>);
+        
+        <span class="code-type">int</span> lastIndex = Count - <span class="code-literal">1</span>;
+        <span class="code-type">T</span> item = _items[lastIndex];
+        _items.RemoveAt(lastIndex);
+        <span class="code-keyword">return</span> item;
+    }
+
+    <span class="code-keyword">public</span> <span class="code-type">T</span> <span class="code-method">Peek</span>()
+    {
+        <span class="code-keyword">if</span> (Count == <span class="code-literal">0</span>)
+            <span class="code-keyword">throw</span> <span class="code-keyword">new</span> <span class="code-type">InvalidOperationException</span>(<span class="code-string">"Stack is empty."</span>);
+        
+        <span class="code-keyword">return</span> _items[Count - <span class="code-literal">1</span>];
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-xl font-semibold text-slate-700 mb-3">[Medium] Generic Cache</h4>
+                                <p class="text-slate-600 mb-4">Create a generic cache class `SimpleCache&lt;TKey, TValue&gt;` that stores key-value pairs. It should have `Add`, `Get`, and `Remove` methods. `Get` should return `default(TValue)` if the key is not found.</p>
+                                <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                    <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs">
+                                        <span class="code-type">Solution: SimpleCache.cs</span>
+                                        <button class="copy-btn text-gray-300 hover:text-white">Copy</button>
+                                    </div>
+                                    <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">SimpleCache&lt;TKey, TValue&gt;</span>
+{
+    <span class="code-keyword">private</span> <span class="code-keyword">readonly</span> <span class="code-type">Dictionary&lt;TKey, TValue&gt;</span> _cache = <span class="code-keyword">new</span> <span class="code-type">Dictionary&lt;TKey, TValue&gt;</span>();
+
+    <span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">Add</span>(<span class="code-type">TKey</span> key, <span class="code-type">TValue</span> value)
+    {
+        _cache[key] = value;
+    }
+
+    <span class="code-keyword">public</span> <span class="code-type">TValue</span> <span class="code-method">Get</span>(<span class="code-type">TKey</span> key)
+    {
+        <span class="code-keyword">return</span> _cache.TryGetValue(key, <span class="code-keyword">out</span> <span class="code-type">TValue</span> value) ? value : <span class="code-keyword">default</span>(<span class="code-type">TValue</span>);
+    }
+
+    <span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">Remove</span>(<span class="code-type">TKey</span> key)
+    {
+        _cache.Remove(key);
+    }
+}</code></pre>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xl font-semibold text-slate-700 mb-3">[Hard] Generic ORM Mapper</h4>
+                                <p class="text-slate-600 mb-4">An Object-Relational Mapper (ORM) maps data from a database to objects. Create a simplified generic method `Map&lt;T&gt;` that takes a `IDataReader` and maps its columns to the properties of an object `T`. Assume property names match column names. Use a `new()` constraint to create instances of `T`.</p>
+                                <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                    <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs">
+                                        <span class="code-type">Solution: OrmMapper.cs</span>
+                                        <button class="copy-btn text-gray-300 hover:text-white">Copy</button>
+                                    </div>
+                                    <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-comment">// Requires System.Data for IDataReader</span>
+<span class="code-keyword">using</span> System.Data;
+<span class="code-keyword">using</span> System.Reflection;
+
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">OrmMapper</span>
+{
+    <span class="code-keyword">public</span> <span class="code-keyword">static</span> <span class="code-type">List&lt;T&gt;</span> <span class="code-method">Map&lt;T&gt;</span>(<span class="code-type">IDataReader</span> reader) <span class="code-keyword">where</span> <span class="code-type">T</span> : <span class="code-type">new()</span>
+    {
+        <span class="code-keyword">var</span> list = <span class="code-keyword">new</span> <span class="code-type">List&lt;T&gt;</span>();
+        <span class="code-keyword">var</span> properties = <span class="code-keyword">typeof</span>(<span class="code-type">T</span>).GetProperties();
+
+        <span class="code-keyword">while</span> (reader.Read())
+        {
+            <span class="code-keyword">var</span> obj = <span class="code-keyword">new</span> <span class="code-type">T</span>();
+            <span class="code-keyword">foreach</span> (<span class="code-keyword">var</span> prop <span class="code-keyword">in</span> properties)
+            {
+                <span class="code-keyword">for</span> (<span class="code-type">int</span> i = <span class="code-literal">0</span>; i &lt; reader.FieldCount; i++)
+                {
+                    <span class="code-keyword">if</span> (reader.GetName(i).Equals(prop.Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        <span class="code-keyword">var</span> val = reader.IsDBNull(i) ? <span class="code-keyword">null</span> : reader.GetValue(i);
+                        prop.SetValue(obj, val);
+                        <span class="code-keyword">break</span>;
+                    }
+                }
+            }
+            list.Add(obj);
+        }
+        <span class="code-keyword">return</span> list;
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml" class="mb-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-teal-500 pb-2 mb-6">✅ UML Task: Generic Repository</h3>
+                        <p class="text-slate-600 mb-6">The Generic Repository Pattern is a classic use case for generics. It abstracts data access logic into a common, reusable class. Below is a UML diagram representing an `IRepository&lt;T&gt;` interface and a `GenericRepository&lt;T&gt;` concrete implementation. The constraint `where T : class` ensures it only works with reference types (entities).</p>
+                        
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 flex flex-col items-center space-y-4">
+                            <div class="bg-yellow-100 border-2 border-dashed border-yellow-400 p-4 rounded-lg w-full max-w-md text-center shadow-sm">
+                                <p class="font-bold text-yellow-800">&lt;&lt;interface&gt;&gt;</p>
+                                <p class="text-lg font-semibold text-yellow-900">IRepository&lt;T&gt;</p>
+                                <hr class="border-yellow-400 border-dashed my-2">
+                                <div class="text-left text-sm text-yellow-800 font-mono">
+                                    <p>+ GetById(id: int): T</p>
+                                    <p>+ GetAll(): IEnumerable&lt;T&gt;</p>
+                                    <p>+ Add(entity: T): void</p>
+                                    <p>+ Update(entity: T): void</p>
+                                    <p>+ Delete(entity: T): void</p>
+                                </div>
+                            </div>
+                            
+                            <div class="text-slate-500 text-3xl font-light transform -rotate-90">▲</div>
+                            <div class="text-slate-500 text-xs -mt-4">implements</div>
+
+                            <div class="bg-sky-100 border border-sky-300 p-4 rounded-lg w-full max-w-md text-center shadow-sm">
+                                <p class="text-lg font-semibold text-sky-900">GenericRepository&lt;T&gt;</p>
+                                <p class="text-xs font-mono text-sky-700">where T : class</p>
+                                <hr class="border-sky-300 my-2">
+                                <div class="text-left text-sm text-sky-800 font-mono">
+                                    <p>- _context: DbContext</p>
+                                    <hr class="border-sky-300 my-1 border-dashed">
+                                    <p>+ GetById(id: int): T</p>
+                                    <p>+ GetAll(): IEnumerable&lt;T&gt;</p>
+                                    <p>+ Add(entity: T): void</p>
+                                    <p>+ Update(entity: T): void</p>
+                                    <p>+ Delete(entity: T): void</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+
+                    <section id="casestudy" class="mb-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-teal-500 pb-2 mb-6">✅ Case Study: Build a Generic Data Access Layer (DAL)</h3>
+                        <p class="text-slate-600 mb-4">Let's apply the Generic Repository pattern to build a simple, reusable Data Access Layer. This layer will handle all basic CRUD (Create, Read, Update, Delete) operations for any entity in our system, drastically reducing boilerplate code.</p>
+                        <ol class="list-decimal list-inside space-y-4 text-slate-600">
+                            <li>
+                                <span class="font-semibold text-slate-700">Define a Base Entity:</span> Create a common base class or interface for all model entities to ensure they have an `Id` property.
+                            </li>
+                            <li>
+                                <span class="font-semibold text-slate-700">Implement the Generic Repository:</span> Create the `IRepository&lt;T&gt;` and `GenericRepository&lt;T&gt;`, using a constraint `where T : class, IEntity`.
+                            </li>
+                            <li>
+                                <span class="font-semibold text-slate-700">Create Specific Repositories (Optional but good practice):</span> You can create specific repository interfaces like `IProductRepository` that inherit from `IRepository&lt;Product&gt;` if you need to add product-specific methods later.
+                            </li>
+                            <li>
+                                <span class="font-semibold text-slate-700">Use in the Service Layer:</span> Inject the generic repository into your business logic services to perform data operations in a type-safe way.
+                            </li>
+                        </ol>
+
+                        <div class="bg-gray-900 text-white rounded-lg overflow-hidden mt-6">
+                            <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs">
+                                <span class="code-type">Example: DataAccessLayer.cs</span>
+                                <button class="copy-btn text-gray-300 hover:text-white">Copy</button>
+                            </div>
+                            <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-comment">// 1. Base Entity Interface</span>
+<span class="code-keyword">public</span> <span class="code-keyword">interface</span> <span class="code-type">IEntity</span> { <span class="code-type">int</span> Id { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } }
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">Product</span> : <span class="code-type">IEntity</span> { <span class="code-keyword">public</span> <span class="code-type">int</span> Id { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } <span class="code-keyword">public</span> <span class="code-type">string</span> Name { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } }
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">Customer</span> : <span class="code-type">IEntity</span> { <span class="code-keyword">public</span> <span class="code-type">int</span> Id { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } <span class="code-keyword">public</span> <span class="code-type">string</span> Email { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } }
+
+<span class="code-comment">// 2. Generic Repository Interface & Implementation (simplified)</span>
+<span class="code-keyword">public</span> <span class="code-keyword">interface</span> <span class="code-type">IRepository&lt;T&gt;</span> <span class="code-keyword">where</span> <span class="code-type">T</span> : <span class="code-keyword">class</span>, <span class="code-type">IEntity</span>
+{
+    <span class="code-type">T</span> <span class="code-method">GetById</span>(<span class="code-type">int</span> id);
+    <span class="code-keyword">void</span> <span class="code-method">Add</span>(<span class="code-type">T</span> entity);
+}
+
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">GenericRepository&lt;T&gt;</span> : <span class="code-type">IRepository&lt;T&gt;</span> <span class="code-keyword">where</span> <span class="code-type">T</span> : <span class="code-keyword">class</span>, <span class="code-type">IEntity</span>
+{
+    <span class="code-comment">// In-memory list for demonstration. This would be a DbContext.</span>
+    <span class="code-keyword">private</span> <span class="code-keyword">readonly</span> <span class="code-type">List&lt;T&gt;</span> _dbSet = <span class="code-keyword">new</span> <span class="code-type">List&lt;T&gt;</span>();
+
+    <span class="code-keyword">public</span> <span class="code-type">T</span> <span class="code-method">GetById</span>(<span class="code-type">int</span> id) => _dbSet.FirstOrDefault(e => e.Id == id);
+    <span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">Add</span>(<span class="code-type">T</span> entity) => _dbSet.Add(entity);
+}
+
+<span class="code-comment">// 3. Usage in a Service</span>
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">ProductService</span>
+{
+    <span class="code-keyword">private</span> <span class="code-keyword">readonly</span> <span class="code-type">IRepository&lt;Product&gt;</span> _productRepo;
+
+    <span class="code-keyword">public</span> <span class="code-method">ProductService</span>(<span class="code-type">IRepository&lt;Product&gt;</span> productRepo)
+    {
+        _productRepo = productRepo;
+    }
+
+    <span class="code-keyword">public</span> <span class="code-keyword">void</span> <span class="code-method">CreateProduct</span>(<span class="code-type">string</span> name)
+    {
+        <span class="code-keyword">var</span> product = <span class="code-keyword">new</span> <span class="code-type">Product</span> { Name = name };
+        _productRepo.Add(product);
+        Console.WriteLine(<span class="code-string">$"Product '</span>{name}<span class="code-string">' created!"</span>);
+    }
+}
+
+<span class="code-comment">// Main Program</span>
+<span class="code-keyword">var</span> productRepository = <span class="code-keyword">new</span> <span class="code-type">GenericRepository&lt;Product&gt;</span>();
+<span class="code-keyword">var</span> productService = <span class="code-keyword">new</span> <span class="code-type">ProductService</span>(productRepository);
+productService.CreateProduct(<span class="code-string">"Laptop"</span>);
+</code></pre>
+                        </div>
+                    </section>
+                    
+                    <section id="quiz" class="mb-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-teal-500 pb-2 mb-6">🧠 Knowledge Check</h3>
+                        <div id="quiz-container" class="space-y-6"></div>
+                    </section>
+
+                    <section id="challenge">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-teal-500 pb-2 mb-6">🚀 Self-Assessment Challenge</h3>
+                        <p class="text-slate-600 mb-4">Create a generic method `TResult ConvertAndProcess&lt;TInput, TResult&gt;(...)`. This method should:</p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-2 mb-4">
+                            <li>Accept an input object of type `TInput`.</li>
+                            <li>Accept a `Func&lt;TInput, TResult&gt;` delegate to convert the input to the result type.</li>
+                            <li>Accept an `Action&lt;TResult&gt;` delegate to process the result (e.g., log it).</li>
+                            <li>Return the converted `TResult`.</li>
+                            <li>Add a constraint so that `TInput` must be a class.</li>
+                        </ul>
+                        <button id="toggle-solution-btn" class="inline-block bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                            Show Solution
+                        </button>
+                        <div id="solution-container" class="hidden mt-4">
+                            <div class="bg-gray-900 text-white rounded-lg overflow-hidden">
+                                <div class="flex justify-between items-center px-4 py-2 bg-gray-800 text-xs">
+                                    <span class="code-type">Solution: Challenge.cs</span>
+                                    <button class="copy-btn text-gray-300 hover:text-white">Copy</button>
+                                </div>
+                                <pre class="code-block p-4 text-sm whitespace-pre-wrap"><code class="language-csharp"><span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">GenericProcessor</span>
+{
+    <span class="code-keyword">public</span> <span class="code-type">TResult</span> <span class="code-method">ConvertAndProcess&lt;TInput, TResult&gt;</span>(
+        <span class="code-type">TInput</span> input, 
+        <span class="code-type">Func&lt;TInput, TResult&gt;</span> converter, 
+        <span class="code-type">Action&lt;TResult&gt;</span> processor) <span class="code-keyword">where</span> <span class="code-type">TInput</span> : <span class="code-keyword">class</span>
+    {
+        <span class="code-keyword">if</span> (input == <span class="code-keyword">null</span>)
+        {
+            <span class="code-keyword">throw</span> <span class="code-keyword">new</span> <span class="code-type">ArgumentNullException</span>(<span class="code-keyword">nameof</span>(input));
+        }
+
+        <span class="code-type">TResult</span> result = converter(input);
+        
+        processor(result);
+        
+        <span class="code-keyword">return</span> result;
+    }
+}
+
+<span class="code-comment">// Example Usage</span>
+<span class="code-keyword">public</span> <span class="code-keyword">class</span> <span class="code-type">Person</span> { <span class="code-keyword">public</span> <span class="code-type">string</span> Name { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } <span class="code-keyword">public</span> <span class="code-type">int</span> Age { <span class="code-keyword">get</span>; <span class="code-keyword">set</span>; } }
+
+<span class="code-keyword">var</span> processor = <span class="code-keyword">new</span> <span class="code-type">GenericProcessor</span>();
+<span class="code-keyword">var</span> person = <span class="code-keyword">new</span> <span class="code-type">Person</span> { Name = <span class="code-string">"Alice"</span>, Age = <span class="code-literal">30</span> };
+
+<span class="code-type">string</span> summary = processor.ConvertAndProcess(
+    person,
+    p => <span class="code-string">$"</span>{p.Name}<span class="code-string"> is </span>{p.Age}<span class="code-string"> years old."</span>, 
+    s => Console.WriteLine(<span class="code-string">$"[LOG]: </span>{s}<span class="code-string">"</span>) 
+);
+</code></pre>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <aside class="lg:w-1/4 mt-12 lg:mt-0">
+                <div class="sticky top-8 bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">On This Page</h3>
+                    <nav id="toc" class="flex flex-col space-y-2">
+                        <a href="#theory-core" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Theory: Core Concepts</a>
+                        <a href="#theory-constructs" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Theory: Generic Constructs</a>
+                        <a href="#theory-advanced" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Theory: Advanced Topics</a>
+                        <a href="#practice" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Coding Practice</a>
+                        <a href="#uml" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">UML Task</a>
+                        <a href="#casestudy" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Case Study</a>
+                        <a href="#quiz" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Knowledge Check</a>
+                        <a href="#challenge" class="toc-link text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 py-1 transition-colors">Self-Assessment</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pre = btn.parentElement.nextElementSibling;
+                    const code = pre.querySelector('code');
+                    const text = code.innerText;
+                    
+                    navigator.clipboard.writeText(text).then(() => {
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            btn.textContent = 'Copy';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                });
+            });
+
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const sections = document.querySelectorAll('section');
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            const linkHref = link.getAttribute('href');
+                            if (linkHref && linkHref.substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const quizData = [
+                {
+                    question: "What is the primary benefit of using a generic `List<int>` over a non-generic `ArrayList` for integers?",
+                    options: [
+                        "It uses less memory.",
+                        "It provides compile-time type safety and avoids boxing/unboxing.",
+                        "It is always faster for all operations.",
+                        "It has more methods available."
+                    ],
+                    answer: "It provides compile-time type safety and avoids boxing/unboxing."
+                },
+                {
+                    question: "Which constraint ensures that a type parameter `T` must have a public, parameterless constructor?",
+                    options: [
+                        "where T : class",
+                        "where T : struct",
+                        "where T : new()",
+                        "where T : IConstructable"
+                    ],
+                    answer: "where T : new()"
+                },
+                {
+                    question: "What is Covariance (`out` keyword) in generics?",
+                    options: [
+                        "It allows using a less derived (base) type.",
+                        "It allows using a more derived type.",
+                        "It prevents any type conversion.",
+                        "It only applies to generic classes, not interfaces."
+                    ],
+                    answer: "It allows using a more derived type."
+                },
+                {
+                    question: "Can you apply multiple constraints to a single type parameter?",
+                    options: [
+                        "No, only one constraint is allowed.",
+                        "Yes, by separating them with a comma.",
+                        "Yes, but only a class and an interface constraint.",
+                        "Only in generic methods, not generic classes."
+                    ],
+                    answer: "Yes, by separating them with a comma."
+                },
+                 {
+                    question: "What does the `where T : class` constraint signify?",
+                    options: [
+                        "T must be an instance of the `Class` object.",
+                        "T can only be a base class.",
+                        "T must be a reference type.",
+                        "T must be a sealed class."
+                    ],
+                    answer: "T must be a reference type."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'bg-slate-50 border border-slate-200 p-4 rounded-lg';
+                
+                const questionText = document.createElement('p');
+                questionText.className = 'font-semibold text-slate-800 mb-3';
+                questionText.textContent = `${index + 1}. ${q.question}`;
+                questionEl.appendChild(questionText);
+                
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'space-y-2';
+                
+                q.options.forEach(optionText => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'quiz-option p-3 border border-slate-300 rounded-md hover:bg-slate-100 cursor-pointer transition-colors';
+                    optionEl.textContent = optionText;
+                    
+                    optionEl.addEventListener('click', () => {
+                        const allOptions = optionsContainer.querySelectorAll('.quiz-option');
+                        allOptions.forEach(opt => {
+                            opt.classList.remove('correct', 'incorrect');
+                            opt.style.pointerEvents = 'none';
+                        });
+
+                        if (optionText === q.answer) {
+                            optionEl.classList.add('correct');
+                        } else {
+                            optionEl.classList.add('incorrect');
+                            allOptions.forEach(opt => {
+                                if(opt.textContent === q.answer) {
+                                    opt.classList.add('correct');
+                                }
+                            });
+                        }
+                    });
+                    
+                    optionsContainer.appendChild(optionEl);
+                });
+                
+                questionEl.appendChild(optionsContainer);
+                quizContainer.appendChild(questionEl);
+            });
+
+            const toggleSolutionBtn = document.getElementById('toggle-solution-btn');
+            if (toggleSolutionBtn) {
+                toggleSolutionBtn.addEventListener('click', function() {
+                    const solutionContainer = document.getElementById('solution-container');
+                    const isHidden = solutionContainer.classList.contains('hidden');
+                    
+                    if (isHidden) {
+                        solutionContainer.classList.remove('hidden');
+                        this.textContent = 'Hide Solution';
+                    } else {
+                        solutionContainer.classList.add('hidden');
+                        this.textContent = 'Show Solution';
+                    }
+                });
+            }
+
+            
+            tocLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -5,23 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Day 10: Deadlocks & Prevention</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
-        
+
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+
         .code-block {
             font-family: 'Roboto Mono', monospace;
             line-height: 1.6;
         }
 
         .toc-link.active {
-            color: #4A5568; 
+            color: #1e293b; /* slate-800 */
             font-weight: 600;
-            border-left-color: #4A5568;
+            border-left-color: #334155; /* slate-700 */
         }
 
         .prose h2 {
@@ -32,18 +37,18 @@
         }
 
         .quiz-option.selected {
-            border-color: #4A5568;
-            background-color: #F7FAFC;
+            border-color: #334155; /* slate-700 */
+            background-color: #f1f5f9; /* slate-100 */
         }
 
         .quiz-option.correct {
-            border-color: #48BB78;
-            background-color: #F0FFF4;
+            border-color: #16a34a; /* green-600 */
+            background-color: #f0fdf4; /* green-50 */
         }
 
         .quiz-option.incorrect {
-            border-color: #F56565;
-            background-color: #FFF5F5;
+            border-color: #dc2626; /* red-600 */
+            background-color: #fef2f2; /* red-50 */
         }
         
         .chart-container {
@@ -55,64 +60,78 @@
             height: 350px;
             max-height: 400px;
         }
+
+        .tab-btn.active {
+            color: #334155;
+            border-color: #334155;
+        }
     </style>
 </head>
-<body class="bg-[#FDF8F0] text-[#4A4A4A]">
-    <!-- Chosen Palette: Calm Harmony (#FDF8F0, #4A4A4A, #8D9B6A, #A4907C) -->
+<body class="text-slate-600">
+    <!-- Chosen Palette: Slate Theme (bg-slate-50, text-slate-600, text-slate-800, border-slate-200) -->
     <!-- Application Structure Plan: A two-column layout is chosen for optimal user experience. The main content area on the left provides a linear, in-depth learning path, while the sticky Table of Contents on the right allows for quick, non-linear navigation. This structure supports both guided learning and quick reference. The flow progresses from theory to interactive visualization, then to practical coding, a real-world case study, and finally, knowledge reinforcement through a quiz and a self-assessment challenge. This layered approach ensures concepts are understood, seen, practiced, and tested. -->
     <!-- Visualization & Content Choices: Report Info: Deadlock diagram -> Goal: Organize/Relationships -> Viz/Presentation: Interactive Canvas Diagram -> Interaction: Visual representation of the circular wait condition. Justification: A dynamic, script-drawn diagram is more engaging than a static image and clarifies the abstract concept of resource contention between threads effectively. Library/Method: Vanilla JS on HTML5 Canvas. Report Info: Coding problems -> Goal: Demonstrate -> Presentation: Styled code blocks with explanations. -> Interaction: Copy-to-clipboard button. Justification: Facilitates easy use of code examples for user's own experimentation and learning. Library/Method: Prism.js for styling, Vanilla JS for interaction. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
-    <!-- Placeholder for custom header -->
-    <div class="h-16"></div>
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
 
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <div class="lg:grid lg:grid-cols-12 lg:gap-8">
             
             <main class="lg:col-span-9 prose max-w-none">
                 <header class="mb-12">
-                    <p class="text-sm font-semibold uppercase tracking-wider text-[#A4907C]">Multithreading Basics: Days 8-14</p>
-                    <h1 class="text-4xl md:text-5xl font-bold text-[#4A4A4A] tracking-tight">Day 10: Deadlocks & Prevention</h1>
-                    <p class="mt-4 text-xl text-gray-600">Understand one of the most notorious challenges in concurrent programming—the dreaded deadlock—and learn robust strategies to prevent it from paralyzing your applications.</p>
+                    <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Multithreading Basics: Days 8-14</p>
+                    <h1 class="text-4xl md:text-5xl font-bold text-slate-800 tracking-tight font-lexend">Day 10: Deadlocks & Prevention</h1>
+                    <p class="mt-4 text-xl text-slate-600">Understand one of the most notorious challenges in concurrent programming—the dreaded deadlock—and learn robust strategies to prevent it from paralyzing your applications.</p>
                 </header>
 
                 <section id="theory" class="mb-16">
-                    <h2 class="text-3xl font-bold border-b-2 border-[#A4907C] pb-2">✅ Theory Deep Dive</h2>
+                    <h2 class="text-3xl font-bold text-slate-800 border-b-2 border-slate-200 pb-2 font-lexend">✅ Theory Deep Dive</h2>
                     
-                    <div class="mt-8 bg-white/50 p-6 rounded-lg shadow-sm">
-                        <h3 class="text-2xl font-semibold">What is a Deadlock?</h3>
+                    <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">What is a Deadlock?</h3>
                         <p>A deadlock is a state in a concurrent system where two or more competing actions are waiting for the other to finish, and thus neither ever does. It's a programming stalemate where multiple threads are stuck in a cycle of dependencies, each waiting for a resource held by another thread in the cycle.</p>
-                        <div class="mt-4 p-4 border-l-4 border-[#8D9B6A] bg-[#F0F2EB] rounded-r-lg">
-                            <p class="font-semibold text-[#4A4A4A]">Real-World Analogy: The Two-Way Street</p>
-                            <p class="mt-2 text-gray-700">Imagine two cars meeting head-on in the middle of a narrow, one-lane bridge. Car A wants to cross to Car B's side, and Car B wants to cross to Car A's side. Neither can move forward because the other is in the way. Neither is willing to back up. They are in a deadlock, and traffic is permanently blocked.</p>
+                        <div class="mt-4 p-4 border-l-4 border-slate-400 bg-slate-100 rounded-r-lg">
+                            <p class="font-semibold text-slate-700">Real-World Analogy: The Two-Way Street</p>
+                            <p class="mt-2 text-slate-600">Imagine two cars meeting head-on in the middle of a narrow, one-lane bridge. Car A wants to cross to Car B's side, and Car B wants to cross to Car A's side. Neither can move forward because the other is in the way. Neither is willing to back up. They are in a deadlock, and traffic is permanently blocked.</p>
                         </div>
                     </div>
 
                     <div id="conditions" class="mt-8">
-                        <h3 class="text-2xl font-semibold">The Four Conditions for Deadlock</h3>
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">The Four Conditions for Deadlock</h3>
                         <p>A deadlock situation can arise if and only if all four of the following conditions hold simultaneously in a system.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            <div class="bg-white/50 p-6 rounded-lg shadow-sm transition-transform transform hover:scale-105">
-                                <h4 class="text-xl font-bold text-[#8D9B6A]">1. Mutual Exclusion</h4>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 transition-transform transform hover:scale-105">
+                                <h4 class="text-xl font-bold text-slate-700 font-lexend">1. Mutual Exclusion</h4>
                                 <p class="mt-2">At least one resource must be held in a non-sharable mode. Only one thread at a time can use the resource. If another thread requests that resource, the requesting thread must be delayed until the resource has been released.</p>
                             </div>
-                            <div class="bg-white/50 p-6 rounded-lg shadow-sm transition-transform transform hover:scale-105">
-                                <h4 class="text-xl font-bold text-[#8D9B6A]">2. Hold and Wait</h4>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 transition-transform transform hover:scale-105">
+                                <h4 class="text-xl font-bold text-slate-700 font-lexend">2. Hold and Wait</h4>
                                 <p class="mt-2">A thread must be holding at least one resource and waiting to acquire additional resources that are currently being held by other threads.</p>
                             </div>
-                            <div class="bg-white/50 p-6 rounded-lg shadow-sm transition-transform transform hover:scale-105">
-                                <h4 class="text-xl font-bold text-[#8D9B6A]">3. No Preemption</h4>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 transition-transform transform hover:scale-105">
+                                <h4 class="text-xl font-bold text-slate-700 font-lexend">3. No Preemption</h4>
                                 <p class="mt-2">Resources cannot be forcibly taken from a thread. They can only be released voluntarily by the thread holding them after that thread has completed its task.</p>
                             </div>
-                            <div class="bg-white/50 p-6 rounded-lg shadow-sm transition-transform transform hover:scale-105">
-                                <h4 class="text-xl font-bold text-[#8D9B6A]">4. Circular Wait</h4>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 transition-transform transform hover:scale-105">
+                                <h4 class="text-xl font-bold text-slate-700 font-lexend">4. Circular Wait</h4>
                                 <p class="mt-2">A set of waiting threads {T0, T1, ..., Tn} must exist such that T0 is waiting for a resource held by T1, T1 is waiting for a resource held by T2, ..., Tn is waiting for a resource held by T0, forming a circular chain.</p>
                             </div>
                         </div>
                     </div>
 
                     <div id="prevention" class="mt-12">
-                        <h3 class="text-2xl font-semibold">Deadlock Prevention Strategies</h3>
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Deadlock Prevention Strategies</h3>
                         <p>To prevent deadlocks, we must ensure that at least one of the four necessary conditions cannot hold. Here are the primary strategies:</p>
                         <ul class="list-disc pl-5 mt-4 space-y-2">
                             <li><strong>Break Mutual Exclusion:</strong> This is often not possible. Some resources, like a printer or a file write operation, are inherently non-sharable.</li>
@@ -123,11 +142,11 @@
                     </div>
 
                     <div id="timeout" class="mt-12">
-                        <h3 class="text-2xl font-semibold">Timeout-based Lock Acquisition</h3>
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Timeout-based Lock Acquisition</h3>
                         <p>Another powerful technique for handling (not preventing) deadlocks is to use timeouts when acquiring locks. Instead of waiting indefinitely for a lock to become available (`Monitor.Enter` or `lock`), a thread can try to acquire the lock for a specific duration (`Monitor.TryEnter`).</p>
                         <p>If the lock is not acquired within the timeout period, the attempt fails. The thread can then release any locks it currently holds, wait for a random period, and retry the entire operation. This helps to break the "wait" part of the deadlock cycle and allows the system to recover.</p>
-                        <div class="mt-4 bg-white/50 p-4 rounded-lg shadow-sm relative">
-                            <button class="copy-btn absolute top-3 right-3 bg-[#A4907C] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8D9B6A] transition-colors">Copy</button>
+                        <div class="mt-4 bg-slate-800 p-4 rounded-lg shadow-md relative">
+                            <button class="copy-btn absolute top-3 right-3 bg-slate-600 text-white px-3 py-1 rounded-md text-sm hover:bg-slate-500 transition-colors">Copy</button>
                             <pre><code class="language-csharp code-block">
 if (Monitor.TryEnter(lockObject, 500)) // Try to acquire lock for 500ms
 {
@@ -151,38 +170,38 @@ else
                 </section>
 
                 <section id="uml" class="mb-16">
-                    <h2 class="text-3xl font-bold border-b-2 border-[#A4907C] pb-2">✅ UML/Schema Task: Deadlock Diagram</h2>
+                    <h2 class="text-3xl font-bold text-slate-800 border-b-2 border-slate-200 pb-2 font-lexend">✅ UML/Schema Task: Deadlock Diagram</h2>
                     <p class="mt-4">The following interactive diagram visualizes the "Circular Wait" condition, the heart of a deadlock. Thread A has acquired Resource 1 and is waiting for Resource 2. Simultaneously, Thread B has acquired Resource 2 and is waiting for Resource 1. This creates a dependency cycle where neither thread can proceed.</p>
-                    <div class="chart-container mt-8 bg-white/50 rounded-lg shadow-md p-4">
+                    <div class="chart-container mt-8 bg-white rounded-lg shadow-md p-4 border border-slate-200">
                         <canvas id="deadlockDiagram"></canvas>
                     </div>
                 </section>
 
                 <section id="practice" class="mb-16">
-                     <h2 class="text-3xl font-bold border-b-2 border-[#A4907C] pb-2">✅ Coding Practice</h2>
+                     <h2 class="text-3xl font-bold text-slate-800 border-b-2 border-slate-200 pb-2 font-lexend">✅ Coding Practice</h2>
                      <div class="mt-4">
                         <p>Now, let's translate theory into practice. These exercises will guide you through creating, identifying, and resolving a deadlock in C#.</p>
                      </div>
                      <div id="tabs-container" class="mt-8">
-                         <div class="border-b border-gray-300">
+                         <div class="border-b border-slate-200">
                              <nav class="flex space-x-4" aria-label="Tabs">
-                                 <button class="tab-btn active text-[#8D9B6A] border-b-2 border-[#8D9B6A] py-3 px-4 text-lg font-medium" data-tab="easy">
+                                 <button class="tab-btn active border-b-2 py-3 px-4 text-lg font-medium" data-tab="easy">
                                      [Easy] Simulate a Deadlock
                                  </button>
-                                 <button class="tab-btn text-gray-500 hover:text-gray-700 py-3 px-4 text-lg font-medium" data-tab="medium">
+                                 <button class="tab-btn text-slate-500 hover:text-slate-700 py-3 px-4 text-lg font-medium" data-tab="medium">
                                      [Medium] Fix with Lock Ordering
                                  </button>
-                                 <button class="tab-btn text-gray-500 hover:text-gray-700 py-3 px-4 text-lg font-medium" data-tab="hard">
+                                 <button class="tab-btn text-slate-500 hover:text-slate-700 py-3 px-4 text-lg font-medium" data-tab="hard">
                                      [Hard] Implement Lock Timeout
                                  </button>
                              </nav>
                          </div>
                  
                          <div id="easy" class="tab-content py-6">
-                             <h3 class="text-2xl font-semibold">Problem: Demonstrate a Deadlock in C#</h3>
+                             <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Problem: Demonstrate a Deadlock in C#</h3>
                              <p class="mt-2">Write a program with two threads and two lock objects. Make Thread 1 lock the first object and then try to lock the second, while Thread 2 locks the second object and then tries to lock the first. This should consistently result in a deadlock.</p>
-                             <div class="mt-6 bg-white/50 p-4 rounded-lg shadow-sm relative">
-                                <button class="copy-btn absolute top-3 right-3 bg-[#A4907C] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8D9B6A] transition-colors">Copy</button>
+                             <div class="mt-6 bg-slate-800 p-4 rounded-lg shadow-md relative">
+                                <button class="copy-btn absolute top-3 right-3 bg-slate-600 text-white px-3 py-1 rounded-md text-sm hover:bg-slate-500 transition-colors">Copy</button>
                                 <pre><code class="language-csharp code-block">
 using System;
 using System.Threading;
@@ -238,17 +257,17 @@ public class DeadlockSimulator
 }
                                 </code></pre>
                              </div>
-                             <div class="mt-4 p-4 border-l-4 border-[#8D9B6A] bg-[#F0F2EB] rounded-r-lg">
-                                <p class="font-semibold text-[#4A4A4A]">Explanation</p>
-                                <p class="mt-2 text-gray-700">The program freezes because <code>Thread1Action</code> acquires <code>lockA</code> and then waits for <code>lockB</code>, while <code>Thread2Action</code> acquires <code>lockB</code> and waits for <code>lockA</code>. This creates a circular wait, satisfying the final condition for a deadlock, and the application hangs.</p>
+                             <div class="mt-4 p-4 border-l-4 border-slate-400 bg-slate-100 rounded-r-lg">
+                                <p class="font-semibold text-slate-700">Explanation</p>
+                                <p class="mt-2 text-slate-600">The program freezes because <code>Thread1Action</code> acquires <code>lockA</code> and then waits for <code>lockB</code>, while <code>Thread2Action</code> acquires <code>lockB</code> and waits for <code>lockA</code>. This creates a circular wait, satisfying the final condition for a deadlock, and the application hangs.</p>
                             </div>
                          </div>
                  
                          <div id="medium" class="tab-content hidden py-6">
-                             <h3 class="text-2xl font-semibold">Solution: Fix Deadlock with Lock Ordering</h3>
+                             <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Solution: Fix Deadlock with Lock Ordering</h3>
                              <p class="mt-2">Modify the previous program to prevent deadlock by enforcing a strict order in which locks are acquired. Both threads must attempt to acquire <code>lockA</code> before <code>lockB</code>.</p>
-                             <div class="mt-6 bg-white/50 p-4 rounded-lg shadow-sm relative">
-                                <button class="copy-btn absolute top-3 right-3 bg-[#A4907C] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8D9B6A] transition-colors">Copy</button>
+                             <div class="mt-6 bg-slate-800 p-4 rounded-lg shadow-md relative">
+                                <button class="copy-btn absolute top-3 right-3 bg-slate-600 text-white px-3 py-1 rounded-md text-sm hover:bg-slate-500 transition-colors">Copy</button>
                                 <pre><code class="language-csharp code-block">
 using System;
 using System.Threading;
@@ -307,17 +326,17 @@ public class DeadlockFix
 }
                                 </code></pre>
                              </div>
-                             <div class="mt-4 p-4 border-l-4 border-[#8D9B6A] bg-[#F0F2EB] rounded-r-lg">
-                                <p class="font-semibold text-[#4A4A4A]">Explanation</p>
-                                <p class="mt-2 text-gray-700">By making both threads acquire locks in the same order (A then B), we break the "Circular Wait" condition. One thread will successfully acquire both locks, complete its work, and release them, allowing the other thread to proceed. The program now runs to completion without hanging.</p>
+                             <div class="mt-4 p-4 border-l-4 border-slate-400 bg-slate-100 rounded-r-lg">
+                                <p class="font-semibold text-slate-700">Explanation</p>
+                                <p class="mt-2 text-slate-600">By making both threads acquire locks in the same order (A then B), we break the "Circular Wait" condition. One thread will successfully acquire both locks, complete its work, and release them, allowing the other thread to proceed. The program now runs to completion without hanging.</p>
                             </div>
                          </div>
                  
                          <div id="hard" class="tab-content hidden py-6">
-                              <h3 class="text-2xl font-semibold">Solution: Implement Lock Timeout Handling</h3>
+                              <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Solution: Implement Lock Timeout Handling</h3>
                              <p class="mt-2">Rewrite the original deadlock-prone program to use <code>Monitor.TryEnter</code> with a timeout. If a lock cannot be acquired within the specified time, the thread should release any locks it holds and retry after a short delay.</p>
-                             <div class="mt-6 bg-white/50 p-4 rounded-lg shadow-sm relative">
-                                <button class="copy-btn absolute top-3 right-3 bg-[#A4907C] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8D9B6A] transition-colors">Copy</button>
+                             <div class="mt-6 bg-slate-800 p-4 rounded-lg shadow-md relative">
+                                <button class="copy-btn absolute top-3 right-3 bg-slate-600 text-white px-3 py-1 rounded-md text-sm hover:bg-slate-500 transition-colors">Copy</button>
                                 <pre><code class="language-csharp code-block">
 using System;
 using System.Threading;
@@ -417,32 +436,32 @@ public class DeadlockTimeout
 }
                                 </code></pre>
                              </div>
-                             <div class="mt-4 p-4 border-l-4 border-[#8D9B6A] bg-[#F0F2EB] rounded-r-lg">
-                                <p class="font-semibold text-[#4A4A4A]">Explanation</p>
-                                <p class="mt-2 text-gray-700">This approach doesn't prevent the initial deadlock condition but provides a recovery mechanism. When a thread fails to acquire a second lock within 500ms, it assumes a potential deadlock, releases the lock it holds, and backs off. This gives the other thread a chance to acquire both locks and complete its work, breaking the stalemate and allowing the system to progress.</p>
+                             <div class="mt-4 p-4 border-l-4 border-slate-400 bg-slate-100 rounded-r-lg">
+                                <p class="font-semibold text-slate-700">Explanation</p>
+                                <p class="mt-2 text-slate-600">This approach doesn't prevent the initial deadlock condition but provides a recovery mechanism. When a thread fails to acquire a second lock within 500ms, it assumes a potential deadlock, releases the lock it holds, and backs off. This gives the other thread a chance to acquire both locks and complete its work, breaking the stalemate and allowing the system to progress.</p>
                             </div>
                          </div>
                      </div>
                 </section>
                 
                 <section id="case-study" class="mb-16">
-                    <h2 class="text-3xl font-bold border-b-2 border-[#A4907C] pb-2">✅ Case Study: Ticket Booking System</h2>
+                    <h2 class="text-3xl font-bold text-slate-800 border-b-2 border-slate-200 pb-2 font-lexend">✅ Case Study: Ticket Booking System</h2>
                     <p class="mt-4">Let's apply these concepts to a practical machine coding problem: designing a concurrent ticket booking system.</p>
-                    <div class="mt-6 bg-white/50 p-6 rounded-lg shadow-sm">
-                        <h3 class="text-2xl font-semibold">Problem Statement</h3>
+                    <div class="mt-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Problem Statement</h3>
                         <p class="mt-2">Design a system that allows multiple users to book seats for an event simultaneously. The key challenge is to prevent two users from booking the exact same seat at the same time, ensuring data integrity without causing deadlocks or excessive waiting.</p>
                         
-                        <h4 class="text-xl font-semibold mt-6">Design Considerations</h4>
+                        <h4 class="text-xl font-semibold mt-6 font-lexend">Design Considerations</h4>
                         <ul class="list-disc pl-5 mt-2 space-y-2">
                            <li><strong>Granularity of Locking:</strong> Should we lock the entire list of seats for every booking? This is simple but has terrible performance, as only one booking can happen at a time. A better approach is to lock only the specific seat being booked.</li>
                            <li><strong>Handling Multiple-Seat Bookings:</strong> What if a user wants to book multiple seats (e.g., A1, A2, A3) in one transaction? If User 1 tries to book A1 then A2, and User 2 tries to book A2 then A1, we have a classic deadlock scenario.</li>
                            <li><strong>Solution:</strong> Enforce a strict lock ordering. When booking multiple seats, always lock them in a consistent, defined order (e.g., alphabetically or by seat ID). This breaks the circular wait condition.</li>
                         </ul>
                         
-                        <h4 class="text-xl font-semibold mt-6">Implementation</h4>
+                        <h4 class="text-xl font-semibold mt-6 font-lexend">Implementation</h4>
                         <p class="mt-2">Below is a simplified implementation showing how to handle booking multiple seats concurrently by enforcing lock ordering.</p>
-                         <div class="mt-6 bg-[#FDF8F0] p-4 rounded-lg shadow-inner relative">
-                            <button class="copy-btn absolute top-3 right-3 bg-[#A4907C] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8D9B6A] transition-colors">Copy</button>
+                         <div class="mt-6 bg-slate-800 p-4 rounded-lg shadow-md relative">
+                            <button class="copy-btn absolute top-3 right-3 bg-slate-600 text-white px-3 py-1 rounded-md text-sm hover:bg-slate-500 transition-colors">Copy</button>
                             <pre><code class="language-csharp code-block">
 using System;
 using System.Collections.Generic;
@@ -484,14 +503,7 @@ public class BookingSystem
             return false;
         }
 
-        // 2. Check availability before locking
-        if (seatsToBook.Any(s => s.IsBooked))
-        {
-            Console.WriteLine($"[{user}] Sorry, one or more requested seats are already booked.");
-            return false;
-        }
-        
-        // 3. Acquire locks in the defined order
+        // 2. Acquire locks in the defined order
         foreach (var seat in seatsToBook)
         {
             Monitor.Enter(seat.Lock);
@@ -500,14 +512,14 @@ public class BookingSystem
 
         try
         {
-            // 4. Re-check availability AFTER acquiring locks (critical step!)
+            // 3. Check availability AFTER acquiring all locks
             if (seatsToBook.Any(s => s.IsBooked))
             {
-                Console.WriteLine($"[{user}] Race condition! Seats were booked while waiting for locks.");
+                Console.WriteLine($"[{user}] Sorry, one or more requested seats are already booked.");
                 return false; 
             }
 
-            // 5. Perform the booking
+            // 4. Perform the booking
             foreach (var seat in seatsToBook)
             {
                 seat.IsBooked = true;
@@ -519,7 +531,7 @@ public class BookingSystem
         }
         finally
         {
-            // 6. Release locks in reverse order
+            // 5. Release locks in reverse order
             foreach (var seat in seatsToBook.AsEnumerable().Reverse())
             {
                 Monitor.Exit(seat.Lock);
@@ -550,34 +562,34 @@ public class CaseStudyDemo
                 </section>
                 
                 <section id="quiz" class="mb-16">
-                    <h2 class="text-3xl font-bold border-b-2 border-[#A4907C] pb-2">🧠 Knowledge Check Quiz</h2>
+                    <h2 class="text-3xl font-bold text-slate-800 border-b-2 border-slate-200 pb-2 font-lexend">🧠 Knowledge Check Quiz</h2>
                     <p class="mt-4">Test your understanding of deadlocks and prevention techniques. Select the best answer for each question.</p>
                     <div id="quiz-container" class="mt-6 space-y-8">
                         <!-- Questions will be injected here by JS -->
                     </div>
                     <div class="mt-6">
-                        <button id="submit-quiz-btn" class="bg-[#8D9B6A] text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-[#7a885a] transition-all transform hover:scale-105">Submit Answers</button>
+                        <button id="submit-quiz-btn" class="bg-slate-700 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-slate-800 transition-all transform hover:scale-105 shadow-sm">Submit Answers</button>
                         <p id="quiz-results" class="mt-4 text-xl font-bold hidden"></p>
                     </div>
                 </section>
 
                 <section id="challenge" class="mb-16">
-                     <h2 class="text-3xl font-bold border-b-2 border-[#A4907C] pb-2">🚀 Self-Assessment Challenge</h2>
-                     <div class="mt-6 bg-white/50 p-6 rounded-lg shadow-sm">
-                        <h3 class="text-2xl font-semibold">The Dining Philosophers Problem</h3>
+                     <h2 class="text-3xl font-bold text-slate-800 border-b-2 border-slate-200 pb-2 font-lexend">🚀 Self-Assessment Challenge</h2>
+                     <div class="mt-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">The Dining Philosophers Problem</h3>
                         <p class="mt-2">A classic concurrency problem that can lead to deadlock. Five silent philosophers sit at a round table with five chopsticks. A chopstick is placed between each pair of adjacent philosophers. Each philosopher must pick up both chopsticks (the one to their left and the one to their right) to eat. They cannot pick up both at once and will not start eating before they have both.
                         <br><br>
                         <strong>Your Task:</strong> Write a C# program to simulate this scenario. Implement a solution that prevents deadlock, allowing all philosophers to eventually eat without the system freezing.</p>
                         
                         <div class="mt-6">
-                            <button id="reveal-solution-btn" class="text-[#8D9B6A] font-semibold border-2 border-[#8D9B6A] px-6 py-2 rounded-lg hover:bg-[#F0F2EB] transition-colors">Reveal Solution</button>
+                            <button id="reveal-solution-btn" class="text-slate-700 font-semibold border-2 border-slate-400 px-6 py-2 rounded-lg hover:bg-slate-100 transition-colors">Reveal Solution</button>
                         </div>
 
                         <div id="solution-container" class="hidden mt-6">
-                            <h4 class="text-xl font-semibold">Solution Breakdown</h4>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">Solution Breakdown</h4>
                             <p>A common solution is to break the circular wait. We can do this by having one of the philosophers (e.g., the last one) pick up their chopsticks in the reverse order (right then left) compared to everyone else (left then right). This breaks the symmetry and prevents a cycle where every philosopher is holding their left chopstick and waiting for their right one.</p>
-                            <div class="mt-6 bg-[#FDF8F0] p-4 rounded-lg shadow-inner relative">
-                               <button class="copy-btn absolute top-3 right-3 bg-[#A4907C] text-white px-3 py-1 rounded-md text-sm hover:bg-[#8D9B6A] transition-colors">Copy</button>
+                            <div class="mt-6 bg-slate-800 p-4 rounded-lg shadow-md relative">
+                               <button class="copy-btn absolute top-3 right-3 bg-slate-600 text-white px-3 py-1 rounded-md text-sm hover:bg-slate-500 transition-colors">Copy</button>
                                <pre><code class="language-csharp code-block">
 using System;
 using System.Threading;
@@ -653,21 +665,21 @@ public class DiningPhilosophers
 
             <aside class="hidden lg:block lg:col-span-3">
                 <nav id="toc" class="sticky top-24">
-                    <h3 class="text-lg font-semibold text-gray-800">On this page</h3>
-                    <ul class="mt-4 space-y-2 text-gray-600">
+                    <h3 class="text-lg font-semibold text-slate-800 font-lexend">On this page</h3>
+                    <ul class="mt-4 space-y-2 text-slate-500">
                         <li>
-                            <a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900 hover:border-gray-400">Theory Deep Dive</a>
+                            <a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900 hover:border-slate-400">Theory Deep Dive</a>
                             <ul class="pl-4 mt-2 space-y-2 text-sm">
-                                <li><a href="#conditions" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900">Four Conditions</a></li>
-                                <li><a href="#prevention" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900">Prevention Strategies</a></li>
-                                <li><a href="#timeout" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900">Lock Timeouts</a></li>
+                                <li><a href="#conditions" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900">Four Conditions</a></li>
+                                <li><a href="#prevention" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900">Prevention Strategies</a></li>
+                                <li><a href="#timeout" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900">Lock Timeouts</a></li>
                             </ul>
                         </li>
-                        <li><a href="#uml" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900 hover:border-gray-400">Deadlock Diagram</a></li>
-                        <li><a href="#practice" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900 hover:border-gray-400">Coding Practice</a></li>
-                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900 hover:border-gray-400">Case Study</a></li>
-                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900 hover:border-gray-400">Knowledge Check</a></li>
-                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 hover:text-gray-900 hover:border-gray-400">Self-Assessment</a></li>
+                        <li><a href="#uml" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900 hover:border-slate-400">Deadlock Diagram</a></li>
+                        <li><a href="#practice" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900 hover:border-slate-400">Coding Practice</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900 hover:border-slate-400">Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900 hover:border-slate-400">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 hover:text-slate-900 hover:border-slate-400">Self-Assessment</a></li>
                     </ul>
                 </nav>
             </aside>
@@ -675,11 +687,10 @@ public class DiningPhilosophers
         </div>
     </div>
 
-    <footer class="mt-20 border-t-2 border-[#A4907C]/50 py-8">
-        <div class="container mx-auto px-4 text-center text-gray-600">
-            <p>&copy; 2025 Multithreading Learning Module. All rights reserved.</p>
-            <p class="text-sm mt-1">Designed to make complex topics accessible and practical.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold font-lexend">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
@@ -698,11 +709,11 @@ public class DiningPhilosophers
                         const tabId = button.dataset.tab;
 
                         tabButtons.forEach(btn => {
-                            btn.classList.remove('active', 'text-[#8D9B6A]', 'border-[#8D9B6A]');
-                            btn.classList.add('text-gray-500');
+                            btn.classList.remove('active');
+                            btn.classList.add('text-slate-500');
                         });
-                        button.classList.add('active', 'text-[#8D9B6A]', 'border-[#8D9B6A]');
-                        button.classList.remove('text-gray-500');
+                        button.classList.add('active');
+                        button.classList.remove('text-slate-500');
 
                         tabContents.forEach(content => {
                             if (content.id === tabId) {
@@ -771,7 +782,7 @@ public class DiningPhilosophers
                     context.translate((fromx + tox) / 2, (fromy + toy) / 2);
                     context.rotate(angle);
                     context.textAlign = "center";
-                    context.fillStyle = '#4A4A4A';
+                    context.fillStyle = '#334155'; // slate-700
                     context.fillText(text, 0, -5);
                     context.restore();
                 };
@@ -783,7 +794,7 @@ public class DiningPhilosophers
                     } else {
                         context.arc(x, y, 30, 0, 2 * Math.PI);
                     }
-                    context.fillStyle = isResource ? '#A4907C' : '#8D9B6A';
+                    context.fillStyle = isResource ? '#64748b' : '#334155'; // slate-500 : slate-700
                     context.fill();
                     context.fillStyle = 'white';
                     context.font = 'bold 16px Inter';
@@ -794,33 +805,42 @@ public class DiningPhilosophers
                 
                 const canvas = ctx.canvas;
                 const parent = canvas.parentElement;
-                canvas.width = parent.clientWidth;
-                canvas.height = parent.clientHeight;
-
-
-                const threadAx = canvas.width * 0.25;
-                const threadAy = canvas.height * 0.5;
-                const threadBx = canvas.width * 0.75;
-                const threadBy = canvas.height * 0.5;
-
-                const resource1x = canvas.width * 0.5;
-                const resource1y = canvas.height * 0.2;
-                const resource2x = canvas.width * 0.5;
-                const resource2y = canvas.height * 0.8;
-
-                drawNode(ctx, threadAx, threadAy, 'Thread A', false);
-                drawNode(ctx, threadBx, threadBy, 'Thread B', false);
-                drawNode(ctx, resource1x, resource1y, 'R1', true);
-                drawNode(ctx, resource2x, resource2y, 'R2', true);
-
-                ctx.strokeStyle = '#4A4A4A';
-                ctx.lineWidth = 2;
-                ctx.font = '14px Inter';
                 
-                drawArrow(ctx, resource1x, resource1y + 25, threadAx + 20, threadAy - 20, "Held By"); // R1 -> T-A
-                drawArrow(ctx, resource2x, resource2y - 25, threadBx + -20, threadBy + 20, "Held By"); // R2 -> T-B
-                drawArrow(ctx, threadAx + 25, threadAy, resource2x - 25, resource2y, "Wants"); // T-A -> R2
-                drawArrow(ctx, threadBx - 25, threadBy, resource1x + 25, resource1y, "Wants"); // T-B -> R1
+                function resizeCanvas() {
+                    canvas.width = parent.clientWidth;
+                    canvas.height = parent.clientHeight;
+                    drawDiagram();
+                }
+
+                function drawDiagram() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const threadAx = canvas.width * 0.25;
+                    const threadAy = canvas.height * 0.5;
+                    const threadBx = canvas.width * 0.75;
+                    const threadBy = canvas.height * 0.5;
+
+                    const resource1x = canvas.width * 0.5;
+                    const resource1y = canvas.height * 0.2;
+                    const resource2x = canvas.width * 0.5;
+                    const resource2y = canvas.height * 0.8;
+
+                    drawNode(ctx, threadAx, threadAy, 'Thread A', false);
+                    drawNode(ctx, threadBx, threadBy, 'Thread B', false);
+                    drawNode(ctx, resource1x, resource1y, 'R1', true);
+                    drawNode(ctx, resource2x, resource2y, 'R2', true);
+
+                    ctx.strokeStyle = '#475569'; // slate-600
+                    ctx.lineWidth = 2;
+                    ctx.font = '14px Inter';
+                    
+                    drawArrow(ctx, resource1x, resource1y + 25, threadAx + 20, threadAy - 20, "Held By"); // R1 -> T-A
+                    drawArrow(ctx, resource2x, resource2y - 25, threadBx + -20, threadBy + 20, "Held By"); // R2 -> T-B
+                    drawArrow(ctx, threadAx + 25, threadAy, resource2x - 25, resource2y, "Wants"); // T-A -> R2
+                    drawArrow(ctx, threadBx - 25, threadBy, resource1x + 25, resource1y, "Wants"); // T-B -> R1
+                }
+                
+                window.addEventListener('resize', resizeCanvas);
+                resizeCanvas();
             }
 
             // Quiz functionality
@@ -854,10 +874,10 @@ public class DiningPhilosophers
             function buildQuiz() {
                 quizData.forEach((item, index) => {
                     const questionDiv = document.createElement('div');
-                    questionDiv.classList.add('bg-white/50', 'p-6', 'rounded-lg', 'shadow-sm');
+                    questionDiv.classList.add('bg-white', 'p-6', 'rounded-lg', 'shadow-sm', 'border', 'border-slate-200');
                     
                     const questionText = document.createElement('p');
-                    questionText.classList.add('font-semibold', 'text-lg');
+                    questionText.classList.add('font-semibold', 'text-lg', 'text-slate-800');
                     questionText.textContent = `${index + 1}. ${item.question}`;
                     questionDiv.appendChild(questionText);
 
@@ -867,7 +887,7 @@ public class DiningPhilosophers
 
                     item.options.forEach(optionText => {
                         const optionLabel = document.createElement('label');
-                        optionLabel.classList.add('quiz-option', 'block', 'p-4', 'border-2', 'rounded-lg', 'cursor-pointer', 'hover:bg-gray-100', 'transition-colors');
+                        optionLabel.classList.add('quiz-option', 'block', 'p-4', 'border-2', 'border-slate-200', 'rounded-lg', 'cursor-pointer', 'hover:bg-slate-100', 'transition-colors');
                         
                         const optionInput = document.createElement('input');
                         optionInput.type = 'radio';
@@ -876,7 +896,6 @@ public class DiningPhilosophers
                         optionInput.classList.add('hidden');
 
                         optionInput.addEventListener('change', () => {
-                            // Visually mark selection
                             optionsDiv.querySelectorAll('label').forEach(lbl => lbl.classList.remove('selected'));
                             optionLabel.classList.add('selected');
                         });
@@ -919,7 +938,7 @@ public class DiningPhilosophers
                     quizResults.textContent = `You scored ${score} out of ${quizData.length}!`;
                     quizResults.classList.remove('hidden');
                     submitQuizBtn.disabled = true;
-                    submitQuizBtn.style.opacity = '0.5';
+                    submitQuizBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 });
             }
 
@@ -936,3 +955,4 @@ public class DiningPhilosophers
     </script>
 </body>
 </html>
+

@@ -7,14 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Calm Harmony -->
-    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning. A sticky navigation sidebar on the left provides an 'always-on' table of contents for easy jumping between complex topics, preventing disorientation. The main content area on the right follows a logical, sequential flow from theory to practical application. This structure supports both linear learning for beginners and quick reference for returning users. Interactive elements like a memory visualizer and a quiz are embedded directly within the flow to reinforce concepts immediately after they are introduced, which is a pedagogically sound approach to solidifying technical knowledge. -->
+    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning. The main content area on the left follows a logical, sequential flow from theory to practice. A sticky navigation sidebar on the right provides an 'always-on' table of contents for easy jumping between complex topics, preventing disorientation. This structure supports both linear learning for beginners and quick reference for returning users. Interactive elements like a memory visualizer and a quiz are embedded directly within the flow to reinforce concepts immediately after they are introduced, which is a pedagogically sound approach to solidifying technical knowledge. -->
     <!-- Visualization & Content Choices: Report Info: Value vs. Reference types. Goal: Clarify abstract memory allocation. Viz/Method: Interactive HTML/CSS/JS diagram showing Stack and Heap. Interaction: User clicks buttons to create types, triggering animations that visualize memory pointers vs. direct data storage. Justification: This makes a difficult concept tangible and memorable. Report Info: UML for Order states. Goal: Show state transitions. Viz/Method: Diagram built with styled HTML divs. Interaction: Hovering over states or transitions reveals tooltips with explanations. Justification: Avoids static images or external tools, keeping the module self-contained and interactive. All code examples use custom-styled blocks with a copy-to-clipboard feature for practicality. The quiz uses immediate feedback to enhance learning. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .toc-link.active { color: #0891b2; font-weight: 600; border-left-color: #0891b2; }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active { color: #0891b2; font-weight: 600; border-right-color: #0891b2; }
         .code-block { background-color: #1e293b; color: #e2e8f0; border-radius: 0.5rem; overflow: hidden; margin-top: 1rem; margin-bottom: 1rem; }
         .code-header { background-color: #334155; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; }
         .code-header span { font-size: 0.875rem; color: #cbd5e1; }
@@ -32,23 +33,35 @@
 </head>
 <body class="text-slate-700">
 
-    <!-- CUSTOM HEADER GAP -->
-    <div class="h-16"></div>
+    <!-- HEADER -->
+    <div class="bg-slate-100/80 border-b border-slate-200 sticky top-0 z-10 backdrop-blur-sm">
+        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="flex items-center justify-between h-20">
+                <header class="text-left">
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-1 text-slate-600 text-sm sm:text-base">Your Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="shrink-0 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="lg:flex lg:space-x-8">
-            <!-- Table of Contents (Sticky) -->
-            <nav id="toc" class="hidden lg:block w-64 shrink-0 sticky top-20 self-start">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+        <div class="lg:flex lg:flex-row-reverse lg:space-x-8 lg:space-x-reverse">
+            <!-- Table of Contents (Sticky, Right Side) -->
+            <nav id="toc" class="hidden lg:block w-64 shrink-0 sticky top-28 self-start">
                 <div class="space-y-4">
                     <h3 class="font-semibold text-slate-900 text-lg">On this page</h3>
                     <ul class="space-y-2 text-slate-500">
-                        <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Core Theory</a></li>
-                        <li><a href="#visualization" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Interactive Visualization</a></li>
-                        <li><a href="#practice" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Coding Practice</a></li>
-                        <li><a href="#uml" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">UML/Schema Task</a></li>
-                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Case Study</a></li>
-                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Knowledge Check</a></li>
-                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200">Self-Assessment</a></li>
+                        <li><a href="#theory" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">Core Theory</a></li>
+                        <li><a href="#visualization" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">Interactive Visualization</a></li>
+                        <li><a href="#practice" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">Coding Practice</a></li>
+                        <li><a href="#uml" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">UML/Schema Task</a></li>
+                        <li><a href="#case-study" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-r-2 border-transparent pr-4 hover:text-cyan-600 hover:border-cyan-600 transition-colors duration-200 text-right">Self-Assessment</a></li>
                     </ul>
                 </div>
             </nav>
@@ -58,17 +71,17 @@
                 <article class="prose lg:prose-xl max-w-none">
                     <header class="mb-12">
                         <p class="text-base font-semibold text-cyan-600">OOP Foundations: Day 4</p>
-                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900">Immutability & Value Types</h1>
+                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 font-lexend">Immutability & Value Types</h1>
                         <p class="mt-4 text-lg text-slate-600">Discover the power of immutable data structures. Learn how to build safer, more predictable, and thread-safe applications by understanding the fundamental difference between data that can change and data that cannot.</p>
                     </header>
                     
                     <!-- Core Theory -->
-                    <section id="theory" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Core Theory: The Bedrock of Predictability</h2>
+                    <section id="theory" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">Core Theory: The Bedrock of Predictability</h2>
                         <p class="mb-6">At the heart of immutability is a simple promise: once a piece of data is created, it can never be changed. This seems restrictive, but it unlocks incredible benefits in complex systems, especially when multiple threads or processes are involved. We'll start by exploring the two fundamental ways C# stores data: as values and as references.</p>
 
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">1. Value Types vs. Reference Types</h3>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4 font-lexend">1. Value Types vs. Reference Types</h3>
                             <p>This is one of the most crucial distinctions in .NET. Understanding it clarifies countless behaviors related to performance, memory, and bugs.</p>
                             
                             <div class="grid md:grid-cols-2 gap-6 mt-4">
@@ -94,7 +107,7 @@
                         </div>
 
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mt-8">
-                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">2. Creating Immutable Types in C#</h3>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4 font-lexend">2. Creating Immutable Types in C#</h3>
                             <p>To make a type immutable, we must ensure its state cannot be modified after construction. This is typically achieved by making all fields `readonly` and only setting them in the constructor.</p>
 
                             <h4 class="font-bold text-lg mt-4">The Classic `class` Approach</h4>
@@ -138,7 +151,7 @@
                         </div>
                         
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mt-8">
-                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">3. Benefits vs. Pitfalls</h3>
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4 font-lexend">3. Benefits vs. Pitfalls</h3>
                             <div class="grid md:grid-cols-2 gap-6 mt-4">
                                 <div>
                                     <h4 class="font-bold text-lg text-green-600">✅ Benefits of Immutability</h4>
@@ -161,11 +174,11 @@
                     </section>
 
                     <!-- Interactive Visualization -->
-                    <section id="visualization" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Interactive Visualization: Memory in Action</h2>
+                    <section id="visualization" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">Interactive Visualization: Memory in Action</h2>
                         <p class="mb-6">Click the buttons below to see a visual representation of how value and reference types are handled in memory. This diagram will help solidify your understanding of the core difference between the Stack and the Heap.</p>
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 relative">
-                            <div class="flex justify-center space-x-4 mb-8">
+                            <div class="flex flex-wrap justify-center gap-4 mb-8">
                                 <button id="createValueTypeBtn" class="bg-cyan-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-cyan-700 transition">Create Value Type (`Point` struct)</button>
                                 <button id="createRefTypeBtn" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition">Create Reference Type (`User` class)</button>
                                 <button id="resetVizBtn" class="bg-slate-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-600 transition">Reset</button>
@@ -192,8 +205,8 @@
                     </section>
 
                     <!-- Coding Practice -->
-                    <section id="practice" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Coding Practice</h2>
+                    <section id="practice" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">Coding Practice</h2>
                         <p class="mb-6">Time to apply the theory. Work through these problems, which increase in complexity. Try to solve them yourself before revealing the solution.</p>
                         
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -342,13 +355,13 @@
                     </section>
 
                      <!-- UML/Schema Task -->
-                    <section id="uml" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">UML/Schema Task: Immutable Order</h2>
+                    <section id="uml" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">UML/Schema Task: Immutable Order</h2>
                         <p class="mb-4">Below is a UML class diagram for an immutable `Order` object. The key design principle is that instead of modifying an order's status, you create a *new* order object that represents the next state. This prevents invalid state transitions and makes the history of an order an explicit sequence of objects.</p>
                         
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col items-center">
-                            <h3 class="text-xl font-semibold text-slate-800 mb-6">Order State Transition Diagram</h3>
-                            <div class="flex items-center justify-center space-x-4 md:space-x-8">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-6 font-lexend">Order State Transition Diagram</h3>
+                            <div class="flex items-center justify-center space-x-2 md:space-x-8 flex-wrap gap-y-4">
                                 <!-- Created State -->
                                 <div class="p-4 border-2 border-cyan-500 rounded-lg bg-cyan-50 text-center shadow-md">
                                     <p class="font-bold text-cyan-800">Order (Created)</p>
@@ -391,12 +404,12 @@
                     </section>
 
                     <!-- Case Study -->
-                    <section id="case-study" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Case Study: E-commerce Order Processing</h2>
+                    <section id="case-study" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">Case Study: E-commerce Order Processing</h2>
                         <p class="mb-6">Let's design a simplified e-commerce backend system using the principles of immutability for order processing. This design ensures that once an order is in a particular state (e.g., Shipped), it cannot be accidentally or maliciously reverted, providing a reliable audit trail.</p>
                         
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                            <h3 class="text-xl font-semibold text-slate-800">System Design & Logic</h3>
+                            <h3 class="text-xl font-semibold text-slate-800 font-lexend">System Design & Logic</h3>
                             <p class="mt-2">The core of the system is the immutable `Order` record. State transitions are handled by service methods that return new instances of the `Order` record.</p>
 
                              <div class="code-block">
@@ -412,7 +425,7 @@
                                 </div>
                             </div>
 
-                            <h3 class="text-xl font-semibold text-slate-800 mt-6">API Endpoints & Logic Flow</h3>
+                            <h3 class="text-xl font-semibold text-slate-800 mt-6 font-lexend">API Endpoints & Logic Flow</h3>
                              <div class="space-y-4 mt-4">
                                 <div class="border p-4 rounded-lg">
                                     <h4 class="font-semibold text-slate-900">1. `POST /api/orders` (CreateOrder)</h4>
@@ -441,9 +454,9 @@
                     </section>
 
                     <!-- Knowledge Check -->
-                    <section id="quiz" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Knowledge Check</h2>
-                        <p class="mb-6">Test your understanding of the key concepts with this quick quiz.</p>
+                    <section id="quiz" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">Knowledge Check</h2>
+                        <p class="mb-6">Test your understanding of the key concepts with this expanded quiz.</p>
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-6">
                             <!-- Question 1 -->
                             <div class="quiz-question">
@@ -475,14 +488,34 @@
                                 </div>
                                 <div class="quiz-feedback hidden mt-2 p-2 text-sm rounded-lg"></div>
                             </div>
+                             <!-- Question 4 -->
+                            <div class="quiz-question">
+                                <p class="font-semibold">4. What does the `with` expression do when used with a record?</p>
+                                <div class="mt-2 space-y-2" data-answer="b">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="a">A) It modifies the original record instance in a safe way.</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="b">B) It creates a new record instance, copying values and applying specified changes.</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="c">C) It temporarily changes a property for a single operation, then reverts it.</button>
+                                </div>
+                                <div class="quiz-feedback hidden mt-2 p-2 text-sm rounded-lg"></div>
+                            </div>
+                             <!-- Question 5 -->
+                            <div class="quiz-question">
+                                <p class="font-semibold">5. Which scenario is a potential performance PITFALL for immutable types?</p>
+                                <div class="mt-2 space-y-2" data-answer="a">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="a">A) Updating an object's state inside a tight loop with thousands of iterations.</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="b">B) Using an immutable object as a key in a dictionary.</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-100 transition" data-option="c">C) Passing an immutable object to multiple different methods.</button>
+                                </div>
+                                <div class="quiz-feedback hidden mt-2 p-2 text-sm rounded-lg"></div>
+                            </div>
                         </div>
                     </section>
 
                     <!-- Self-Assessment Challenge -->
-                    <section id="challenge" class="scroll-mt-20 mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6">Self-Assessment Challenge</h2>
+                    <section id="challenge" class="scroll-mt-28 mb-16">
+                        <h2 class="text-3xl font-bold text-slate-900 border-b pb-2 mb-6 font-lexend">Self-Assessment Challenge</h2>
                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                            <h3 class="text-xl font-semibold text-slate-800">Challenge: An Immutable, Versioned Document</h3>
+                            <h3 class="text-xl font-semibold text-slate-800 font-lexend">Challenge: An Immutable, Versioned Document</h3>
                             <p class="mt-2">Design and implement an immutable `Document` class. This class should hold a `Title` (string), `Content` (string), and a `Version` (int). Create a method called `UpdateContent(string newContent)` that does not modify the existing document. Instead, it should return a <span class="font-semibold">new</span> `Document` instance with the updated content and an incremented version number. This pattern is common in systems that need a full audit history, like wikis or content management systems.</p>
                              <div class="mt-4">
                                 <button class="accordion-toggle bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition text-sm">Reveal Detailed Solution</button>
@@ -553,10 +586,10 @@
     </div>
     
     <!-- FOOTER -->
-    <footer class="mt-20 py-8 bg-slate-100 border-t">
-        <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500">
-            <p>&copy; 2025 OOP Foundations Learning Module. All rights reserved.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold font-lexend">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by an expert instructional designer.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
 <script>
@@ -630,9 +663,15 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (selectedOption === correctAnswer) {
                 button.classList.add('correct');
-                feedbackDiv.textContent = 'Correct! This is the main advantage for concurrent programming.';
-                if(correctAnswer === 'a') feedbackDiv.textContent = 'Correct! Value types are allocated on the fast stack memory.';
-                if(correctAnswer === 'c') feedbackDiv.textContent = 'Correct! Records provide the most modern and concise syntax for immutability.';
+                let feedbackText = 'Correct!';
+                switch(questionDiv.querySelector('p').textContent.charAt(0)) {
+                    case '1': feedbackText = 'Correct! This is the main advantage for concurrent programming.'; break;
+                    case '2': feedbackText = 'Correct! Value types are allocated on the fast stack memory.'; break;
+                    case '3': feedbackText = 'Correct! Records provide the most modern and concise syntax for immutability.'; break;
+                    case '4': feedbackText = 'Correct! This "non-destructive mutation" is the core of working with immutable records.'; break;
+                    case '5': feedbackText = 'Correct! Creating many new objects in a loop can stress the Garbage Collector.'; break;
+                }
+                feedbackDiv.textContent = feedbackText;
                 feedbackDiv.className = 'quiz-feedback mt-2 p-2 text-sm rounded-lg bg-green-100 text-green-800';
             } else {
                 button.classList.add('incorrect');
@@ -657,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         });
-    }, { rootMargin: '-20% 0px -70% 0px' });
+    }, { rootMargin: '-30% 0px -60% 0px' });
 
     sections.forEach(section => observer.observe(section));
 
@@ -671,7 +710,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let valueCount = 0;
     let refCount = 0;
-    
+    const resizeObserver = new ResizeObserver(() => {
+        // This is a placeholder to re-trigger arrow drawing on resize if needed.
+        // For simplicity, current implementation re-draws on window resize event.
+    });
+
     const resetViz = () => {
         valueCount = 0;
         refCount = 0;
@@ -706,9 +749,11 @@ document.addEventListener('DOMContentLoaded', () => {
             arrow.style.transform = `rotate(${angle}deg)`;
         };
 
-        // Call once to position and then again if window resizes
+        // Call once to position and set up listener
         updateArrow();
         window.addEventListener('resize', updateArrow);
+        resizeObserver.observe(stackArea);
+        resizeObserver.observe(heapArea);
     };
 
     createValueTypeBtn.addEventListener('click', () => {
@@ -724,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
     createRefTypeBtn.addEventListener('click', () => {
         refCount++;
         const id = `user${refCount}`;
-        const address = `0x${Math.floor(Math.random() * 0xFFF).toString(16).toUpperCase()}`;
+        const address = `0x${Math.floor(Math.random() * 0xFFF).toString(16).toUpperCase().padStart(3,'0')}`;
 
         const stackItem = document.createElement('div');
         stackItem.id = `stack-${id}`;

@@ -4,21 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Day 13: Thread-Safe Collections & Concurrent Programming</title>
-    <!-- Chosen Palette: Calm Neutrals (Beige, Slate, Soft Teal accents) -->
-    <!-- Application Structure Plan: The application is designed as a guided learning path using a two-column layout. The main content area on the left provides a logical flow from foundational theory to practical application, minimizing cognitive load. A sticky table of contents on the right allows for both linear progression and random-access exploration, catering to different learning styles. This structure was chosen because it transforms a static syllabus into an interactive educational experience, where concepts are introduced, visually demonstrated, practiced, and then tested in a cohesive, self-contained environment. -->
+    <!-- Chosen Palette: LLD Bootcamp Slate (Slate, Sky, Teal accents) -->
+    <!-- Application Structure Plan: The application is structured as an immersive single-page lesson. It uses a two-column layout where the main, scrollable content provides a linear learning path from theory to practice. A sticky table of contents on the right offers quick, non-linear navigation. This design was chosen to support both guided learning for beginners and quick reference for experienced developers, making a large amount of detailed information easily accessible and digestible within a single, cohesive view. -->
     <!-- Visualization & Content Choices: Report Info: Producer-Consumer Pattern -> Goal: Visualize the dynamic interaction between threads and a shared collection -> Viz Method: Interactive Chart.js Line Chart -> Interaction: Buttons to simulate adding producers/consumers and starting/stopping the process, updating the chart in real-time. -> Justification: Makes an abstract, time-based concurrency concept concrete and observable. Report Info: UML Sequence Diagram -> Goal: Illustrate message flow between producer and consumer -> Viz Method: Structured HTML divs styled with Tailwind CSS to create a clean, vector-like diagram. -> Interaction: Static visual aid. -> Justification: Fulfills the requirement for a UML diagram without using prohibited SVG or Mermaid JS, maintaining a professional look. Interactive elements like solution toggles and quizzes are chosen to promote active learning and self-assessment. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap');
         body {
-            background-color: #FDFBF8;
-            color: #334155;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
             font-family: 'Inter', sans-serif;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap');
-        h1, h2, h3 { font-family: 'Inter', sans-serif; font-weight: 600; }
+        h1, h2, h3, h4, h5, h6 { 
+            font-family: 'Lexend', sans-serif; 
+            color: #1e293b; /* slate-800 */
+        }
         pre {
             background-color: #282c34;
             color: #abb2bf;
@@ -45,49 +48,50 @@
             opacity: 1;
         }
         .toc-link.active {
-            color: #0d9488;
+            color: #0d9488; /* teal-600 */
             font-weight: 600;
             transform: translateX(2px);
+            border-left-color: #0d9488;
         }
         .solution-toggle {
-            background-color: #e2e8f0;
+            background-color: #e2e8f0; /* slate-200 */
             color: #334155;
             transition: background-color 0.3s;
         }
         .solution-toggle:hover {
-            background-color: #cbd5e1;
+            background-color: #cbd5e1; /* slate-300 */
         }
         .callout {
-            background-color: #f0f9ff;
-            border-left: 4px solid #38bdf8;
+            background-color: #f0f9ff; /* sky-50 */
+            border-left: 4px solid #38bdf8; /* sky-500 */
             padding: 1rem;
             margin: 1.5rem 0;
             border-radius: 0 0.5rem 0.5rem 0;
         }
         .quiz-option.selected {
-            border-color: #38bdf8;
-            background-color: #f0f9ff;
+            border-color: #38bdf8; /* sky-500 */
+            background-color: #f0f9ff; /* sky-50 */
         }
         .quiz-option.correct {
-            border-color: #22c55e;
-            background-color: #f0fdf4;
+            border-color: #22c55e; /* green-500 */
+            background-color: #f0fdf4; /* green-50 */
         }
         .quiz-option.incorrect {
-            border-color: #ef4444;
-            background-color: #fef2f2;
+            border-color: #ef4444; /* red-500 */
+            background-color: #fef2f2; /* red-50 */
         }
         .diagram-box {
-            border: 2px solid #9ca3af;
+            border: 2px solid #9ca3af; /* slate-400 */
             padding: 0.5rem 1rem;
             border-radius: 0.375rem;
-            background-color: #f9fafb;
+            background-color: #f1f5f9; /* slate-100 */
             text-align: center;
         }
         .diagram-arrow {
             position: relative;
             flex-grow: 1;
             height: 2px;
-            background-color: #6b7280;
+            background-color: #64748b; /* slate-500 */
             margin: 0 1rem;
         }
         .diagram-arrow::after {
@@ -99,70 +103,71 @@
             height: 0;
             border-top: 5px solid transparent;
             border-bottom: 5px solid transparent;
-            border-left: 8px solid #6b7280;
-        }
-        .header-gradient {
-            background: linear-gradient(135deg, #f0fdfa, #f0f9ff);
+            border-left: 8px solid #64748b; /* slate-500 */
         }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- The custom header gap has been moved inside the container for easier replacement -->
-
-    <div class="container mx-auto px-4 py-8">
-        <!-- START: CUSTOMIZABLE HEADER SECTION -->
-        <!-- You can replace the entire content of the div below with your custom header. -->
-        <div id="page-header-container">
-            <!-- This spacer is included to accommodate fixed headers. Adjust or remove as needed. -->
-            <div class="h-16"></div>
-            <header class="mb-12 text-center p-8 rounded-xl shadow-lg header-gradient border border-slate-200">
-                <div class="flex items-center justify-center gap-4 mb-4">
-                    <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full">Day 13 of 14</span>
-                    <span class="bg-sky-100 text-sky-800 text-sm font-bold px-3 py-1 rounded-full">Focus: Concurrency</span>
-                </div>
-                <h1 class="text-5xl font-bold text-slate-800 leading-tight">Thread-Safe Collections & Concurrent Programming</h1>
-                <p class="mt-4 text-xl text-slate-500 max-w-3xl mx-auto">Mastering the essential .NET tools for writing clean, robust, and scalable multithreaded applications by safely sharing data between threads.</p>
-            </header>
+    <div id="page-header-container">
+        <div class="bg-slate-100/80 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
         </div>
-        <!-- END: CUSTOMIZABLE HEADER SECTION -->
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <div class="text-center mb-12">
+            <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full mb-4 inline-block">Day 13: Advanced Concepts</span>
+            <h2 class="text-4xl lg:text-5xl font-bold tracking-tight">Thread-Safe Collections & Concurrent Programming</h2>
+            <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">Mastering the essential .NET tools for writing clean, robust, and scalable multithreaded applications by safely sharing data between threads.</p>
+        </div>
+
 
         <div class="flex flex-col lg:flex-row gap-12">
             <!-- Main Content -->
             <main class="w-full lg:w-3/4">
 
                 <section id="introduction" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-4">What is Concurrent Programming?</h2>
+                    <h3 class="text-3xl font-bold mb-4">What is Concurrent Programming?</h3>
                     <p class="text-lg text-slate-600 leading-relaxed mb-4">
                         At its core, concurrent programming is about having multiple streams of operations running at the same time. Think of an application as a factory assembly line. In a traditional, single-threaded application, you have one worker who does every single task in sequence. Concurrent programming gives you multiple workers (threads) that can perform tasks simultaneously.
                     </p>
                     <div class="grid md:grid-cols-2 gap-8 my-8">
                         <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
-                            <h3 class="font-semibold text-xl mb-2 text-red-600">The Challenge: Shared Resources</h3>
+                            <h4 class="font-semibold text-xl mb-2 text-red-600">The Challenge: Shared Resources</h4>
                              <p class="text-slate-600">The problem arises when these multiple workers need to use the same tool or access the same bin of parts—this is your application's **shared state** (like a list, dictionary, or any variable). If two workers try to modify the same part at the same time, you get chaos. One might be painting it blue while the other is trying to attach a wheel. The result is a broken, unpredictable product. This is a **race condition**.</p>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow border border-slate-200">
-                            <h3 class="font-semibold text-xl mb-2 text-green-600">The Solution: Thread Safety</h3>
+                            <h4 class="font-semibold text-xl mb-2 text-green-600">The Solution: Thread Safety</h4>
                             <p class="text-slate-600">Thread safety is the practice of managing these shared resources to prevent such chaos. The "old" way was to use manual locks—giving only one worker at a time the key to the parts bin. This works, but it's complex, easy to get wrong (e.g., deadlocks, where workers are waiting on each other indefinitely), and can create performance bottlenecks. **Thread-safe collections** are the modern solution: "smart" parts bins that manage the keys and access rules internally, providing a highly optimized and safe way for many workers to collaborate effectively.</p>
                         </div>
                     </div>
                 </section>
 
                 <section id="theory" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Deep Dive: Core Theory</h2>
+                    <h3 class="text-3xl font-bold mb-6">Deep Dive: Core Theory</h3>
 
                     <article id="concurrent-collections" class="mb-10">
-                        <h3 class="text-2xl font-semibold text-teal-700 mb-4">1. Concurrent Collections in .NET</h3>
+                        <h4 class="text-2xl font-semibold text-teal-700 mb-4">1. Concurrent Collections in .NET</h4>
                         <p class="text-slate-600 mb-6">
-                            These collections, found in the <code class="bg-slate-200 p-1 rounded">System.Collections.Concurrent</code> namespace, are optimized for scenarios where multiple threads might access the collection. They handle all the low-level locking and synchronization internally, so you don't have to.
+                            These collections, found in the <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">System.Collections.Concurrent</code> namespace, are optimized for scenarios where multiple threads might access the collection. They handle all the low-level locking and synchronization internally, so you don't have to.
                         </p>
 
-                        <h4 class="text-xl font-semibold text-slate-600 mt-6 mb-2">ConcurrentQueue&lt;T&gt;</h4>
+                        <h5 class="text-xl font-semibold mt-6 mb-2">ConcurrentQueue&lt;T&gt;</h5>
                         <p class="text-slate-600 mb-4">A thread-safe first-in, first-out (FIFO) collection. It's perfect for producer-consumer scenarios where one or more threads are adding items ("producing") and others are removing them ("consuming") in the order they were added.</p>
                         <div class="callout">
                             <p><strong>Analogy:</strong> Think of a cafeteria line. People (items) get in line, and the cashier (consumer thread) serves the person at the front. New people (producer threads) can join the back of the line at any time without disrupting the cashier.</p>
                         </div>
-                        <h5 class="font-semibold mt-4 mb-2">Syntax Snippet</h5>
+                        <h6 class="font-semibold mt-4 mb-2">Syntax Snippet</h6>
                         <pre><code>using System.Collections.Concurrent;
 
 var queue = new ConcurrentQueue&lt;int&gt;();
@@ -176,12 +181,12 @@ if (queue.TryDequeue(out int item))
     // Process item
 }</code></pre>
 
-                        <h4 class="text-xl font-semibold text-slate-600 mt-8 mb-2">ConcurrentDictionary&lt;TKey, TValue&gt;</h4>
+                        <h5 class="text-xl font-semibold mt-8 mb-2">ConcurrentDictionary&lt;TKey, TValue&gt;</h5>
                         <p class="text-slate-600 mb-4">A thread-safe dictionary. It allows multiple threads to add, update, and retrieve key-value pairs without risk of corruption. This is incredibly useful for shared caches, lookup tables, or state management in concurrent applications.</p>
                         <div class="callout">
                              <p><strong>Analogy:</strong> A modern library's digital catalog. Multiple librarians (threads) can look up, add, or update book records simultaneously. The system ensures that two librarians don't try to edit the exact same record at the exact same microsecond, preventing data conflicts.</p>
                         </div>
-                        <h5 class="font-semibold mt-4 mb-2">Syntax Snippet</h5>
+                        <h6 class="font-semibold mt-4 mb-2">Syntax Snippet</h6>
                         <pre><code>using System.Collections.Concurrent;
 
 var cache = new ConcurrentDictionary&lt;string, string&gt;();
@@ -200,16 +205,16 @@ if(cache.TryRemove("user:1", out string removedValue))
                     </article>
 
                     <article id="producer-consumer" class="mb-10">
-                        <h3 class="text-2xl font-semibold text-teal-700 mb-4">2. The Producer-Consumer Pattern & BlockingCollection&lt;T&gt;</h3>
+                        <h4 class="text-2xl font-semibold text-teal-700 mb-4">2. The Producer-Consumer Pattern & BlockingCollection&lt;T&gt;</h4>
                         <p class="text-slate-600 mb-4">This is one of the most common concurrency patterns. Producers generate work and add it to a shared queue. Consumers take work from the queue and process it. This decouples the task of work creation from work execution, allowing them to proceed at different rates.</p>
                         <p class="text-slate-600 mb-4">
-                            <code class="bg-slate-200 p-1 rounded">BlockingCollection&lt;T&gt;</code> is the cornerstone of this pattern in .NET. It's a wrapper around a concurrent collection (like <code class="bg-slate-200 p-1 rounded">ConcurrentQueue&lt;T&gt;</code> by default) that adds blocking and bounding capabilities.
+                            <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">BlockingCollection&lt;T&gt;</code> is the cornerstone of this pattern in .NET. It's a wrapper around a concurrent collection (like <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">ConcurrentQueue&lt;T&gt;</code> by default) that adds blocking and bounding capabilities.
                         </p>
                         <ul class="list-disc list-inside text-slate-600 space-y-2 mb-4">
                             <li><strong>Blocking:</strong> If a consumer tries to take an item from an empty collection, it will block (wait) until an item becomes available. This prevents the consumer from spinning in a loop, wasting CPU cycles.</li>
                             <li><strong>Bounding:</strong> You can set a maximum capacity. If a producer tries to add an item to a full collection, it will block until space becomes available. This prevents the collection from growing indefinitely and consuming all available memory.</li>
                         </ul>
-                         <h5 class="font-semibold mt-4 mb-2">Syntax Snippet</h5>
+                         <h6 class="font-semibold mt-4 mb-2">Syntax Snippet</h6>
                         <pre><code>using System.Collections.Concurrent;
 
 // Bounded collection that can hold 100 items
@@ -233,7 +238,7 @@ foreach (var workItem in dataBus.GetConsumingEnumerable())
                 </section>
 
                 <section id="visualization" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-4">Interactive Visualization: Producer-Consumer</h2>
+                    <h3 class="text-3xl font-bold mb-4">Interactive Visualization: Producer-Consumer</h3>
                     <p class="text-lg text-slate-600 mb-6">
                         See the Producer-Consumer pattern in action. Use the buttons below to add producer and consumer "threads". Producers add one item per second, and consumers process one every 1.5 seconds. Watch how the queue size changes over time.
                     </p>
@@ -244,9 +249,9 @@ foreach (var workItem in dataBus.GetConsumingEnumerable())
                         <div class="mt-6 flex flex-wrap justify-center gap-4">
                             <button id="startSim" class="bg-teal-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-teal-700 transition">▶️ Start</button>
                             <button id="stopSim" class="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-red-700 transition" disabled>⏹️ Stop</button>
-                            <button id="addProducer" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition">➕ Add Producer</button>
+                            <button id="addProducer" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-sky-700 transition">➕ Add Producer</button>
                             <button id="addConsumer" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition">➖ Add Consumer</button>
-                            <button id="resetSim" class="bg-gray-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition">🔄 Reset</button>
+                            <button id="resetSim" class="bg-slate-500 text-white font-semibold px-4 py-2 rounded-lg shadow hover:bg-slate-600 transition">🔄 Reset</button>
                         </div>
                         <div id="simStats" class="mt-4 text-center text-slate-600 font-mono flex justify-center gap-6">
                             <span>Producers: <span id="producerCount" class="font-bold">1</span></span>
@@ -257,13 +262,13 @@ foreach (var workItem in dataBus.GetConsumingEnumerable())
                 </section>
 
                 <section id="coding-practice" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Coding Practice & Solutions</h2>
+                    <h3 class="text-3xl font-bold mb-6">Coding Practice & Solutions</h3>
 
                     <div class="space-y-8">
                         <!-- Problem 1 -->
                         <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
-                            <h3 class="text-xl font-semibold text-slate-800"><span class="text-green-600">[Easy]</span> Thread-Safe Counter with Interlocked</h3>
-                            <p class="text-slate-600 my-2">Create a class with a counter that can be incremented by multiple threads safely. Avoid using locks; use the <code class="bg-slate-200 p-1 rounded">System.Threading.Interlocked</code> class.</p>
+                            <h4 class="text-xl font-semibold"><span class="text-green-600">[Easy]</span> Thread-Safe Counter with Interlocked</h4>
+                            <p class="text-slate-600 my-2">Create a class with a counter that can be incremented by multiple threads safely. Avoid using locks; use the <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">System.Threading.Interlocked</code> class.</p>
                             <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-2" data-target="solution1">Show Solution</button>
                             <div id="solution1" class="hidden mt-4">
                                 <pre><code>using System;
@@ -318,7 +323,7 @@ public class Program
 
                         <!-- Problem 2 -->
                         <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
-                            <h3 class="text-xl font-semibold text-slate-800"><span class="text-orange-500">[Medium]</span> Use ConcurrentDictionary for Caching</h3>
+                            <h4 class="text-xl font-semibold"><span class="text-orange-500">[Medium]</span> Use ConcurrentDictionary for Caching</h4>
                             <p class="text-slate-600 my-2">Implement a simple in-memory cache for expensive data fetching operations. The cache should be thread-safe. If data is not in the cache, it should be fetched (simulated with a delay) and stored.</p>
                              <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-2" data-target="solution2">Show Solution</button>
                             <div id="solution2" class="hidden mt-4">
@@ -382,7 +387,7 @@ public class Program
                         
                         <!-- Problem 3 -->
                         <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
-                             <h3 class="text-xl font-semibold text-slate-800"><span class="text-red-600">[Hard]</span> Implement Producer-Consumer using BlockingCollection</h3>
+                             <h4 class="text-xl font-semibold"><span class="text-red-600">[Hard]</span> Implement Producer-Consumer using BlockingCollection</h4>
                             <p class="text-slate-600 my-2">Create a system with multiple "producer" threads that generate "jobs" (e.g., simple strings) and one "consumer" thread that processes them. The consumer should stop gracefully when all producers are finished.</p>
                              <button class="solution-toggle font-semibold py-2 px-4 rounded-lg mt-2" data-target="solution3">Show Solution</button>
                             <div id="solution3" class="hidden mt-4">
@@ -464,9 +469,9 @@ public class Program
                 </section>
 
                 <section id="uml-task" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-6">UML Task: Producer-Consumer Sequence Diagram</h2>
+                    <h3 class="text-3xl font-bold mb-6">UML Task: Producer-Consumer Sequence Diagram</h3>
                     <p class="text-lg text-slate-600 mb-6">
-                        This diagram illustrates the interactions between a Producer, a Consumer, and the shared BlockingCollection. It shows how the <code class="bg-slate-200 p-1 rounded">Add</code> and <code class="bg-slate-200 p-1 rounded">Take</code> methods coordinate the workflow.
+                        This diagram illustrates the interactions between a Producer, a Consumer, and the shared BlockingCollection. It shows how the <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">Add</code> and <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">Take</code> methods coordinate the workflow.
                     </p>
                     <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 flex flex-col items-center space-y-4">
                         <div class="flex justify-around w-full">
@@ -523,21 +528,21 @@ public class Program
                 </section>
 
                 <section id="case-study" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Case Study: Designing a Notification Service</h2>
+                    <h3 class="text-3xl font-bold mb-6">Case Study: Designing a Notification Service</h3>
                     <p class="text-lg text-slate-600 mb-6">
                        Let's design a robust, scalable service that sends notifications (Email, SMS, Push). The key is to handle sudden bursts of requests without slowing down the main application. A queue-based system using the producer-consumer pattern is a perfect fit.
                     </p>
                     <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
-                        <h3 class="text-2xl font-semibold text-slate-800 mb-4">System Design</h3>
+                        <h4 class="text-2xl font-semibold mb-4">System Design</h4>
                         <ul class="list-disc list-inside space-y-3 text-slate-600">
-                            <li><strong>Producers:</strong> Different parts of your application (e.g., user registration, order confirmation) act as producers. They create a <code class="bg-slate-200 p-1 rounded">Notification</code> object and add it to a central queue. This is a very fast operation, so the main application thread is not blocked.</li>
-                            <li><strong>The Queue:</strong> A single, shared <code class="bg-slate-200 p-1 rounded">BlockingCollection&lt;Notification&gt;</code> acts as the central buffer. We can give it a large capacity to absorb spikes in demand.</li>
+                            <li><strong>Producers:</strong> Different parts of your application (e.g., user registration, order confirmation) act as producers. They create a <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">Notification</code> object and add it to a central queue. This is a very fast operation, so the main application thread is not blocked.</li>
+                            <li><strong>The Queue:</strong> A single, shared <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">BlockingCollection&lt;Notification&gt;</code> acts as the central buffer. We can give it a large capacity to absorb spikes in demand.</li>
                             <li><strong>Consumers:</strong> A pool of long-running background worker threads act as consumers. Each consumer takes a notification from the queue and handles the actual sending process (e.g., calling an email API, an SMS gateway). Because sending can be slow due to network latency, having multiple consumers allows us to process notifications in parallel.</li>
                         </ul>
                         <div class="callout mt-6">
                              <p><strong>Why this is a great design:</strong> It decouples the application logic from the slow, unreliable process of sending notifications. If an SMS gateway is down, only the consumer threads are affected; the main application continues to run smoothly, and notifications are queued up to be sent later.</p>
                         </div>
-                         <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Implementation</h3>
+                         <h4 class="text-2xl font-semibold mt-8 mb-4">Implementation</h4>
                          <pre><code>using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -646,23 +651,23 @@ public class Program
                 </section>
 
                  <section id="knowledge-check" class="mb-16 scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Knowledge Check Quiz</h2>
+                    <h3 class="text-3xl font-bold mb-6">Knowledge Check Quiz</h3>
                     <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200 space-y-8" id="quiz-container">
                         <!-- Questions will be injected here by JS -->
                     </div>
                 </section>
 
                 <section id="self-assessment" class="scroll-mt-24">
-                    <h2 class="text-3xl font-bold text-slate-700 mb-6">Self-Assessment Challenge</h2>
+                    <h3 class="text-3xl font-bold mb-6">Self-Assessment Challenge</h3>
                     <div class="bg-white p-8 rounded-lg shadow-lg border border-slate-200">
-                        <h3 class="text-xl font-semibold text-slate-800">Challenge: A Multi-threaded Web Crawler</h3>
+                        <h4 class="text-xl font-semibold">Challenge: A Multi-threaded Web Crawler</h4>
                         <p class="text-slate-600 my-4">
                             Design and implement a simple web crawler. The crawler should start with a single URL, download its content, find all the links on that page, and then visit those links. This process should repeat up to a certain depth and should not visit the same URL twice.
                         </p>
                         <p class="text-slate-600 font-semibold">Requirements:</p>
                         <ul class="list-disc list-inside text-slate-600 space-y-2 mb-4">
-                            <li>Use <code class="bg-slate-200 p-1 rounded">BlockingCollection&lt;string&gt;</code> to store the URLs that need to be visited.</li>
-                            <li>Use <code class="bg-slate-200 p-1 rounded">ConcurrentDictionary&lt;string, bool&gt;</code> to keep track of visited URLs to prevent duplicates and loops.</li>
+                            <li>Use <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">BlockingCollection&lt;string&gt;</code> to store the URLs that need to be visited.</li>
+                            <li>Use <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono">ConcurrentDictionary&lt;string, bool&gt;</code> to keep track of visited URLs to prevent duplicates and loops.</li>
                             <li>Create multiple worker tasks that act as consumers, taking URLs from the queue, "downloading" them (simulated), and adding new, unvisited links back to the queue.</li>
                             <li>The crawler should stop gracefully when there are no more URLs to visit.</li>
                         </ul>
@@ -799,25 +804,25 @@ public class Program
             </main>
 
             <!-- Sticky Table of Contents -->
-            <aside class="w-full lg:w-1/4 lg:sticky lg:top-24 h-fit">
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-28 h-fit">
                  <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
-                    <h3 class="text-xl font-bold text-slate-700 mb-4">On This Page</h3>
+                    <h4 class="text-xl font-bold mb-4">On This Page</h4>
                     <nav>
-                        <ul class="space-y-3">
-                            <li><a href="#introduction" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Introduction</a></li>
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Introduction</a></li>
                             <li>
-                                <a href="#theory" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Core Theory</a>
+                                <a href="#theory" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Core Theory</a>
                                 <ul class="ml-4 mt-2 space-y-2 border-l-2 border-slate-200">
-                                     <li><a href="#concurrent-collections" class="toc-link block text-sm text-slate-500 hover:text-teal-600 transition-colors duration-300 pl-4">Concurrent Collections</a></li>
-                                     <li><a href="#producer-consumer" class="toc-link block text-sm text-slate-500 hover:text-teal-600 transition-colors duration-300 pl-4">Producer-Consumer</a></li>
+                                     <li><a href="#concurrent-collections" class="toc-link block text-sm text-slate-500 hover:text-teal-600 transition-colors duration-300 pl-4 py-1">Concurrent Collections</a></li>
+                                     <li><a href="#producer-consumer" class="toc-link block text-sm text-slate-500 hover:text-teal-600 transition-colors duration-300 pl-4 py-1">Producer-Consumer</a></li>
                                 </ul>
                             </li>
-                            <li><a href="#visualization" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Interactive Visualization</a></li>
-                            <li><a href="#coding-practice" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Coding Practice</a></li>
-                            <li><a href="#uml-task" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">UML Sequence Diagram</a></li>
-                            <li><a href="#case-study" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Case Study: Notification Service</a></li>
-                            <li><a href="#knowledge-check" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Knowledge Check</a></li>
-                            <li><a href="#self-assessment" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300">Self-Assessment Challenge</a></li>
+                            <li><a href="#visualization" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Interactive Visualization</a></li>
+                            <li><a href="#coding-practice" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Coding Practice</a></li>
+                            <li><a href="#uml-task" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">UML Sequence Diagram</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Case Study: Notification Service</a></li>
+                            <li><a href="#knowledge-check" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="toc-link block text-slate-500 hover:text-teal-600 transition-colors duration-300 border-l-2 border-transparent pl-4 py-1">Self-Assessment Challenge</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -825,10 +830,10 @@ public class Program
         </div>
     </div>
     
-    <footer class="mt-20 py-8 bg-slate-800 text-slate-400 text-center">
-        <div class="container mx-auto">
-            <p>&copy; 2025 Multithreading Mastery Course. All Rights Reserved.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
 <script>
@@ -838,16 +843,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const allCodeBlocks = document.querySelectorAll('pre');
     allCodeBlocks.forEach(block => {
         const button = document.createElement('button');
-        button.innerText = 'Copy';
-        button.className = 'copy-btn';
+        button.innerHTML = '<i class="far fa-copy"></i> Copy';
+        button.className = 'copy-btn text-xs font-sans';
         block.appendChild(button);
 
         button.addEventListener('click', () => {
             const code = block.querySelector('code').innerText;
             navigator.clipboard.writeText(code).then(() => {
-                button.innerText = 'Copied!';
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 setTimeout(() => {
-                    button.innerText = 'Copy';
+                    button.innerHTML = '<i class="far fa-copy"></i> Copy';
                 }, 2000);
             });
         });
@@ -873,16 +878,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const observer = new IntersectionObserver(entries => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                tocLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href').substring(1) === entry.target.id) {
-                        link.classList.add('active');
-                    }
-                });
+            const id = entry.target.getAttribute('id');
+            const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+            if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                tocLinks.forEach(link => link.classList.remove('active'));
+                if (tocLink) {
+                    tocLink.classList.add('active');
+                }
             }
         });
-    }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
+    }, { rootMargin: '-25% 0px -65% 0px', threshold: 0.1 });
 
     sections.forEach(section => {
         observer.observe(section);
@@ -1035,6 +1040,12 @@ document.addEventListener('DOMContentLoaded', function() {
             options: ["You add a special 'null' item to the queue", "You call the Stop() method", "You call the CompleteAdding() method", "You dispose the CancellationTokenSource"],
             answer: "You call the CompleteAdding() method",
             explanation: "CompleteAdding() signals that the collection should not accept any more items. Once the collection is empty and adding is complete, the consumer's GetConsumingEnumerable() loop will terminate gracefully."
+        },
+        {
+            question: "What happens when a producer thread tries to .Add() an item to a full, bounded BlockingCollection?",
+            options: ["It throws an InvalidOperationException", "The item is discarded", "The thread blocks (waits) until space is available in the collection", "It overwrites the oldest item in the collection"],
+            answer: "The thread blocks (waits) until space is available in the collection",
+            explanation: "This is the 'bounding' feature of BlockingCollection. It provides back-pressure, preventing producers from overwhelming consumers and exhausting memory by queuing too many items."
         }
     ];
 
@@ -1043,11 +1054,11 @@ document.addEventListener('DOMContentLoaded', function() {
     quizData.forEach((q, index) => {
         const questionEl = document.createElement('div');
         questionEl.innerHTML = `
-            <h4 class="text-lg font-semibold text-slate-700">${index + 1}. ${q.question}</h4>
+            <h5 class="text-lg font-semibold">${index + 1}. ${q.question}</h5>
             <div class="mt-4 space-y-2" id="options-${index}">
                 ${q.options.map((option, i) => `
                     <div class="quiz-option border-2 border-slate-300 p-3 rounded-lg cursor-pointer transition" data-question="${index}" data-option="${option}">
-                        <span class="font-mono text-sm bg-teal-100 text-teal-800 font-bold px-2 py-1 rounded mr-3">${String.fromCharCode(65 + i)}</span>
+                        <span class="font-mono text-sm bg-slate-200 text-slate-800 font-bold px-2 py-1 rounded mr-3">${String.fromCharCode(65 + i)}</span>
                         ${option}
                     </div>
                 `).join('')}
@@ -1081,10 +1092,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (selectedOption === questionData.answer) {
                 feedbackEl.innerHTML = `<strong class="text-green-700">Correct!</strong> ${questionData.explanation}`;
-                feedbackEl.className = 'mt-3 p-3 rounded-lg bg-green-100 text-green-800';
+                feedbackEl.className = 'mt-3 p-3 rounded-lg bg-green-50 text-green-800';
             } else {
                 feedbackEl.innerHTML = `<strong class="text-red-700">Incorrect.</strong> ${questionData.explanation}`;
-                feedbackEl.className = 'mt-3 p-3 rounded-lg bg-red-100 text-red-800';
+                feedbackEl.className = 'mt-3 p-3 rounded-lg bg-red-50 text-red-800';
             }
             feedbackEl.classList.remove('hidden');
         }
@@ -1094,5 +1105,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
-
 

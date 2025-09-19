@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals -->
     <!-- Application Structure Plan: A two-column layout was chosen for optimal learning experience. The left, wider column contains the main lesson content in a logical, top-down flow from theory to practical application. This linear progression is ideal for educational material. The right, narrower column features a sticky Table of Contents (TOC) for easy navigation, allowing users to jump between sections without losing their place. Interactions include tabbed views for problems/solutions, an interactive visualization to demonstrate race conditions, and a quiz with instant feedback, all designed to reinforce learning through active engagement. -->
     <!-- Visualization & Content Choices: Report Info: Race Condition -> Goal: Demonstrate the unpredictable nature of concurrent access. -> Viz/Presentation: Interactive HTML/JS simulation showing two threads incrementing a counter, with and without a lock. -> Interaction: User clicks "Run" to see the outcome, visually comparing the correct (locked) and incorrect (unlocked) results. -> Justification: This makes an abstract concept tangible and memorable. Report Info: UML Activity Diagram -> Goal: Illustrate a thread-safe process flow. -> Viz/Presentation: Diagram built with structured HTML & Tailwind CSS. -> Interaction: Key steps highlight on hover. -> Justification: Avoids static images (SVG), making it responsive and stylable. All coding examples use styled blocks with copy-to-clipboard functionality for ease of use. -->
@@ -17,6 +17,9 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc; 
             color: #1e293b;
+        }
+        .font-lexend { 
+            font-family: 'Lexend', sans-serif; 
         }
         .toc-link.active {
             color: #0891b2;
@@ -81,8 +84,18 @@
 </head>
 <body class="antialiased">
 
-    <!-- Header Gap -->
-    <div class="h-16"></div>
+    <!-- Header -->
+     <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
 
     <div class="container mx-auto px-4 py-8">
         <div class="flex flex-col lg:flex-row gap-8">
@@ -705,7 +718,7 @@ public class LoggerChallenge
             </main>
 
             <!-- Sticky TOC -->
-            <aside class="w-full lg:w-1/4 lg:sticky top-24 self-start">
+            <aside class="w-full lg:w-1/4 lg:sticky top-28 self-start">
                 <div class="p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-slate-200">
                     <h3 class="text-lg font-semibold text-slate-800">On this page</h3>
                     <nav id="toc" class="mt-4">
@@ -739,11 +752,10 @@ public class LoggerChallenge
     </div>
     
     <!-- Footer -->
-    <footer class="mt-16 py-8 bg-slate-800 text-slate-400">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2025 C# Learning Modules. All Rights Reserved.</p>
-            <p class="text-sm mt-2">A comprehensive guide to multithreading basics.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
     <script>
@@ -785,26 +797,30 @@ public class LoggerChallenge
              // --- Sticky TOC active state ---
             const sections = document.querySelectorAll('main section');
             const tocLinks = document.querySelectorAll('#toc a');
+            const headerEl = document.querySelector('.sticky.top-0');
+            const headerHeight = headerEl ? headerEl.offsetHeight : 0;
 
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     const id = entry.target.getAttribute('id');
                     const link = document.querySelector(`#toc a[href="#${id}"]`);
-                    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
                          tocLinks.forEach(l => l.classList.remove('active'));
-                         if(link) link.classList.add('active');
+                         if(link) {
+                            const parentLi = link.closest('ul').closest('li');
+                            if (parentLi) {
+                                const parentLink = parentLi.querySelector('a');
+                                if (parentLink) parentLink.classList.add('active');
+                            }
+                            link.classList.add('active');
+                         }
                     }
                 });
-            }, { rootMargin: "-30% 0px -60% 0px", threshold: 0.6 });
+            }, { rootMargin: `-${headerHeight + 20}px 0px -60% 0px`, threshold: 0.1 });
 
-            sections.forEach(section => {
-                observer.observe(section);
-            });
-            
-            // Also observe articles within sections for finer-grained highlighting
-            const articles = document.querySelectorAll('main article');
-            articles.forEach(article => {
-                observer.observe(article);
+            // Observe sections and key articles
+            document.querySelectorAll('main section, main article[id^="theory-"], main article[id^="practice-"]').forEach(el => {
+                observer.observe(el);
             });
 
 
@@ -822,16 +838,11 @@ public class LoggerChallenge
             const lockedCounterEl = document.getElementById('locked-counter');
             const unlockedResultEl = document.getElementById('unlocked-result');
             const lockedResultEl = document.getElementById('locked-result');
-            const thread1Unlocked = document.getElementById('thread1-unlocked');
-            const thread2Unlocked = document.getElementById('thread2-unlocked');
-            const thread1Locked = document.getElementById('thread1-locked');
-            const thread2Locked = document.getElementById('thread2-locked');
-
+            
             runSimBtn.addEventListener('click', () => {
                 runSimBtn.disabled = true;
                 runSimBtn.textContent = 'Running...';
                 
-                // Reset UI
                 unlockedCounterEl.textContent = '0';
                 lockedCounterEl.textContent = '0';
                 unlockedResultEl.textContent = '?';
@@ -843,44 +854,26 @@ public class LoggerChallenge
                 let lockedCounter = 0;
                 const increments = 100;
 
-                const animateThread = (threadEl, boxEl, counterEl, delay) => {
-                    setTimeout(() => {
-                        const boxRect = boxEl.getBoundingClientRect();
-                        const threadRect = threadEl.getBoundingClientRect();
-                        const targetX = boxRect.left + (boxRect.width / 2) - (threadRect.width / 2);
-                        const targetY = boxRect.top + (boxRect.height / 2) - (threadRect.height / 2);
-                        threadEl.style.transform = `translate(${targetX - threadRect.left}px, ${targetY - threadRect.top}px) scale(1.2)`;
-                        
-                        setTimeout(() => {
-                            let val = parseInt(counterEl.textContent);
-                            counterEl.textContent = val + 1;
-                            threadEl.style.transform = threadEl.id.includes('thread1') ? 'translate(-3rem, 0)' : 'translate(3rem, 0)';
-                        }, 500);
-                    }, delay);
-                };
-
                 // Unlocked simulation
-                const runUnlocked = () => {
-                    let operations = [];
-                    for(let i=0; i<increments; i++) {
-                        operations.push(() => unlockedCounter++);
-                        operations.push(() => unlockedCounter++);
-                    }
-                    // Simulate race condition by randomizing execution
-                    for(let i = 0; i < 100; i++){
-                        const delay = Math.random() * 20;
+                const runUnlocked = (callback) => {
+                    let completed = 0;
+                    for(let i = 0; i < increments * 2; i++){
+                        // Simulate non-atomic read-modify-write
+                        const delay = Math.random() * 25;
                         setTimeout(() => {
                             let temp = unlockedCounter;
                             // small delay to simulate context switch
                             setTimeout(() => {
                                 unlockedCounter = temp + 1;
-                                unlockedCounterEl.textContent = unlockedCounter;
+                                unlockedCounterEl.textContent = unlockedCounter; // Update UI as it happens
+                                completed++;
+                                if (completed === increments * 2) callback();
                             }, Math.random() * 5);
                         }, delay);
                     }
                 };
                 
-                // Locked simulation
+                // Locked simulation (visualized as a clean, ordered process)
                 const runLocked = (callback) => {
                      let completed = 0;
                      for(let i = 0; i < increments * 2; i++) {
@@ -889,15 +882,13 @@ public class LoggerChallenge
                             lockedCounterEl.textContent = lockedCounter;
                             completed++;
                             if (completed === increments * 2) callback();
-                        }, i * 15);
+                        }, i * 10);
                      }
                 };
 
-                runUnlocked();
-                
-                runLocked(() => {
-                    // Final update after animations
-                    setTimeout(() => {
+                runUnlocked(() => {
+                     runLocked(() => {
+                        // Final update after animations
                         unlockedResultEl.textContent = unlockedCounter;
                         unlockedResultEl.classList.add(unlockedCounter === 200 ? 'text-green-600' : 'text-red-600');
                         
@@ -906,7 +897,7 @@ public class LoggerChallenge
                         
                         runSimBtn.disabled = false;
                         runSimBtn.textContent = 'Run Simulation';
-                    }, 500);
+                    });
                 });
             });
 
@@ -967,11 +958,9 @@ public class LoggerChallenge
                         optionEl.className = 'quiz-option p-3 border rounded-lg cursor-pointer transition-colors';
                         optionEl.textContent = option;
                         optionEl.addEventListener('click', () => {
-                            // Deselect siblings
-                            optionsContainer.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
-                            // Select this one
+                            if (optionEl.parentElement.querySelector('.selected')) return; // Already answered
                             optionEl.classList.add('selected');
-                            checkAnswers();
+                            checkAnswer(optionEl, q.answer);
                         });
                         optionsContainer.appendChild(optionEl);
                     });
@@ -979,44 +968,46 @@ public class LoggerChallenge
                     questionEl.appendChild(optionsContainer);
                     quizContainer.appendChild(questionEl);
                 });
-            }
-            
-            function checkAnswers() {
-                const selections = quizContainer.querySelectorAll('.quiz-option.selected');
-                if (selections.length !== quizData.length) {
-                    return; // Not all questions answered yet
-                }
-
-                let score = 0;
-                quizContainer.querySelectorAll('.p-6').forEach((questionEl, index) => {
-                    const selected = questionEl.querySelector('.quiz-option.selected');
-                    const correctAnswer = quizData[index].answer;
-                    
-                    // Disable further clicks
-                    questionEl.querySelectorAll('.quiz-option').forEach(o => o.style.pointerEvents = 'none');
-
-                    if (selected.textContent === correctAnswer) {
-                        score++;
-                        selected.classList.add('correct');
-                    } else {
-                        selected.classList.add('incorrect');
-                        // Highlight the correct one
-                        questionEl.querySelectorAll('.quiz-option').forEach(opt => {
-                            if (opt.textContent === correctAnswer) {
-                                opt.classList.add('correct');
-                            }
-                        });
-                    }
-                });
                 
-                showResults(score);
+                // Add a submit button
+                const submitBtn = document.createElement('button');
+                submitBtn.id = 'submit-quiz-btn';
+                submitBtn.className = 'w-full mt-6 px-6 py-3 bg-cyan-600 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed';
+                submitBtn.textContent = 'Submit Answers';
+                submitBtn.disabled = true;
+                submitBtn.addEventListener('click', showResults);
+                quizContainer.appendChild(submitBtn);
+
+                // Check if all questions are answered to enable submit
+                quizContainer.addEventListener('click', () => {
+                    const selections = quizContainer.querySelectorAll('.quiz-option.selected');
+                    submitBtn.disabled = selections.length !== quizData.length;
+                });
+            }
+
+            function checkAnswer(selectedOption, correctAnswer) {
+                const isCorrect = selectedOption.textContent === correctAnswer;
+                const options = selectedOption.parentElement.querySelectorAll('.quiz-option');
+
+                if (isCorrect) {
+                    selectedOption.classList.add('correct');
+                } else {
+                    selectedOption.classList.add('incorrect');
+                    options.forEach(opt => {
+                        if (opt.textContent === correctAnswer) {
+                            opt.classList.add('correct');
+                        }
+                    });
+                }
+                options.forEach(o => o.style.pointerEvents = 'none');
             }
             
-            function showResults(score) {
-                quizContainer.style.display = 'none';
+            function showResults() {
+                let score = quizContainer.querySelectorAll('.quiz-option.correct.selected').length;
                 quizScoreEl.textContent = score;
                 quizTotalEl.textContent = quizData.length;
                 quizResults.classList.remove('hidden');
+                document.getElementById('submit-quiz-btn').style.display = 'none';
             }
 
             retryBtn.addEventListener('click', buildQuiz);
@@ -1026,3 +1017,4 @@ public class LoggerChallenge
     </script>
 </body>
 </html>
+

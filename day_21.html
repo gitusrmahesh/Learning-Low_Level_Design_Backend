@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 21: ORM & EF Core Masterclass - Low-Level Design Bootcamp</title>
+    <!-- Chosen Palette: Slate & Cyan -->
+    <!-- Application Structure Plan: A comprehensive, single-page vertical report designed for deep learning. The structure is hierarchical, starting with the philosophical 'why' (ORM paradigm), moving to the architectural 'how' (EF Core internals), and then covering advanced practical application (modeling, querying, performance). A sticky Table of Contents is essential for navigating this large document. This structure best serves as both a step-by-step guide for learners and a quick reference for experienced developers. Key interactions include interactive diagrams with hover-based info, a detailed comparison table, an expanded quiz, and a multi-part challenge. -->
+    <!-- Visualization & Content Choices: Report Info: Object-Relational Impedance Mismatch. Goal: Visually explain the core problem ORMs solve. Viz/Presentation: HTML/CSS diagram with icons. Interaction: Hover over mismatch points to see explanations. Justification: A visual metaphor is powerful for this abstract concept. Report Info: EF Core Architecture. Goal: Demystify the internal components. Viz/Presentation: Styled HTML boxes in a flow diagram. Interaction: Hover for component descriptions. Justification: Clarifies how different parts of the framework interact. Report Info: Data Loading Strategies. Goal: Compare performance and use cases. Viz/Presentation: A detailed HTML table. Interaction: N/A, static comparison. Justification: A table is the clearest way to compare pros, cons, and syntax for multiple related concepts. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0891b2;
+            font-weight: 600;
+            border-left-color: #0891b2;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .copy-button:hover {
+            background-color: #334155;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .feedback { display: none; }
+        .feedback.correct { display: block; color: #16a34a; }
+        .feedback.incorrect { display: block; color: #dc2626; }
+        .solution { display: none; }
+        .diagram-item { position: relative; }
+        .diagram-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 8px;
+            background-color: #1e293b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            width: max-content;
+            max-width: 250px;
+            z-index: 10;
+        }
+        .diagram-item:hover .diagram-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <p class="text-cyan-600 font-semibold">Day 21 of 60</p>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight font-lexend">ORM & EF Core Masterclass</h2>
+            <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">A deep dive into the theory, architecture, and advanced application of Object-Relational Mapping with Entity Framework Core.</p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <main class="w-full lg:w-3/4">
+                <div class="space-y-20">
+                    
+                    <section id="paradigm" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">The ORM Paradigm: A Deep Dive</h3>
+                        <p class="mt-4 text-slate-600">Object-Relational Mapping is more than a convenience; it's a solution to a fundamental conflict in software development known as the <strong>Object-Relational Impedance Mismatch</strong>. Understanding this problem is key to mastering any ORM.</p>
+                        
+                        <div class="mt-8 space-y-8">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-xl font-semibold text-slate-800 font-lexend">The Impedance Mismatch Problem</h4>
+                                <p class="mt-3 text-slate-600">The object-oriented paradigm (used by C#) and the relational paradigm (used by SQL databases) represent data in fundamentally different ways. This mismatch creates several challenges:</p>
+                                
+                                <div class="mt-6 p-4 bg-slate-50 rounded-lg text-center">
+                                    
+                                    <h5 class="text-lg font-semibold text-slate-700 mb-4">Core Mismatches (Hover to learn more)</h5>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                        <div class="diagram-item bg-white p-3 rounded-lg shadow-md border border-red-200">
+                                            <span class="text-2xl">🧱</span> <p class="font-semibold text-red-800">Granularity</p>
+                                            <div class="diagram-tooltip">Objects can be complex with nested objects, while tables are flat rows of simple data types.</div>
+                                        </div>
+                                        <div class="diagram-item bg-white p-3 rounded-lg shadow-md border-blue-200">
+                                            <span class="text-2xl">👨‍👩‍👧</span> <p class="font-semibold text-blue-800">Inheritance</p>
+                                            <div class="diagram-tooltip">OOP has inheritance (e.g., `Manager` is a type of `Employee`), which has no direct equivalent in relational databases.</div>
+                                        </div>
+                                        <div class="diagram-item bg-white p-3 rounded-lg shadow-md border-green-200">
+                                            <span class="text-2xl">🆔</span> <p class="font-semibold text-green-800">Identity</p>
+                                            <div class="diagram-tooltip">Objects are identified by reference in memory (`obj1 === obj2`), while database rows are identified by a primary key.</div>
+                                        </div>
+                                        <div class="diagram-item bg-white p-3 rounded-lg shadow-md border-purple-200">
+                                            <span class="text-2xl">🔗</span> <p class="font-semibold text-purple-800">Associations</p>
+                                            <div class="diagram-tooltip">Objects navigate relationships via direct references (e.g., `order.Customer`), while databases use foreign keys to join tables.</div>
+                                        </div>
+                                    </div>
+                                    <p class="mt-4 text-slate-600">The ORM's job is to bridge these gaps, creating a "virtual object database" that lets you work with C# objects while it handles the complex SQL translation behind the scenes.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-xl font-semibold text-slate-800 font-lexend">ORM Patterns: Data Mapper vs. Active Record</h4>
+                                <p class="mt-3 text-slate-600">Not all ORMs work the same way. Two dominant patterns exist:</p>
+                                <ul class="mt-4 list-disc list-inside space-y-3 text-slate-600">
+                                    <li><strong>Data Mapper (EF Core's approach):</strong> This pattern separates the in-memory objects (your entities) from the database. A "mapper" layer (the `DbContext`) sits in between, responsible for moving data back and forth. This promotes separation of concerns; your domain objects don't need to know how they are saved.</li>
+                                    <li><strong>Active Record (e.g., Ruby on Rails' default):</strong> In this pattern, the object itself is responsible for its own persistence. An object would have methods like `Save()` or `Delete()`. While simpler for basic CRUD, it tightly couples your domain logic to your data access logic.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="architecture" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">EF Core Architecture</h3>
+                        <p class="mt-4 text-slate-600">To use EF Core effectively, you need to understand its key architectural components. It's not a black box; it's a layered and extensible framework.</p>
+
+                        <div class="mt-6 p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                           <h5 class="text-lg font-semibold text-slate-700 mb-6 text-center">EF Core's Internal Pipeline (Hover for details)</h5>
+                           <div class="flex flex-col items-center space-y-4 font-mono text-sm">
+                               <div class="diagram-item bg-slate-100 p-3 rounded-lg w-full md:w-3/4 text-center shadow">
+                                   Your Application Code (`.Where(p => p.Price > 10)`)
+                                   <div class="diagram-tooltip">You write strongly-typed LINQ queries against your DbContext's DbSet properties.</div>
+                               </div>
+                               <div class="text-2xl text-slate-400">↓</div>
+                               <div class="diagram-item bg-cyan-50 border border-cyan-200 p-3 rounded-lg w-full md:w-3/4 text-center shadow">
+                                   DbContext & DbSet
+                                   <div class="diagram-tooltip">The DbContext assembles the LINQ query into an Expression Tree, a data structure representing your query logic.</div>
+                               </div>
+                               <div class="text-2xl text-slate-400">↓</div>
+                               <div class="diagram-item bg-cyan-50 border border-cyan-200 p-3 rounded-lg w-full md:w-3/4 text-center shadow">
+                                   LINQ Provider / Query Compiler
+                                   <div class="diagram-tooltip">This core component traverses the Expression Tree and translates it into a database-specific query language (e.g., SQL).</div>
+                               </div>
+                               <div class="text-2xl text-slate-400">↓</div>
+                               <div class="diagram-item bg-cyan-50 border border-cyan-200 p-3 rounded-lg w-full md:w-3/4 text-center shadow">
+                                   Database Provider (e.g., `Microsoft.EntityFrameworkCore.SqlServer`)
+                                   <div class="diagram-tooltip">The provider takes the compiled query and handles the actual communication with the database via a low-level library (e.g., ADO.NET).</div>
+                               </div>
+                               <div class="text-2xl text-slate-400">⇅</div>
+                               <div class="diagram-item bg-teal-50 border border-teal-200 p-3 rounded-lg w-full md:w-3/4 text-center shadow">
+                                   Database (SQL Server, PostgreSQL, SQLite, etc.)
+                                   <div class="diagram-tooltip">The database executes the SQL and returns the raw results (rows and columns).</div>
+                               </div>
+                                <div class="text-2xl text-slate-400">↑</div>
+                                <div class="diagram-item bg-cyan-50 border border-cyan-200 p-3 rounded-lg w-full md:w-3/4 text-center shadow">
+                                   Materializer & Change Tracker
+                                   <div class="diagram-tooltip">EF Core receives the raw data, "materializes" it into your C# entity objects, and the Change Tracker keeps a snapshot of the original state for later updates.</div>
+                               </div>
+                           </div>
+                        </div>
+                    </section>
+
+                    <section id="modeling" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">Advanced Modeling & Configuration</h3>
+                        <p class="mt-4 text-slate-600">EF Core provides two primary ways to configure your data model: <strong>Data Annotations</strong> and the <strong>Fluent API</strong>. While Data Annotations are simpler, the Fluent API offers far more power and fine-grained control.</p>
+                        
+                        <div class="mt-8 space-y-8">
+                             <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-lg font-semibold text-slate-800 font-lexend">Data Annotations vs. Fluent API</h4>
+                                <p class="mt-2 text-slate-600">A common configuration using both approaches.</p>
+                                <div class="grid md:grid-cols-2 gap-6 mt-4">
+                                    <div>
+                                        <h5 class="font-semibold text-slate-700">Data Annotations</h5>
+                                        <p class="text-sm text-slate-500 mb-2">Attributes placed directly on your entity classes and properties.</p>
+                                        <div class="code-block">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+[Table("WebsiteBlogs")]
+public class Blog
+{
+    [Key]
+    public int BlogId { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string Title { get; set; }
+
+    [NotMapped]
+    public int LoadedPostCount { get; set; }
+}</code></pre>
+                                        </div>
+                                    </div>
+                                     <div>
+                                        <h5 class="font-semibold text-slate-700">Fluent API</h5>
+                                        <p class="text-sm text-slate-500 mb-2">Configuration is done in your DbContext's `OnModelCreating` method.</p>
+                                        <div class="code-block">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity&lt;Blog&gt;(entity => 
+    {
+        entity.ToTable("WebsiteBlogs");
+
+        entity.HasKey(b => b.BlogId);
+
+        entity.Property(b => b.Title)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        entity.Ignore(b => b.LoadedPostCount);
+    });
+}</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 text-amber-800 rounded-r-lg">
+                                    <p><strong class="font-semibold">Best Practice:</strong> Prefer the Fluent API. It keeps your domain models (entities) clean of persistence-related concerns (a concept called "Persistence Ignorance") and offers configuration options not available via annotations.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-xl font-semibold text-slate-800 font-lexend">Configuring Many-to-Many Relationships</h4>
+                                <p class="mt-3 text-slate-600">Let's model a relationship between `Post` and `Tag`. A post can have many tags, and a tag can be on many posts.</p>
+                                <div class="code-block mt-4">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+// Entities
+public class Post
+{
+    public int PostId { get; set; }
+    public string Title { get; set; }
+    public ICollection&lt;Tag&gt; Tags { get; set; }
+}
+
+public class Tag
+{
+    public int TagId { get; set; }
+    public string Name { get; set; }
+    public ICollection&lt;Post&gt; Posts { get; set; }
+}
+
+// Fluent API Configuration in OnModelCreating
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity&lt;Post&gt;()
+        .HasMany(p => p.Tags)
+        .WithMany(t => t.Posts)
+        .UsingEntity(j => j.ToTable("PostTags")); // EF Core creates the join table automatically
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="querying" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">Advanced Querying</h3>
+                        <p class="mt-4 text-slate-600">How you load data, especially related data, has the biggest impact on your application's performance. EF Core provides three primary strategies for loading related entities.</p>
+                        
+                        <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">Comparison of Data Loading Strategies</h4>
+                            <table class="w-full mt-4 border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100">
+                                        <th class="border p-3 text-left font-semibold text-slate-700">Strategy</th>
+                                        <th class="border p-3 text-left font-semibold text-slate-700">Mechanism</th>
+                                        <th class="border p-3 text-left font-semibold text-slate-700">Pros</th>
+                                        <th class="border p-3 text-left font-semibold text-slate-700">Cons</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-slate-600">
+                                    <tr>
+                                        <td class="border p-3 font-semibold text-cyan-700">Eager Loading</td>
+                                        <td class="border p-3">Use <code class="bg-slate-100 font-mono text-xs p-1 rounded">.Include()</code> and <code class="bg-slate-100 font-mono text-xs p-1 rounded">.ThenInclude()</code>. EF Core generates a single, complex SQL query with JOINs to fetch all data at once.</td>
+                                        <td class="border p-3">Predictable, avoids N+1 problem. All required data is retrieved in one database round-trip.</td>
+                                        <td class="border p-3">Can lead to very large, complex queries that are slow if you include too many relationships. May over-fetch data.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border p-3 font-semibold text-cyan-700">Explicit Loading</td>
+                                        <td class="border p-3">Load the main entity first, then use <code class="bg-slate-100 font-mono text-xs p-1 rounded">.Entry().Collection().Load()</code> or <code class="bg-slate-100 font-mono text-xs p-1 rounded">.Entry().Reference().Load()</code> later.</td>
+                                        <td class="border p-3">Gives fine-grained control. Useful when you only need related data based on a condition determined after the initial query.</td>
+                                        <td class="border p-3">Requires multiple database round-trips. More verbose code.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="border p-3 font-semibold text-cyan-700">Lazy Loading</td>
+                                        <td class="border p-3">Requires installing <code class="bg-slate-100 font-mono text-xs p-1 rounded">Microsoft.EntityFrameworkCore.Proxies</code> and making navigation properties <code class="bg-slate-100 font-mono text-xs p-1 rounded">virtual</code>. Related data is loaded automatically the first time you access the navigation property.</td>
+                                        <td class="border p-3">Simple to write. Seems "magical".</td>
+                                        <td class="border p-3"><strong>Dangerous!</strong> Very easily leads to the N+1 query problem, causing severe performance degradation. Often disabled in production apps for this reason.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">Querying Examples</h4>
+                             <div class="code-block mt-4">
+                                <button class="copy-button">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+// Eager Loading: Get blogs, their posts, and the author of each post
+var blogs = context.Blogs
+    .Include(b => b.Posts)
+        .ThenInclude(p => p.Author)
+    .ToList();
+
+// Explicit Loading: Get a blog, then later decide to load its posts
+var blog = context.Blogs.Find(1);
+// ... some other logic ...
+if (userNeedsPosts)
+{
+    context.Entry(blog).Collection(b => b.Posts).Load();
+}
+
+// Global Query Filters: Automatically apply a filter to all queries for an entity
+// In OnModelCreating:
+modelBuilder.Entity&lt;Post&gt;().HasQueryFilter(p => !p.IsDeleted);
+
+// Now, this query will automatically add "WHERE IsDeleted = 0"
+var posts = context.Posts.ToList();
+</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="saving" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">Advanced Saving & Transactions</h3>
+                        <p class="mt-4 text-slate-600">Saving data is orchestrated by the `DbContext`'s change tracker and the `SaveChanges()` method, which implements the Unit of Work pattern.</p>
+
+                        <div class="mt-8 space-y-8">
+                             <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-xl font-semibold text-slate-800 font-lexend">The `SaveChanges` Process</h4>
+                                <ol class="mt-3 list-decimal list-inside space-y-2 text-slate-600">
+                                    <li>When you query an entity, the `DbContext`'s change tracker stores a snapshot of its original property values.</li>
+                                    <li>When you modify a property, the change tracker marks the entity's state as `Modified`. Adding a new entity marks it as `Added`, and removing one marks it as `Deleted`.</li>
+                                    <li>When you call `SaveChanges()`, EF Core implicitly begins a database transaction.</li>
+                                    <li>It inspects the change tracker for all entities with a non-`Unchanged` state.</li>
+                                    <li>It generates and executes the appropriate `INSERT`, `UPDATE`, or `DELETE` statements for each changed entity.</li>
+                                    <li>If all statements execute successfully, it commits the transaction. If any fail, it rolls back the transaction, ensuring data integrity.</li>
+                                </ol>
+                             </div>
+                             <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-xl font-semibold text-slate-800 font-lexend">Explicit Transactions & Concurrency</h4>
+                                <p class="mt-3 text-slate-600">For operations spanning multiple `SaveChanges` calls or involving non-EF Core logic, you can control transactions manually.</p>
+                                <div class="code-block mt-4">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+using var transaction = context.Database.BeginTransaction();
+
+try
+{
+    // Operation 1
+    var blog = context.Blogs.First();
+    blog.Url = "new-url.com";
+    context.SaveChanges();
+
+    // Operation 2 (could be raw SQL or another service call)
+    context.Database.ExecuteSqlRaw("UPDATE Posts SET IsArchived = 1 WHERE BlogId = {0}", blog.BlogId);
+
+    // Commit transaction if all operations succeed
+    transaction.Commit();
+}
+catch (Exception)
+{
+    // If anything fails, the transaction is rolled back by the 'using' statement's disposal
+    // No changes will be saved to the database.
+    // Log the error...
+    throw;
+}
+</code></pre>
+                             </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="migrations" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">Migrations In-Depth</h3>
+                        <p class="mt-4 text-slate-600">Migrations are the source of truth for your database schema. Mastering the workflow is critical for team-based development and reliable deployments.</p>
+                        <div class="mt-8 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">Production Migration Strategies</h4>
+                             <ul class="mt-3 list-disc list-inside space-y-3 text-slate-600">
+                                <li><strong>SQL Scripts (Recommended):</strong> Instead of running `database update` directly on a production server, generate idempotent SQL scripts. This allows for review by a DBA, integration into a CI/CD pipeline, and controlled execution during a deployment window.
+                                    <div class="code-block mt-2">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-bash">dotnet ef migrations script --output migration.sql --idempotent</code></pre>
+                                    </div>
+                                </li>
+                                <li><strong>Application Startup:</strong> You can call `context.Database.Migrate()` when your application starts. This is simple for small apps but less flexible. It can cause issues in multi-instance deployments (race conditions) and requires your application user to have schema modification permissions, which is often a security risk.</li>
+                             </ul>
+                        </div>
+                    </section>
+
+                     <section id="performance" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">Performance Tuning</h3>
+                        <p class="mt-4 text-slate-600">An ORM is a powerful tool, but it's not magic. Poorly written queries can still bring your application to a crawl. Here are key areas to focus on for performance.</p>
+                        <div class="mt-8 space-y-8">
+                             <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <h4 class="text-xl font-semibold text-slate-800 font-lexend">Key Optimization Techniques</h4>
+                                 <ul class="mt-3 list-disc list-inside space-y-3 text-slate-600">
+                                    <li><strong>Avoid the N+1 Problem:</strong> This is the most common EF Core performance pitfall. It occurs when you loop over a collection and trigger a separate database query for each item (often caused by lazy loading). Always use Eager Loading (`.Include()`) to fetch all required data in a single query.</li>
+                                    <li><strong>Use Projections (`.Select()`):</strong> Don't query full entities if you only need a few properties. Projecting onto a DTO (Data Transfer Object) or anonymous type generates a more efficient SQL query that only selects the columns you need.
+                                        <div class="code-block mt-2">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp">var postTitles = context.Posts.Select(p => new { p.Title, p.PublishedOn }).ToList();</code></pre>
+                                        </div>
+                                    </li>
+                                    <li><strong>No-Tracking Queries:</strong> If you are reading data for display purposes only and don't intend to modify it, use `.AsNoTracking()`. This tells EF Core to skip the change tracking process, which significantly speeds up query execution and reduces memory usage.</li>
+                                    <li><strong>Batch Operations:</strong> For bulk updates or deletes, `SaveChanges` can be inefficient as it loads each entity into memory. Use `ExecuteUpdate` and `ExecuteDelete` (EF Core 7+) for high-performance batch operations that run directly against the database.</li>
+                                </ul>
+                             </div>
+                        </div>
+                    </section>
+
+                    <section id="casestudy" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">🚀 Case Study: E-Commerce System</h3>
+                        <p class="mt-4 text-slate-600">This expanded case study models a simple e-commerce system with Customers, Products, and Orders, demonstrating a many-to-many relationship (Order-Product) and one-to-many (Customer-Order).</p>
+                        <div class="code-block mt-6">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+// ===== 1. Models (Entities) =====
+public class Customer {
+    public int CustomerId { get; set; }
+    public string Name { get; set; }
+    public ICollection&lt;Order&gt; Orders { get; set; } = new List&lt;Order&gt;();
+}
+
+public class Order {
+    public int OrderId { get; set; }
+    public DateTime OrderDate { get; set; }
+    public int CustomerId { get; set; }
+    public Customer Customer { get; set; }
+    public ICollection&lt;Product&gt; Products { get; set; } = new List&lt;Product&gt;();
+}
+
+public class Product {
+    public int ProductId { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public ICollection&lt;Order&gt; Orders { get; set; } = new List&lt;Order&gt;();
+}
+
+// ===== 2. DbContext with Fluent API Configuration =====
+public class CommerceContext : DbContext {
+    public DbSet&lt;Customer&gt; Customers { get; set; }
+    public DbSet&lt;Order&gt; Orders { get; set; }
+    public DbSet&lt;Product&gt; Products { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+        => options.UseSqlite("Data Source=commerce.db").LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information);
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity&lt;Customer&gt;().HasKey(c => c.CustomerId);
+        modelBuilder.Entity&lt;Product&gt;().HasKey(p => p.ProductId);
+        modelBuilder.Entity&lt;Order&gt;()
+            .HasOne(o => o.Customer)
+            .WithMany(c => c.Orders)
+            .HasForeignKey(o => o.CustomerId);
+        
+        // Configure the many-to-many relationship between Order and Product
+        modelBuilder.Entity&lt;Order&gt;()
+            .HasMany(o => o.Products)
+            .WithMany(p => p.Orders)
+            .UsingEntity(j => j.ToTable("OrderProduct")); // EF Core will create the join table
+    }
+}
+
+// ===== 3. Main Application Logic =====
+public class CommerceSystem {
+    public static void Run() {
+        using var db = new CommerceContext();
+        db.Database.EnsureDeleted();
+        db.Database.EnsureCreated();
+
+        // Seed data
+        var customer1 = new Customer { Name = "Alice" };
+        var product1 = new Product { Name = "Laptop", Price = 1200 };
+        var product2 = new Product { Name = "Mouse", Price = 25 };
+        db.AddRange(customer1, product1, product2);
+        db.SaveChanges();
+
+        // Create an order
+        Console.WriteLine("Placing a new order...");
+        var newOrder = new Order {
+            OrderDate = DateTime.UtcNow,
+            Customer = customer1,
+            Products = { product1, product2 }
+        };
+        db.Orders.Add(newOrder);
+        db.SaveChanges();
+        Console.WriteLine("Order placed successfully!");
+
+        // Query data efficiently using projection
+        Console.WriteLine("\nFetching order summaries for customer 'Alice'...");
+        var orderSummaries = db.Orders
+            .AsNoTracking() // Read-only query
+            .Where(o => o.Customer.Name == "Alice")
+            .Select(o => new { // Projecting to an anonymous type
+                o.OrderId,
+                o.OrderDate,
+                ProductCount = o.Products.Count(),
+                TotalPrice = o.Products.Sum(p => p.Price)
+            })
+            .ToList();
+
+        foreach (var summary in orderSummaries) {
+            Console.WriteLine($"- Order ID: {summary.OrderId}, Date: {summary.OrderDate.ToShortDateString()}, Items: {summary.ProductCount}, Total: ${summary.TotalPrice}");
+        }
+    }
+}
+</code></pre>
+                        </div>
+                    </section>
+                    
+                    <section id="quiz" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">🧠 Knowledge Check Quiz</h3>
+                        <p class="mt-4 text-slate-600">Test your understanding of these advanced concepts.</p>
+                        <div id="quiz-container" class="mt-6 space-y-6">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 quiz-question">
+                                <p class="font-semibold text-slate-800">1. What is the primary advantage of the Fluent API over Data Annotations?</p>
+                                <div class="mt-4 space-y-2">
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">A) It is easier to read.</button>
+                                    <button data-correct="true" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">B) It separates persistence concerns from the domain model and offers more configuration options.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">C) It results in faster query execution.</button>
+                                </div>
+                                <div class="feedback mt-3 p-2 rounded-md text-sm font-medium">
+                                    <span class="correct-text">Correct! The Fluent API promotes "Persistence Ignorance" and provides the most comprehensive set of configuration methods.</span>
+                                    <span class="incorrect-text">Incorrect. The main benefit is the clean separation of concerns and the greater power it provides.</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 quiz-question">
+                                <p class="font-semibold text-slate-800">2. You need to display a list of 1000 product names and prices. Which query is most performant?</p>
+                                <div class="mt-4 space-y-2">
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">A) `context.Products.AsNoTracking().ToList()`</button>
+                                    <button data-correct="true" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">B) `context.Products.AsNoTracking().Select(p => new {p.Name, p.Price}).ToList()`</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">C) `context.Products.ToList()`</button>
+                                </div>
+                                <div class="feedback mt-3 p-2 rounded-md text-sm font-medium">
+                                    <span class="correct-text">Correct! This uses both no-tracking and projection, minimizing data transfer and memory allocation.</span>
+                                    <span class="incorrect-text">Incorrect. The most performant query for read-only data uses both `.AsNoTracking()` and `.Select()` to only get the data it needs.</span>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 quiz-question">
+                                <p class="font-semibold text-slate-800">3. What is the "N+1 Problem" typically caused by?</p>
+                                <div class="mt-4 space-y-2">
+                                    <button data-correct="true" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">A) Using Lazy Loading inside a loop.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">B) Using Eager Loading with too many `.Include()` calls.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 border rounded-lg hover:bg-slate-50 transition">C) Forgetting to call `SaveChanges()`.</button>
+                                </div>
+                                <div class="feedback mt-3 p-2 rounded-md text-sm font-medium">
+                                    <span class="correct-text">Correct! One initial query (1) fetches the main entities, and then for each entity (N), a separate query is sent to fetch related data.</span>
+                                    <span class="incorrect-text">Incorrect. The N+1 problem is the classic pitfall of lazy loading, where iterating a collection triggers N additional queries.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="challenge" class="scroll-mt-20">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-l-4 border-cyan-500 pl-4">🏆 Self-Assessment Challenge</h3>
+                        <div class="mt-4 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <p class="font-semibold text-slate-800">Your task: Implement Product Reviews.</p>
+                            <p class="mt-3 text-slate-600">Extend the E-Commerce case study by adding a `Review` entity. A `Review` is written by a `Customer` for a `Product`.</p>
+                            <ul class="mt-4 list-disc list-inside space-y-2 text-slate-600">
+                                <li>Define a `Review` entity with `ReviewId`, `Stars` (1-5), `Comment` text, `CustomerId`, and `ProductId`.</li>
+                                <li>Update `Customer` and `Product` models with navigation properties for their reviews.</li>
+                                <li>Configure the new relationships using the Fluent API in `OnModelCreating`.</li>
+                                <li>Write a new method to add a review from a customer for a product.</li>
+                                <li>Write a performant query that retrieves the average star rating for a specific product, using a projection and no tracking.</li>
+                            </ul>
+                            <button id="toggle-solution-btn" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none">
+                                Show Solution
+                            </button>
+                            <div id="challenge-solution" class="solution mt-6 border-t pt-6">
+                                <h4 class="font-semibold text-slate-800">Challenge Solution Code:</h4>
+                                <div class="code-block mt-4">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">
+// ===== 1. New and Updated Models =====
+public class Review {
+    public int ReviewId { get; set; }
+    public int Stars { get; set; }
+    public string Comment { get; set; }
+    public int CustomerId { get; set; }
+    public Customer Customer { get; set; }
+    public int ProductId { get; set; }
+    public Product Product { get; set; }
+}
+public class Customer { // Updated
+    public int CustomerId { get; set; }
+    public string Name { get; set; }
+    public ICollection&lt;Order&gt; Orders { get; set; } = new List&lt;Order&gt;();
+    public ICollection&lt;Review&gt; Reviews { get; set; } = new List&lt;Review&gt;(); // Add this
+}
+public class Product { // Updated
+    public int ProductId { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public ICollection&lt;Order&gt; Orders { get; set; } = new List&lt;Order&gt;();
+    public ICollection&lt;Review&gt; Reviews { get; set; } = new List&lt;Review&gt;(); // Add this
+}
+
+// ===== 2. Updated DbContext =====
+public class CommerceContext : DbContext {
+    // ... existing DbSets
+    public DbSet&lt;Review&gt; Reviews { get; set; } // Add this
+    
+    // ... OnConfiguring ...
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        // ... existing configurations
+        
+        modelBuilder.Entity&lt;Review&gt;(entity => {
+            entity.HasKey(r => r.ReviewId);
+            entity.Property(r => r.Comment).HasMaxLength(500);
+            entity.HasOne(r => r.Customer)
+                .WithMany(c => c.Reviews)
+                .HasForeignKey(r => r.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent deleting a customer if they have reviews
+            
+            entity.HasOne(r => r.Product)
+                .WithMany(p => p.Reviews)
+                .HasForeignKey(r => r.ProductId);
+        });
+    }
+}
+
+// ===== 3. New Methods in CommerceSystem =====
+public static void AddReview(int customerId, int productId, int stars, string comment) {
+    using var db = new CommerceContext();
+    var review = new Review {
+        CustomerId = customerId,
+        ProductId = productId,
+        Stars = stars,
+        Comment = comment
+    };
+    db.Reviews.Add(review);
+    db.SaveChanges();
+    Console.WriteLine($"Review added for product {productId} by customer {customerId}.");
+}
+
+public static void GetProductAverageRating(int productId) {
+    using var db = new CommerceContext();
+    var avgRating = db.Reviews
+        .AsNoTracking()
+        .Where(r => r.ProductId == productId)
+        .Average(r => (double?)r.Stars); // Average can return null if no reviews
+
+    if (avgRating.HasValue) {
+        Console.WriteLine($"Product {productId} has an average rating of {avgRating:F2} stars.");
+    } else {
+        Console.WriteLine($"Product {productId} has no reviews yet.");
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </main>
+
+            <aside class="w-full lg:w-1/4">
+                <div class="sticky top-20">
+                    <h3 class="font-semibold text-slate-800 font-lexend">On this page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#paradigm" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">ORM Paradigm</a></li>
+                            <li><a href="#architecture" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">EF Core Architecture</a></li>
+                            <li><a href="#modeling" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Advanced Modeling</a></li>
+                            <li><a href="#querying" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Advanced Querying</a></li>
+                            <li><a href="#saving" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Advanced Saving</a></li>
+                            <li><a href="#migrations" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Migrations In-Depth</a></li>
+                            <li><a href="#performance" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Performance Tuning</a></li>
+                            <li><a href="#casestudy" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-cyan-600 hover:border-cyan-600">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Copy to Clipboard
+            document.querySelectorAll('.code-block').forEach(block => {
+                const button = block.querySelector('.copy-button');
+                button.addEventListener('click', async () => {
+                    const code = block.querySelector('code').innerText;
+                    await navigator.clipboard.writeText(code);
+                    button.textContent = 'Copied!';
+                    setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+                });
+            });
+
+            // TOC active state
+            const sections = document.querySelectorAll('main section');
+            const tocLinks = document.querySelectorAll('#toc a');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        tocLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, { rootMargin: "-30% 0px -70% 0px" });
+            sections.forEach(section => observer.observe(section));
+
+            // Quiz
+            document.querySelectorAll('.quiz-question').forEach(question => {
+                const options = question.querySelectorAll('.quiz-option');
+                options.forEach(option => {
+                    option.addEventListener('click', () => {
+                        const isCorrect = option.getAttribute('data-correct') === 'true';
+                        const feedback = question.querySelector('.feedback');
+                        options.forEach(opt => {
+                            opt.disabled = true;
+                            if (opt.getAttribute('data-correct') === 'true') {
+                                opt.classList.add('correct');
+                            }
+                        });
+                        if (!isCorrect) {
+                            option.classList.add('incorrect');
+                            feedback.classList.add('incorrect');
+                        } else {
+                            feedback.classList.add('correct');
+                        }
+                    });
+                });
+            });
+
+            // Challenge Solution Toggle
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionDiv = document.getElementById('challenge-solution');
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = solutionDiv.style.display === 'none' || solutionDiv.style.display === '';
+                solutionDiv.style.display = isHidden ? 'block' : 'none';
+                toggleBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+            });
+        });
+    </script>
+</body>
+</html>

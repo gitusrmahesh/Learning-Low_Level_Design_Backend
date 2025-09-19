@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 15: Delegates & Events - Advanced .NET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application is designed as a single-column, long-form educational module with a sticky Table of Contents (TOC) on the right for easy navigation. This structure was chosen because it's a proven format for learning, allowing users to either read linearly to build knowledge progressively or jump directly to specific topics of interest. The flow is from foundational theory (Delegates) to applied concepts (Events, Pub/Sub), practical coding exercises of increasing difficulty, a real-world case study, and finally, knowledge reinforcement through a quiz and a self-assessment challenge. This top-to-bottom, simple-to-complex flow maximizes comprehension for a technical subject. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Publisher-Subscriber Model -> Goal: Organize/Relationships -> Viz/Method: HTML/CSS Diagram -> Interaction: Static visual clarity -> Justification: A visual diagram simplifies the abstract relationship between publishers, subscribers, and the event itself, making it more intuitive than text alone.
+        - Report Info: Event Sequence -> Goal: Show Process/Change -> Viz/Method: HTML/CSS Sequence Diagram -> Interaction: Static visual flow -> Justification: A sequence diagram is the standard and most effective way to illustrate the step-by-step timeline of an event firing and being handled.
+        - Report Info: Delegates vs. Events -> Goal: Compare -> Viz/Method: HTML Table -> Interaction: None -> Justification: A table provides a clear, side-by-side comparison of features, which is ideal for highlighting nuanced differences between related concepts.
+        - All code examples are presented in styled blocks with a copy-to-clipboard button for practical utility.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            background-color: #475569;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #334155;
+        }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            transform: translateX(4px);
+        }
+        .line {
+            border-left: 2px dashed #94a3b8;
+        }
+        .arrow {
+            position: relative;
+            padding-right: 20px;
+        }
+        .arrow::after {
+            content: '►';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #334155;
+        }
+        .lifeline {
+            border-left: 2px solid #64748b;
+        }
+        .message {
+            position: relative;
+            border-bottom: 1.5px solid #334155;
+        }
+        .message::after {
+            content: '►';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%) scaleX(1.2);
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=3" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="text-center mb-12">
+            <p class="text-sky-600 font-semibold">Advanced .NET Concepts (Days 15–21)</p>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">Day 15: Delegates & Events</h2>
+            <p class="mt-3 text-slate-600 max-w-2xl mx-auto">Mastering the backbone of event-driven architecture in .NET for building responsive, decoupled, and scalable applications.</p>
+        </div>
+
+        <div class="lg:grid lg:grid-cols-12 lg:gap-12">
+            <div class="lg:col-span-9">
+
+                <section id="theory" class="space-y-8">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Theory Deep Dive</h3>
+                    
+                    <div class="p-6 bg-white rounded-xl shadow-sm">
+                        <h4 class="text-xl font-semibold text-slate-900">1. Delegates in C#: The What and The Why</h4>
+                        <p class="mt-2 text-slate-600">
+                            Before understanding what a delegate *is*, it's crucial to understand *why* it exists. In software design, a common problem is **decoupling**—allowing two components to communicate without being explicitly aware of each other's concrete types. How can Class A call a method in Class B if Class A has no reference to Class B?
+                        </p>
+                        <p class="mt-3 text-slate-600">
+                           This is where delegates come in. A delegate is a **type that defines a method signature**. It acts as a contract. Any method from any class that matches this signature can be assigned to an instance of that delegate. Essentially, a delegate is a type-safe object that "holds" a reference to a method.
+                        </p>
+                        <p class="mt-3 text-slate-600">
+                            <strong>Analogy: The Power Outlet.</strong> Think of a wall socket. The socket (the delegate) defines a very specific contract: the shape of the prongs, the voltage, the frequency. It doesn't know or care if you plug in a lamp, a laptop charger, or a vacuum cleaner (the methods). As long as the appliance's plug (the method's signature) matches the socket's contract, it will work. The socket safely "invokes" the appliance's function (providing it with power).
+                        </p>
+
+                        <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+                             <p class="font-bold text-sky-800">Core Purpose</p>
+                             <p class="text-sky-700 mt-1">Delegates are the foundation for implementing callback mechanisms, event-driven programming, and LINQ in .NET. They provide a way to pass methods as arguments to other methods.</p>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <p class="font-semibold text-slate-700">Syntax: Declaration & Instantiation</p>
+                            <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// 1. DECLARE: This defines the "contract" or method signature.
+// Any method that takes a string and returns void can be assigned to this delegate.
+public delegate void LogHandler(string message);
+
+public class Logger 
+{
+    public void LogToConsole(string msg) { Console.WriteLine($"CONSOLE: {msg}"); }
+    public void LogToFile(string msg) { /* ... code to write to file ... */ Console.WriteLine($"FILE: {msg}"); }
+}
+
+// 2. INSTANTIATE & INVOKE
+var logger = new Logger();
+LogHandler consoleLogger = logger.LogToConsole; // Assigning the method (note: no parentheses)
+consoleLogger("Application started."); // Invokes the LogToConsole method
+
+LogHandler fileLogger = logger.LogToFile;
+fileLogger("User logged in.");</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+
+                        <h5 class="text-lg font-semibold text-slate-800 mt-6">The Evolution: Anonymous Methods & Lambda Expressions</h5>
+                        <p class="mt-2 text-slate-600">Creating a separate, named method just for a delegate can be cumbersome. C# introduced syntactic sugar to make this easier.</p>
+                        <ul class="list-disc list-inside mt-2 space-y-4 text-slate-600">
+                           <li><strong>Anonymous Methods (C# 2.0):</strong> Allowed defining an inline method.
+                               <div class="code-block mt-1">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">LogHandler anonymousLogger = delegate(string msg) {
+    Console.WriteLine($"ANONYMOUS: {msg}");
+};
+anonymousLogger("Processing data.");</code></pre>
+                                <button class="copy-btn">Copy</button>
+                               </div>
+                           </li>
+                           <li><strong>Lambda Expressions (C# 3.0):</strong> A far more concise and powerful syntax using the `=>` operator. This is the modern, preferred way.
+                               <div class="code-block mt-1">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">LogHandler lambdaLogger = (msg) => Console.WriteLine($"LAMBDA: {msg}");
+lambdaLogger("Task complete.");</code></pre>
+                                <button class="copy-btn">Copy</button>
+                               </div>
+                           </li>
+                        </ul>
+                        
+                        <h5 class="text-lg font-semibold text-slate-800 mt-6">Built-in Generic Delegates: `Action`, `Func`, `Predicate`</h5>
+                        <p class="mt-2 text-slate-600">Instead of defining custom delegates all the time, .NET provides generic delegates for most common scenarios.</p>
+                         <ul class="list-disc list-inside mt-2 space-y-4 text-slate-600">
+                           <li><strong>`Action<...>`:</strong> For methods that do not return a value (return `void`). It has versions with 0 to 16 input parameters.
+                               <div class="code-block mt-1">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">Action<string> printMessage = (msg) => Console.WriteLine(msg);
+Action<int, int> addAndPrint = (a, b) => Console.WriteLine(a + b);
+printMessage("Hello Action!");
+addAndPrint(5, 10);</code></pre>
+                                <button class="copy-btn">Copy</button>
+                               </div>
+                           </li>
+                           <li><strong>`Func<..., TResult>`:</strong> For methods that **do** return a value. The *last* generic type parameter is always the return type.
+                               <div class="code-block mt-1">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">Func<int, int, int> multiply = (a, b) => a * b;
+int result = multiply(7, 8); // result is 56
+Console.WriteLine(result);</code></pre>
+                                <button class="copy-btn">Copy</button>
+                               </div>
+                           </li>
+                            <li><strong>`Predicate<T>`:</strong> A special version of `Func` that always takes one parameter and returns a `bool`. Often used for checking conditions.
+                               <div class="code-block mt-1">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">Predicate<int> isEven = (number) => number % 2 == 0;
+bool check = isEven(10); // check is true
+Console.WriteLine(check);</code></pre>
+                                <button class="copy-btn">Copy</button>
+                               </div>
+                           </li>
+                        </ul>
+
+                        <h5 class="text-lg font-semibold text-slate-800 mt-6">Multicast Delegates</h5>
+                        <p class="mt-2 text-slate-600">Delegates have a powerful feature: an instance can hold references to multiple methods. Using `+=`, you can add methods to an invocation list. When the delegate is invoked, all methods are called in the order they were added.</p>
+                        <div class="code-block mt-2">
+                             <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">LogHandler allHandlers = logger.LogToConsole;
+allHandlers += logger.LogToFile; // Add another handler
+allHandlers += (msg) => Console.WriteLine($"AUDIT: Action '{msg}' performed.");
+
+// This will invoke LogToConsole, LogToFile, and the lambda expression in order.
+allHandlers("User deleted record 123.");
+
+allHandlers -= logger.LogToFile; // Remove a handler
+allHandlers("User updated profile.");</code></pre>
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-white rounded-xl shadow-sm">
+                        <h4 class="text-xl font-semibold text-slate-900">2. Events: Encapsulated & Safe Broadcasting</h4>
+                        <p class="mt-2 text-slate-600">
+                           You could use a public multicast delegate for notifications, but it has critical flaws:
+                        </p>
+                        <ul class="list-disc list-inside mt-2 space-y-2 text-red-600">
+                           <li><strong>External Invocation:</strong> Any external class could invoke the delegate, causing the event to fire at the wrong time.</li>
+                           <li><strong>Subscriber Interference:</strong> A subscriber could use `=` instead of `+=`, accidentally wiping out all other subscribers.</li>
+                        </ul>
+
+                        <p class="mt-3 text-slate-600">
+                           The `event` keyword solves these problems. An event is a **protective wrapper around a delegate**. It exposes only the subset of delegate features that a subscriber should have: the ability to add (`+=`) and remove (`-=`) handlers. Only the containing class (the publisher) can invoke the event.
+                        </p>
+                        
+                        <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <h5 class="font-bold text-amber-800">The Standard .NET Event Pattern</h5>
+                            <div class="mt-2 text-amber-700">
+                                <p>By convention, events in .NET follow a standard pattern to ensure consistency.</p>
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li>The delegate signature should have two parameters: `object sender` and `EventArgs e`.</li>
+                                    <li><strong>`object sender`:</strong> This is a reference to the object that raised the event.</li>
+                                    <li><strong>`EventArgs e`:</strong> This is an object that contains any relevant data about the event. You typically create a custom class that inherits from `EventArgs` to pass specific data. If no data is needed, use `EventArgs.Empty`.</li>
+                                    <li>The event handler method in the subscriber should match this signature.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <p class="font-semibold text-slate-700">Syntax: Defining and Raising an Event Correctly</p>
+                            <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// 1. Define a custom EventArgs class to hold event data
+public class ThresholdReachedEventArgs : EventArgs
+{
+    public int Threshold { get; set; }
+    public DateTime TimeReached { get; set; }
+}
+
+public class Counter
+{
+    // 2. Define the event using the generic EventHandler<T> delegate
+    public event EventHandler<ThresholdReachedEventArgs> ThresholdReached;
+
+    public void Check(int currentCount, int threshold)
+    {
+        if (currentCount >= threshold)
+        {
+            // 3. Raise the event, passing 'this' as the sender and the data object
+            OnThresholdReached(new ThresholdReachedEventArgs
+            {
+                Threshold = threshold,
+                TimeReached = DateTime.Now
+            });
+        }
+    }
+
+    // 4. A protected virtual method to raise the event (allows derived classes to override)
+    protected virtual void OnThresholdReached(ThresholdReachedEventArgs e)
+    {
+        // Check if there are any subscribers before invoking
+        ThresholdReached?.Invoke(this, e);
+    }
+}</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="comparison" class="mt-12">
+                     <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">Public Delegate vs. Event</h3>
+                     <div class="p-6 bg-white rounded-xl shadow-sm mt-4">
+                        <p class="text-slate-600 mb-6">This table clarifies the critical differences in encapsulation and safety between exposing a delegate directly and using the `event` keyword.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-slate-500">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3">Feature</th>
+                                        <th scope="col" class="px-6 py-3">Public Delegate</th>
+                                        <th scope="col" class="px-6 py-3">Event</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b">
+                                        <th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">Invocation</th>
+                                        <td class="px-6 py-4 text-red-600">Can be invoked from anywhere (inside or outside the class). <strong>Unsafe.</strong></td>
+                                        <td class="px-6 py-4 text-green-600">Can only be invoked from within the class that defines it. <strong>Safe.</strong></td>
+                                    </tr>
+                                    <tr class="bg-slate-50 border-b">
+                                        <th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">Subscription</th>
+                                        <td class="px-6 py-4">Uses `+=` and `-=` operators.</td>
+                                        <td class="px-6 py-4">Uses `+=` and `-=` operators.</td>
+                                    </tr>
+                                    <tr class="bg-white border-b">
+                                        <th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">Assignment</th>
+                                        <td class="px-6 py-4 text-red-600">Can be directly assigned with `=` which overwrites all existing subscribers. <strong>Dangerous.</strong></td>
+                                        <td class="px-6 py-4 text-green-600">Cannot be assigned with `=`. The `event` keyword prevents this. <strong>Safe.</strong></td>
+                                    </tr>
+                                    <tr class="bg-slate-50">
+                                        <th scope="row" class="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">Encapsulation</th>
+                                        <td class="px-6 py-4">Poor. Exposes the delegate instance completely.</td>
+                                        <td class="px-6 py-4">Strong. Exposes only the necessary `add` and `remove` functionality to subscribers.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                     </div>
+                </section>
+                
+                <section id="uml" class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ UML Task: Event Sequence Diagram</h3>
+                    <div class="p-6 bg-white rounded-xl shadow-sm mt-4">
+                        <p class="text-slate-600 mb-6">This diagram illustrates the typical interaction flow in an event-driven system. It shows how a subscriber registers its interest and how the publisher notifies it when the event occurs, all without direct coupling.</p>
+                        <div class="flex justify-around font-mono text-sm text-center font-semibold text-slate-700">
+                            <div>Subscriber</div>
+                            <div>Publisher</div>
+                        </div>
+                        <div class="flex justify-around mt-2">
+                            <div class="w-1/4 flex justify-center"><div class="h-64 lifeline"></div></div>
+                            <div class="w-1/4 flex justify-center"><div class="h-64 lifeline"></div></div>
+                        </div>
+                        <div class="relative -top-64">
+                            <div class="h-64 space-y-10 p-4">
+                                <div class="relative w-1/2 left-1/4">
+                                    <p class="text-xs text-slate-600 absolute -top-5 w-full text-center">1. Subscribe to event</p>
+                                    <div class="message"></div>
+                                </div>
+                                <div class="relative w-1/2 left-1/4">
+                                     <p class="text-xs text-slate-600 absolute -top-5 w-full text-center">2. Publisher does work...</p>
+                                    <div class="message hidden"></div>
+                                </div>
+                                 <div class="relative w-1/2 left-1/4">
+                                    <p class="text-xs text-slate-600 absolute -top-5 w-full text-center">3. RaiseEvent() is called</p>
+                                    <div class="message message-return" style="border-style: dashed; border-bottom: 0; border-top: 1.5px solid #334155;">
+                                         <div style="position: relative;">
+                                            <div class="message" style="width: 50%; left: 50%; border-color: #64748b;"></div>
+                                            <p class="text-xs text-slate-600 absolute -top-5 right-0 w-1/2 text-center">4. Invoke delegate</p>
+                                         </div>
+                                    </div>
+                                </div>
+                                 <div class="relative w-1/2 left-0">
+                                    <p class="text-xs text-slate-600 absolute -top-5 w-full text-center">5. Subscriber's handler executes</p>
+                                    <div class="message" style="border-style: dashed;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="practice" class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Coding Practice</h3>
+                    <div class="space-y-6 mt-4">
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-lg font-semibold text-slate-800">[Easy] Simple Event Trigger</h4>
+                            <p class="mt-1 text-slate-600">A counter that fires an event when a certain threshold is reached.</p>
+                            <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+
+public class ThresholdReachedEventArgs : EventArgs
+{
+    public int Threshold { get; set; }
+    public DateTime TimeReached { get; set; }
+}
+
+public class Counter
+{
+    public event EventHandler<ThresholdReachedEventArgs> ThresholdReached;
+    private int _threshold;
+
+    public Counter(int threshold)
+    {
+        _threshold = threshold;
+    }
+
+    public void Add(int x)
+    {
+        int total = 0;
+        for (int i = 0; i < x; i++)
+        {
+            total++;
+            if (total >= _threshold)
+            {
+                OnThresholdReached(new ThresholdReachedEventArgs
+                {
+                    Threshold = _threshold,
+                    TimeReached = DateTime.Now
+                });
+                break;
+            }
+        }
+    }
+
+    protected virtual void OnThresholdReached(ThresholdReachedEventArgs e)
+    {
+        ThresholdReached?.Invoke(this, e);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var counter = new Counter(5);
+        counter.ThresholdReached += (sender, e) => {
+            Console.WriteLine($"Threshold of {e.Threshold} was reached at {e.TimeReached}.");
+        };
+
+        Console.WriteLine("Adding numbers...");
+        counter.Add(10);
+    }
+}</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-lg font-semibold text-slate-800">[Medium] Chat Event Bus</h4>
+                            <p class="mt-1 text-slate-600">A central event bus allows multiple users to communicate without knowing about each other directly.</p>
+                            <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+using System.Collections.Generic;
+
+public class MessageEventArgs : EventArgs
+{
+    public string From { get; set; }
+    public string Message { get; set; }
+}
+
+public static class ChatEventBus
+{
+    public static event EventHandler<MessageEventArgs> MessageSent;
+
+    public static void SendMessage(string from, string message)
+    {
+        MessageSent?.Invoke(null, new MessageEventArgs { From = from, Message = message });
+    }
+}
+
+public class User
+{
+    public string Name { get; }
+
+    public User(string name)
+    {
+        Name = name;
+        ChatEventBus.MessageSent += ReceiveMessage;
+    }
+
+    private void ReceiveMessage(object sender, MessageEventArgs e)
+    {
+        if (e.From != Name)
+        {
+            Console.WriteLine($"[{Name}'s console] {e.From}: {e.Message}");
+        }
+    }
+
+    public void Send(string message)
+    {
+        Console.WriteLine($"[{Name} sends] {message}");
+        ChatEventBus.SendMessage(Name, message);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var alice = new User("Alice");
+        var bob = new User("Bob");
+        var charlie = new User("Charlie");
+
+        alice.Send("Hi everyone!");
+        bob.Send("Hey Alice!");
+    }
+}</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-lg font-semibold text-slate-800">[Hard] Event-Driven Logging System</h4>
+                            <p class="mt-1 text-slate-600">Multiple application services raise events for their activities. A central logger subscribes to all of them to create a unified log stream, decoupling logging from business logic.</p>
+                            <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading;
+
+public class LogEventArgs : EventArgs
+{
+    public string ServiceName { get; set; }
+    public string Message { get; set; }
+    public DateTime Timestamp { get; set; }
+}
+
+public class DatabaseService
+{
+    public event EventHandler<LogEventArgs> OnLog;
+
+    public void Connect()
+    {
+        OnLog?.Invoke(this, new LogEventArgs { ServiceName = "Database", Message = "Connecting to database...", Timestamp = DateTime.UtcNow });
+        Thread.Sleep(500);
+        OnLog?.Invoke(this, new LogEventArgs { ServiceName = "Database", Message = "Connection successful.", Timestamp = DateTime.UtcNow });
+    }
+}
+
+public class ApiService
+{
+    public event EventHandler<LogEventArgs> OnLog;
+    public void MakeRequest()
+    {
+        OnLog?.Invoke(this, new LogEventArgs { ServiceName = "API", Message = "Making API request...", Timestamp = DateTime.UtcNow });
+        Thread.Sleep(300);
+        OnLog?.Invoke(this, new LogEventArgs { ServiceName = "API", Message = "Request completed with status 200.", Timestamp = DateTime.UtcNow });
+    }
+}
+
+public class Logger
+{
+    public void Subscribe(DatabaseService db)
+    {
+        db.OnLog += LogMessage;
+    }
+    
+    public void Subscribe(ApiService api)
+    {
+        api.OnLog += LogMessage;
+    }
+
+    private void LogMessage(object sender, LogEventArgs e)
+    {
+        Console.WriteLine($"[LOG - {e.Timestamp:HH:mm:ss.fff}] [{e.ServiceName}] {e.Message}");
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var dbService = new DatabaseService();
+        var apiService = new ApiService();
+        var logger = new Logger();
+
+        logger.Subscribe(dbService);
+        logger.Subscribe(apiService);
+
+        dbService.Connect();
+        apiService.MakeRequest();
+    }
+}</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                 <section id="case-study" class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Case Study: Event Bus for a Notification System</h3>
+                    <div class="p-6 bg-white rounded-xl shadow-sm mt-4 space-y-4 text-slate-600">
+                        <p>Imagine an e-commerce application. When an order is placed, several things need to happen: an email confirmation is sent, an SMS is sent to the user, and the shipping department is notified. A naive approach would be to have the `OrderService` call the `EmailService`, `SmsService`, and `ShippingService` directly.</p>
+                        <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                            <strong>The Problem:</strong> This creates tight coupling. What if you want to add push notifications? You'd have to modify the `OrderService`. What if the `SmsService` is down? The whole order process might fail.
+                        </div>
+                        <div class="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                           <strong>The Event-Driven Solution:</strong> The `OrderService` simply publishes an `OrderPlaced` event to a central `EventBus`. The various notification services subscribe to this event. Now, the `OrderService` has no knowledge of the subscribers. You can add a `PushNotificationService` or a `WarehouseManagementService` that also listens for `OrderPlaced` events without ever touching the `OrderService` code.
+                        </div>
+                         <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading.Tasks;
+
+public class OrderPlacedEventArgs : EventArgs { public string OrderId { get; set; } }
+
+public static class NotificationEventBus
+{
+    public static event EventHandler<OrderPlacedEventArgs> OrderPlaced;
+    public static void RaiseOrderPlaced(string orderId) => OrderPlaced?.Invoke(null, new OrderPlacedEventArgs { OrderId = orderId });
+}
+
+public class EmailService
+{
+    public EmailService() => NotificationEventBus.OrderPlaced += OnOrderPlaced;
+    private void OnOrderPlaced(object s, OrderPlacedEventArgs e) => Console.WriteLine($"[Email] Sending confirmation for order {e.OrderId}.");
+}
+public class SmsService
+{
+    public SmsService() => NotificationEventBus.OrderPlaced += OnOrderPlaced;
+    private void OnOrderPlaced(object s, OrderPlacedEventArgs e) => Console.WriteLine($"[SMS] Sending text for order {e.OrderId}.");
+}
+public class ShippingService
+{
+    public ShippingService() => NotificationEventBus.OrderPlaced += OnOrderPlaced;
+    private void OnOrderPlaced(object s, OrderPlacedEventArgs e) => Console.WriteLine($"[Shipping] Preparing to ship order {e.OrderId}.");
+}
+
+public class OrderService
+{
+    public void CreateOrder()
+    {
+        var orderId = Guid.NewGuid().ToString("N").Substring(0, 8);
+        Console.WriteLine($"Placing order {orderId}...");
+        NotificationEventBus.RaiseOrderPlaced(orderId);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        // In a real app, these would be initialized via Dependency Injection
+        var emailService = new EmailService();
+        var smsService = new SmsService();
+        var shippingService = new ShippingService();
+
+        var orderService = new OrderService();
+        orderService.CreateOrder();
+    }
+}</code></pre>
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="quiz" class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">🧠 Knowledge Check</h3>
+                    <div class="p-6 bg-white rounded-xl shadow-sm mt-4">
+                        <form id="quiz-form" class="space-y-8">
+                            <div>
+                                <p class="font-semibold text-slate-800">1. What is the primary purpose of a delegate in C#?</p>
+                                <div class="mt-2 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q1" value="a" class="mr-2"> To store a collection of objects.</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="b" class="mr-2"> To act as a type-safe reference to a method.</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="c" class="mr-2"> To handle exceptions exclusively.</label>
+                                </div>
+                                <div class="mt-2 text-sm quiz-feedback" data-correct="b"></div>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">2. What advantage does the `event` keyword provide over a public delegate?</p>
+                                <div class="mt-2 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q2" value="a" class="mr-2"> It allows any class to invoke the delegate.</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="b" class="mr-2"> It is faster.</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="c" class="mr-2"> It encapsulates the delegate, only allowing `+=` and `-=` operations from subscribers.</label>
+                                </div>
+                                <div class="mt-2 text-sm quiz-feedback" data-correct="c"></div>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">3. In the Publisher-Subscriber model, what is the Publisher's primary responsibility?</p>
+                                <div class="mt-2 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q3" value="a" class="mr-2"> To know the details of all its subscribers.</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="b" class="mr-2"> To define and raise an event when a specific action occurs.</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="c" class="mr-2"> To handle the event and perform business logic.</label>
+                                </div>
+                                <div class="mt-2 text-sm quiz-feedback" data-correct="b"></div>
+                            </div>
+                            <button type="submit" class="bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors">Check Answers</button>
+                        </form>
+                    </div>
+                </section>
+                
+                 <section id="challenge" class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">🚀 Self-Assessment Challenge</h3>
+                    <div class="p-6 bg-white rounded-xl shadow-sm mt-4">
+                        <h4 class="text-lg font-semibold text-slate-800">Task: File Downloader Notifier</h4>
+                        <p class="mt-2 text-slate-600">Create a `FileDownloader` class that simulates downloading a file. It should provide progress updates by raising an event. The event should carry the percentage of the download that is complete.</p>
+                        <ul class="list-disc list-inside space-y-1 mt-3 text-slate-600">
+                            <li>Create a `FileDownloader` class.</li>
+                            <li>It should have a method `DownloadFile(string url)`.</li>
+                            <li>Inside this method, loop from 0 to 100, pausing for a short time in each iteration to simulate work.</li>
+                            <li>Define a `DownloadProgressChanged` event that passes an integer (the percentage complete) to subscribers.</li>
+                            <li>Raise this event in each iteration of the loop.</li>
+                            <li>Create a `Program` class that instantiates the `FileDownloader`, subscribes to the event, and prints the progress to the console.</li>
+                        </ul>
+                        <button id="reveal-solution-btn" class="mt-6 bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">Reveal Solution</button>
+                        <div id="solution-div" class="hidden mt-4">
+                            <div class="code-block">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading;
+
+public class DownloadProgressEventArgs : EventArgs
+{
+    public int PercentComplete { get; set; }
+}
+
+public class FileDownloader
+{
+    public event EventHandler<DownloadProgressEventArgs> DownloadProgressChanged;
+
+    public void DownloadFile(string url)
+    {
+        Console.WriteLine($"Starting download from {url}...");
+
+        for (int i = 0; i <= 100; i++)
+        {
+            Thread.Sleep(50); // Simulate network latency
+            OnDownloadProgressChanged(new DownloadProgressEventArgs { PercentComplete = i });
+        }
+        
+        Console.WriteLine("Download complete.");
+    }
+
+    protected virtual void OnDownloadProgressChanged(DownloadProgressEventArgs e)
+    {
+        DownloadProgressChanged?.Invoke(this, e);
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var downloader = new FileDownloader();
+
+        downloader.DownloadProgressChanged += (sender, e) => {
+            Console.Write($"\rDownloading... {e.PercentComplete}% ");
+        };
+        
+        downloader.DownloadFile("http://example.com/file.zip");
+        Console.WriteLine(); // New line after progress bar finishes
+    }
+}</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <aside class="lg:col-span-3 lg:block hidden">
+                <div class="sticky top-24">
+                    <h3 class="text-lg font-semibold text-slate-800">On this page</h3>
+                    <nav id="toc" class="mt-4 border-l border-slate-200 pl-4 space-y-2 text-slate-500"></nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const code = button.previousElementSibling.textContent;
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.textContent = 'Copied!';
+                        setTimeout(() => {
+                            button.textContent = 'Copy';
+                        }, 2000);
+                    });
+                });
+            });
+
+            const quizForm = document.getElementById('quiz-form');
+            quizForm.addEventListener('submit', event => {
+                event.preventDefault();
+                const questions = quizForm.querySelectorAll('.quiz-feedback');
+                questions.forEach(feedbackEl => {
+                    const questionName = feedbackEl.previousElementSibling.querySelector('input').name;
+                    const selectedValue = quizForm.querySelector(`input[name="${questionName}"]:checked`)?.value;
+                    const correctAnswer = feedbackEl.dataset.correct;
+
+                    feedbackEl.textContent = '';
+                    feedbackEl.classList.remove('text-green-600', 'text-red-600');
+
+                    if (!selectedValue) {
+                        feedbackEl.textContent = 'Please select an answer.';
+                        feedbackEl.classList.add('text-red-600');
+                    } else if (selectedValue === correctAnswer) {
+                        feedbackEl.textContent = 'Correct!';
+                        feedbackEl.classList.add('text-green-600');
+                    } else {
+                        feedbackEl.textContent = `Incorrect. The correct answer is '${correctAnswer.toUpperCase()}'.`;
+                        feedbackEl.classList.add('text-red-600');
+                    }
+                });
+            });
+
+            const revealBtn = document.getElementById('reveal-solution-btn');
+            const solutionDiv = document.getElementById('solution-div');
+            revealBtn.addEventListener('click', () => {
+                solutionDiv.classList.toggle('hidden');
+                revealBtn.textContent = solutionDiv.classList.contains('hidden') ? 'Reveal Solution' : 'Hide Solution';
+            });
+            
+            const tocContainer = document.getElementById('toc');
+            const sections = document.querySelectorAll('main section[id]');
+            const tocLinks = [];
+
+            sections.forEach(section => {
+                const title = section.querySelector('h3').textContent;
+                const id = section.getAttribute('id');
+                const link = document.createElement('a');
+                link.href = `#${id}`;
+                link.textContent = title.replace('✅','').replace('🧠','').replace('🚀','');
+                link.className = 'block py-1 transition-all duration-200 ease-in-out toc-link';
+                tocContainer.appendChild(link);
+                tocLinks.push(link);
+            });
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const link = tocContainer.querySelector(`a[href="#${id}"]`);
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                        tocLinks.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                    }
+                });
+            }, { rootMargin: '0px 0px -50% 0px', threshold: 0.6 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+</html>
+
+

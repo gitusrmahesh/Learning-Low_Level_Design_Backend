@@ -8,9 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Calm Harmony (Warm Neutrals) -->
-    <!-- Application Structure Plan: The application is designed as a single-page, linear educational module to guide the learner progressively. It starts with foundational theory, moves to an interactive visualization for conceptual clarity, then presents practical coding exercises with hidden solutions, a UML diagram, a real-world case study, and finishes with knowledge checks. This structure facilitates a step-by-step learning process. A sticky table of contents on the right provides persistent, easy navigation, allowing users to jump between sections or track their progress, making the dense information highly accessible and user-friendly. -->
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate Harmony -->
+    <!-- Application Structure Plan: The application is designed as a single-page, linear educational module to guide the learner progressively from theory to practice. It starts with foundational concepts, moves to an interactive visualization for conceptual clarity, then presents practical coding exercises with hidden solutions, a UML diagram, a real-world case study, and finishes with knowledge checks. This structure facilitates a step-by-step learning process. A sticky table of contents on the right provides persistent, easy navigation, allowing users to jump between sections or track their progress, making the dense information highly accessible and user-friendly. -->
     <!-- Visualization & Content Choices: 
         - Report Info: Core concepts of Mutex & Semaphore. Goal: Inform/Compare. Method: Detailed text, comparison tables (HTML/Tailwind). Interaction: Reading, cross-referencing. Justification: Tables provide a clear, side-by-side view of nuanced differences.
         - Report Info: Semaphore mechanism (threads waiting/entering). Goal: Visualize/Engage. Method: Interactive Canvas visualization (Chart.js). Interaction: Start/reset simulation to see threads change state. Justification: A dynamic visual makes the abstract concept of a semaphore tangible and easier to grasp than static text.
@@ -22,21 +22,26 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #FDFBF8; /* Warm off-white */
-            color: #403d39; /* Dark brown-gray */
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
         }
         .toc-link {
             transition: all 0.2s ease-in-out;
             border-left: 2px solid transparent;
+            padding-left: 0.5rem;
         }
         .toc-link.active {
-            color: #e57373; /* Muted red */
-            border-left-color: #e57373;
+            color: #0f172a; /* slate-900 */
+            border-left-color: #0f172a;
             transform: translateX(4px);
+            font-weight: 600;
         }
         .code-block {
-            background-color: #2d3748;
-            color: #e2e8f0;
+            background-color: #1e293b; /* slate-800 */
+            color: #e2e8f0; /* slate-200 */
             border-radius: 8px;
             position: relative;
         }
@@ -44,93 +49,106 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            background-color: #4a5568;
-            color: #e2e8f0;
+            background-color: #475569; /* slate-600 */
+            color: #e2e8f0; /* slate-200 */
             border: none;
             padding: 6px 10px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 12px;
+            font-weight: 600;
             transition: background-color 0.2s;
         }
         .copy-button:hover {
-            background-color: #718096;
+            background-color: #64748b; /* slate-500 */
         }
         .solution {
-            border: 1px dashed #a0aec0;
+            border: 1px dashed #94a3b8; /* slate-400 */
             padding: 1rem;
             margin-top: 1rem;
             border-radius: 8px;
+            background-color: #ffffff;
         }
         .callout {
-            background-color: #FFFBEB; /* Light yellow */
-            border-left: 4px solid #FBBF24; /* Amber */
+            background-color: #f0f9ff; /* sky-50 */
+            border-left: 4px solid #38bdf8; /* sky-400 */
             padding: 1rem;
             margin: 1.5rem 0;
             border-radius: 0 8px 8px 0;
         }
         .btn {
-            background-color: #81a1c1; /* Muted blue */
+            background-color: #0f172a; /* slate-900 */
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
             transition: background-color 0.3s;
-            font-weight: 500;
+            font-weight: 600;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
         .btn:hover {
-            background-color: #5e81ac;
+            background-color: #1e293b; /* slate-800 */
         }
         .quiz-option.correct {
-            background-color: #D1FAE5; /* Light Green */
-            border-color: #10B981; /* Green */
+            background-color: #ecfdf5; /* green-50 */
+            border-color: #22c55e; /* green-500 */
         }
         .quiz-option.incorrect {
-            background-color: #FEE2E2; /* Light Red */
-            border-color: #EF4444; /* Red */
+            background-color: #fef2f2; /* red-50 */
+            border-color: #ef4444; /* red-500 */
         }
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #FDFBF8;
+            background: #f1f5f9; /* slate-100 */
         }
         ::-webkit-scrollbar-thumb {
-            background: #d1d5db;
+            background: #cbd5e1; /* slate-300 */
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
+            background: #94a3b8; /* slate-400 */
         }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- Header Gap -->
-    <div class="h-16"></div>
+    <!-- Header -->
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
 
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         <div class="flex flex-col lg:flex-row lg:space-x-12">
             <!-- Main Content -->
             <main class="w-full lg:w-3/4 min-w-0">
                 <article>
                     <header class="mb-12">
-                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-[#252422] mb-4">Day 11: Thread Synchronization</h1>
-                        <p class="text-xl text-gray-600">Mastering coordination between threads with Mutex and Semaphore to prevent chaos and ensure data integrity.</p>
+                        <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4 font-lexend">Day 11: Thread Synchronization</h1>
+                        <p class="text-xl text-slate-600">Mastering coordination between threads with Mutex and Semaphore to prevent chaos and ensure data integrity.</p>
                     </header>
 
-                    <section id="theory" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ Theory Deep Dive</h2>
-                        <p class="mb-8 text-gray-700">In multithreading, a "race condition" occurs when multiple threads try to access and modify a shared resource (like a variable or file) at the same time. The outcome becomes unpredictable and depends on which thread "wins the race." Synchronization primitives are tools designed to prevent this by enforcing controlled access to these shared resources, ensuring that only one (or a specified number of) thread(s) can enter a "critical section" of code at any given time.</p>
+                    <section id="theory" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">✅ Theory Deep Dive</h2>
+                        <p class="mb-8 text-lg">In multithreading, a "race condition" occurs when multiple threads try to access and modify a shared resource (like a variable or file) at the same time. The outcome becomes unpredictable and depends on which thread "wins the race." Synchronization primitives are tools designed to prevent this by enforcing controlled access to these shared resources, ensuring that only one (or a specified number of) thread(s) can enter a "critical section" of code at any given time.</p>
 
                         <div class="space-y-12">
                             <div>
-                                <h3 class="text-2xl font-semibold mb-3">What is a Mutex?</h3>
-                                <p class="mb-4">A <span class="font-semibold">Mutex</span> (short for Mutual Exclusion) is like a key to a single-occupancy restroom. Only one person (thread) can have the key and be inside at a time. If another thread wants to enter, it must wait outside until the first thread comes out and returns the key. This ensures exclusive access to a resource.</p>
+                                <h3 class="text-2xl font-semibold mb-3 text-slate-800">What is a Mutex?</h3>
+                                <p class="mb-4">A <span class="font-semibold text-slate-900">Mutex</span> (short for Mutual Exclusion) is like a key to a single-occupancy restroom. Only one person (thread) can have the key and be inside at a time. If another thread wants to enter, it must wait outside until the first thread comes out and returns the key. This ensures exclusive access to a resource.</p>
                                 <p class="mb-4">A key feature of a Mutex is that it has "thread affinity"—the thread that acquires the Mutex must be the one to release it. In .NET, a Mutex can also be system-wide, meaning it can be used to synchronize threads across different processes, not just within a single application.</p>
                                 <div class="callout">
                                     <p><span class="font-bold">Analogy:</span> Imagine a single microphone on a stage. Only the person holding the microphone can speak. A Mutex ensures only one thread "holds the microphone" for a shared resource at any time.</p>
                                 </div>
-                                <h4 class="font-semibold mt-6 mb-2">Syntax Snippet</h4>
+                                <h4 class="font-semibold mt-6 mb-2 text-slate-800">Syntax Snippet</h4>
                                 <div class="code-block">
                                     <button class="copy-button">Copy</button>
                                     <pre class="p-4 overflow-x-auto"><code class="language-csharp">// 1. Create a Mutex instance
@@ -154,32 +172,32 @@ finally
                             </div>
 
                             <div>
-                                <h3 class="text-2xl font-semibold mb-3">Difference between Mutex and lock</h3>
+                                <h3 class="text-2xl font-semibold mb-3 text-slate-800">Difference between Mutex and lock</h3>
                                 <p class="mb-4">While both `Mutex` and the `lock` keyword (which uses `Monitor` behind the scenes) provide mutual exclusion, they have key differences that make them suitable for different scenarios.</p>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-left border-collapse">
-                                        <thead>
+                                <div class="overflow-x-auto rounded-lg border border-slate-200">
+                                    <table class="w-full text-left">
+                                        <thead class="bg-slate-100">
                                             <tr>
-                                                <th class="border-b-2 p-4 text-lg">Feature</th>
-                                                <th class="border-b-2 p-4 text-lg">Mutex</th>
-                                                <th class="border-b-2 p-4 text-lg">lock (Monitor)</th>
+                                                <th class="p-4 text-lg font-semibold">Feature</th>
+                                                <th class="p-4 text-lg font-semibold">Mutex</th>
+                                                <th class="p-4 text-lg font-semibold">lock (Monitor)</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <tr class="bg-white hover:bg-gray-50">
-                                                <td class="border-b p-4 font-semibold">Scope</td>
-                                                <td class="border-b p-4">System-wide (can sync across processes).</td>
-                                                <td class="border-b p-4">Application-wide (only syncs threads within the same process).</td>
+                                        <tbody class="bg-white divide-y divide-slate-200">
+                                            <tr>
+                                                <td class="p-4 font-semibold">Scope</td>
+                                                <td class="p-4">System-wide (can sync across processes).</td>
+                                                <td class="p-4">Application-wide (only syncs threads within the same process).</td>
                                             </tr>
-                                            <tr class="bg-gray-50/50 hover:bg-gray-100">
-                                                <td class="border-b p-4 font-semibold">Performance</td>
-                                                <td class="border-b p-4">Slower. Involves kernel-level operations, making it a "heavyweight" object.</td>
-                                                <td class="border-b p-4">Faster. Primarily operates in user-mode, making it a "lightweight" and more efficient choice for most common cases.</td>
+                                            <tr>
+                                                <td class="p-4 font-semibold">Performance</td>
+                                                <td class="p-4">Slower. Involves kernel-level operations, making it a "heavyweight" object.</td>
+                                                <td class="p-4">Faster. Primarily operates in user-mode, making it a "lightweight" and more efficient choice for most common cases.</td>
                                             </tr>
-                                            <tr class="bg-white hover:bg-gray-50">
-                                                <td class="border-b p-4 font-semibold">Usage</td>
-                                                <td class="border-b p-4">Use when you need to synchronize access to a resource shared by multiple applications (e.g., a shared file or hardware device).</td>
-                                                <td class="border-b p-4">Use for the vast majority of intra-app synchronization needs. It's simpler, safer (with `try...finally`), and performs better.</td>
+                                            <tr>
+                                                <td class="p-4 font-semibold">Usage</td>
+                                                <td class="p-4">Use when you need to synchronize access to a resource shared by multiple applications (e.g., a shared file or hardware device).</td>
+                                                <td class="p-4">Use for the vast majority of intra-app synchronization needs. It's simpler, safer (with `try...finally`), and performs better.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -187,13 +205,13 @@ finally
                             </div>
                             
                             <div>
-                                <h3 class="text-2xl font-semibold mb-3">Semaphore vs SemaphoreSlim</h3>
-                                <p class="mb-4">A <span class="font-semibold">Semaphore</span> is a more versatile synchronization tool. Instead of a single key, it maintains a count of available "permits" or "slots". A thread can enter the critical section only if it can acquire a permit. If the count is zero, the thread must wait until another thread releases a permit.</p>
-                                <p class="mb-4"><span class="font-semibold">SemaphoreSlim</span> is a lightweight, faster version of `Semaphore` that is recommended for synchronization within a single application. It avoids the performance overhead of kernel-level operations that `Semaphore` requires for inter-process communication.</p>
+                                <h3 class="text-2xl font-semibold mb-3 text-slate-800">Semaphore vs SemaphoreSlim</h3>
+                                <p class="mb-4">A <span class="font-semibold text-slate-900">Semaphore</span> is a more versatile synchronization tool. Instead of a single key, it maintains a count of available "permits" or "slots". A thread can enter the critical section only if it can acquire a permit. If the count is zero, the thread must wait until another thread releases a permit.</p>
+                                <p class="mb-4"><span class="font-semibold text-slate-900">SemaphoreSlim</span> is a lightweight, faster version of `Semaphore` that is recommended for synchronization within a single application. It avoids the performance overhead of kernel-level operations that `Semaphore` requires for inter-process communication.</p>
                                 <div class="callout">
                                     <p><span class="font-bold">Analogy:</span> Think of a bike rental station with 5 bikes. The semaphore's initial count is 5. Each person (thread) who wants to ride takes a bike (acquires a permit). When all 5 are taken, new people must wait. As riders return, bikes become available again (permits are released).</p>
                                 </div>
-                                <h4 class="font-semibold mt-6 mb-2">Syntax Snippet</h4>
+                                <h4 class="font-semibold mt-6 mb-2 text-slate-800">Syntax Snippet</h4>
                                 <div class="code-block">
                                     <button class="copy-button">Copy</button>
                                     <pre class="p-4 overflow-x-auto"><code class="language-csharp">// 1. Create a SemaphoreSlim with an initial and max count of 3 "slots".
@@ -216,36 +234,36 @@ finally
                             </div>
 
                             <div>
-                                <h3 class="text-2xl font-semibold mb-3">Real-world use: DB Connection Pooling</h3>
+                                <h3 class="text-2xl font-semibold mb-3 text-slate-800">Real-world use: DB Connection Pooling</h3>
                                 <p>A classic real-world application for a semaphore is managing a database connection pool. Establishing a database connection is an expensive and time-consuming operation. A connection pool pre-creates a set of open connections that can be "checked out" by threads, used, and then "returned" to the pool.</p>
-                                <p>A <span class="font-semibold">SemaphoreSlim</span> is perfect for this. If the pool has 10 connections, you initialize the semaphore with a count of 10. When a thread needs a connection, it calls `Wait()` on the semaphore. If a connection is available, it gets one. If all 10 are in use, the thread blocks until another thread releases its connection and calls `Release()` on the semaphore, making a slot available again. This efficiently limits resource usage and prevents overloading the database server.</p>
+                                <p>A <span class="font-semibold text-slate-900">SemaphoreSlim</span> is perfect for this. If the pool has 10 connections, you initialize the semaphore with a count of 10. When a thread needs a connection, it calls `Wait()` on the semaphore. If a connection is available, it gets one. If all 10 are in use, the thread blocks until another thread releases its connection and calls `Release()` on the semaphore, making a slot available again. This efficiently limits resource usage and prevents overloading the database server.</p>
                             </div>
                         </div>
                     </section>
 
-                    <section id="visualization" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">⚙️ Interactive Semaphore Simulation</h2>
-                        <p class="mb-6 text-gray-700">This visualization simulates threads competing for a limited number of resources controlled by a semaphore. The semaphore is initialized with 3 available "slots". Click "Start Simulation" to see threads request access. Threads in green have acquired a slot and are in the critical section, while threads in yellow are waiting.</p>
-                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <section id="visualization" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">⚙️ Interactive Semaphore Simulation</h2>
+                        <p class="mb-6">This visualization simulates threads competing for a limited number of resources controlled by a semaphore. The semaphore is initialized with 3 available "slots". Click "Start Simulation" to see threads request access. Threads in green have acquired a slot and are in the critical section, while threads in yellow are waiting.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
                             <div class="chart-container" style="position: relative; height:300px; width:100%; max-width: 700px; margin: auto;">
                                 <canvas id="semaphoreChart"></canvas>
                             </div>
                             <div class="mt-4 text-center">
-                                <p class="text-lg font-medium">Available Semaphore Slots: <span id="slotsCount" class="font-bold text-2xl text-[#5e81ac]">3</span></p>
+                                <p class="text-lg font-medium text-slate-800">Available Semaphore Slots: <span id="slotsCount" class="font-bold text-2xl text-slate-900">3</span></p>
                             </div>
                             <div class="flex justify-center space-x-4 mt-4">
                                 <button id="startSimBtn" class="btn">Start Simulation</button>
-                                <button id="resetSimBtn" class="btn bg-gray-500 hover:bg-gray-600">Reset</button>
+                                <button id="resetSimBtn" class="btn bg-slate-500 hover:bg-slate-600">Reset</button>
                             </div>
                         </div>
                     </section>
                     
-                    <section id="practice" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ Coding Practice</h2>
+                    <section id="practice" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">✅ Coding Practice</h2>
                         <div class="space-y-8">
-                            <div>
-                                <h3 class="text-xl font-semibold">[Easy] Mutex demo for single-thread access</h3>
-                                <p class="mb-4 text-gray-700">Write a program where multiple threads attempt to increment a shared counter, but use a `Mutex` to ensure that only one thread can access it at a time, preventing a race condition.</p>
+                            <div class="p-6 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                <h3 class="text-xl font-semibold text-slate-800">[Easy] Mutex demo for single-thread access</h3>
+                                <p class="my-3">Write a program where multiple threads attempt to increment a shared counter, but use a `Mutex` to ensure that only one thread can access it at a time, preventing a race condition.</p>
                                 <button class="toggle-solution btn text-sm">Show Solution</button>
                                 <div class="solution hidden">
                                     <div class="code-block">
@@ -299,9 +317,9 @@ public class MutexDemo
                                 </div>
                             </div>
                             
-                            <div>
-                                <h3 class="text-xl font-semibold">[Medium] Implement semaphore-controlled print queue</h3>
-                                <p class="mb-4 text-gray-700">Simulate a print queue that can handle two print jobs concurrently. Use a `SemaphoreSlim` to limit the number of "printers" to two. Multiple threads will submit print jobs, but only two can be "printing" at once.</p>
+                            <div class="p-6 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                <h3 class="text-xl font-semibold text-slate-800">[Medium] Implement semaphore-controlled print queue</h3>
+                                <p class="my-3">Simulate a print queue that can handle two print jobs concurrently. Use a `SemaphoreSlim` to limit the number of "printers" to two. Multiple threads will submit print jobs, but only two can be "printing" at once.</p>
                                 <button class="toggle-solution btn text-sm">Show Solution</button>
                                 <div class="solution hidden">
                                     <div class="code-block">
@@ -350,9 +368,9 @@ public class PrintQueueSimulator
                                 </div>
                             </div>
 
-                            <div>
-                                <h3 class="text-xl font-semibold">[Hard] Thread pool simulation with SemaphoreSlim</h3>
-                                <p class="mb-4 text-gray-700">Implement a basic thread pool that can execute a fixed number of tasks concurrently. Use a `SemaphoreSlim` to control the degree of parallelism (e.g., 3 concurrent tasks). When a task is submitted, it should wait if the pool is full. When a task completes, it should free up a slot for the next waiting task.</p>
+                            <div class="p-6 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                <h3 class="text-xl font-semibold text-slate-800">[Hard] Thread pool simulation with SemaphoreSlim</h3>
+                                <p class="my-3">Implement a basic thread pool that can execute a fixed number of tasks concurrently. Use a `SemaphoreSlim` to control the degree of parallelism (e.g., 3 concurrent tasks). When a task is submitted, it should wait if the pool is full. When a task completes, it should free up a slot for the next waiting task.</p>
                                 <button class="toggle-solution btn text-sm">Show Solution</button>
                                 <div class="solution hidden">
                                     <div class="code-block">
@@ -421,46 +439,46 @@ public class ThreadPoolSimulation
                         </div>
                     </section>
 
-                    <section id="uml" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ UML/Schema Task: Sequence Diagram</h2>
-                        <p class="mb-6 text-gray-700">This sequence diagram illustrates multiple threads interacting with a semaphore that has a count of 2. It shows how the first two threads acquire a lock successfully, while the third thread is forced to wait until one of the first two releases its lock.</p>
-                        <div class="p-6 bg-white rounded-lg shadow-lg overflow-x-auto">
+                    <section id="uml" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">✅ UML/Schema Task: Sequence Diagram</h2>
+                        <p class="mb-6">This sequence diagram illustrates multiple threads interacting with a semaphore that has a count of 2. It shows how the first two threads acquire a lock successfully, while the third thread is forced to wait until one of the first two releases its lock.</p>
+                        <div class="p-6 bg-white rounded-lg shadow-lg border border-slate-200 overflow-x-auto">
                             <div class="flex space-x-8 min-w-[700px]">
                                 <!-- Lifelines -->
                                 <div class="text-center w-1/4">
-                                    <div class="font-bold p-2 bg-gray-200 rounded">:Thread 1</div>
-                                    <div class="h-96 border-l-2 border-dashed border-gray-400 mx-auto mt-2"></div>
+                                    <div class="font-bold p-2 bg-slate-200 rounded">:Thread 1</div>
+                                    <div class="h-96 border-l-2 border-dashed border-slate-400 mx-auto mt-2"></div>
                                 </div>
                                 <div class="text-center w-1/4">
-                                    <div class="font-bold p-2 bg-gray-200 rounded">:Thread 2</div>
-                                    <div class="h-96 border-l-2 border-dashed border-gray-400 mx-auto mt-2"></div>
+                                    <div class="font-bold p-2 bg-slate-200 rounded">:Thread 2</div>
+                                    <div class="h-96 border-l-2 border-dashed border-slate-400 mx-auto mt-2"></div>
                                 </div>
                                 <div class="text-center w-1/4">
-                                    <div class="font-bold p-2 bg-gray-200 rounded">:Thread 3</div>
-                                    <div class="h-96 border-l-2 border-dashed border-gray-400 mx-auto mt-2"></div>
+                                    <div class="font-bold p-2 bg-slate-200 rounded">:Thread 3</div>
+                                    <div class="h-96 border-l-2 border-dashed border-slate-400 mx-auto mt-2"></div>
                                 </div>
                                 <div class="text-center w-1/4">
-                                    <div class="font-bold p-2 bg-blue-200 rounded">:Semaphore (Count=2)</div>
-                                    <div class="h-96 border-l-2 border-dashed border-blue-400 mx-auto mt-2"></div>
+                                    <div class="font-bold p-2 bg-sky-200 rounded">:Semaphore (Count=2)</div>
+                                    <div class="h-96 border-l-2 border-dashed border-sky-400 mx-auto mt-2"></div>
                                 </div>
                             </div>
                             <!-- Messages -->
                             <div class="relative -top-[390px] min-w-[700px]">
                                 <div class="absolute w-full" style="top: 20px;">
                                     <div class="text-sm text-center">Wait() →</div>
-                                    <div class="h-px bg-black" style="width: 62.5%; margin-left: 12.5%;"></div>
+                                    <div class="h-px bg-slate-800" style="width: 62.5%; margin-left: 12.5%;"></div>
                                 </div>
                                 <div class="absolute w-full" style="top: 45px;">
                                     <div class="text-sm text-center">← OK (Count=1)</div>
-                                    <div class="h-px bg-black border-dashed" style="width: 62.5%; margin-left: 12.5%;"></div>
+                                    <div class="h-px bg-slate-800 border-dashed" style="width: 62.5%; margin-left: 12.5%;"></div>
                                 </div>
                                 <div class="absolute w-full" style="top: 80px;">
                                     <div class="text-sm text-center">Wait() →</div>
-                                    <div class="h-px bg-black" style="width: 37.5%; margin-left: 37.5%;"></div>
+                                    <div class="h-px bg-slate-800" style="width: 37.5%; margin-left: 37.5%;"></div>
                                 </div>
                                 <div class="absolute w-full" style="top: 105px;">
                                     <div class="text-sm text-center">← OK (Count=0)</div>
-                                    <div class="h-px bg-black border-dashed" style="width: 37.5%; margin-left: 37.5%;"></div>
+                                    <div class="h-px bg-slate-800 border-dashed" style="width: 37.5%; margin-left: 37.5%;"></div>
                                 </div>
                                 <div class="absolute w-full" style="top: 140px;">
                                     <div class="text-sm text-center text-red-600">Wait() →</div>
@@ -486,22 +504,23 @@ public class ThreadPoolSimulation
                         </div>
                     </section>
 
-                    <section id="case-study" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">✅ Case Study: Design Parking Lot</h2>
-                        <p class="mb-2 text-gray-700"><strong>Problem:</strong> Design a parking lot system with multiple entry gates. The parking lot has a fixed number of available slots. Use a semaphore to control access, ensuring that cars (threads) can only enter if a slot is available.</p>
-                        <p class="mb-6 text-gray-700"><strong>Design considerations:</strong>
-                            <ul class="list-disc list-inside space-y-2 mb-4">
-                                <li>The parking lot's capacity is the initial count of the semaphore.</li>
-                                <li>Each car trying to enter represents a thread calling `Wait()` on the semaphore.</li>
-                                <li>If the lot is full, cars must queue at the gates (threads will block).</li>
-                                <li>When a car leaves, it calls `Release()` on the semaphore, freeing up a slot for a waiting car.</li>
-                            </ul>
-                        </p>
-                        <button class="toggle-solution btn text-sm">Show Solution</button>
-                        <div class="solution hidden">
-                            <div class="code-block">
-                                <button class="copy-button">Copy</button>
-                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+                    <section id="case-study" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">✅ Case Study: Design Parking Lot</h2>
+                        <div class="p-6 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <p class="mb-2"><strong>Problem:</strong> Design a parking lot system with multiple entry gates. The parking lot has a fixed number of available slots. Use a semaphore to control access, ensuring that cars (threads) can only enter if a slot is available.</p>
+                            <p class="mb-6"><strong>Design considerations:</strong>
+                                <ul class="list-disc list-inside space-y-2 my-4">
+                                    <li>The parking lot's capacity is the initial count of the semaphore.</li>
+                                    <li>Each car trying to enter represents a thread calling `Wait()` on the semaphore.</li>
+                                    <li>If the lot is full, cars must queue at the gates (threads will block).</li>
+                                    <li>When a car leaves, it calls `Release()` on the semaphore, freeing up a slot for a waiting car.</li>
+                                </ul>
+                            </p>
+                            <button class="toggle-solution btn text-sm">Show Solution</button>
+                            <div class="solution hidden">
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -570,54 +589,55 @@ public class ParkingLotSimulation
     }
 }
 </code></pre>
+                                </div>
                             </div>
                         </div>
                     </section>
 
-                    <section id="quiz" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">🧠 Knowledge Check Quiz</h2>
+                    <section id="quiz" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">🧠 Knowledge Check Quiz</h2>
                         <div id="quiz-container" class="space-y-6">
                             <!-- Question 1 -->
-                            <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                                 <p class="font-semibold mb-3">1. When would you choose a `Mutex` over a `lock` in C#?</p>
                                 <div class="space-y-2 quiz-options" data-answer="c">
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="a" class="mr-2">For better performance in single-process applications.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="b" class="mr-2">When you need to lock on value types.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="c" class="mr-2">When you need to synchronize threads across different processes.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q1" value="d" class="mr-2">Never, `lock` is always superior.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q1" value="a" class="mr-2">For better performance in single-process applications.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q1" value="b" class="mr-2">When you need to lock on value types.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q1" value="c" class="mr-2">When you need to synchronize threads across different processes.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q1" value="d" class="mr-2">Never, `lock` is always superior.</label>
                                 </div>
                                 <p class="quiz-feedback mt-3 text-sm hidden"></p>
                             </div>
                             <!-- Question 2 -->
-                            <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                                 <p class="font-semibold mb-3">2. What is the primary purpose of a `SemaphoreSlim`?</p>
                                 <div class="space-y-2 quiz-options" data-answer="b">
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="a" class="mr-2">To ensure only one thread can ever access a resource.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="b" class="mr-2">To limit the number of threads that can access a resource or pool of resources concurrently.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="c" class="mr-2">To make threads run faster by giving them more memory.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q2" value="d" class="mr-2">To replace the `Task` class for asynchronous operations.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q2" value="a" class="mr-2">To ensure only one thread can ever access a resource.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q2" value="b" class="mr-2">To limit the number of threads that can access a resource or pool of resources concurrently.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q2" value="c" class="mr-2">To make threads run faster by giving them more memory.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q2" value="d" class="mr-2">To replace the `Task` class for asynchronous operations.</label>
                                 </div>
                                 <p class="quiz-feedback mt-3 text-sm hidden"></p>
                             </div>
-                            <!-- Question 3 -->
-                            <div class="bg-white p-6 rounded-lg shadow">
-                                <p class="font-semibold mb-3">3. In a database connection pool scenario using `SemaphoreSlim`, what does the semaphore's initial count represent?</p>
-                                <div class="space-y-2 quiz-options" data-answer="a">
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="a" class="mr-2">The total number of available connections in the pool.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="b" class="mr-2">The number of threads waiting for a connection.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="c" class="mr-2">The maximum timeout before a connection is dropped.</label>
-                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-gray-100"><input type="radio" name="q3" value="d" class="mr-2">Always 1.</label>
+                             <!-- Question 3 -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold mb-3">3. A thread acquires a `Mutex` but then throws an unhandled exception before releasing it. What happens?</p>
+                                <div class="space-y-2 quiz-options" data-answer="d">
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q3" value="a" class="mr-2">The Mutex is automatically released by the garbage collector.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q3" value="b" class="mr-2">The next waiting thread automatically acquires the Mutex.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q3" value="c" class="mr-2">The application will crash immediately.</label>
+                                    <label class="quiz-option block p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><input type="radio" name="q3" value="d" class="mr-2">The Mutex is considered abandoned, and other threads waiting on it will get an `AbandonedMutexException`.</label>
                                 </div>
                                 <p class="quiz-feedback mt-3 text-sm hidden"></p>
                             </div>
                         </div>
                     </section>
 
-                    <section id="challenge" class="mb-16">
-                        <h2 class="text-3xl font-bold border-b-2 border-[#e57373] pb-2 mb-6">🚀 Self-Assessment Challenge</h2>
-                        <div class="bg-white p-6 rounded-lg shadow">
-                            <h3 class="text-xl font-semibold">Web Crawler Throttling</h3>
-                            <p class="mt-2 mb-4 text-gray-700">Imagine you are building a web crawler that scrapes data from a specific website. To avoid overwhelming the website's server and getting your IP address blocked, you need to limit the number of concurrent HTTP requests your crawler makes. Implement a `RateLimiter` class using `SemaphoreSlim` that ensures no more than 4 HTTP requests are active at any given time. Create a simulation with 20 "pages" to crawl, and have each crawl operation take a random amount of time.</p>
+                    <section id="challenge" class="mb-16 scroll-mt-24">
+                        <h2 class="text-3xl font-bold border-b-2 border-slate-300 pb-2 mb-6 font-lexend text-slate-800">🚀 Self-Assessment Challenge</h2>
+                        <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800">Web Crawler Throttling</h3>
+                            <p class="mt-2 mb-4">Imagine you are building a web crawler that scrapes data from a specific website. To avoid overwhelming the website's server and getting your IP address blocked, you need to limit the number of concurrent HTTP requests your crawler makes. Implement a `RateLimiter` class using `SemaphoreSlim` that ensures no more than 4 HTTP requests are active at any given time. Create a simulation with 20 "pages" to crawl, and have each crawl operation take a random amount of time.</p>
                             <button class="toggle-solution btn text-sm">Reveal Detailed Solution</button>
                             <div class="solution hidden">
                                 <div class="code-block">
@@ -705,15 +725,15 @@ public class WebCrawlerSimulation
             <!-- Sticky Table of Contents -->
             <aside class="w-full lg:w-1/4 lg:pl-8">
                 <nav class="sticky top-24">
-                    <h3 class="font-bold mb-4 text-lg">On This Page</h3>
+                    <h3 class="font-bold mb-4 text-lg text-slate-900">On This Page</h3>
                     <ul id="toc" class="space-y-2">
-                        <li><a href="#theory" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ Theory Deep Dive</a></li>
-                        <li><a href="#visualization" class="toc-link block p-2 rounded text-gray-600 hover:text-black">⚙️ Interactive Simulation</a></li>
-                        <li><a href="#practice" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ Coding Practice</a></li>
-                        <li><a href="#uml" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ UML/Schema Task</a></li>
-                        <li><a href="#case-study" class="toc-link block p-2 rounded text-gray-600 hover:text-black">✅ Case Study</a></li>
-                        <li><a href="#quiz" class="toc-link block p-2 rounded text-gray-600 hover:text-black">🧠 Knowledge Check</a></li>
-                        <li><a href="#challenge" class="toc-link block p-2 rounded text-gray-600 hover:text-black">🚀 Challenge</a></li>
+                        <li><a href="#theory" class="toc-link block rounded text-slate-600 hover:text-slate-900">✅ Theory Deep Dive</a></li>
+                        <li><a href="#visualization" class="toc-link block rounded text-slate-600 hover:text-slate-900">⚙️ Interactive Simulation</a></li>
+                        <li><a href="#practice" class="toc-link block rounded text-slate-600 hover:text-slate-900">✅ Coding Practice</a></li>
+                        <li><a href="#uml" class="toc-link block rounded text-slate-600 hover:text-slate-900">✅ UML/Schema Task</a></li>
+                        <li><a href="#case-study" class="toc-link block rounded text-slate-600 hover:text-slate-900">✅ Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block rounded text-slate-600 hover:text-slate-900">🧠 Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block rounded text-slate-600 hover:text-slate-900">🚀 Challenge</a></li>
                     </ul>
                 </nav>
             </aside>
@@ -721,11 +741,10 @@ public class WebCrawlerSimulation
     </div>
     
     <!-- Footer -->
-    <footer class="mt-20 py-8 bg-gray-800 text-white">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2025 Multithreading Mastery. All rights reserved.</p>
-            <p class="text-sm text-gray-400 mt-1">A self-contained learning module.</p>
-        </div>
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
     </footer>
 
 <script>
@@ -742,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.textContent = 'Hide Solution';
             } else {
                 solutionDiv.classList.add('hidden');
-                button.textContent = button.textContent.replace('Hide', 'Show');
+                button.textContent = button.textContent.replace('Hide', 'Show').replace('Hide', 'Reveal');
             }
         });
     });
@@ -753,10 +772,9 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', () => {
             const code = button.nextElementSibling.querySelector('code').innerText;
             navigator.clipboard.writeText(code).then(() => {
-                const originalText = button.textContent;
                 button.textContent = 'Copied!';
                 setTimeout(() => {
-                    button.textContent = originalText;
+                    button.textContent = 'Copy';
                 }, 2000);
             });
         });
@@ -770,12 +788,12 @@ document.addEventListener('DOMContentLoaded', function() {
         entries.forEach(entry => {
             const id = entry.target.getAttribute('id');
             const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
-            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
                 tocLinks.forEach(link => link.classList.remove('active'));
                 tocLink.classList.add('active');
             }
         });
-    }, { rootMargin: "-50% 0px -50% 0px", threshold: 0.1 });
+    }, { rootMargin: "0px 0px -75% 0px", threshold: 0.2 });
 
     sections.forEach(section => {
         observer.observe(section);
@@ -807,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     parentLabel.classList.add('incorrect');
                     const correctLabel = container.querySelector(`input[value="${correctAnswer}"]`).parentElement;
                     correctLabel.classList.add('correct');
-                    feedbackEl.textContent = `Not quite. The correct answer highlights why Mutex is essential for inter-process communication.`;
+                    feedbackEl.textContent = `That's not quite right. The correct answer is highlighted above.`;
                     feedbackEl.className = 'quiz-feedback mt-3 text-sm text-red-700 block';
                 }
             });
@@ -821,14 +839,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetSimBtn = document.getElementById('resetSimBtn');
     
     const colors = {
-        idle: 'rgba(201, 203, 207, 0.6)', // gray
-        waiting: 'rgba(251, 191, 36, 0.8)', // yellow
-        active: 'rgba(52, 211, 153, 0.8)', // green
+        idle: 'rgba(148, 163, 184, 0.6)', // slate-400
+        waiting: 'rgba(251, 191, 36, 0.8)', // yellow-400
+        active: 'rgba(34, 197, 94, 0.8)', // green-500
     };
     const borderColors = {
-        idle: 'rgba(201, 203, 207, 1)',
+        idle: 'rgba(148, 163, 184, 1)',
         waiting: 'rgba(251, 191, 36, 1)',
-        active: 'rgba(52, 211, 153, 1)',
+        active: 'rgba(34, 197, 94, 1)',
     };
     
     let chart;
@@ -856,7 +874,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     data: Array(TOTAL_THREADS).fill(10),
                     backgroundColor: threads.map(t => colors[t.state]),
                     borderColor: threads.map(t => borderColors[t.state]),
-                    borderWidth: 2
+                    borderWidth: 2,
+                    borderRadius: 4
                 }]
             },
             options: {
@@ -933,3 +952,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
