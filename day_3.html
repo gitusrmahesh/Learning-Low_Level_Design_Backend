@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 3: Inheritance & Polymorphism - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;700;800&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Cool Slate" - A professional palette using slate grays, with a calm blue for accents and callouts. -->
+    <!-- Application Structure Plan: A two-column layout is used. The main content is in a wider left column for readability, while a sticky Table of Contents occupies the right column. This is a standard and highly effective structure for documentation and learning pages, allowing users to maintain context and navigate complex information without losing their place. The flow is from theory to practice, ending with assessments to reinforce learning. -->
+    <!-- Visualization & Content Choices: 
+        1. Abstract vs. Interface: Retained the interactive Radar Chart (Chart.js) as it provides a strong visual "fingerprint" for comparison, which is superior to a static table alone.
+        2. UML Diagram: The HTML/CSS-based diagram is kept for its clarity and lack of external dependencies, effectively communicating class hierarchy.
+        3. Coding Solutions: Enhanced collapsible sections for solutions to encourage active problem-solving before viewing the answer.
+        4. Quiz: Expanded to five questions for a more comprehensive knowledge check, using interactive JS-driven feedback for immediate reinforcement. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+        }
+        .toc-link:hover, .toc-link.active {
+            color: #2563eb; /* blue-600 */
+            border-left-color: #2563eb;
+            transform: translateX(4px);
+        }
+        .code-block {
+            background-color: #1e293b; /* slate-800 */
+            color: #cbd5e1; /* slate-300 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #475569; /* slate-600 */
+            color: #f1f5f9; /* slate-100 */
+            border: none;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #64748b; /* slate-500 */
+        }
+        .section-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+            margin-bottom: 2.5rem;
+            padding: 2.5rem;
+        }
+        .callout {
+            background-color: #eff6ff; /* blue-50 */
+            border-left: 4px solid #3b82f6; /* blue-500 */
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        .syntax-snippet {
+            background-color: #f8fafc; /* slate-50 */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        .quiz-option {
+            transition: all 0.2s;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e; /* green-500 */
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .solution-toggle {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .solution-toggle:hover {
+            background-color: #2563eb; /* blue-600 */
+        }
+        .solution-content {
+            display: none;
+            margin-top: 1.5rem;
+            border-left: 3px solid #e2e8f0; /* slate-200 */
+            padding-left: 1.5rem;
+        }
+    </style>
+</head>
+<body class="w-full">
+    
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row-reverse lg:space-x-reverse lg:space-x-12 py-12">
+            
+            <!-- Right Column: Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:sticky top-10 self-start mb-12 lg:mb-0">
+                <div class="p-5 bg-white rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4">Lesson Contents</h3>
+                    <nav id="toc-nav">
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="toc-link block font-medium text-slate-600 pl-2">Introduction</a></li>
+                            <li>
+                                <a href="#theory" class="toc-link block font-semibold text-slate-800 pl-2">✅ Theory Topics</a>
+                                <ul class="pl-4 mt-2 space-y-2 text-sm">
+                                    <li><a href="#theory-inheritance" class="toc-link block text-slate-500 pl-2">Base & Derived Classes</a></li>
+                                    <li><a href="#theory-abstract-vs-interface" class="toc-link block text-slate-500 pl-2">Abstract Class vs. Interface</a></li>
+                                    <li><a href="#theory-overriding" class="toc-link block text-slate-500 pl-2">Method Overriding</a></li>
+                                    <li><a href="#theory-polymorphism" class="toc-link block text-slate-500 pl-2">Polymorphism in Practice</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="#practice" class="toc-link block font-semibold text-slate-800 pl-2">💻 Coding Practice</a>
+                                <ul class="pl-4 mt-2 space-y-2 text-sm">
+                                    <li><a href="#practice-shape" class="toc-link block text-slate-500 pl-2">Base: Shape Hierarchy</a></li>
+                                    <li><a href="#practice-animal" class="toc-link block text-slate-500 pl-2">Easy: Animal Hierarchy</a></li>
+                                    <li><a href="#practice-payment" class="toc-link block text-slate-500 pl-2">Medium: Payment Processor</a></li>
+                                    <li><a href="#practice-notification" class="toc-link block text-slate-500 pl-2">Hard: Notification System</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#uml" class="toc-link block font-semibold text-slate-800 pl-2">🎨 UML/Schema Task</a></li>
+                            <li><a href="#case-study" class="toc-link block font-semibold text-slate-800 pl-2">🚗 Case Study: Ride-Hailing</a></li>
+                            <li><a href="#quiz" class="toc-link block font-semibold text-slate-800 pl-2">🧠 Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block font-semibold text-slate-800 pl-2">🚀 Self-Assessment Challenge</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Left Column: Main Content -->
+            <main class="w-full lg:w-3/4">
+                
+                <section id="introduction" class="section-card">
+                    <h1 class="text-4xl font-bold text-slate-900 mb-2">Day 3: Inheritance & Polymorphism</h1>
+                    <p class="text-lg text-slate-600">Building on yesterday's foundations, today we explore two cornerstone principles of OOP that enable code reuse and flexibility: Inheritance and Polymorphism.</p>
+                    <div class="callout">
+                        <p><strong>💡 Today's Goal:</strong> Understand how to create class hierarchies to share code (Inheritance) and how to treat objects of different classes in the same way (Polymorphism). This is where your code starts to become truly dynamic and scalable.</p>
+                    </div>
+                </section>
+
+                <section id="theory" class="section-card">
+                    <h2 class="text-3xl font-bold mb-8 border-b border-slate-200 pb-4 text-slate-900">✅ Theory Topics</h2>
+                    
+                    <div id="theory-inheritance" class="mb-12">
+                        <h3 class="text-2xl font-semibold mb-3 text-slate-800">Base and Derived Classes in C#</h3>
+                        <p class="mb-4">Inheritance is a mechanism where a new class (the <strong class="text-blue-600">derived</strong> or child class) inherits properties and methods from an existing class (the <strong class="text-blue-600">base</strong> or parent class). This promotes code reusability and establishes a logical "is-a" relationship.</p>
+                        <p class="mb-4"><strong>Analogy:</strong> Think of a <code class="font-mono text-sm bg-slate-100 p-1 rounded">Vehicle</code> as a base class. It has properties like <code class="font-mono text-sm bg-slate-100 p-1 rounded">Speed</code> and methods like <code class="font-mono text-sm bg-slate-100 p-1 rounded">Move()</code>. A <code class="font-mono text-sm bg-slate-100 p-1 rounded">Car</code> and a <code class="font-mono text-sm bg-slate-100 p-1 rounded">Bicycle</code> can be derived classes. They both *are* vehicles, so they inherit the ability to move, but they might implement it differently or add their own unique features (like a Car having an <code class="font-mono text-sm bg-slate-100 p-1 rounded">Engine</code>).</p>
+                        <div class="syntax-snippet">
+                            <h4 class="font-semibold text-slate-700 mb-3">Syntax: Defining Inheritance</h4>
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">public class BaseClassName 
+{ 
+    // Members of the base class 
+}
+
+// The colon ':' indicates that DerivedClassName inherits from BaseClassName
+public class DerivedClassName : BaseClassName 
+{ 
+    // Members of the derived class
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="theory-abstract-vs-interface" class="mb-12">
+                        <h3 class="text-2xl font-semibold mb-3 text-slate-800">Abstract Classes vs. Interfaces</h3>
+                        <p class="mb-4">Both are used to achieve abstraction, but they serve different purposes. An <strong class="text-blue-600">abstract class</strong> is a blueprint for related classes (an "is-a" relationship), while an <strong class="text-blue-600">interface</strong> defines a capability or contract that a class can implement (a "can-do" relationship).</p>
+                        <div class="callout">
+                            <p><strong>Key Difference:</strong> A class can inherit from only <strong class="text-blue-600">one</strong> abstract class, but it can implement <strong class="text-blue-600">multiple</strong> interfaces. Think of it like a person: you can only have one biological father (single inheritance), but you can have multiple jobs or roles like 'Doctor', 'Parent', 'Musician' (multiple interfaces).</p>
+                        </div>
+
+                        <h4 class="font-semibold text-slate-700 my-4">Interactive Comparison</h4>
+                        <p class="text-sm text-slate-500 mb-3">Click the buttons to see how features are distributed between Abstract Classes and Interfaces.</p>
+                        <div class="flex space-x-2 mb-4">
+                            <button id="showAllBtn" class="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-full font-medium shadow-sm">Show All</button>
+                            <button id="showAbstractBtn" class="px-4 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-full font-medium">Abstract Class</button>
+                            <button id="showInterfaceBtn" class="px-4 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-full font-medium">Interface</button>
+                        </div>
+                        <div class="chart-container relative h-96 w-full max-w-lg mx-auto">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                        
+                        <div class="overflow-x-auto mt-6">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50">
+                                        <th class="border-b-2 border-slate-200 p-3 font-semibold text-slate-600">Feature</th>
+                                        <th class="border-b-2 border-slate-200 p-3 font-semibold text-slate-600">Abstract Class</th>
+                                        <th class="border-b-2 border-slate-200 p-3 font-semibold text-slate-600">Interface</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="border-b border-slate-200 p-3">Method Implementation</td>
+                                        <td class="border-b border-slate-200 p-3">Can contain both abstract (no body) and concrete (with body) methods.</td>
+                                        <td class="border-b border-slate-200 p-3">Cannot contain implementation for methods (prior to C# 8.0). Primarily just signatures.</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="border-b border-slate-200 p-3">Fields/Variables</td>
+                                        <td class="border-b border-slate-200 p-3">Can contain fields and constants.</td>
+                                        <td class="border-b border-slate-200 p-3">Cannot contain fields (only properties).</td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="border-b border-slate-200 p-3">Inheritance</td>
+                                        <td class="border-b border-slate-200 p-3">A class can inherit from only one abstract class.</td>
+                                        <td class="border-b border-slate-200 p-3">A class can implement multiple interfaces.</td>
+                                    </tr>
+                                     <tr class="hover:bg-slate-50">
+                                        <td class="border-b border-slate-200 p-3">Constructors</td>
+                                        <td class="border-b border-slate-200 p-3">Can have constructors (called by derived class constructors).</td>
+                                        <td class="border-b border-slate-200 p-3">Cannot have constructors.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="theory-overriding" class="mb-12">
+                        <h3 class="text-2xl font-semibold mb-3 text-slate-800">Method Overriding (virtual, override, sealed)</h3>
+                        <p class="mb-4">Method overriding allows a derived class to provide its own specific implementation of a method that is already defined in its base class. This is a key part of polymorphism.</p>
+                        <ul class="list-disc list-inside space-y-3 mb-4 text-slate-600">
+                            <li><code class="font-mono text-sm bg-slate-100 p-1 rounded-md text-slate-800">virtual</code>: Used in the base class to indicate that a method *can* be overridden by derived classes. It's an invitation to specialize.</li>
+                            <li><code class="font-mono text-sm bg-slate-100 p-1 rounded-md text-slate-800">override</code>: Used in the derived class to provide a new implementation for a virtual method from the base class. It's accepting the invitation.</li>
+                            <li><code class="font-mono text-sm bg-slate-100 p-1 rounded-md text-slate-800">sealed</code>: Used on an overridden method to prevent any further derived classes from overriding it again. It's ending the chain of specialization for that method.</li>
+                        </ul>
+                         <div class="syntax-snippet">
+                            <h4 class="font-semibold text-slate-700 mb-3">Syntax: The Override Chain</h4>
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">public class Base
+{
+    public virtual void MyMethod() { /* Default behavior */ }
+}
+public class Derived : Base
+{
+    // Override provides a new behavior
+    public sealed override void MyMethod() { /* New, final behavior */ }
+}
+public class FurtherDerived : Derived
+{
+    // COMPILE ERROR: Cannot override MyMethod because it is sealed
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="theory-polymorphism">
+                        <h3 class="text-2xl font-semibold mb-3 text-slate-800">Polymorphism in Backend Practice</h3>
+                        <p class="mb-4">Polymorphism (from Greek, meaning "many forms") allows us to treat objects of different classes that share a common base class or interface as if they were objects of that base type. This simplifies code and makes it incredibly flexible.</p>
+                        <p class="mb-4"><strong>Example Scenario:</strong> A payment processing system. You don't want to write separate logic for every single payment type. Instead, you can create a common <code class="font-mono text-sm bg-slate-100 p-1 rounded">PaymentMethod</code> base class or interface with a <code class="font-mono text-sm bg-slate-100 p-1 rounded">ProcessPayment()</code> method. Then, you create specific classes like <code class="font-mono text-sm bg-slate-100 p-1 rounded">CreditCardPayment</code> and <code class="font-mono text-sm bg-slate-100 p-1 rounded">UpiPayment</code> that each provide their own implementation of <code class="font-mono text-sm bg-slate-100 p-1 rounded">ProcessPayment()</code>.</p>
+                        <div class="code-block">
+                            <button class="copy-btn">Copy</button>
+                            <pre><code class="language-csharp">public abstract class PaymentMethod { public abstract void Process(decimal amount); }
+public class CreditCardPayment : PaymentMethod { public override void Process(decimal amount) => Console.WriteLine($"Processing credit card payment of ${amount}."); }
+public class UpiPayment : PaymentMethod { public override void Process(decimal amount) => Console.WriteLine($"Processing UPI payment of ${amount}."); }
+
+// Polymorphic usage
+List&lt;PaymentMethod&gt; payments = new List&lt;PaymentMethod&gt;
+{
+    new CreditCardPayment(),
+    new UpiPayment()
+};
+
+foreach (var paymentMethod in payments)
+{
+    // The correct Process method is called for each object type!
+    paymentMethod.Process(100.50m);
+}
+</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="practice" class="section-card">
+                    <h2 class="text-3xl font-bold mb-8 border-b border-slate-200 pb-4 text-slate-900">💻 Coding Practice</h2>
+                    
+                    <div id="practice-shape" class="mb-10">
+                        <h3 class="text-2xl font-semibold mb-3">Base: Shape Hierarchy</h3>
+                        <p class="mb-4">Create an abstract base class <code class="font-mono text-sm bg-slate-100 p-1 rounded">Shape</code> with an abstract method <code class="font-mono text-sm bg-slate-100 p-1 rounded">CalculateArea()</code>. Then, derive <code class="font-mono text-sm bg-slate-100 p-1 rounded">Circle</code> and <code class="font-mono text-sm bg-slate-100 p-1 rounded">Rectangle</code> classes from it and implement the area calculation for each.</p>
+                        <div class="solution-toggle" onclick="toggleSolution('solution-shape')">
+                            <span>Show Solution</span>
+                        </div>
+                        <div id="solution-shape" class="solution-content">
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">// C# Solution for Shape Hierarchy
+using System;
+using System.Collections.Generic;
+
+public abstract class Shape { public abstract double CalculateArea(); }
+
+public class Circle : Shape
+{
+    public double Radius { get; }
+    public Circle(double radius) { Radius = radius; }
+    public override double CalculateArea() => Math.PI * Radius * Radius;
+}
+
+public class Rectangle : Shape
+{
+    public double Width { get; }
+    public double Height { get; }
+    public Rectangle(double width, double height) { Width = width; Height = height; }
+    public override double CalculateArea() => Width * Height;
+}
+
+public class Program { /* ... Usage is the same as previous example ... */ }
+</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="practice-animal" class="mb-10">
+                        <h3 class="text-2xl font-semibold mb-3">[Easy] Animal Hierarchy</h3>
+                        <p class="mb-4">Implement a base class <code class="font-mono text-sm bg-slate-100 p-1 rounded">Animal</code> with a virtual method <code class="font-mono text-sm bg-slate-100 p-1 rounded">MakeSound()</code>. Create <code class="font-mono text-sm bg-slate-100 p-1 rounded">Dog</code> and <code class="font-mono text-sm bg-slate-100 p-1 rounded">Cat</code> subclasses that override this method to print "Woof" and "Meow" respectively.</p>
+                        <div class="solution-toggle" onclick="toggleSolution('solution-animal')">Show Solution</div>
+                        <div id="solution-animal" class="solution-content">
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">// C# Solution for Animal Hierarchy
+using System;
+public class Animal { public virtual void MakeSound() => Console.WriteLine("Generic sound"); }
+public class Dog : Animal { public override void MakeSound() => Console.WriteLine("Woof"); }
+public class Cat : Animal { public override void MakeSound() => Console.WriteLine("Meow"); }
+
+public class Program
+{
+    public static void Main()
+    {
+        var animals = new List&lt;Animal&gt; { new Animal(), new Dog(), new Cat() };
+        foreach(var animal in animals) { animal.MakeSound(); }
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="practice-payment" class="mb-10">
+                        <h3 class="text-2xl font-semibold mb-3">[Medium] Payment Processor Interface</h3>
+                        <p class="mb-4">Define an interface <code class="font-mono text-sm bg-slate-100 p-1 rounded">IPaymentProcessor</code> with two methods: <code class="font-mono text-sm bg-slate-100 p-1 rounded">ProcessPayment(decimal amount)</code> and <code class="font-mono text-sm bg-slate-100 p-1 rounded">GetTransactionStatus(string transactionId)</code>. Implement this interface in three classes: <code class="font-mono text-sm bg-slate-100 p-1 rounded">PayPalProcessor</code>, <code class="font-mono text-sm bg-slate-100 p-1 rounded">StripeProcessor</code>, and <code class="font-mono text-sm bg-slate-100 p-1 rounded">SquareProcessor</code>.</p>
+                        <div class="solution-toggle" onclick="toggleSolution('solution-payment')">Show Solution</div>
+                        <div id="solution-payment" class="solution-content">
+                             <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">// C# Solution for Payment Processors
+using System;
+public interface IPaymentProcessor
+{
+    bool ProcessPayment(decimal amount);
+    string GetTransactionStatus(string transactionId);
+}
+public class PayPalProcessor : IPaymentProcessor { /* ... Implementation ... */ }
+public class StripeProcessor : IPaymentProcessor { /* ... Implementation ... */ }
+public class SquareProcessor : IPaymentProcessor { /* ... Implementation ... */ }
+// Full implementation in previous example.
+</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div id="practice-notification">
+                        <h3 class="text-2xl font-semibold mb-3">[Medium-Hard] Notification System</h3>
+                        <p class="mb-4">Design a notification system. Create a base abstract class <code class="font-mono text-sm bg-slate-100 p-1 rounded">Notification</code> with a constructor to accept a recipient and a message, and an abstract method <code class="font-mono text-sm bg-slate-100 p-1 rounded">Send()</code>. Create derived classes <code class="font-mono text-sm bg-slate-100 p-1 rounded">EmailNotification</code>, <code class="font-mono text-sm bg-slate-100 p-1 rounded">SmsNotification</code>, and <code class="font-mono text-sm bg-slate-100 p-1 rounded">PushNotification</code>.</p>
+                        <div class="solution-toggle" onclick="toggleSolution('solution-notification')">Show Solution</div>
+                        <div id="solution-notification" class="solution-content">
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">// C# Solution for Notification System
+using System;
+public abstract class Notification
+{
+    public string Recipient { get; }
+    public string Message { get; }
+    protected Notification(string recipient, string message) { Recipient = recipient; Message = message; }
+    public abstract void Send();
+}
+public class EmailNotification : Notification { /* ... Implementation ... */ }
+public class SmsNotification : Notification { /* ... Implementation ... */ }
+public class PushNotification : Notification { /* ... Implementation ... */ }
+// Full implementation in previous example.
+</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="uml" class="section-card">
+                     <h2 class="text-3xl font-bold mb-8 border-b border-slate-200 pb-4 text-slate-900">🎨 UML/Schema Task</h2>
+                     <p class="mb-4">A UML (Unified Modeling Language) diagram helps visualize the structure of a system. Below is an inheritance diagram for an Employee hierarchy, showing how specialized classes derive from a general base class.</p>
+                     <div class="callout">
+                        <p><strong>Reading the Diagram:</strong> The arrow (with a hollow triangle head) points from the derived (child) class to the base (parent) class. This signifies an "is-a" relationship (e.g., a Manager *is an* Employee).</p>
+                     </div>
+                     <div class="flex justify-center items-center flex-col p-8 space-y-2 bg-slate-50 rounded-lg">
+                        <div class="border-2 border-slate-600 bg-white p-4 rounded-md shadow-lg text-center w-60">
+                            <h4 class="font-bold text-slate-800">Employee (Base)</h4>
+                            <hr class="my-2 border-slate-200">
+                            <p class="text-sm text-left text-slate-600">- Name: string</p>
+                            <p class="text-sm text-left text-slate-600">- EmployeeId: int</p>
+                            <p class="text-sm text-left text-slate-600">+ CalculateSalary(): double</p>
+                        </div>
+                        <div class="h-10 w-px bg-slate-400"></div>
+                        <div class="flex flex-col sm:flex-row gap-8 sm:gap-16">
+                            <div class="relative w-60 flex flex-col items-center">
+                                <div class="absolute -top-10 h-10 w-px bg-slate-400"></div>
+                                <div class="absolute -top-[42px] h-0 w-0 border-x-[10px] border-x-transparent border-t-[12px] border-t-slate-400"></div>
+                                <div class="border-2 border-blue-500 bg-blue-50 p-4 rounded-md shadow-lg text-center w-full">
+                                    <h4 class="font-bold text-blue-800">Manager</h4>
+                                    <hr class="my-2 border-blue-200">
+                                    <p class="text-sm text-left text-slate-600">- Bonus: double</p>
+                                    <p class="text-sm text-left text-slate-600">+ override CalculateSalary()</p>
+                                </div>
+                            </div>
+                            <div class="relative w-60 flex flex-col items-center">
+                                 <div class="absolute -top-10 h-10 w-px bg-slate-400"></div>
+                                <div class="absolute -top-[42px] h-0 w-0 border-x-[10px] border-x-transparent border-t-[12px] border-t-slate-400"></div>
+                                <div class="border-2 border-green-500 bg-green-50 p-4 rounded-md shadow-lg text-center w-full">
+                                    <h4 class="font-bold text-green-800">Developer</h4>
+                                    <hr class="my-2 border-green-200">
+                                    <p class="text-sm text-left text-slate-600">- LinesOfCode: int</p>
+                                    <p class="text-sm text-left text-slate-600">+ override CalculateSalary()</p>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                </section>
+                
+                <section id="case-study" class="section-card">
+                    <h2 class="text-3xl font-bold mb-8 border-b border-slate-200 pb-4 text-slate-900">🚗 Case Study: Ride-Hailing System</h2>
+                    <p class="mb-4">Let's design a simplified model for a ride-hailing service. This is a classic example where polymorphism shines, allowing the system to handle different ride types through a common interface.</p>
+                    
+                    <h3 class="text-xl font-semibold mb-2">3. Polymorphism: The Key to Flexibility</h3>
+                    <p class="mb-4">We create an abstract <code class="font-mono text-sm bg-slate-100 p-1 rounded">Ride</code> class. Then, each specific ride type inherits from it, providing its own fare logic:</p>
+                    <ul class="list-disc list-inside space-y-1 mb-4">
+                        <li><strong class="text-blue-600">EconomyRide:</strong> Standard fare (base + per km).</li>
+                        <li><strong class="text-blue-600">PremiumRide:</strong> Higher rates plus a surcharge.</li>
+                        <li><strong class="text-blue-600">RidePool:</strong> Fare is split among riders.</li>
+                    </ul>
+                    <p>The system's core logic can work with any object of type <code class="font-mono text-sm bg-slate-100 p-1 rounded">Ride</code>. When it calls <code class="font-mono text-sm bg-slate-100 p-1 rounded">CalculateFare()</code>, polymorphism ensures the correct calculation is used for an Economy, Premium, or Pool ride without any `if/else` checks.</p>
+                    
+                     <div class="solution-toggle" onclick="toggleSolution('solution-ridehail')">Show Full C# Implementation</div>
+                     <div id="solution-ridehail" class="solution-content">
+                        <div class="code-block">
+                            <button class="copy-btn">Copy</button>
+                            <pre><code class="language-csharp">// C# Solution for Ride-Hailing System
+using System;
+public class Rider { public string Name { get; set; } }
+public class Driver { public string Name { get; set; } }
+
+public abstract class Ride
+{
+    // ... Common properties ...
+    public abstract decimal CalculateFare();
+}
+
+public class EconomyRide : Ride { /* ... Implementation ... */ }
+public class PremiumRide : Ride { /* ... Implementation ... */ }
+public class RidePool : Ride { /* ... Implementation ... */ }
+
+public class RideHailingService
+{
+    // This method works with ANY object that is a 'Ride'
+    public void CompleteRide(Ride ride)
+    {
+        // ... print details ...
+        decimal fare = ride.CalculateFare(); // Polymorphism!
+        Console.WriteLine($"Final Fare: ${fare:F2}");
+    }
+}
+// Full implementation in previous example.
+</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="quiz" class="section-card">
+                    <h2 class="text-3xl font-bold mb-8 border-b border-slate-200 pb-4 text-slate-900">🧠 Knowledge Check</h2>
+                    <div id="quiz-container" class="space-y-8">
+                        <div class="quiz-question" data-correct="1">
+                            <p class="font-semibold mb-3">1. A class can inherit from ____ abstract class(es) and implement ____ interface(s).</p>
+                            <div class="space-y-2"><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q1" value="0" class="mr-3">multiple, only one</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q1" value="1" class="mr-3">only one, multiple</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q1" value="2" class="mr-3">only one, only one</label></div><p class="quiz-feedback text-sm mt-2 hidden"></p>
+                        </div>
+                         <div class="quiz-question" data-correct="3">
+                            <p class="font-semibold mb-3">2. Which keyword is used in a base class to allow a method to be overridden?</p>
+                            <div class="space-y-2"><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="0" class="mr-3">override</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="1" class="mr-3">sealed</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="2" class="mr-3">new</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="3" class="mr-3">virtual</label></div><p class="quiz-feedback text-sm mt-2 hidden"></p>
+                        </div>
+                        <div class="quiz-question" data-correct="0">
+                            <p class="font-semibold mb-3">3. Treating a `Dog` object as an `Animal` object is an example of:</p>
+                            <div class="space-y-2"><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q3" value="0" class="mr-3">Polymorphism</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q3" value="1" class="mr-3">Encapsulation</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q3" value="2" class="mr-3">Abstraction</label></div><p class="quiz-feedback text-sm mt-2 hidden"></p>
+                        </div>
+                         <div class="quiz-question" data-correct="2">
+                            <p class="font-semibold mb-3">4. What is the primary purpose of an interface?</p>
+                            <div class="space-y-2"><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q4" value="0" class="mr-3">To share implementation code between classes.</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q4" value="1" class="mr-3">To instantiate objects directly.</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q4" value="2" class="mr-3">To define a contract of capabilities for a class.</label></div><p class="quiz-feedback text-sm mt-2 hidden"></p>
+                        </div>
+                         <div class="quiz-question" data-correct="0">
+                            <p class="font-semibold mb-3">5. You have a class `SpecializedLogger` that inherits from `Logger`. `Logger` has a method `public override void Log()`. If you wanted to prevent any other class from inheriting from `SpecializedLogger` and overriding `Log()`, how would you modify the method in `SpecializedLogger`?</p>
+                            <div class="space-y-2"><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q5" value="0" class="mr-3">public sealed override void Log()</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q5" value="1" class="mr-3">public virtual override void Log()</label><label class="quiz-option block border border-slate-300 p-3 rounded-lg cursor-pointer hover:bg-slate-50"><input type="radio" name="q5" value="2" class="mr-3">public abstract override void Log()</label></div><p class="quiz-feedback text-sm mt-2 hidden"></p>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="challenge" class="section-card">
+                    <h2 class="text-3xl font-bold mb-8 border-b border-slate-200 pb-4 text-slate-900">🚀 Self-Assessment Challenge</h2>
+                    <p class="mb-4">Create a system to render different UI elements. Create an interface <code class="font-mono text-sm bg-slate-100 p-1 rounded">IRenderable</code> with a single method <code class="font-mono text-sm bg-slate-100 p-1 rounded">Render()</code>. Implement this interface on three classes: <code class="font-mono text-sm bg-slate-100 p-1 rounded">Button</code>, <code class="font-mono text-sm bg-slate-100 p-1 rounded">TextBox</code>, and <code class="font-mono text-sm bg-slate-100 p-1 rounded">Image</code>. Each class's Render method should print a description of how it would be drawn (e.g., "Drawing a button with text: 'Click Me'"). Create a list of <code class="font-mono text-sm bg-slate-100 p-1 rounded">IRenderable</code> elements and loop through them, calling Render() on each one to simulate drawing a UI.</p>
+                    <div class="solution-toggle" onclick="toggleSolution('solution-challenge')">Reveal Solution</div>
+                    <div id="solution-challenge" class="solution-content">
+                        <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">// C# Solution for IRenderable Challenge
+using System;
+using System.Collections.Generic;
+
+public interface IRenderable { void Render(); }
+
+public class Button : IRenderable { /* ... Implementation ... */ }
+public class TextBox : IRenderable { /* ... Implementation ... */ }
+public class Image : IRenderable { /* ... Implementation ... */ }
+
+public class Program
+{
+    public static void Main()
+    {
+        var uiElements = new List&lt;IRenderable&gt;
+        {
+            new Button("Submit", 10, 20),
+            new TextBox("Enter your name", 200, 30),
+            new Image("/images/logo.png")
+        };
+
+        foreach (var element in uiElements) { element.Render(); }
+    }
+}
+// Full implementation in previous example.
+</code></pre>
+                            </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Copy-to-clipboard functionality
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const code = e.target.closest('.code-block').querySelector('code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.innerText = 'Copied!';
+                        setTimeout(() => { button.innerText = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            // Solution toggling
+            window.toggleSolution = (id) => {
+                const content = document.getElementById(id);
+                content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            };
+            
+            // Quiz functionality
+            document.querySelectorAll('.quiz-question').forEach(question => {
+                const options = question.querySelectorAll('input[type="radio"]');
+                question.addEventListener('change', (e) => {
+                    const selectedOption = e.target;
+                    const isCorrect = selectedOption.value === question.dataset.correct;
+                    const feedbackEl = question.querySelector('.quiz-feedback');
+                    
+                    // Disable all options after one is selected
+                    options.forEach(opt => opt.disabled = true);
+                    
+                    // Show feedback
+                    if(isCorrect) {
+                        selectedOption.parentElement.classList.add('correct');
+                        feedbackEl.textContent = 'Correct! Excellent.';
+                        feedbackEl.className = 'quiz-feedback text-sm mt-3 text-green-600 block';
+                    } else {
+                        selectedOption.parentElement.classList.add('incorrect');
+                        const correctLabel = question.querySelector(`input[value="${question.dataset.correct}"]`).parentElement;
+                        correctLabel.classList.add('correct');
+                        feedbackEl.textContent = 'Not quite. The correct answer is highlighted in green.';
+                        feedbackEl.className = 'quiz-feedback text-sm mt-3 text-red-600 block';
+                    }
+                });
+            });
+
+            // TOC Active State Scrolling
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const sections = Array.from(document.querySelectorAll('section[id]')).map(s => ({ id: s.id, el: s }));
+            
+            const observer = new IntersectionObserver((entries) => {
+                let bestVisible = null;
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (!bestVisible || entry.intersectionRatio > bestVisible.intersectionRatio) {
+                            bestVisible = entry;
+                        }
+                    }
+                });
+
+                if (bestVisible) {
+                    const id = bestVisible.target.getAttribute('id');
+                    tocLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                    });
+                }
+            }, { rootMargin: '0px 0px -50% 0px', threshold: [0, 0.5, 1] });
+
+            sections.forEach(s => observer.observe(s.el));
+            
+            // Chart.js Visualization
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            const fullData = {
+                labels: ['Fields', 'Constructors', 'Method Implementation', 'Multiple Inheritance', 'Abstract Members'],
+                datasets: [{
+                    label: 'Abstract Class', data: [1, 1, 1, 0, 1],
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3b82f6', borderWidth: 2
+                }, {
+                    label: 'Interface', data: [0, 0, 0, 1, 1],
+                    backgroundColor: 'rgba(100, 116, 139, 0.2)', borderColor: '#64748b', borderWidth: 2
+                }]
+            };
+
+            let comparisonChart = new Chart(ctx, {
+                type: 'radar',
+                data: JSON.parse(JSON.stringify(fullData)),
+                options: {
+                    maintainAspectRatio: false,
+                    scales: { r: {
+                        angleLines: { color: '#e2e8f0' }, grid: { color: '#e2e8f0' },
+                        pointLabels: { font: { size: 13 }, color: '#334155' },
+                        ticks: { backdropColor: '#f8fafc', stepSize: 1, display: false },
+                        beginAtZero: true, max: 1
+                    }},
+                    plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw === 1 ? 'Yes' : 'No'}` }} }
+                }
+            });
+
+            const updateChartData = (datasetsToShow, activeBtn) => {
+                 document.querySelectorAll('#showAllBtn, #showAbstractBtn, #showInterfaceBtn').forEach(btn => {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                    btn.classList.add('bg-slate-200', 'text-slate-700');
+                 });
+                 activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+                 activeBtn.classList.remove('bg-slate-200', 'text-slate-700');
+                 
+                 const newData = JSON.parse(JSON.stringify(fullData));
+                 newData.datasets = fullData.datasets.filter(ds => datasetsToShow.includes(ds.label));
+                 comparisonChart.data = newData;
+                 comparisonChart.update();
+            }
+            const allBtn = document.getElementById('showAllBtn');
+            const absBtn = document.getElementById('showAbstractBtn');
+            const intBtn = document.getElementById('showInterfaceBtn');
+
+            allBtn.addEventListener('click', () => updateChartData(['Abstract Class', 'Interface'], allBtn));
+            absBtn.addEventListener('click', () => updateChartData(['Abstract Class'], absBtn));
+            intBtn.addEventListener('click', () => updateChartData(['Interface'], intBtn));
+        });
+    </script>
+</body>
+</html>

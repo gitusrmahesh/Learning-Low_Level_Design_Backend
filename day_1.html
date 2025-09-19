@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low-Level Design: Day 1 - OOP, Encapsulation & Abstraction</title>
+    <!-- Chosen Palette: Slate & Indigo -->
+    <!-- Application Structure Plan: A single-page educational module with a two-column layout. The main, scrollable content resides in a wider left column, while a sticky table of contents is fixed to the right. This "documentation-style" layout is chosen for its excellent usability on larger screens, allowing users to see their progress and jump between sections without losing their place. On mobile, the TOC stacks on top for linear navigation. This structure provides both focused reading and effortless non-linear exploration. -->
+    <!-- Visualization & Content Choices: 
+        - Theory/Concepts: Goal: Inform/Explain. Method: Detailed text blocks with highlighted keywords and call-out boxes for emphasis. Interaction: None. Justification: Clear, structured text is the most effective way to convey foundational knowledge.
+        - Code/Syntax: Goal: Demonstrate. Method: Syntax-highlighted code blocks. Interaction: Copy-to-clipboard button. Justification: Provides clean, readable, and reusable code examples essential for a programming course.
+        - UML/Sequence Diagrams: Goal: Organize/Visualize relationships. Method: Custom HTML/CSS flexbox and grid layouts to simulate diagrams. Interaction: None. Justification: This technique visually represents system design without external files or forbidden libraries (SVG/Mermaid), maintaining the single-file constraint.
+        - Quiz/Challenge: Goal: Assess/Apply. Method: Interactive, JS-powered components with instant feedback and revealable solutions. Interaction: Click to answer/reveal. Justification: Active recall and self-assessment are proven methods for reinforcing learning and boosting knowledge retention.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active { color: #4f46e5; font-weight: 600; border-left-color: #4f46e5; transform: translateX(4px); }
+        .toc-link { transition: all 0.2s ease-in-out; }
+        .code-block { position: relative; }
+        .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background-color: #334155; color: #e2e8f0; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; opacity: 0; transition: all 0.2s; border: 1px solid #475569; }
+        .code-block:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { background-color: #475569; }
+        .quiz-option { cursor: pointer; transition: all 0.2s ease-in-out; }
+        .quiz-option:hover { background-color: #eef2ff; border-color: #818cf8; transform: scale(1.01); }
+        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; color: #15803d; font-weight: 500; }
+        .quiz-option.incorrect { background-color: #fee2e2; border-color: #ef4444; color: #b91c1c; font-weight: 500; }
+        .quiz-option.reveal { border-color: #22c55e !important; }
+        .solution-toggle { cursor: pointer; }
+        .uml-class, .uml-actor, .seq-obj { border: 2px solid #94a3b8; padding: 0.75rem; text-align: center; background-color: #f8fafc; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+        .uml-class .title { font-weight: 700; color: #1e293b; border-bottom: 2px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+        .uml-connector { position: relative; display: flex; align-items: center; justify-content: center; margin: 1rem 0; height: 2px; background-color: #94a3b8; }
+        .uml-connector-v { width: 2px; background-color: #94a3b8; margin: 0 auto; }
+        .uml-label { position: absolute; background-color: #f8fafc; padding: 0 0.5rem; color: #475569; font-size: 0.875rem; font-weight: 500; }
+        .seq-line { border-left: 2px dashed #94a3b8; height: 100%; position: absolute; left: 50%; transform: translateX(-1px); }
+        .seq-arrow { width: 100%; height: 2px; background-color: #3b82f6; position: relative; }
+        .seq-arrow::after { content: '▶'; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); color: #3b82f6; font-size: 1.1rem; }
+        .seq-arrow-return { background: none; border-top: 2px dashed #64748b; }
+        .seq-arrow-return::after { content: '◀'; color: #64748b; font-size: 1.1rem; left: -4px; right: auto; }
+        pre code.hljs { border-radius: 0.5rem; padding: 1.25rem !important; }
+        .content-card { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05); }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="flex flex-col-reverse lg:flex-row lg:space-x-12">
+            <main class="w-full lg:w-3/4 mt-8 lg:mt-0">
+                <div class="mb-12">
+                    <p class="text-indigo-600 font-semibold">Day 1: OOP Foundations</p>
+                    <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight mt-1 font-lexend">Introduction to Encapsulation & Abstraction</h1>
+                    <p class="mt-3 text-lg text-slate-600">Learn how to protect your data and manage complexity—the two foundational pillars of robust backend systems.</p>
+                </div>
+                
+                <section id="theory" class="scroll-mt-24 space-y-12">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">Theory Deep Dive</h2>
+                    
+                    <article class="content-card p-6">
+                        <h3 class="text-2xl font-semibold text-slate-800">1. Objects and Classes in C#</h3>
+                        <p class="mt-3 text-slate-700 leading-relaxed text-base">
+                            At the heart of OOP are two core concepts: the <strong class="text-indigo-600 font-semibold">class</strong> and the <strong class="text-indigo-600 font-semibold">object</strong>. A class is a blueprint—a detailed plan for creating something. An object is the actual "something" built from that plan. For instance, a `Car` class would define that all cars have properties like `Color` and `Model`, and behaviors like `StartEngine()`. An object would be `myRedTesla`, a specific instance of a car with its own unique state (`Color = "Red"`, `Model = "Model S"`).
+                        </p>
+                        <div class="mt-4 p-4 bg-indigo-50 border-l-4 border-indigo-400 rounded-r-lg">
+                            <p class="text-indigo-800"><strong class="font-semibold">Key Idea:</strong> A class defines the structure and behavior, while an object represents a specific entity with its own data based on that structure.</p>
+                        </div>
+                        <h4 class="font-semibold mt-6 mb-2 text-slate-800">Syntax Snippet</h4>
+                        <div class="code-block">
+                            <pre><code class="language-csharp">
+// The Blueprint: Defines what a Car is.
+public class Car 
+{
+    // Properties (data fields)
+    public string Color;
+    public string Model;
+
+    // Method (behavior)
+    public void StartEngine() 
+    {
+        Console.WriteLine($"{Model} engine started!");
+    }
+}
+
+// Creating Instances (Objects) from the blueprint
+Car myCar = new Car(); // 'new' keyword creates the object in memory
+myCar.Color = "Red";
+myCar.Model = "Tesla Model S";
+myCar.StartEngine(); // Output: Tesla Model S engine started!
+                            </code></pre>
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </article>
+
+                    <article class="content-card p-6">
+                        <h3 class="text-2xl font-semibold text-slate-800">2. Access Modifiers</h3>
+                        <p class="mt-3 text-slate-700 leading-relaxed text-base">
+                            Access modifiers are keywords that control the visibility of your classes and their members. They are the gatekeepers of your code, enforcing the rules of encapsulation.
+                        </p>
+                        <ul class="mt-4 space-y-3 list-disc list-inside text-slate-700">
+                            <li><strong class="text-slate-800 font-semibold">public:</strong> Fully accessible. Any code in any project can see and use it. Use for the main "entry points" of your class.</li>
+                            <li><strong class="text-slate-800 font-semibold">private:</strong> Highly restrictive. Only code within the same class can access it. This is the default for members and is used to hide internal data.</li>
+                            <li><strong class="text-slate-800 font-semibold">protected:</strong> Accessible within the class and by any subclasses that inherit from it. Essential for creating extensible base classes.</li>
+                            <li><strong class="text-slate-800 font-semibold">internal:</strong> Accessible only within the same project (assembly). Useful for helper classes that you don't want to expose to other projects that might reference yours.</li>
+                        </ul>
+                    </article>
+
+                    <article class="content-card p-6">
+                        <h3 class="text-2xl font-semibold text-slate-800">3. Encapsulation: The Principle of Data Hiding</h3>
+                        <p class="mt-3 text-slate-700 leading-relaxed text-base">
+                            Encapsulation is the practice of bundling data and the methods that operate on that data into a single unit (the class), and critically, restricting direct access to that data from outside. The goal is to protect an object's internal state. You achieve this by making data fields <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono text-sm">private</code> and providing <code class="bg-slate-200 text-slate-800 p-1 rounded font-mono text-sm">public</code> methods (often called getters and setters, or properties in C#) to interact with that data.
+                        </p>
+                         <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                            <p class="text-amber-800"><strong class="font-semibold">Why it's crucial for backend systems:</strong> It ensures data integrity. By forcing interactions through methods, you can add validation logic (e.g., `price cannot be negative`). This makes your system more robust, secure, and easier to maintain because you can change the internal implementation without breaking the code that uses your class.
+                            </p>
+                        </div>
+                        <h4 class="font-semibold mt-6 mb-2 text-slate-800">Analogy: A Bank Account</h4>
+                        <div class="code-block">
+                            <pre><code class="language-csharp">
+public class BankAccount
+{
+    // 1. Data is hidden (private). No one can just set the balance.
+    private decimal _balance;
+
+    // 2. A public Property provides controlled access.
+    public decimal Balance 
+    {
+        get { return _balance; } // Getter: Safely expose the data
+        private set {            // Setter is private: Only code inside this class can change the balance.
+            if (value < 0) {
+                throw new ArgumentException("Balance cannot be negative.");
+            }
+            _balance = value;
+        }
+    }
+
+    public BankAccount(decimal initialBalance) {
+        Balance = initialBalance; // Uses the property's validation logic!
+    }
+
+    // 3. Public methods define the ONLY ways to modify the state.
+    public void Deposit(decimal amount) {
+        if (amount > 0) {
+            Balance += amount;
+        }
+    }
+}
+                            </code></pre>
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </article>
+
+                    <article class="content-card p-6">
+                        <h3 class="text-2xl font-semibold text-slate-800">4. Abstraction: The Principle of Hiding Complexity</h3>
+                        <p class="mt-3 text-slate-700 leading-relaxed text-base">
+                           Abstraction is about hiding complex implementation details and showing only the essential, high-level features. It's the "what" vs. the "how." You define a contract of what an object can do, without specifying how it does it. This is primarily achieved in C# using <strong class="text-indigo-600 font-semibold">abstract classes</strong> and <strong class="text-indigo-600 font-semibold">interfaces</strong>.
+                        </p>
+                        <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                             <p class="text-amber-800"><strong class="font-semibold">Why it's crucial for backend systems:</strong> It decouples components. Your application can depend on an abstraction (like an `IRepository` interface) rather than a concrete implementation (like `SqlServerRepository`). This makes your system incredibly flexible. You can easily swap `SqlServerRepository` for `MongoDbRepository` without changing any of the application code, as long as both implement the `IRepository` contract.
+                            </p>
+                        </div>
+                         <h4 class="font-semibold mt-6 mb-2 text-slate-800">Analogy: A Remote Control</h4>
+                         <div class="code-block">
+                            <pre><code class="language-csharp">
+// The Abstraction (The Contract): Defines "what" can be done.
+public interface IMessageService
+{
+    void SendMessage(string recipient, string message);
+}
+
+// Concrete Implementation 1: The "how" for sending an email.
+public class EmailService : IMessageService
+{
+    public void SendMessage(string recipient, string message)
+    {
+        // Complex logic for SMTP connection, authentication, etc. is hidden here.
+        Console.WriteLine($"Sending EMAIL to {recipient}: {message}");
+    }
+}
+
+// Concrete Implementation 2: The "how" for sending an SMS.
+public class SmsService : IMessageService
+{
+    public void SendMessage(string recipient, string message)
+    {
+        // Complex logic for connecting to a gateway provider is hidden here.
+        Console.WriteLine($"Sending SMS to {recipient}: {message}");
+    }
+}
+                            </code></pre>
+                             <button class="copy-btn">Copy</button>
+                        </div>
+                    </article>
+
+                    <article class="content-card p-6">
+                        <h3 class="text-2xl font-semibold text-slate-800">Key Differences: Encapsulation vs. Abstraction</h3>
+                        <div class="overflow-x-auto mt-4">
+                            <table class="w-full min-w-full divide-y divide-gray-200 border">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Feature</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Encapsulation</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Abstraction</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">Main Goal</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600"><strong>Data Hiding:</strong> To protect the internal state of an object.</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600"><strong>Complexity Hiding:</strong> To hide implementation details.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">Concern</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600">Concerned with the internal structure and integrity of an object.</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600">Concerned with the external contract or interface of an object.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">Mechanism</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600">Achieved using access modifiers (e.g., `private`).</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600">Achieved using `abstract` classes and `interfaces`.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-800">Analogy</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600">A capsule with medicine inside, protecting it from the outside.</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-slate-600">A TV remote control, providing a simple interface to a complex device.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+
+                <section id="practice" class="scroll-mt-24 mt-16">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">Coding Practice</h2>
+                    <div class="mt-4 content-card p-6">
+                        <p class="text-slate-700">Write a simple <code>Book</code> class with <code>Title</code>, <code>Author</code>, and a <strong>private</strong> <code>Price</code>. Add public methods <code>GetPrice()</code> to retrieve the price and <code>ApplyDiscount(decimal percentage)</code> to apply a discount, ensuring the price never drops below zero.</p>
+                         <div class="code-block mt-4">
+                            <pre><code class="language-csharp">
+using System;
+
+public class Book
+{
+    public string Title { get; set; }
+    public string Author { get; set; }
+    
+    // Price is encapsulated: hidden from direct access
+    private decimal _price;
+
+    public Book(string title, string author, decimal initialPrice)
+    {
+        Title = title;
+        Author = author;
+        // Ensure price is valid on creation
+        _price = (initialPrice > 0) ? initialPrice : 0;
+    }
+
+    // Public "getter" to safely expose the private price
+    public decimal GetPrice()
+    {
+        return _price;
+    }
+
+    // Public method to safely modify the private price
+    public void ApplyDiscount(decimal discountPercentage)
+    {
+        if (discountPercentage > 0 && discountPercentage <= 100)
+        {
+            decimal discountAmount = _price * (discountPercentage / 100);
+            _price -= discountAmount;
+
+            // Ensure price doesn't fall below zero
+            if (_price < 0)
+            {
+                _price = 0;
+            }
+        }
+    }
+}
+
+// Example Usage:
+public class Program
+{
+    public static void Main()
+    {
+        Book myBook = new Book("The Pragmatic Programmer", "Andy Hunt", 25.50m);
+        Console.WriteLine($"Initial Price: ${myBook.GetPrice()}");
+
+        // myBook._price = -10; // This will cause a compile error because '_price' is private
+
+        myBook.ApplyDiscount(10); // Apply a 10% discount
+        Console.WriteLine($"Price after 10% discount: ${myBook.GetPrice():F2}");
+
+        myBook.ApplyDiscount(200); // Try to apply an invalid discount
+        Console.WriteLine($"Price after invalid discount: ${myBook.GetPrice():F2}"); // Price remains unchanged
+    }
+}
+                            </code></pre>
+                            <button class="copy-btn">Copy</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="problems" class="scroll-mt-24 mt-16 space-y-8">
+                     <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">Problem Solving</h2>
+                     <article class="content-card p-6">
+                         <h3 class="text-xl font-semibold text-slate-800">[Easy] Implement a Stack using arrays.</h3>
+                         <p class="mt-2 text-slate-700">A stack is a Last-In, First-Out (LIFO) data structure. The main operations are Push (add item), Pop (remove item), and Peek (view top item).</p>
+                         <div class="code-block mt-4">
+                            <pre><code class="language-csharp">
+public class ArrayStack
+{
+    private int[] _items;
+    private int _top;
+
+    public ArrayStack(int capacity)
+    {
+        _items = new int[capacity];
+        _top = -1; // Stack is initially empty
+    }
+
+    public void Push(int item)
+    {
+        if (_top == _items.Length - 1)
+        {
+            throw new InvalidOperationException("Stack is full.");
+        }
+        _items[++_top] = item;
+    }
+
+    public int Pop()
+    {
+        if (_top == -1)
+        {
+            throw new InvalidOperationException("Stack is empty.");
+        }
+        return _items[_top--];
+    }
+
+    public int Peek()
+    {
+        if (_top == -1)
+        {
+            throw new InvalidOperationException("Stack is empty.");
+        }
+        return _items[_top];
+    }
+}
+                            </code></pre>
+                             <button class="copy-btn">Copy</button>
+                         </div>
+                     </article>
+                      <article class="content-card p-6">
+                         <h3 class="text-xl font-semibold text-slate-800">[Easy] Reverse a Linked List.</h3>
+                         <p class="mt-2 text-slate-700">Given the head of a singly linked list, reverse the list, and return the new head.</p>
+                         <div class="code-block mt-4">
+                            <pre><code class="language-csharp">
+public class ListNode {
+    public int val;
+    public ListNode next;
+    public ListNode(int val=0, ListNode next=null) {
+        this.val = val;
+        this.next = next;
+    }
+}
+
+public class Solution {
+    public ListNode ReverseList(ListNode head) {
+        ListNode prev = null;
+        ListNode current = head;
+        while (current != null) {
+            ListNode nextTemp = current.next;
+            current.next = prev;
+            prev = current;
+            current = nextTemp;
+        }
+        return prev; // `prev` is now the new head
+    }
+}
+                            </code></pre>
+                            <button class="copy-btn">Copy</button>
+                         </div>
+                     </article>
+                      <article class="content-card p-6">
+                         <h3 class="text-xl font-semibold text-slate-800">[Medium] Implement a Queue class with O(1) enqueue/dequeue.</h3>
+                         <p class="mt-2 text-slate-700">A queue is a First-In, First-Out (FIFO) data structure. Using a custom doubly-linked list allows for O(1) time complexity for both adding (enqueue) and removing (dequeue) items.</p>
+                         <div class="code-block mt-4">
+                            <pre><code class="language-csharp">
+public class QueueNode<T>
+{
+    public T Value { get; set; }
+    public QueueNode<T> Next { get; set; }
+    public QueueNode(T value) { Value = value; }
+}
+
+public class MyQueue<T>
+{
+    private QueueNode<T> _head;
+    private QueueNode<T> _tail;
+    public int Count { get; private set; }
+
+    public void Enqueue(T value)
+    {
+        var newNode = new QueueNode<T>(value);
+        if (_tail == null)
+        {
+            _head = _tail = newNode;
+        }
+        else
+        {
+            _tail.Next = newNode;
+            _tail = newNode;
+        }
+        Count++;
+    }
+
+    public T Dequeue()
+    {
+        if (_head == null)
+        {
+            throw new InvalidOperationException("Queue is empty.");
+        }
+        
+        T value = _head.Value;
+        _head = _head.Next;
+
+        if (_head == null)
+        {
+            _tail = null;
+        }
+        
+        Count--;
+        return value;
+    }
+}
+                            </code></pre>
+                            <button class="copy-btn">Copy</button>
+                         </div>
+                     </article>
+                </section>
+                
+                <section id="uml" class="scroll-mt-24 mt-16">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">UML/Schema Design Task</h2>
+                    <div class="mt-4 content-card p-6">
+                        <p class="text-slate-700">Create a class diagram for a Library Management system with Book, Member, and Loan classes. The diagram should show an aggregation relationship, where a Member can have many Loans.</p>
+                        <div class="mt-6">
+                            <div class="flex flex-col items-center space-y-6 md:flex-row md:space-y-0 md:items-start md:justify-around">
+                                <div class="uml-class w-52">
+                                    <div class="title">Book</div>
+                                    <div class="text-left text-sm space-y-1 text-slate-600">
+                                        <p>- ISBN: string</p>
+                                        <p>- Title: string</p>
+                                        <p>- Author: string</p>
+                                    </div>
+                                </div>
+                                <div class="uml-class w-52">
+                                    <div class="title">Member</div>
+                                    <div class="text-left text-sm space-y-1 text-slate-600">
+                                        <p>- MemberID: string</p>
+                                        <p>- Name: string</p>
+                                    </div>
+                                </div>
+                                <div class="uml-class w-52">
+                                    <div class="title">Loan</div>
+                                    <div class="text-left text-sm space-y-1 text-slate-600">
+                                        <p>- LoanDate: DateTime</p>
+                                        <p>- DueDate: DateTime</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-10 flex justify-center items-center">
+                                <div class="text-center">
+                                    <div class="font-semibold text-slate-700">Member</div>
+                                    <div class="uml-connector-v h-6"></div>
+                                    <div class="uml-connector w-72 md:w-96">
+                                        <div class="uml-label">has many &lt;&gt; (Aggregation)</div>
+                                    </div>
+                                    <div class="uml-connector-v h-6"></div>
+                                    <div class="font-semibold text-slate-700">Loan</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-slate-50 border-t border-slate-200 rounded-b-lg">
+                            <h4 class="font-semibold text-slate-800">Design Breakdown:</h4>
+                            <p class="mt-2 text-sm text-slate-600">Aggregation (the empty diamond &lt;&gt;) signifies a "has-a" relationship. A `Member` "has" `Loan`s. Crucially, if a `Member` is deleted, their `Loan` records can still exist in the system for historical purposes. The `Loan`s are not dependent on the `Member`'s lifecycle.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="case-study" class="scroll-mt-24 mt-16">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">Case Study: URL Shortener</h2>
+                    <div class="mt-4 content-card p-6">
+                        <p class="text-slate-700">Build the first draft of a URL Shortener. The system should take a long URL and produce a short, unique code. A common approach is using a database with an auto-incrementing ID. We then convert this integer ID into a Base62 string ([a-zA-Z0-9]) for a shorter, URL-friendly code.</p>
+                         <h3 class="text-xl font-semibold text-slate-800 mt-6">Sequence Diagram</h3>
+                         <div class="mt-4 p-8">
+                            <div class="grid grid-cols-3 gap-x-4 md:gap-x-8 text-center text-sm font-semibold">
+                                <div class="seq-obj">👤<br>User</div>
+                                <div class="seq-obj">💻<br>API Server</div>
+                                <div class="seq-obj">🗄️<br>Database</div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-x-4 md:gap-x-8 h-80 mt-4 relative">
+                                <div class="relative"><div class="seq-line"></div></div>
+                                <div class="relative"><div class="seq-line"></div></div>
+                                <div class="relative"><div class="seq-line"></div></div>
+                                
+                                <div class="absolute w-full top-8" style="padding-left: 16.66%; padding-right: 16.66%;"><div class="relative w-1/2"><div class="seq-arrow"></div><div class="absolute -top-6 text-xs text-slate-600">1. POST /shorten (longUrl)</div></div></div>
+                                <div class="absolute w-full top-24" style="padding-left: 50%;"><div class="relative w-1/2"><div class="seq-arrow"></div><div class="absolute -top-6 text-xs text-slate-600">2. INSERT longUrl, get ID</div></div></div>
+                                <div class="absolute w-full top-40" style="padding-left: 50%;"><div class="relative w-1/2" style="transform: scaleX(-1);"><div class="seq-arrow seq-arrow-return"></div><div class="absolute -top-6 text-xs text-slate-600 w-full text-right" style="transform: scaleX(-1);">3. Return ID</div></div></div>
+                                <div class="absolute w-full top-56 text-center" style="padding-left: 33.33%; padding-right: 33.33%;"><div class="relative"><div class="text-xs text-slate-600 bg-indigo-50 p-1 rounded-md border border-indigo-200">🔄 4. Encode ID to Base62</div></div></div>
+                                <div class="absolute w-full top-72" style="padding-left: 16.66%; padding-right: 16.66%;"><div class="relative w-1/2" style="transform: scaleX(-1);"><div class="seq-arrow seq-arrow-return"></div><div class="absolute -top-6 text-xs text-slate-600 w-full text-right" style="transform: scaleX(-1);">5. Return shortUrl</div></div></div>
+                            </div>
+                         </div>
+                         <div class="mt-4 p-4 bg-slate-50 border-t border-slate-200 rounded-b-lg">
+                            <h4 class="font-semibold text-slate-800">Design Breakdown:</h4>
+                            <p class="mt-2 text-sm text-slate-600">This diagram shows the flow of requests. The API server abstracts the database logic. The user only interacts with the server, not the database. The server encapsulates the process of creating a record, getting an ID, and then encoding it. We use Base62 because it's URL-safe and creates very short strings even for large numbers (e.g., the number `1,000,000` becomes just `gBi` in Base62).</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="quiz" class="scroll-mt-24 mt-16">
+                    <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">Knowledge Check Quiz</h2>
+                    <div id="quiz-container" class="mt-6 space-y-8"></div>
+                    <div id="quiz-results" class="mt-6 hidden p-4 rounded-lg bg-indigo-100 text-indigo-800 font-semibold text-lg"></div>
+                </section>
+
+                <section id="challenge" class="scroll-mt-24 mt-16">
+                     <h2 class="text-3xl font-bold text-slate-900 border-b-2 border-slate-200 pb-3 font-lexend">Self-Assessment Challenge</h2>
+                     <article class="mt-6 content-card">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-slate-800">Challenge: Design a Vending Machine</h3>
+                            <p class="mt-2 text-slate-700">
+                               Design the classes for a simple vending machine. It should have a collection of items, each with a name, price, and quantity. The machine should accept money, dispense an item if enough money is inserted and the item is in stock, and provide change.
+                            </p>
+                            <p class="mt-2 text-slate-700">
+                               Focus on encapsulation. What data should be private? What methods should be public? Think about classes like <code>VendingMachine</code> and <code>Item</code>.
+                            </p>
+                        </div>
+                        <div class="mt-2 p-6 border-t border-slate-200 bg-slate-50 rounded-b-lg">
+                            <button id="solution-toggle" class="solution-toggle inline-flex items-center font-semibold text-indigo-600 hover:text-indigo-800 group">
+                                <span class="mr-2">Reveal Detailed Solution</span>
+                                <svg id="solution-arrow" class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                            <div id="solution-content" class="hidden mt-4">
+                                <div class="code-block">
+                                    <pre><code class="language-csharp">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+// Represents a single item slot in the machine.
+// Note: This class is mostly a data container, but its setters could be private.
+public class Item
+{
+    public string Name { get; private set; }
+    public decimal Price { get; private set; }
+    public int Quantity { get; internal set; } // Internal: only code in this project can change it.
+
+    public Item(string name, decimal price, int quantity)
+    {
+        Name = name; Price = price; Quantity = quantity;
+    }
+}
+
+public class VendingMachine
+{
+    // --- Encapsulated Data (private) ---
+    // The machine's core state is completely hidden and protected.
+    private List<Item> _inventory;
+    private decimal _currentBalance;
+
+    // --- Public Constructor ---
+    public VendingMachine()
+    {
+        _inventory = new List<Item>();
+        _currentBalance = 0;
+    }
+    
+    // --- Public Interface (the only way to interact with the machine) ---
+
+    // Method to load items into the machine
+    public void StockItem(Item item) {
+        _inventory.Add(item);
+    }
+
+    // Method to insert money, updating the internal balance
+    public void InsertMoney(decimal amount)
+    {
+        if (amount > 0) _currentBalance += amount;
+    }
+
+    // Main interaction method with validation logic
+    public string DispenseItem(string itemName)
+    {
+        Item item = _inventory.FirstOrDefault(i => i.Name.Equals(itemName, StringComparison.OrdinalIgnoreCase));
+
+        if (item == null) return "Item not found.";
+        if (item.Quantity == 0) return $"{item.Name} is out of stock.";
+        if (_currentBalance < item.Price) return $"Insufficient funds. Please insert at least ${item.Price - _currentBalance:F2} more.";
+        
+        _currentBalance -= item.Price;
+        item.Quantity--; // Modify internal state
+
+        string result = $"Dispensing {item.Name}.";
+        decimal change = ReturnChange(); // Use private helper
+        if (change > 0) result += $" Your change is ${change:F2}.";
+        
+        return result;
+    }
+
+    public decimal GetCurrentBalance() { return _currentBalance; }
+
+    // --- Private Helper Method (internal complexity) ---
+    private decimal ReturnChange()
+    {
+        decimal changeToReturn = _currentBalance;
+        _currentBalance = 0; // Reset internal state
+        return changeToReturn;
+    }
+}
+                                    </code></pre>
+                                    <button class="copy-btn">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                     </article>
+                </section>
+            </main>
+
+            <aside class="w-full lg:w-1/4">
+                <nav id="toc" class="sticky top-24">
+                    <h3 class="font-bold text-slate-900 mb-4 text-lg font-lexend">On this page</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#theory" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Theory Deep Dive</a></li>
+                        <li><a href="#practice" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Coding Practice</a></li>
+                        <li><a href="#problems" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Problem Solving</a></li>
+                        <li><a href="#uml" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">UML/Schema Design</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-4 border-transparent pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-300">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        hljs.highlightAll();
+
+        const tocLinks = document.querySelectorAll('.toc-link');
+        const sections = document.querySelectorAll('main section');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    if(tocLink) tocLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: "-30% 0px -70% 0px", threshold: 0 });
+
+        sections.forEach(section => { observer.observe(section); });
+
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const code = button.previousElementSibling.textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    button.textContent = 'Copied!';
+                    setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+                }).catch(err => { console.error('Failed to copy text: ', err); });
+            });
+        });
+
+        const solutionToggle = document.getElementById('solution-toggle');
+        const solutionContent = document.getElementById('solution-content');
+        const solutionArrow = document.getElementById('solution-arrow');
+        solutionToggle.addEventListener('click', () => {
+            const isHidden = solutionContent.classList.contains('hidden');
+            solutionContent.classList.toggle('hidden');
+            solutionArrow.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+        });
+
+        const quizData = [
+            { question: "Which principle is primarily concerned with hiding complex implementation details behind a simple interface?", options: ["Abstraction", "Inheritance", "Encapsulation", "Polymorphism"], answer: "Abstraction" },
+            { question: "What is the most restrictive access modifier in C#?", options: ["public", "internal", "protected", "private"], answer: "private" },
+            { question: "A `class` is to an `object` as a blueprint is to a ____.", options: ["house", "drawing", "window", "architect"], answer: "house" },
+            { question: "The main goal of Encapsulation is to protect an object's...", options: ["Methods", "Name", "Internal State", "Interface"], answer: "Internal State" },
+            { question: "Which C# feature is a pure form of Abstraction, defining a contract without any implementation?", options: ["Static Class", "Interface", "Struct", "Sealed Class"], answer: "Interface" },
+            { question: "If you want a member to be accessible to child classes but not to the public, which modifier should you use?", options: ["private", "public", "internal", "protected"], answer: "protected" }
+        ];
+        
+        const quizContainer = document.getElementById('quiz-container');
+        const quizResults = document.getElementById('quiz-results');
+        let score = 0; let questionsAnswered = 0;
+
+        quizData.forEach((q, index) => {
+            const questionElement = document.createElement('article');
+            questionElement.className = 'content-card p-6';
+            questionElement.innerHTML = `
+                <h3 class="font-semibold text-slate-800 text-base">${index + 1}. ${q.question}</h3>
+                <div class="mt-4 space-y-3">
+                    ${q.options.map(opt => `<div class="quiz-option border-2 border-slate-200 rounded-md p-3 hover:bg-slate-50">${opt}</div>`).join('')}
+                </div>
+                <div class="quiz-feedback mt-3 text-sm font-medium hidden p-3 rounded-md"></div>
+            `;
+            quizContainer.appendChild(questionElement);
+
+            const options = questionElement.querySelectorAll('.quiz-option');
+            const feedback = questionElement.querySelector('.quiz-feedback');
+            
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    if (questionElement.classList.contains('answered')) return;
+                    questionElement.classList.add('answered');
+                    questionsAnswered++;
+                    
+                    const selectedAnswer = option.textContent;
+                    const correctAnswer = q.answer;
+                    
+                    if (selectedAnswer === correctAnswer) {
+                        option.classList.add('correct');
+                        feedback.textContent = '✅ Correct! Well done.';
+                        feedback.classList.add('bg-green-50', 'text-green-700');
+                        score++;
+                    } else {
+                        option.classList.add('incorrect');
+                        feedback.textContent = `❌ Incorrect. The correct answer is "${correctAnswer}".`;
+                        feedback.classList.add('bg-red-50', 'text-red-700');
+                    }
+                    
+                    options.forEach(opt => { if (opt.textContent === correctAnswer) opt.classList.add('reveal'); });
+                    feedback.classList.remove('hidden');
+
+                    if(questionsAnswered === quizData.length) {
+                        quizResults.innerHTML = `Quiz Complete! You scored <strong class="font-bold">${score}</strong> out of <strong class="font-bold">${quizData.length}</strong>.`;
+                        quizResults.classList.remove('hidden');
+                    }
+                });
+            });
+        });
+    });
+    </script>
+</body>
+</html>

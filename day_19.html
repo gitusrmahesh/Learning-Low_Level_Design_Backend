@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 19: Reflection & Attributes - Low-Level Design Bootcamp</title>
+    
+    <!-- Chosen Palette: Warm Neutrals (Slate, Stone, Amber) -->
+    <!-- Application Structure Plan: A two-column responsive layout is used. The main, wider left column contains the lesson content in a logical, scrollable flow: Theory -> Interactive Diagram -> Coding Practice -> UML -> Case Study -> Quiz -> Challenge. This linear progression supports structured learning. The right column features a sticky Table of Contents (TOC) for quick navigation, which becomes a dropdown on smaller screens. This structure was chosen because it separates content from navigation, a standard and highly usable pattern for educational material, allowing users to both follow the lesson sequentially and jump to specific sections easily. -->
+    <!-- Visualization & Content Choices: 
+        1. Reflection Core Concept -> Goal: Explain the abstract idea of runtime type inspection. -> Viz/Presentation Method: Interactive diagram built with HTML/CSS. A central `Type` object branches to `Properties`, `Methods`, etc. -> Interaction: Clicking a branch (e.g., "Methods") reveals a modal with details about `MethodInfo` objects. -> Justification: Transforms a passive concept into an active, explorable experience, enhancing comprehension and retention. -> Library/Method: Vanilla JS & Tailwind CSS.
+        2. UML Metadata Diagram -> Goal: Visually represent the hierarchy of .NET metadata. -> Viz/Presentation Method: A static diagram using nested, styled HTML divs to create a clear flowchart. -> Interaction: None, focus is on clear visual representation. -> Justification: Directly fulfills the UML task from the source material in a clear, web-native format. -> Library/Method: HTML & Tailwind CSS.
+        3. Quiz Score -> Goal: Provide immediate, visual feedback on quiz performance. -> Viz/Presentation Method: A donut chart showing correct vs. incorrect answers. -> Interaction: Hovering over chart segments shows the count. -> Justification: More engaging and provides a quicker understanding of performance than simple text. -> Library/Method: Chart.js on Canvas.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #f59e0b; /* amber-500 */
+            font-weight: 600;
+            border-left-color: #f59e0b; /* amber-500 */
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            color: #e2e8f0; /* slate-200 */
+            background-color: #475569; /* slate-600 */
+            border-radius: 0.25rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .quiz-option { cursor: pointer; transition: background-color 0.2s; }
+        .quiz-option:hover { background-color: #f1f5f9; /* slate-100 */ }
+        .correct { background-color: #dcfce7; /* green-100 */ border-color: #22c55e; /* green-500 */ }
+        .incorrect { background-color: #fee2e2; /* red-100 */ border-color: #ef4444; /* red-500 */ }
+        .solution-hidden { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <div id="app">
+        <!-- Header -->
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <!-- This is a placeholder for the actual link which may not exist in this context -->
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="lg:flex lg:flex-row-reverse lg:space-x-reverse lg:space-x-12">
+                
+                <!-- Right Sidebar: Table of Contents -->
+                <aside class="lg:w-1/4 lg:sticky lg:top-8 self-start hidden lg:block">
+                    <nav class="space-y-2">
+                        <h3 class="font-lexend font-bold text-lg text-slate-800 mb-4">On this page</h3>
+                        <a href="#introduction" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Introduction</a>
+                        <a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Theory Topics</a>
+                        <a href="#interactive-diagram" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Interactive Diagram</a>
+                        <a href="#coding-practice" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Coding Practice</a>
+                        <a href="#uml-task" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">UML Task</a>
+                        <a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Case Study</a>
+                        <a href="#knowledge-check" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Knowledge Check</a>
+                        <a href="#self-assessment" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-slate-900 font-medium">Self-Assessment</a>
+                    </nav>
+                </aside>
+                
+                <!-- Left Column: Main Lesson Content -->
+                <main class="lg:w-3/4 space-y-16">
+                    
+                    <section id="introduction">
+                        <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-lg">
+                            <h2 class="font-lexend text-3xl font-bold text-slate-800">Day 19: Reflection & Attributes</h2>
+                            <p class="mt-4 text-lg text-slate-700">Welcome to a deep dive into one of .NET's most powerful and advanced features: Reflection. This lesson will demystify the process of inspecting and manipulating your code at runtime. We'll explore how to read an assembly's metadata, create and use custom attributes to annotate your code, and see how these concepts are the secret sauce behind many popular frameworks and tools like Object-Relational Mappers (ORMs).</p>
+                        </div>
+                    </section>
+                    
+                    <section id="theory" class="space-y-8">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">✅ Theory Topics</h2>
+                        <p>This section provides a comprehensive breakdown of Reflection and Attributes. We'll start with the fundamentals, explore the metadata hierarchy, discuss performance, then master custom attributes, and finally see how these powerful features enable the frameworks you use every day.</p>
+
+                        <!-- Reflection Basics -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">1. Reflection In-Depth</h3>
+                            <p class="mt-3">At its core, reflection is the process of runtime type discovery. It allows managed code to read its own metadata to find and use types, members, and attributes. The <code class="bg-slate-200 text-sm font-mono p-1 rounded">System.Reflection</code> namespace is your gateway to this functionality, with <code class="bg-slate-200 text-sm font-mono p-1 rounded">System.Type</code> being the central class.</p>
+                            
+                            <h4 class="font-lexend font-semibold text-lg text-slate-700 mt-6">The Metadata Hierarchy</h4>
+                            <p class="mt-2">Reflection doesn't just look at a single class; it navigates a well-defined hierarchy:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2">
+                                <li><strong>Assembly:</strong> The fundamental unit of deployment, versioning, and security in .NET. An assembly can be a DLL or an EXE. You can load assemblies dynamically to create plug-in architectures.</li>
+                                <li><strong>Module:</strong> An assembly contains one or more modules. While most assemblies have only one module, it's possible to have more.</li>
+                                <li><strong>Type:</strong> The heart of reflection. A <code class="bg-slate-200 text-sm font-mono p-1 rounded">Type</code> object represents a class, interface, struct, enum, or delegate. This is what you'll work with most often.</li>
+                                <li><strong>MemberInfo:</strong> This is an abstract base class for <code class="bg-slate-200 text-sm font-mono p-1 rounded">PropertyInfo</code>, <code class="bg-slate-200 text-sm font-mono p-1 rounded">MethodInfo</code>, <code class="bg-slate-200 text-sm font-mono p-1 rounded">FieldInfo</code>, <code class="bg-slate-200 text-sm font-mono p-1 rounded">ConstructorInfo</code>, and <code class="bg-slate-200 text-sm font-mono p-1 rounded">EventInfo</code>. It allows you to inspect the details of any member of a type.</li>
+                            </ul>
+                             <div class="code-block mt-4">
+                                <button class="copy-button">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// Load an assembly from a file
+Assembly assembly = Assembly.LoadFrom("MyLibrary.dll");
+
+// Get all the types within that assembly
+Type[] types = assembly.GetTypes();
+
+foreach(Type type in types)
+{
+    Console.WriteLine($"Type: {type.FullName}");
+    // Now you can inspect members of each type
+    foreach(MethodInfo method in type.GetMethods())
+    {
+        // ...
+    }
+}</code></pre>
+                            </div>
+
+                            <h4 class="font-lexend font-semibold text-lg text-slate-700 mt-6">BindingFlags: Filtering Your Search</h4>
+                            <p class="mt-2">When you call methods like <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetMethods()</code> or <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetProperties()</code>, you are by default only getting public members. To find private, static, or inherited members, you must use <code class="bg-slate-200 text-sm font-mono p-1 rounded">BindingFlags</code>. These are bit flags that you can combine with the OR operator (<code class="bg-slate-200 text-sm font-mono p-1 rounded">|</code>) to specify exactly what you're looking for.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-button">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// Find a specific private instance method by name
+BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+MethodInfo privateMethod = typeof(MyClass).GetMethod("MyPrivateMethod", flags);
+
+// Get all public static properties
+flags = BindingFlags.Static | BindingFlags.Public;
+PropertyInfo[] staticProps = typeof(MyClass).GetProperties(flags);</code></pre>
+                            </div>
+
+                            <h4 class="font-lexend font-semibold text-lg text-slate-700 mt-6">Dynamic Instantiation and Invocation</h4>
+                            <p class="mt-2">Reflection isn't just for reading metadata; it's for acting on it. You can create instances of types and call their methods dynamically at runtime.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2">
+                                <li><code class="bg-slate-200 text-sm font-mono p-1 rounded">Activator.CreateInstance(type)</code>: The simplest way to create an object when you have its <code class="bg-slate-200 text-sm font-mono p-1 rounded">Type</code> object. It calls the parameterless constructor.</li>
+                                <li><code class="bg-slate-200 text-sm font-mono p-1 rounded">ConstructorInfo.Invoke()</code>: Gives you more control to call a specific constructor and pass it arguments.</li>
+                                <li><code class="bg-slate-200 text-sm font-mono p-1 rounded">MethodInfo.Invoke(object, object[])</code>: Executes a method on a specific object instance, passing an array of arguments. For static methods, the first parameter is <code class="bg-slate-200 text-sm font-mono p-1 rounded">null</code>.</li>
+                            </ul>
+                            
+                            <h4 class="font-lexend font-semibold text-lg text-slate-700 mt-6">Performance Considerations</h4>
+                            <div class="mt-4 p-4 bg-rose-50 border-l-4 border-rose-400 rounded-r-lg">
+                                <p class="font-semibold text-rose-800">Important Warning</p>
+                                <p class="text-rose-700">Reflection is significantly slower than direct, compile-time-bound code. The overhead comes from looking up metadata, type safety checks, and the dynamic nature of invocation. It should not be used in performance-critical loops. For frameworks, the performance cost is often a one-time startup hit during initialization, which is generally acceptable.</p>
+                            </div>
+                        </div>
+
+                        <!-- Custom Attributes -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">2. Mastering Custom Attributes</h3>
+                            <p class="mt-3">Attributes add declarative metadata to your code. They are classes that inherit from <code class="bg-slate-200 text-sm font-mono p-1 rounded">System.Attribute</code> and provide a powerful way to associate information with code elements, which can then be queried at runtime via reflection.</p>
+                            
+                            <h4 class="font-lexend font-semibold text-lg text-slate-700 mt-6">Anatomy of a Custom Attribute</h4>
+                            <p class="mt-2">When creating an attribute, you have several tools to control its behavior:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2">
+                                <li><strong>Constructor:</strong> Used to pass required positional parameters to the attribute.</li>
+                                <li><strong>Public Properties:</strong> Used to pass optional named parameters to the attribute.</li>
+                                <li><strong><code class="bg-slate-200 text-sm font-mono p-1 rounded">[AttributeUsage]</code>:</strong> A crucial attribute you apply to your own attribute class. It controls where your attribute can be placed (e.g., <code class="bg-slate-200 text-sm font-mono p-1 rounded">AttributeTargets.Class</code>, <code class="bg-slate-200 text-sm font-mono p-1 rounded">AttributeTargets.Method</code>), whether it can be applied multiple times (<code class="bg-slate-200 text-sm font-mono p-1 rounded">AllowMultiple</code>), and if it's inherited by derived classes (<code class="bg-slate-200 text-sm font-mono p-1 rounded">Inherited</code>).</li>
+                            </ul>
+
+                            <div class="code-block mt-4">
+                                <button class="copy-button">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// Define a more advanced attribute
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+public class AuthorAttribute : Attribute
+{
+    // Positional parameter (required)
+    public string Name { get; }
+    
+    // Named parameter (optional)
+    public int Version { get; set; }
+
+    public AuthorAttribute(string name)
+    {
+        this.Name = name;
+        this.Version = 1; // Default value
+    }
+}
+
+// Apply the attribute using both positional and named parameters
+[Author("Jane Doe", Version = 2)]
+public class MyFeature { }
+</code></pre>
+                            </div>
+                        </div>
+                        
+                        <!-- Use in Frameworks -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">3. Reflection & Attributes in Modern Frameworks</h3>
+                            <p class="mt-3">The combination of Reflection and Attributes is the enabling technology behind many of the most popular .NET libraries and frameworks. This pattern allows frameworks to be non-intrusive and configurable through simple declarations.</p>
+
+                            <div class="mt-4 overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th class="py-2 px-4 bg-slate-100 font-semibold border-b-2 border-slate-200">Framework Type</th>
+                                            <th class="py-2 px-4 bg-slate-100 font-semibold border-b-2 border-slate-200">How It's Used</th>
+                                            <th class="py-2 px-4 bg-slate-100 font-semibold border-b-2 border-slate-200">Example Attributes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white">
+                                        <tr>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-800">ORMs (Entity Framework)</td>
+                                            <td class="py-3 px-4 border-b border-slate-200">Reflects over model classes to dynamically generate SQL queries. Attributes map classes to tables and properties to columns.</td>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-mono text-sm"><code class="bg-slate-200 p-1 rounded">[Table]</code> <code class="bg-slate-200 p-1 rounded">[Key]</code> <code class="bg-slate-200 p-1 rounded">[Column]</code> <code class="bg-slate-200 p-1 rounded">[Required]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-800">Serialization (Newtonsoft.Json)</td>
+                                            <td class="py-3 px-4 border-b border-slate-200">Reflects over objects to convert them to/from formats like JSON. Attributes control property names, ignoring members, and formatting.</td>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-mono text-sm"><code class="bg-slate-200 p-1 rounded">[JsonProperty]</code> <code class="bg-slate-200 p-1 rounded">[JsonIgnore]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-800">Testing (xUnit, NUnit)</td>
+                                            <td class="py-3 px-4 border-b border-slate-200">A test runner assembly reflects over your test assemblies, looking for methods marked with specific attributes to execute as tests.</td>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-mono text-sm"><code class="bg-slate-200 p-1 rounded">[Fact]</code> <code class="bg-slate-200 p-1 rounded">[Theory]</code> <code class="bg-slate-200 p-1 rounded">[Test]</code> <code class="bg-slate-200 p-1 rounded">[SetUp]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-semibold text-slate-800">Dependency Injection</td>
+                                            <td class="py-3 px-4 border-b border-slate-200">The DI container reflects over constructors to determine which dependencies need to be created and injected automatically.</td>
+                                            <td class="py-3 px-4 border-b border-slate-200 font-mono text-sm"><code class="bg-slate-200 p-1 rounded">[Inject]</code> (in some libs) or convention-based</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="interactive-diagram">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">Interactive Diagram: Exploring a Type</h2>
+                        <p class="mt-4">This diagram illustrates how Reflection works. Click on any of the member types (Properties, Methods, etc.) branching from the central <code class="bg-slate-200 text-sm font-mono p-1 rounded">System.Type</code> object to see what kind of metadata you can inspect at runtime.</p>
+                        
+                        <div class="mt-6 bg-white p-6 rounded-lg shadow-sm flex justify-center items-center h-[400px]">
+                            <div class="relative w-full max-w-lg h-full">
+                                <!-- Central Node -->
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 text-white p-4 rounded-full w-40 h-40 flex items-center justify-center text-center font-bold z-10 shadow-lg">System.Type<br/>(Metadata Gateway)</div>
+                                
+                                <!-- Lines (using divs) -->
+                                <div class="absolute top-1/2 left-1/2 w-px h-28 bg-slate-300 -translate-y-full"></div>
+                                <div class="absolute top-1/2 left-1/2 w-28 h-px bg-slate-300 -translate-x-full"></div>
+                                <div class="absolute top-1/2 left-1/2 w-px h-28 bg-slate-300"></div>
+                                <div class="absolute top-1/2 left-1/2 w-28 h-px bg-slate-300"></div>
+                                <div class="absolute top-1/2 left-1/2 w-[140px] h-px bg-slate-300 transform rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
+                                <div class="absolute top-1/2 left-1/2 w-[140px] h-px bg-slate-300 transform -rotate-45 -translate-x-1/2 -translate-y-1/2"></div>
+
+                                <!-- Member Nodes -->
+                                <button data-member="Properties" class="reflection-node absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-sky-100 text-sky-800 p-3 rounded-lg shadow hover:bg-sky-200 transition">Properties</button>
+                                <button data-member="Methods" class="reflection-node absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 bg-emerald-100 text-emerald-800 p-3 rounded-lg shadow hover:bg-emerald-200 transition">Methods</button>
+                                <button data-member="Constructors" class="reflection-node absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 bg-amber-100 text-amber-800 p-3 rounded-lg shadow hover:bg-amber-200 transition">Constructors</button>
+                                <button data-member="Attributes" class="reflection-node absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-rose-100 text-rose-800 p-3 rounded-lg shadow hover:bg-rose-200 transition">Attributes</button>
+                                <button data-member="Events" class="reflection-node absolute top-[15%] right-[15%] bg-violet-100 text-violet-800 p-3 rounded-lg shadow hover:bg-violet-200 transition">Events</button>
+                                <button data-member="Interfaces" class="reflection-node absolute bottom-[15%] left-[15%] bg-stone-100 text-stone-800 p-3 rounded-lg shadow hover:bg-stone-200 transition">Interfaces</button>
+                            </div>
+                        </div>
+
+                        <!-- Modal for Interactive Diagram -->
+                        <div id="reflection-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+                            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md m-4">
+                                <div class="flex justify-between items-center border-b pb-3">
+                                    <h3 id="modal-title" class="font-lexend text-2xl font-bold"></h3>
+                                    <button id="modal-close" class="text-slate-500 hover:text-slate-800">&times;</button>
+                                </div>
+                                <div id="modal-body" class="mt-4 text-slate-600"></div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="coding-practice" class="space-y-8">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">✅ Coding Practice</h2>
+                        <p>Time to get hands-on. The following exercises will solidify your understanding of reflection and attributes. Each problem includes a complete, commented solution for you to review after attempting it yourself.</p>
+                        
+                        <!-- Easy -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">[Easy] Print Metadata of a Type</h3>
+                            <p class="mt-3">Write a C# console application that takes the full name of a .NET type as a string (e.g., "System.String"), uses reflection to get its <code class="bg-slate-200 text-sm font-mono p-1 rounded">Type</code> object, and then prints out the names of all its public methods and properties.</p>
+                            <details class="mt-4">
+                                <summary class="font-semibold cursor-pointer text-amber-600 hover:text-amber-700">Show Solution</summary>
+                                <div class="code-block mt-2">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System;
+using System.Reflection;
+
+public class MetadataPrinter
+{
+    public static void Main(string[] args)
+    {
+        PrintTypeMetadata("System.String");
+        Console.WriteLine("\n------------------\n");
+        PrintTypeMetadata("System.Collections.Generic.List`1");
+    }
+
+    public static void PrintTypeMetadata(string typeName)
+    {
+        // Get the Type object from its string name.
+        Type type = Type.GetType(typeName);
+
+        if (type == null)
+        {
+            Console.WriteLine($"Could not find type: {typeName}");
+            return;
+        }
+
+        Console.WriteLine($"--- Metadata for {type.FullName} ---");
+
+        // Get and print public properties.
+        Console.WriteLine("\nProperties:");
+        PropertyInfo[] properties = type.GetProperties();
+        foreach (var prop in properties)
+        {
+            Console.WriteLine($"- {prop.PropertyType.Name} {prop.Name}");
+        }
+
+        // Get and print public methods.
+        Console.WriteLine("\nMethods:");
+        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
+        foreach (var method in methods)
+        {
+            // We'll ignore special methods like property getters/setters for cleaner output.
+            if (!method.IsSpecialName)
+            {
+                Console.WriteLine($"- {method.ReturnType.Name} {method.Name}()");
+            }
+        }
+    }
+}</code></pre>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- Medium -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">[Medium] Create and Use a Custom Attribute</h3>
+                            <p class="mt-3">Define a custom attribute named <code class="bg-slate-200 text-sm font-mono p-1 rounded">[CodeReview]</code> that can be applied to methods. This attribute should store the reviewer's name, the review date (as a string), and an approval status (boolean). Create a sample class with a few methods, some decorated with this attribute. Finally, write a "reviewer tool" method that uses reflection to scan the class and print a report of all methods that have been reviewed, along with their review details.</p>
+                            <details class="mt-4">
+                                <summary class="font-semibold cursor-pointer text-amber-600 hover:text-amber-700">Show Solution</summary>
+                                <div class="code-block mt-2">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System;
+using System.Reflection;
+using System.Linq;
+
+// 1. Define the custom attribute.
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+public class CodeReviewAttribute : Attribute
+{
+    public string ReviewerName { get; }
+    public string ReviewDate { get; }
+    public bool IsApproved { get; }
+
+    public CodeReviewAttribute(string reviewer, string date, bool approved)
+    {
+        ReviewerName = reviewer;
+        ReviewDate = date;
+        IsApproved = approved;
+    }
+}
+
+// 2. Apply the attribute to some methods.
+public class MyBusinessLogic
+{
+    [CodeReview("Alice", "2025-09-18", true)]
+    public void AddCustomer() { /* ... */ }
+
+    [CodeReview("Bob", "2025-09-19", false)]
+    [CodeReview("Alice", "2025-09-20", true)]
+    public void CalculateShipping() { /* ... */ }
+
+    public void GetCustomer() { /* This one is not reviewed */ }
+}
+
+// 3. Create the reviewer tool.
+public class ReviewerTool
+{
+    public static void Main(string[] args)
+    {
+        RunReviewReport(typeof(MyBusinessLogic));
+    }
+
+    public static void RunReviewReport(Type type)
+    {
+        Console.WriteLine($"--- Code Review Report for {type.Name} ---");
+        
+        foreach (MethodInfo method in type.GetMethods())
+        {
+            // Get all CodeReview attributes on this method.
+            var reviews = method.GetCustomAttributes(typeof(CodeReviewAttribute), false);
+
+            if (reviews.Any())
+            {
+                Console.WriteLine($"\nMethod: {method.Name}");
+                foreach (CodeReviewAttribute review in reviews)
+                {
+                    string status = review.IsApproved ? "Approved" : "Rejected";
+                    Console.WriteLine($"  - Reviewed by {review.ReviewerName} on {review.ReviewDate} [{status}]");
+                }
+            }
+        }
+    }
+}</code></pre>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- Hard -->
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">[Hard] Basic Reflection-based Serializer</h3>
+                            <p class="mt-3">Create a simple object-to-string serializer. It should take any object and convert it into a key-value pair string format. The serializer should reflect over the object's public properties, get their names and values, and format them. For example, an object <code class="bg-slate-200 text-sm font-mono p-1 rounded">new Customer { Name = "John", Age = 30 }</code> should serialize to <code class="bg-slate-200 text-sm font-mono p-1 rounded">"Name:John|Age:30"</code>. Add an attribute <code class="bg-slate-200 text-sm font-mono p-1 rounded">[DoNotSerialize]</code> that, when applied to a property, will cause the serializer to ignore it.</p>
+                             <details class="mt-4">
+                                <summary class="font-semibold cursor-pointer text-amber-600 hover:text-amber-700">Show Solution</summary>
+                                <div class="code-block mt-2">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System;
+using System.Reflection;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+
+// 1. Define the attribute to ignore properties.
+[AttributeUsage(AttributeTargets.Property)]
+public class DoNotSerializeAttribute : Attribute { }
+
+// 2. Create some sample classes.
+public class Customer
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+    [DoNotSerialize]
+    public string InternalNotes { get; set; }
+}
+
+public class Product
+{
+    public int Id { get; set; }
+    public decimal Price { get; set; }
+}
+
+// 3. Build the serializer.
+public class SimpleSerializer
+{
+    public string Serialize(object obj)
+    {
+        if (obj == null) return string.Empty;
+
+        Type type = obj.GetType();
+        var propertyValues = new List<string>();
+
+        // Get all public instance properties.
+        PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        
+        foreach (var prop in properties)
+        {
+            // Check if the property has the DoNotSerialize attribute.
+            if (prop.IsDefined(typeof(DoNotSerializeAttribute), false))
+            {
+                continue; // Skip this property.
+            }
+
+            // Ensure the property can be read.
+            if (prop.CanRead)
+            {
+                object value = prop.GetValue(obj);
+                propertyValues.Add($"{prop.Name}:{value}");
+            }
+        }
+        return string.Join("|", propertyValues);
+    }
+}
+
+// 4. Test the serializer.
+public class SerializerTest
+{
+    public static void Main(string[] args)
+    {
+        var customer = new Customer { Name = "Jane Doe", Age = 42, InternalNotes = "Secret info" };
+        var product = new Product { Id = 123, Price = 99.99m };
+
+        var serializer = new SimpleSerializer();
+
+        string serializedCustomer = serializer.Serialize(customer);
+        string serializedProduct = serializer.Serialize(product);
+
+        Console.WriteLine("Serialized Customer:");
+        Console.WriteLine(serializedCustomer); // Expected: Name:Jane Doe|Age:42
+
+        Console.WriteLine("\nSerialized Product:");
+        Console.WriteLine(serializedProduct); // Expected: Id:123|Price:99.99
+    }
+}</code></pre>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <section id="uml-task">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">✅ UML Task: Metadata Diagram</h2>
+                        <p class="mt-4">The following diagram illustrates the hierarchical relationship of metadata within the .NET ecosystem, which is the structure that Reflection navigates. An Assembly is the primary unit of deployment, containing one or more Modules. Each Module contains Types (like classes and structs), and each Type contains Members (like methods and properties).</p>
+                        
+                        <div class="mt-6 bg-white p-8 rounded-lg shadow-sm">
+                            <div class="border-2 border-slate-700 rounded-lg p-4 text-center">
+                                <p class="font-bold font-lexend text-slate-800">Assembly (.dll or .exe)</p>
+                                <div class="flex justify-center mt-4">
+                                    <div class="border-2 border-slate-500 rounded-lg p-4 w-11/12">
+                                        <p class="font-semibold text-slate-600">Module</p>
+                                        <div class="flex justify-center mt-4">
+                                             <div class="border-2 border-sky-500 rounded-lg p-4 w-11/12 bg-sky-50">
+                                                <p class="font-semibold text-sky-800">Type (e.g., class Customer)</p>
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-left">
+                                                    <div class="border border-emerald-400 rounded p-3 bg-emerald-50">
+                                                        <p class="font-semibold text-emerald-800">Member: Method</p>
+                                                        <p class="text-sm text-emerald-700">e.g., GetName()</p>
+                                                    </div>
+                                                    <div class="border border-emerald-400 rounded p-3 bg-emerald-50">
+                                                        <p class="font-semibold text-emerald-800">Member: Property</p>
+                                                        <p class="text-sm text-emerald-700">e.g., string Name</p>
+                                                    </div>
+                                                    <div class="border border-emerald-400 rounded p-3 bg-emerald-50">
+                                                        <p class="font-semibold text-emerald-800">Member: Constructor</p>
+                                                        <p class="text-sm text-emerald-700">e.g., Customer()</p>
+                                                    </div>
+                                                    <div class="border border-emerald-400 rounded p-3 bg-emerald-50">
+                                                        <p class="font-semibold text-emerald-800">Member: Field</p>
+                                                        <p class="text-sm text-emerald-700">e.g., _internalId</p>
+                                                    </div>
+                                                </div>
+                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="case-study">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">✅ Case Study: Build a Mini ORM</h2>
+                        <p class="mt-4">This case study demonstrates the power of reflection and custom attributes by building a very basic Object-Relational Mapper (ORM). Our mini-ORM will have a <code class="bg-slate-200 text-sm font-mono p-1 rounded">GenerateInsertSql</code> method that takes an object and produces a SQL INSERT statement. We'll use custom attributes, <code class="bg-slate-200 text-sm font-mono p-1 rounded">[Table]</code> and <code class="bg-slate-200 text-sm font-mono p-1 rounded">[Column]</code>, to map classes and properties to database table and column names.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">Solution Breakdown</h3>
+                             <details class="mt-4">
+                                <summary class="font-semibold cursor-pointer text-amber-600 hover:text-amber-700">Show Complete Solution</summary>
+                                <div class="code-block mt-2">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System;
+using System.Reflection;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
+
+// 1. Define Attributes for mapping
+[AttributeUsage(AttributeTargets.Class)]
+public class TableAttribute : Attribute
+{
+    public string Name { get; }
+    public TableAttribute(string name) => Name = name;
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class ColumnAttribute : Attribute
+{
+    public string Name { get; }
+    public ColumnAttribute(string name) => Name = name;
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public class PkAttribute : Attribute { } // Primary Key marker
+
+// 2. Create a model class and decorate it
+[Table("users")]
+public class User
+{
+    [Pk]
+    [Column("user_id")]
+    public int Id { get; set; }
+
+    [Column("user_name")]
+    public string Username { get; set; }
+
+    [Column("email_address")]
+    public string Email { get; set; }
+}
+
+// 3. Build the Mini ORM Logic
+public class MiniOrm
+{
+    public string GenerateInsertSql(object obj)
+    {
+        Type type = obj.GetType();
+
+        // Get table name from [Table] attribute, or use class name if not present.
+        var tableAttr = type.GetCustomAttribute<TableAttribute>();
+        string tableName = tableAttr?.Name ?? type.Name;
+
+        var columns = new List<string>();
+        var values = new List<string>();
+
+        // Iterate over properties to find columns
+        foreach (var prop in type.GetProperties())
+        {
+            // Skip properties marked as Primary Key for INSERT
+            if (prop.IsDefined(typeof(PkAttribute)))
+            {
+                continue;
+            }
+
+            // Get column name from [Column] attribute, or use property name
+            var colAttr = prop.GetCustomAttribute<ColumnAttribute>();
+            string colName = colAttr?.Name ?? prop.Name;
+            columns.Add(colName);
+            
+            // Get property value
+            object propValue = prop.GetValue(obj);
+
+            // Format value for SQL (simple version: add quotes for strings)
+            if (propValue is string || propValue is char)
+            {
+                values.Add($"'{propValue}'");
+            }
+            else
+            {
+                values.Add(propValue.ToString());
+            }
+        }
+        
+        return $"INSERT INTO {tableName} ({string.Join(", ", columns)}) VALUES ({string.Join(", ", values)});";
+    }
+}
+
+// 4. Test the Mini ORM
+public class OrmTest
+{
+    public static void Main(string[] args)
+    {
+        var user = new User { Id = 1, Username = "jdoe", Email = "jdoe@example.com" };
+        var orm = new MiniOrm();
+        string sql = orm.GenerateInsertSql(user);
+
+        Console.WriteLine("Generated SQL:");
+        Console.WriteLine(sql);
+        // Expected: INSERT INTO users (user_name, email_address) VALUES ('jdoe', 'jdoe@example.com');
+    }
+}</code></pre>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+                    
+                    <section id="knowledge-check">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">🧠 Knowledge Check</h2>
+                        <p class="mt-4">Test your understanding of the key concepts from this lesson. Choose the best answer for each question. You'll get instant feedback!</p>
+                        
+                        <div id="quiz-container" class="mt-6 space-y-6">
+                            <!-- Questions will be injected here by JavaScript -->
+                        </div>
+                        <div id="quiz-results" class="mt-8 hidden">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">Quiz Complete!</h3>
+                             <div class="chart-container relative h-64 w-full max-w-sm mx-auto mt-4">
+                                <canvas id="quiz-chart"></canvas>
+                            </div>
+                            <p id="quiz-score-text" class="text-center font-semibold text-lg mt-4"></p>
+                            <button id="quiz-retry-btn" class="mt-4 mx-auto block bg-amber-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors">Retry Quiz</button>
+                        </div>
+                    </section>
+
+                    <section id="self-assessment">
+                        <h2 class="font-lexend text-3xl font-bold text-slate-800 border-b-2 pb-2 border-slate-200">🚀 Self-Assessment Challenge</h2>
+                        <p class="mt-4">Ready to put it all together? This challenge requires you to combine everything you've learned about reflection and attributes to build a practical tool.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h3 class="font-lexend text-2xl font-semibold text-slate-800">Challenge: A Simple Dependency Injection Container</h3>
+                            <p class="mt-3">Create a basic Dependency Injection (DI) container. The container should have a <code class="bg-slate-200 text-sm font-mono p-1 rounded">Resolve&lt;T&gt;()</code> method that can create an instance of a requested class <code class="bg-slate-200 text-sm font-mono p-1 rounded">T</code>. Here's the catch: it must automatically resolve and inject dependencies for the class's constructor.</p>
+                             <p class="mt-3">To make this work, create a custom attribute, <code class="bg-slate-200 text-sm font-mono p-1 rounded">[Inject]</code>. Your DI container will look for a constructor decorated with this attribute. It will then reflect over that constructor's parameters, recursively resolve instances for each parameter type, and finally invoke the constructor with the resolved dependencies to create the final object.</p>
+                            <button id="toggle-solution-btn" class="mt-4 font-semibold text-amber-600 hover:text-amber-700">Show Detailed Solution</button>
+                            <div id="solution-content" class="solution-hidden mt-4 border-t pt-4">
+                                <p class="font-semibold mb-2">This is a complex problem that mimics how real DI frameworks operate. Here is a complete, commented implementation to study.</p>
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+
+// 1. The attribute to mark the constructor for injection.
+[AttributeUsage(AttributeTargets.Constructor)]
+public class InjectAttribute : Attribute { }
+
+// 2. Define some services and their dependencies.
+public interface ILogger { void Log(string message); }
+public class ConsoleLogger : ILogger { public void Log(string message) => Console.WriteLine($"LOG: {message}"); }
+
+public interface INotificationService { void Notify(string message); }
+public class EmailService : INotificationService 
+{
+    private readonly ILogger _logger;
+    [Inject]
+    public EmailService(ILogger logger) { _logger = logger; }
+    public void Notify(string message) => _logger.Log($"Sending email: {message}");
+}
+
+public class UserService
+{
+    private readonly INotificationService _notifier;
+    [Inject]
+    public UserService(INotificationService notifier) { _notifier = notifier; }
+    public void CreateUser(string name) => _notifier.Notify($"User '{name}' created.");
+}
+
+
+// 3. The DI Container
+public class DiContainer
+{
+    private readonly Dictionary<Type, Type> _registrations = new Dictionary<Type, Type>();
+
+    public void Register<TInterface, TImplementation>() where TImplementation : TInterface
+    {
+        _registrations[typeof(TInterface)] = typeof(TImplementation);
+    }
+
+    public T Resolve<T>()
+    {
+        return (T)Resolve(typeof(T));
+    }
+
+    private object Resolve(Type typeToResolve)
+    {
+        // If it's an interface, find its concrete implementation.
+        if (_registrations.ContainsKey(typeToResolve))
+        {
+            typeToResolve = _registrations[typeToResolve];
+        }
+
+        // Find the constructor marked with [Inject]. Fallback to the first one if none.
+        var constructor = typeToResolve.GetConstructors()
+            .FirstOrDefault(c => c.IsDefined(typeof(InjectAttribute))) 
+            ?? typeToResolve.GetConstructors().First();
+        
+        var parameters = constructor.GetParameters();
+
+        if (!parameters.Any())
+        {
+            // If no parameters, just create an instance.
+            return Activator.CreateInstance(typeToResolve);
+        }
+        else
+        {
+            // If there are parameters, recursively resolve them.
+            var parameterInstances = parameters
+                .Select(p => Resolve(p.ParameterType))
+                .ToArray();
+            
+            return constructor.Invoke(parameterInstances);
+        }
+    }
+}
+
+// 4. Test the container
+public class DiTest
+{
+    public static void Main(string[] args)
+    {
+        var container = new DiContainer();
+        // Register which concrete classes to use for which interfaces.
+        container.Register<ILogger, ConsoleLogger>();
+        container.Register<INotificationService, EmailService>();
+
+        // Ask the container to create a complex object.
+        // It should automatically create ConsoleLogger -> EmailService -> UserService.
+        var userService = container.Resolve<UserService>();
+        
+        userService.CreateUser("Alice"); 
+        // Expected output: LOG: Sending email: User 'Alice' created.
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Copy to Clipboard functionality ---
+        const copyButtons = document.querySelectorAll('.copy-button');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const codeBlock = button.closest('.code-block');
+                const code = codeBlock.querySelector('code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    button.innerText = 'Copied!';
+                    setTimeout(() => {
+                        button.innerText = 'Copy';
+                    }, 2000);
+                });
+            });
+        });
+        
+        // --- Sticky Table of Contents Active Link Highlighting ---
+        const sections = document.querySelectorAll('main section');
+        const tocLinks = document.querySelectorAll('.toc-link');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: "-50% 0px -50% 0px" });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // --- Interactive Diagram Modal Logic ---
+        const modal = document.getElementById('reflection-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalClose = document.getElementById('modal-close');
+        const reflectionNodes = document.querySelectorAll('.reflection-node');
+        
+        const modalContent = {
+            Properties: {
+                title: 'PropertyInfo',
+                body: `Represents a public property. You can get its name (<code class="bg-slate-200 text-sm font-mono p-1 rounded">Name</code>), data type (<code class="bg-slate-200 text-sm font-mono p-1 rounded">PropertyType</code>), and even get or set its value on an object instance using <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetValue()</code> and <code class="bg-slate-200 text-sm font-mono p-1 rounded">SetValue()</code>.`
+            },
+            Methods: {
+                title: 'MethodInfo',
+                body: `Represents a method. You can discover its name, return type (<code class="bg-slate-200 text-sm font-mono p-1 rounded">ReturnType</code>), and parameters (<code class="bg-slate-200 text-sm font-mono p-1 rounded">GetParameters()</code>). You can also dynamically execute the method using <code class="bg-slate-200 text-sm font-mono p-1 rounded">Invoke()</code>.`
+            },
+            Constructors: {
+                title: 'ConstructorInfo',
+                body: `Represents a class constructor. This allows you to examine constructor parameters and, most importantly, create new instances of a type dynamically using <code class="bg-slate-200 text-sm font-mono p-1 rounded">Invoke()</code>.`
+            },
+            Attributes: {
+                title: 'Custom Attributes',
+                body: `You can query for any custom attributes decorating a type or its members using <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetCustomAttributes()</code>. This is the key to creating declarative frameworks.`
+            },
+            Events: {
+                title: 'EventInfo',
+                body: `Represents an event. You can get information about the event's handler type and its name. This is less commonly used but powerful for dynamic event subscription.`
+            },
+            Interfaces: {
+                title: 'Interfaces',
+                body: `You can discover all the interfaces a type implements using <code class="bg-slate-200 text-sm font-mono p-1 rounded">GetInterfaces()</code>. This is useful for checking if an object conforms to a specific contract at runtime.`
+            },
+        };
+
+        reflectionNodes.forEach(node => {
+            node.addEventListener('click', () => {
+                const member = node.dataset.member;
+                const content = modalContent[member];
+                if (content) {
+                    modalTitle.innerText = content.title;
+                    modalBody.innerHTML = content.body;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+            });
+        });
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        modalClose.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // --- Knowledge Check Quiz Logic ---
+        const quizContainer = document.getElementById('quiz-container');
+        const quizResultsContainer = document.getElementById('quiz-results');
+        const quizScoreText = document.getElementById('quiz-score-text');
+        const quizRetryBtn = document.getElementById('quiz-retry-btn');
+        let quizChartInstance = null;
+        
+        const quizQuestions = [
+            {
+                question: "What is the primary entry point class for using Reflection in .NET?",
+                options: ["System.Reflection", "System.Type", "System.Object", "System.Activator"],
+                answer: "System.Type"
+            },
+            {
+                question: "How do you define a custom attribute?",
+                options: ["By creating a struct that inherits from System.Attribute", "By creating an interface that implements IAttribute", "By creating a class that inherits from System.Attribute", "By using the [CustomAttribute] tag on any class"],
+                answer: "By creating a class that inherits from System.Attribute"
+            },
+            {
+                question: "What is the purpose of the [AttributeUsage] attribute?",
+                options: ["To specify which types of program elements (class, method, etc.) a custom attribute can be applied to.", "To define the data types that an attribute's properties can hold.", "To mark an attribute as obsolete.", "To set the attribute's default value."],
+                answer: "To specify which types of program elements (class, method, etc.) a custom attribute can be applied to."
+            },
+            {
+                question: "Which of the following is a common use case for Reflection and Attributes?",
+                options: ["High-performance mathematical calculations", "Building Object-Relational Mappers (ORMs)", "Direct memory manipulation", "Basic file I/O operations"],
+                answer: "Building Object-Relational Mappers (ORMs)"
+            },
+            {
+                question: "To dynamically create an instance of a type when you have its Type object, you can use...",
+                options: ["new Type()", "System.Reflection.Emit()", "System.Activator.CreateInstance()", "type.New()"],
+                answer: "System.Activator.CreateInstance()"
+            }
+        ];
+
+        let score = 0;
+        let answeredQuestions = 0;
+
+        function loadQuiz() {
+            score = 0;
+            answeredQuestions = 0;
+            quizContainer.innerHTML = '';
+            quizResultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+
+            quizQuestions.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'bg-white p-6 rounded-lg shadow-sm';
+                questionEl.innerHTML = `<p class="font-semibold text-lg">${index + 1}. ${q.question}</p>`;
+                
+                const optionsEl = document.createElement('div');
+                optionsEl.className = 'mt-4 space-y-2';
+
+                q.options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'quiz-option p-3 border border-slate-300 rounded-lg';
+                    optionEl.innerText = option;
+                    optionEl.addEventListener('click', () => handleAnswer(optionEl, option, q.answer, optionsEl));
+                    optionsEl.appendChild(optionEl);
+                });
+
+                questionEl.appendChild(optionsEl);
+                quizContainer.appendChild(questionEl);
+            });
+        }
+
+        function handleAnswer(selectedEl, selectedOption, correctAnswer, optionsContainer) {
+            // Disable further clicks on this question
+            optionsContainer.querySelectorAll('.quiz-option').forEach(el => {
+                el.style.pointerEvents = 'none';
+            });
+
+            if (selectedOption === correctAnswer) {
+                selectedEl.classList.add('correct');
+                score++;
+            } else {
+                selectedEl.classList.add('incorrect');
+                // Highlight the correct answer
+                Array.from(optionsContainer.children).find(el => el.innerText === correctAnswer).classList.add('correct');
+            }
+            
+            answeredQuestions++;
+            if (answeredQuestions === quizQuestions.length) {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            quizResultsContainer.classList.remove('hidden');
+            quizScoreText.innerText = `You scored ${score} out of ${quizQuestions.length}!`;
+
+            const ctx = document.getElementById('quiz-chart').getContext('2d');
+            if(quizChartInstance) {
+                quizChartInstance.destroy();
+            }
+            quizChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        label: 'Quiz Results',
+                        data: [score, quizQuestions.length - score],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderColor: ['#ffffff'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+        
+        quizRetryBtn.addEventListener('click', loadQuiz);
+
+        loadQuiz();
+
+        // --- Self-Assessment Solution Toggle ---
+        const toggleBtn = document.getElementById('toggle-solution-btn');
+        const solutionContent = document.getElementById('solution-content');
+
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = solutionContent.classList.contains('solution-hidden');
+            if (isHidden) {
+                solutionContent.classList.remove('solution-hidden');
+                toggleBtn.innerText = 'Hide Detailed Solution';
+            } else {
+                solutionContent.classList.add('solution-hidden');
+                toggleBtn.innerText = 'Show Detailed Solution';
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 8: Advanced Multithreading - Threads, Tasks, Async & Await</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: A two-column layout is used. The main content is on the left, providing a linear, scrollable learning path. A sticky Table of Contents (TOC) is on the right for quick, non-linear navigation. This structure was chosen because the source material is dense and covers multiple distinct topics (theory, coding, design). The TOC allows users to jump to the section most relevant to their immediate needs (e.g., quickly reviewing a code solution or taking the quiz) while the main column provides a structured, comprehensive flow for first-time learners. Interactivity is layered on top: collapsible sections for solutions encourage active problem-solving, an animated diagram explains the async process visually, and an interactive quiz provides immediate feedback to reinforce concepts. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Threads vs. Tasks vs. ThreadPool -> Goal: Compare -> Viz/Method: Detailed HTML table -> Interaction: N/A -> Justification: A table is the clearest format for direct feature-by-feature comparison.
+        - Report Info: I/O vs. CPU-bound -> Goal: Compare -> Viz/Method: Advanced interactive simulation showing thread pool behavior -> Interaction: User clicks 'Run' to see an animated graph demonstrating how async I/O allows a thread to serve multiple requests while synchronous CPU-bound work blocks it. -> Justification: This advanced visualization makes the scalability benefit of async tangible.
+        - Report Info: Sequence diagram of an async API call -> Goal: Organize/Show Process -> Viz/Method: HTML/CSS/JS animated sequence diagram with improved visual cues and timing. -> Interaction: 'Play Animation' button triggers a clearer, step-by-step visual flow of the API call. -> Justification: Enhanced animation and styling make the complex interaction between client, server, and database easier to follow.
+        - Report Info: Coding Problems & Solutions -> Goal: Inform/Organize -> Viz/Method: Styled code blocks within collapsible divs -> Interaction: Copy-to-clipboard button on code; 'Show Solution' button toggles visibility -> Justification: Standard, effective pattern for coding tutorials that encourages self-attempt before revealing the answer.
+        - Report Info: Quiz -> Goal: Assess -> Viz/Method: Multiple-choice questions with radio buttons -> Interaction: Instant feedback on answer selection with explanations -> Justification: Active recall with immediate feedback is a powerful learning tool.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+            line-height: 1.7;
+        }
+        h1, h2, h3, .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .code-block {
+            background-color: #020617; /* slate-950 */
+            color: #e2e8f0; /* slate-200 */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            position: relative;
+            overflow-x: auto;
+            border: 1px solid #1e293b; /* slate-800 */
+        }
+        .code-block .copy-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: #1e293b; /* slate-800 */
+            color: #94a3b8; /* slate-400 */
+            border: 1px solid #334155; /* slate-700 */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+            background-color: #334155;
+            color: #e2e8f0;
+        }
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-left: 2px solid transparent;
+            color: #475569; /* slate-600 */
+        }
+        .toc-link:hover {
+            color: #ca8a04; /* amber-500 */
+            border-left-color: #ca8a04;
+            transform: translateX(2px);
+        }
+        .toc-link.active {
+            color: #a16207; /* amber-600 */
+            font-weight: 600;
+            border-left-color: #a16207;
+        }
+        .quiz-option:hover {
+            background-color: #fef3c7; /* amber-100 */
+        }
+        h2 { margin-top: 4rem; margin-bottom: 1.5rem; font-size: 2.25rem; font-weight: 700; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.75rem; }
+        h3 { margin-top: 3rem; margin-bottom: 1.25rem; font-size: 1.75rem; font-weight: 600; }
+        .callout {
+            background-color: #f0f9ff; /* sky-50 */
+            border-left: 4px solid #0ea5e9; /* sky-500 */
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .sequence-diagram .actor { width: 120px; text-align: center; font-weight: 600; }
+        .sequence-diagram .message {
+            position: absolute; transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); opacity: 0; transform: scale(0.5);
+            border-top: 2px solid; padding: 5px 8px; font-size: 0.8rem; border-radius: 4px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .sequence-diagram .message.right::after { content: '►'; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); font-size: 10px; }
+        .sequence-diagram .message.left::before { content: '◄'; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); font-size: 10px;}
+
+        .thread-viz-container .thread-lane {
+            position: relative;
+            height: 40px;
+            background-color: #e2e8f0;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+        .thread-viz-container .request-block {
+            position: absolute;
+            height: 100%;
+            transition: all 0.5s ease-in-out;
+            opacity: 0.9;
+            font-size: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+            border-radius: 0.25rem;
+        }
+        .section-divider {
+            margin-top: 4rem;
+            margin-bottom: 4rem;
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(100, 116, 139, 0.3), rgba(0, 0, 0, 0));
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 border-b border-slate-200">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                 <h2 class="text-2xl font-bold font-lexend text-slate-900 m-0 p-0 border-none">.NET Concurrency Masterclass</h2>
+                 <span class="text-sm font-medium text-amber-600">Day 8: Advanced Concepts</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 lg:px-8 py-12">
+        <div class="lg:flex lg:space-x-16">
+            <!-- Main Content -->
+            <div class="lg:w-3/4">
+                <main id="main-content">
+                    <header class="mb-16">
+                        <h1 class="text-5xl md:text-6xl font-bold text-slate-900 leading-tight font-lexend">Multithreading: Threads, Tasks, & Async/Await</h1>
+                        <p class="mt-6 text-xl text-slate-600">An in-depth guide to modern concurrency in .NET for building scalable, high-performance applications.</p>
+                    </header>
+                    
+                    <section id="theory">
+                        <h2>✅ Core Theory</h2>
+                        <p class="text-lg text-slate-600">A rock-solid understanding of concurrency primitives is non-negotiable for building robust applications. This section dissects the fundamental models in .NET, moving from low-level constructs to high-level abstractions, ensuring you know not just the 'what', but the 'why'.</p>
+                        
+                        <h3 id="theory-threads-tasks">Threads vs. Tasks vs. ThreadPool</h3>
+                        <p>These concepts form a hierarchy of abstraction. Mastering when to use each is key to writing efficient concurrent code.</p>
+                        <div class="callout">
+                            <p><strong class="font-semibold text-sky-800">Analogy: The Professional Kitchen</strong></p>
+                            <ul class="list-disc list-inside mt-2 text-sky-700 space-y-1">
+                                <li><strong>Thread:</strong> A highly-specialized chef you hire for one specific, long-term task, like slow-roasting a brisket for 8 hours. They are powerful and dedicated but resource-intensive and require careful management.</li>
+                                <li><strong>ThreadPool:</strong> The entire kitchen brigade of on-call chefs. You don't interact with them individually. You post an order (a work item) to the order rail, and any available chef will pick it up. This is highly efficient for handling a rush of many small, quick orders.</li>
+                                <li><strong>Task:</strong> A detailed recipe card for a dish (e.g., "Pan-Seared Salmon"). It's a promise of a future result. You hand this recipe to the ThreadPool to be prepared by the kitchen brigade. The card also lets you track the dish's status and retrieve it once it's ready.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="overflow-x-auto mt-8 shadow-md rounded-lg border border-slate-200">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wider">Feature</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wider">Thread</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wider">ThreadPool</th>
+                                        <th class="px-6 py-4 text-left text-sm font-semibold text-slate-600 uppercase tracking-wider">Task</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    <tr>
+                                        <td class="px-6 py-4 font-semibold">Abstraction Level</td>
+                                        <td class="px-6 py-4">Lowest level. A thin wrapper over an OS thread.</td>
+                                        <td class="px-6 py-4">Medium level. A managed pool of worker threads.</td>
+                                        <td class="px-6 py-4">Highest level. An abstraction over an asynchronous operation.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-semibold">Creation Cost</td>
+                                        <td class="px-6 py-4">Expensive. High memory and OS overhead.</td>
+                                        <td class="px-6 py-4">Threads are recycled, making work submission cheap.</td>
+                                        <td class="px-6 py-4">Very lightweight object. Inexpensive to create.</td>
+                                    </tr>
+                                     <tr>
+                                        <td class="px-6 py-4 font-semibold">Primary Use Case</td>
+                                        <td class="px-6 py-4">Long-running, blocking, or dedicated operations.</td>
+                                        <td class="px-6 py-4">Executing many short-lived, fire-and-forget work items.</td>
+                                        <td class="px-6 py-4">The modern, preferred way to handle all async operations.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-semibold">Composition</td>
+                                        <td class="px-6 py-4">Difficult. Requires manual synchronization primitives.</td>
+                                        <td class="px-6 py-4">Not designed for composition.</td>
+                                        <td class="px-6 py-4">Excellent. Easily composable with `Task.WhenAll`, `WhenAny`, etc.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 id="theory-async-await">The `async` and `await` Keywords</h3>
+                        <p>These two keywords, introduced in C# 5, revolutionized asynchronous programming by transforming complex callback-based logic into a clean, linear control flow. They provide syntactic sugar over the Task-based Asynchronous Pattern (TAP).</p>
+                        
+                        <div class="mt-6">
+                            <div class="code-block" data-lang="csharp">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+public class AsyncAwaitExample
+{
+    // 'async' enables the use of 'await' inside the method and changes how the method's result is handled.
+    public static async Task&lt;string&gt; DownloadWebsiteContentAsync(string url)
+    {
+        using var client = new HttpClient();
+        
+        Console.WriteLine($"Starting download from {url}...");
+        // 'await' suspends the method's execution and returns control to the caller.
+        // The thread is NOT blocked; it's released back to the ThreadPool.
+        string content = await client.GetStringAsync(url);
+        
+        // Once GetStringAsync completes, execution resumes here on a context-captured thread.
+        Console.WriteLine("Download complete. Processing content...");
+        return content.Substring(0, Math.Min(content.Length, 100));
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                        
+                        <h3 id="theory-io-cpu">I/O-Bound vs. CPU-Bound Operations</h3>
+                        <p>Correctly identifying the nature of an asynchronous operation is the single most important factor in choosing the right concurrency tool.</p>
+                        
+                        <div id="timeline-visualization" class="my-10 p-6 bg-white rounded-xl shadow-lg border border-slate-200">
+                             <h4 class="font-bold text-xl text-center mb-2 font-lexend">Interactive Visualization: ThreadPool Scalability</h4>
+                             <p class="text-center text-slate-600 mb-6 max-w-2xl mx-auto">See how `async` I/O operations allow a single thread to handle multiple requests, while synchronous CPU work blocks its thread, forcing sequential execution.</p>
+                             <div class="text-center mb-8">
+                                <button id="run-sim-btn" class="bg-amber-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-amber-600 transition-transform duration-200 hover:scale-105 shadow-md">Run Simulation</button>
+                             </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 thread-viz-container">
+                                 <div>
+                                     <h5 class="font-semibold mb-2 text-center text-slate-700">Async I/O-Bound (e.g., API Calls)</h5>
+                                     <div class="text-xs text-slate-500 mb-1">Thread #1</div>
+                                     <div id="io-timeline" class="thread-lane"></div>
+                                     <div class="text-sm text-slate-500 mt-3 h-6">Result: <span id="io-result" class="font-semibold text-green-600"></span></div>
+                                 </div>
+                                 <div>
+                                     <h5 class="font-semibold mb-2 text-center text-slate-700">Sync CPU-Bound (e.g., Calculations)</h5>
+                                     <div class="text-xs text-slate-500 mb-1">Thread #2</div>
+                                     <div id="cpu-timeline" class="thread-lane"></div>
+                                     <div class="text-sm text-slate-500 mt-3 h-6">Result: <span id="cpu-result" class="font-semibold text-red-600"></span></div>
+                                 </div>
+                             </div>
+                         </div>
+
+                        <h3 id="theory-benefits-api">The Scalability Imperative: `async` in Backend APIs</h3>
+                        <p>In a server environment like ASP.NET Core, `async/await` isn't a suggestion; it's a requirement for building applications that can handle real-world load.</p>
+                        <ul class="list-disc list-inside space-y-3 mt-6 text-slate-700">
+                            <li><strong>Thread Pool Efficiency:</strong> A server has a finite number of ThreadPool threads. Synchronous, blocking I/O calls (like `database.Query().Result`) hold onto these precious threads while doing nothing but waiting. An `async` call releases the thread back to the pool, allowing it to immediately serve another incoming HTTP request. This drastically increases the number of concurrent requests a server can handle.</li>
+                            <li><strong>Preventing Thread Pool Starvation:</strong> If all threads are blocked waiting for I/O, the server becomes unresponsive. New requests are queued and may time out. This catastrophic failure mode is known as thread pool starvation and is directly prevented by using `async` correctly.</li>
+                            <li><strong>Reduced Resource Consumption:</strong> Fewer threads mean less memory usage and less context-switching overhead for the OS, leading to a more performant and cost-effective application.</li>
+                        </ul>
+                    </section>
+                    
+                    <hr class="section-divider" />
+
+                    <section id="coding-practice">
+                        <h2>✅ Coding Practice</h2>
+                        <p class="text-lg text-slate-600">Theory is foundational, but mastery comes from implementation. These exercises are designed to build practical skills in realistic scenarios, moving from simple parallelism to complex asynchronous workflows.</p>
+
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-12">
+                            <h3 class="!mt-0">Demo: Fetch data from multiple APIs concurrently</h3>
+                            <p class="mb-4 text-slate-600">This example demonstrates the core pattern of starting multiple `Task` objects and then awaiting them all with `Task.WhenAll()` for maximum efficiency.</p>
+                            <div class="code-block" data-lang="csharp">
+                                <button class="copy-btn">Copy</button>
+                                <pre><code class="language-csharp">using System;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+public class ConcurrentApiFetcher
+{
+    private static readonly HttpClient client = new();
+
+    public static async Task Main()
+    {
+        var stopwatch = Stopwatch.StartNew();
+        Console.WriteLine("Starting concurrent API calls...");
+
+        // Start the tasks immediately and concurrently. Don't await them yet.
+        Task&lt;string&gt; userTask = client.GetStringAsync("https://jsonplaceholder.typicode.com/users/1");
+        Task&lt;string&gt; postTask = client.GetStringAsync("https://jsonplaceholder.typicode.com/posts/1");
+
+        // Now, asynchronously wait for all of them to complete.
+        // The thread is released here, free to do other work.
+        await Task.WhenAll(userTask, postTask);
+        
+        // The results are now available without additional blocking.
+        string user = await userTask; 
+        string post = await postTask;
+        
+        stopwatch.Stop();
+        Console.WriteLine($"--- Both API calls completed in {stopwatch.ElapsedMilliseconds}ms ---");
+        Console.WriteLine($"User data has {user.Length} characters.");
+        Console.WriteLine($"Post data has {post.Length} characters.");
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-8">
+                            <h3 id="problem-easy" class="!mt-0">[Easy] Parallel Execution with Threads</h3>
+                            <p class="mb-4 text-slate-600">An introduction to the low-level `Thread` class, useful for understanding the fundamentals. Note that `Task` is preferred in modern code.</p>
+                            <div>
+                                <button class="toggle-solution-btn bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition-colors">Show Solution</button>
+                                <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
+                                    <div class="code-block" data-lang="csharp">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre><code class="language-csharp">using System;
+using System.Threading;
+
+public class EasyParallel
+{
+    public static void Main()
+    {
+        Console.WriteLine("Starting two threads in parallel...");
+        
+        // Create new thread instances, passing the method to execute via a lambda.
+        var t1 = new Thread(() => Work("Method 1", 100));
+        var t2 = new Thread(() => Work("Method 2", 150));
+        
+        // Start the threads. The OS scheduler will begin executing them.
+        t1.Start();
+        t2.Start();
+        
+        // Block the main thread until t1 and t2 complete their execution.
+        // Without Join(), the Main method would exit before the threads finish.
+        t1.Join();
+        t2.Join();
+        
+        Console.WriteLine("Both methods have completed.");
+    }
+    
+    public static void Work(string name, int delay)
+    {
+        for(int i = 0; i < 5; i++)
+        {
+            Console.WriteLine($"{name} executing step {i + 1}...");
+            Thread.Sleep(delay); // This blocks the current thread.
+        }
+        Console.WriteLine($"--- {name} finished ---");
+    }
+}
+</code></pre>
+                                    </div>
+                               </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-8">
+                            <h3 id="problem-medium" class="!mt-0">Asynchronous File I/O</h3>
+                             <p class="mb-4 text-slate-600">Leverage modern `async` file APIs to perform disk I/O without blocking threads.</p>
+                            <div>
+                                <button class="toggle-solution-btn bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition-colors">Show Solution</button>
+                                <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
+                                    <div class="code-block" data-lang="csharp">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre><code class="language-csharp">using System;
+using System.IO;
+using System.Threading.Tasks;
+
+public class MediumAsyncFileIO
+{
+    public static async Task Main()
+    {
+        string filePath = "async-demo.txt";
+        string content = $"Hello from async file I/O at {DateTime.UtcNow:O}.";
+        
+        Console.WriteLine("Writing to file asynchronously...");
+        // This operation does not block the calling thread.
+        await File.WriteAllTextAsync(filePath, content);
+        Console.WriteLine("Write complete.");
+        
+        Console.WriteLine("Reading from file asynchronously...");
+        string readContent = await File.ReadAllTextAsync(filePath);
+        Console.WriteLine("Read complete.");
+
+        Console.WriteLine($"\nContent read from file: \"{readContent}\"");
+        
+        // Clean up the created file.
+        File.Delete(filePath);
+        Console.WriteLine("\nFile deleted.");
+    }
+}
+</code></pre>
+                                    </div>
+                               </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-8">
+                            <h3 id="problem-hard" class="!mt-0">Parallel Matrix Multiplication (CPU-Bound)</h3>
+                            <p class="mb-4 text-slate-600">A classic CPU-bound problem, ideal for `Parallel.For` which efficiently utilizes multiple cores via the ThreadPool.</p>
+                            <div>
+                                <button class="toggle-solution-btn bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition-colors">Show Solution</button>
+                                <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
+                                    <div class="code-block" data-lang="csharp">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre><code class="language-csharp">using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
+public class HardParallelMatrix
+{
+    public static void Main()
+    {
+        const int MatrixSize = 256;
+        var matrixA = InitializeMatrix(MatrixSize, MatrixSize);
+        var matrixB = InitializeMatrix(MatrixSize, MatrixSize);
+        var result = new double[MatrixSize, MatrixSize];
+
+        Console.WriteLine($"Multiplying {MatrixSize}x{MatrixSize} matrices...");
+        var stopwatch = Stopwatch.StartNew();
+
+        int rowsA = matrixA.GetLength(0);
+        int colsA = matrixA.GetLength(1);
+        int colsB = matrixB.GetLength(1);
+
+        // Use Parallel.For to distribute the outer loop across available cores.
+        // This is highly efficient for data parallelism on multi-core CPUs.
+        Parallel.For(0, rowsA, i =>
+        {
+            for (int j = 0; j < colsB; j++)
+            {
+                double sum = 0;
+                for (int k = 0; k < colsA; k++)
+                {
+                    sum += matrixA[i, k] * matrixB[k, j];
+                }
+                result[i, j] = sum;
+            }
+        });
+
+        stopwatch.Stop();
+        Console.WriteLine($"Parallel multiplication completed in {stopwatch.ElapsedMilliseconds} ms.");
+    }
+
+    public static double[,] InitializeMatrix(int rows, int cols)
+    {
+        var matrix = new double[rows, cols];
+        var rand = new Random();
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                matrix[i, j] = rand.NextDouble() * 10;
+            }
+        }
+        return matrix;
+    }
+}
+</code></pre>
+                                    </div>
+                               </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr class="section-divider" />
+
+                    <section id="uml">
+                        <h2>✅ Design & Architecture</h2>
+                        <h3 id="uml-diagram">Animated Sequence Diagram: Async API Call</h3>
+                        <p class="text-lg text-slate-600">This interactive diagram models the non-blocking flow of an `await` call in an ASP.NET Core application. Press "Play Animation" to visualize how the request thread is efficiently managed to improve server scalability.</p>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 mt-10">
+                            <div class="text-center mb-8">
+                                <button id="play-sequence-btn" class="bg-amber-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-amber-600 transition-transform duration-200 hover:scale-105 shadow-md">Play Animation</button>
+                            </div>
+                            <div id="sequence-diagram-container" class="sequence-diagram relative h-96">
+                                <div class="flex justify-around items-start h-full">
+                                    <div class="actor">Client</div>
+                                    <div class="actor">API Controller <br><span id="thread-status" class="text-xs p-1 rounded transition-colors duration-500 bg-slate-200">Thread #123</span></div>
+                                    <div class="actor">Database</div>
+                                </div>
+                                <div class="absolute top-1/4 -mt-4 left-0 right-0 h-48">
+                                    <div id="msg1" class="message right" style="left: 15%; width: 18%; top: 10px; border-color: #3b82f6; color: #3b82f6;">1. HTTP Request</div>
+                                    <div id="msg2" class="message right" style="left: 38%; width: 25%; top: 40px; border-color: #10b981; color: #10b981;">2. Begin DB Query (await)</div>
+                                    <div id="msg3" class="message left" style="right: 37%; width: 25%; top: 70px; border-color: #ef4444; color: #ef4444;">3. Thread #123 Released</div>
+                                    <div id="msg4" class="message left" style="right: 64%; width: 20%; top: 100px; border-color: #f97316; color: #f97316;">4. Serves another request</div>
+                                    <div id="msg5" class="message left" style="right: 38%; width: 25%; top: 130px; border-color: #10b981; color: #10b981;">5. DB Query Completes</div>
+                                    <div id="msg6" class="message left" style="left: 15%; width: 18%; top: 160px; border-color: #3b82f6; color: #3b82f6;">6. HTTP Response</div>
+                                </div>
+                                <div class="absolute top-10 bottom-10 left-1/4 -ml-px w-0.5 bg-slate-300"></div>
+                                <div class="absolute top-10 bottom-10 left-1/2 -ml-px w-0.5 bg-slate-300"></div>
+                                <div class="absolute top-10 bottom-10 right-1/4 -mr-px w-0.5 bg-slate-300"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                     <hr class="section-divider" />
+
+                    <section id="case-study">
+                        <h2>✅ Case Study: Designing a Scalable Job Scheduler</h2>
+                        <p class="text-lg text-slate-600">A quintessential backend system design problem that relies heavily on asynchronous processing principles for robustness and scale.</p>
+
+                        <h3 id="case-study-reqs">1. Functional Requirements</h3>
+                        <ul class="list-disc list-inside space-y-2 mt-6">
+                           <li><strong>Job Ingestion:</strong> A resilient API endpoint to accept new jobs (e.g., "generate-monthly-report", "transcode-video").</li>
+                           <li><strong>Durable Execution:</strong> Jobs must run reliably in the background. The API must provide an immediate `202 Accepted` response with a unique Job ID.</li>
+                           <li><strong>Status Inquiry:</strong> A `GET` endpoint to query the status of any job by its ID (e.g., Queued, InProgress, Succeeded, Failed).</li>
+                           <li><strong>State Persistence:</strong> Job metadata (ID, type, status, timestamps, result/error) must be stored durably in a database.</li>
+                        </ul>
+
+                        <h3 id="case-study-arch">2. System Architecture</h3>
+                        <p class="mt-6 mb-6">The key to this design is decoupling the web front-end (which accepts jobs) from the back-end services (which execute them). A message queue is the perfect intermediary for this, providing resilience and load balancing.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-4 text-center">
+                            <p class="font-mono text-sm tracking-tight">
+                                [Client] --(1. POST /jobs)--> [API Gateway] --> [Jobs API Service]
+                                <br>
+                                <span class="text-slate-400">| 2. Write to DB (Status: Queued)</span>
+                                <br>
+                                [Jobs API Service] --(3. Enqueue Msg)--> [Message Queue (RabbitMQ/Azure Queue)]
+                                <br>
+                                <span class="text-2xl align-middle text-slate-300">...</span>
+                                <br>
+                                [Background Worker Service] --(4. Dequeue Msg)--> [Job Processor]
+                                <br>
+                                <span class="text-slate-400">| 5. Update DB (Status: InProgress -> Succeeded/Failed)</span>
+                                <br>
+                                [Client] --(GET /jobs/{id})--> [API Gateway] --> [Jobs API Service] --(6. Read from DB)--> [Database]
+                            </p>
+                            <p class="mt-4 text-slate-600 text-sm">This decoupled architecture ensures the API remains fast and responsive, and jobs are not lost if a worker process fails.</p>
+                        </div>
+                    </section>
+                    
+                     <hr class="section-divider" />
+                    
+                    <section id="quiz">
+                        <h2>🧠 Knowledge Check</h2>
+                        <p class="text-lg text-slate-600">Validate your understanding of the core concepts with this short quiz. Select an answer to receive immediate feedback.</p>
+                        <div id="quiz-container" class="mt-10 space-y-8"></div>
+                    </section>
+
+                     <hr class="section-divider" />
+
+                    <section id="self-assessment">
+                         <h2>🚀 Self-Assessment Challenge</h2>
+                         <p class="text-lg text-slate-600">Apply your knowledge to a practical, real-world problem. This challenge synthesizes multiple concepts from the module into a single, cohesive solution.</p>
+                         <div class="mt-10 p-8 bg-white rounded-lg shadow-lg border border-slate-200">
+                             <h3 class="!mt-0 text-amber-600">Challenge: Concurrent Website Status Aggregator</h3>
+                             <p>Write a C# console application that fetches content from a list of URLs concurrently. It should then count the occurrences of the word "Microsoft" on each page and report the total count at the end. The entire process should be optimized for speed.</p>
+                             <ul class="list-disc list-inside my-6 text-slate-700 space-y-1">
+                                 <li><strong>Input:</strong> A <code>List&lt;string&gt;</code> of URLs.</li>
+                                 <li><strong>Processing:</strong> Concurrently download the HTML content of all URLs. Once downloaded, count the word occurrences.</li>
+                                 <li><strong>Output:</strong> After all processing is complete, print the total aggregated count from all pages.</li>
+                                 <li><strong>Constraint:</strong> The process should be as parallel as possible. The download of one URL should not block another.</li>
+                             </ul>
+                             <div>
+                                <button class="toggle-solution-btn bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-2 px-4 rounded-lg transition-colors">Show Detailed Solution</button>
+                                <div class="solution-content hidden pt-4 mt-2 border-t border-slate-200">
+                                    <div class="code-block" data-lang="csharp">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre><code class="language-csharp">using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+public class ParallelAggregator
+{
+    private static readonly HttpClient client = new();
+    private const string WordToCount = "Microsoft";
+
+    public static async Task Main()
+    {
+        var urls = new List&lt;string&gt;
+        {
+            "https://www.microsoft.com/en-us/",
+            "https://azure.microsoft.com/en-us/",
+            "https://news.microsoft.com/",
+            "https://devblogs.microsoft.com/dotnet/",
+            "https://www.xbox.com/", // This one likely has fewer mentions
+            "https://www.github.com" // Also owned by Microsoft
+        };
+
+        Console.WriteLine($"Starting concurrent search for the word '{WordToCount}' across {urls.Count} sites...");
+        var stopwatch = Stopwatch.StartNew();
+
+        // 1. Create a list of tasks, one for each URL.
+        // This starts all downloads concurrently by calling the async method.
+        IEnumerable&lt;Task&lt;int&gt;&gt; countTasks = 
+            urls.Select(url => GetWordCountAsync(url, WordToCount));
+
+        // 2. Asynchronously wait for ALL tasks to complete.
+        // The results will be an array of integers, in the same order as the urls.
+        int[] counts = await Task.WhenAll(countTasks);
+
+        // 3. Sum the results.
+        int totalCount = counts.Sum();
+        stopwatch.Stop();
+
+        Console.WriteLine($"\n--- Process Complete ---");
+        Console.WriteLine($"Total occurrences of '{WordToCount}': {totalCount}");
+        Console.WriteLine($"Completed in {stopwatch.ElapsedMilliseconds} ms.");
+    }
+
+    public static async Task&lt;int&gt; GetWordCountAsync(string url, string word)
+    {
+        try
+        {
+            Console.WriteLine($"   - Starting download: {url}");
+            string content = await client.GetStringAsync(url);
+            
+            // This is a CPU-bound operation, but it's fast enough here.
+            // For a more intensive CPU operation, we would use Task.Run().
+            int count = Regex.Matches(content, word, RegexOptions.IgnoreCase).Count;
+            Console.WriteLine($"   - SUCCESS: Found {count} occurrences at {url}");
+            return count;
+        }
+        catch (HttpRequestException ex)
+        {
+            // Gracefully handle failed downloads.
+            Console.WriteLine($"   - FAILED: Could not fetch {url}. Error: {ex.Message}");
+            return 0; 
+        }
+    }
+}
+</code></pre>
+                                    </div>
+                               </div>
+                            </div>
+                         </div>
+                    </section>
+                </main>
+            </div>
+
+            <!-- Sticky Table of Contents -->
+            <div class="hidden lg:block lg:w-1/f">
+                <aside class="sticky top-24">
+                    <h3 class="text-lg font-semibold mb-4 text-slate-900 font-lexend">On This Page</h3>
+                    <nav id="toc" class="flex flex-col space-y-1 border-l-2 border-slate-200">
+                        <a href="#theory" class="toc-link py-2 px-4 text-sm">✅ Core Theory</a>
+                        <a href="#coding-practice" class="toc-link py-2 px-4 text-sm">✅ Coding Practice</a>
+                        <a href="#uml" class="toc-link py-2 px-4 text-sm">✅ Design & Architecture</a>
+                        <a href="#case-study" class="toc-link py-2 px-4 text-sm">✅ Case Study</a>
+                        <a href="#quiz" class="toc-link py-2 px-4 text-sm">🧠 Knowledge Check</a>
+                        <a href="#self-assessment" class="toc-link py-2 px-4 text-sm">🚀 Self-Assessment</a>
+                    </nav>
+                </aside>
+            </div>
+        </div>
+    </div>
+    
+     <!-- Footer -->
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Copy to Clipboard Functionality ---
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const code = e.currentTarget.closest('.code-block').querySelector('code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    const originalText = 'Copy';
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                });
+            });
+        });
+
+        // --- Toggle Solution Visibility ---
+        document.querySelectorAll('.toggle-solution-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const isHidden = content.classList.contains('hidden');
+                
+                if (isHidden) {
+                    content.classList.remove('hidden');
+                    button.textContent = 'Hide Solution';
+                } else {
+                    content.classList.add('hidden');
+                    button.textContent = 'Show Solution';
+                }
+            });
+        });
+        
+        // --- Sticky TOC Active State ---
+        const sections = document.querySelectorAll('main section[id]');
+        const tocLinks = document.querySelectorAll('#toc a');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`#toc a[href="#${id}"]`);
+                if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    if(tocLink) tocLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: "-20% 0px -70% 0px", threshold: 0.1 });
+
+        sections.forEach(section => observer.observe(section));
+
+        // --- Quiz Functionality ---
+        const quizData = [
+            { question: "For an I/O-bound operation in an ASP.NET Core API, what is the primary benefit of using `async/await`?", options: ["It makes the database query run faster.", "It uses multiple threads to execute the query.", "It frees the request thread to serve other requests, improving scalability.", "It guarantees the operation will succeed."], answer: "It frees the request thread to serve other requests, improving scalability." },
+            { question: "Which tool is most appropriate for a CPU-bound task, like resizing thousands of images, to leverage multiple cores?", options: ["`await Task.Delay()`", "`new Thread()` for each image", "`Parallel.ForEach` or `Task.Run`", "`HttpClient.GetStringAsync()`"], answer: "`Parallel.ForEach` or `Task.Run`" },
+            { question: "What does the `await` keyword actually do?", options: ["Blocks the current thread until the task is complete.", "Creates a new thread to run the code that follows.", "Starts the asynchronous operation.", "Suspends the method's execution and returns control to the caller until the awaited task completes."], answer: "Suspends the method's execution and returns control to the caller until the awaited task completes." }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        quizData.forEach((q, index) => {
+            const questionEl = document.createElement('div');
+            questionEl.className = 'bg-white p-6 rounded-lg shadow-md border border-slate-200';
+            let optionsHtml = q.options.map(opt => `<label class="block p-4 rounded-lg cursor-pointer quiz-option transition-colors duration-200 border border-slate-200 hover:border-amber-400 hover:bg-amber-50"><input type="radio" name="q${index}" value="${opt}" class="mr-3 w-4 h-4 accent-amber-500">${opt}</label>`).join('');
+            questionEl.innerHTML = `<p class="font-semibold mb-4 text-lg">${index + 1}. ${q.question}</p><div class="space-y-3">${optionsHtml}</div><div id="feedback-${index}" class="mt-4 p-3 rounded-md text-sm font-semibold hidden transition-opacity duration-300 opacity-0"></div>`;
+            quizContainer.appendChild(questionEl);
+        });
+
+        quizContainer.addEventListener('change', e => {
+            if (e.target.type === 'radio') {
+                const qIndex = parseInt(e.target.name.substring(1));
+                const selectedAnswer = e.target.value;
+                const correctAnswer = quizData[qIndex].answer;
+                const feedbackEl = document.getElementById(`feedback-${qIndex}`);
+                feedbackEl.classList.remove('hidden');
+                setTimeout(() => feedbackEl.style.opacity = 1, 50);
+
+                if (selectedAnswer === correctAnswer) {
+                    feedbackEl.innerHTML = '✅ Correct! Async I/O frees the thread, enabling scalability.';
+                    feedbackEl.className = 'mt-4 p-3 rounded-md text-sm font-semibold bg-green-100 text-green-800 transition-opacity duration-300 opacity-100';
+                } else {
+                    feedbackEl.innerHTML = `❌ Not quite. The correct answer is: "${correctAnswer}"`;
+                    feedbackEl.className = 'mt-4 p-3 rounded-md text-sm font-semibold bg-red-100 text-red-800 transition-opacity duration-300 opacity-100';
+                }
+            }
+        });
+        
+        // --- Sequence Diagram Animation ---
+        const playBtn = document.getElementById('play-sequence-btn');
+        playBtn.addEventListener('click', () => {
+            const messages = document.querySelectorAll('.sequence-diagram .message');
+            const threadStatus = document.getElementById('thread-status');
+            
+            messages.forEach(msg => { msg.style.opacity = '0'; msg.style.transform = 'scale(0.5)'; });
+            threadStatus.textContent = "Thread #123";
+            threadStatus.className = 'text-xs p-1 rounded transition-colors duration-500 bg-slate-200';
+
+            const animateStep = (el, delay) => new Promise(r => setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'scale(1)'; r(); }, delay));
+
+            async function runAnimation() {
+                playBtn.disabled = true;
+                await animateStep(document.getElementById('msg1'), 100);
+                await animateStep(document.getElementById('msg2'), 600);
+                threadStatus.className = 'text-xs p-1 rounded transition-colors duration-500 bg-red-200 text-red-800';
+                await animateStep(document.getElementById('msg3'), 600);
+                threadStatus.textContent = "Thread #456";
+                threadStatus.className = 'text-xs p-1 rounded transition-colors duration-500 bg-amber-200 text-amber-800';
+                await animateStep(document.getElementById('msg4'), 600);
+                await animateStep(document.getElementById('msg5'), 1000);
+                threadStatus.textContent = "Thread #789";
+                threadStatus.className = 'text-xs p-1 rounded transition-colors duration-500 bg-green-200 text-green-800';
+                await animateStep(document.getElementById('msg6'), 600);
+                playBtn.disabled = false;
+            }
+            runAnimation();
+        });
+
+        // --- Advanced Timeline Visualization ---
+        const runSimBtn = document.getElementById('run-sim-btn');
+        const ioTimeline = document.getElementById('io-timeline');
+        const cpuTimeline = document.getElementById('cpu-timeline');
+        const ioResult = document.getElementById('io-result');
+        const cpuResult = document.getElementById('cpu-result');
+
+        runSimBtn.addEventListener('click', () => {
+            runSimBtn.disabled = true;
+            ioTimeline.innerHTML = '';
+            cpuTimeline.innerHTML = '';
+            ioResult.textContent = 'Processing...';
+            cpuResult.textContent = 'Processing...';
+
+            const requests = [
+                { id: 'R1', color: 'bg-sky-500', duration: 1000, start: 0 },
+                { id: 'R2', color: 'bg-teal-500', duration: 1200, start: 200 },
+                { id: 'R3', color: 'bg-indigo-500', duration: 800, start: 400 },
+            ];
+
+            // Async I/O Simulation
+            let ioCompleted = 0;
+            requests.forEach(req => {
+                const work1 = document.createElement('div');
+                work1.className = `request-block ${req.color}`;
+                work1.textContent = req.id;
+                work1.style.left = `${req.start / 40}%`; work1.style.width = '5%';
+                setTimeout(() => ioTimeline.appendChild(work1), req.start);
+                
+                const work2 = document.createElement('div');
+                work2.className = `request-block ${req.color}`;
+                work2.textContent = req.id;
+                work2.style.left = `${(req.start + req.duration) / 40}%`; work2.style.width = '5%';
+                setTimeout(() => {
+                    ioTimeline.appendChild(work2);
+                    ioCompleted++;
+                    if (ioCompleted === requests.length) {
+                        ioResult.textContent = `3 requests handled by 1 thread.`;
+                    }
+                }, req.start + req.duration);
+            });
+            
+            // Sync CPU Simulation
+            let cpuTime = 0; let cpuCompleted = 0;
+            requests.forEach(req => {
+                const work = document.createElement('div');
+                work.className = `request-block ${req.color}`;
+                work.textContent = req.id;
+                work.style.left = `${cpuTime / 40}%`; work.style.width = `${req.duration / 40}%`;
+                setTimeout(() => {
+                    cpuTimeline.appendChild(work);
+                    cpuCompleted++;
+                    if (cpuCompleted === requests.length) {
+                         cpuResult.textContent = `3 requests handled sequentially.`;
+                    }
+                }, cpuTime + 100);
+                cpuTime += req.duration;
+            });
+
+            setTimeout(() => runSimBtn.disabled = false, cpuTime + 200);
+        });
+    });
+    </script>
+</body>
+</html>
+

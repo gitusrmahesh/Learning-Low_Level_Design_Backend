@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF--8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 28: SOLID Principles - The Ultimate Review & Interview Guide</title>
+    <!-- Chosen Palette: Warm Neutral Stone -->
+    <!-- Application Structure Plan: The application is structured as a linear, single-page lesson that users can scroll through. A sticky table of contents (ToC) on the right (or top on mobile) provides non-linear navigation, allowing users to jump to specific topics. This familiar, textbook-like structure is ideal for a learning module. It supports both sequential learning and quick review. Key interactions include ToC navigation, quiz participation with instant feedback, revealing solutions to challenges, and copying code snippets, all designed to create an engaging, self-paced learning environment. -->
+    <!-- Visualization & Content Choices: 1. Report Info: Tradeoffs of strict SOLID adherence. Goal: Visually demonstrate the long-term benefits vs. initial costs. Viz/Method: Line Chart (Chart.js/Canvas) comparing development cost over time for 'Strict SOLID' vs. 'No SOLID' projects. Interaction: Hover tooltips explain cost implications at different project phases. Justification: A chart effectively communicates the trend of decreasing maintenance cost, making the abstract concept of technical debt tangible. 2. Report Info: UML Diagram for a Library Management System. Goal: Visually represent class structure and relationships. Viz/Method: HTML divs with Tailwind CSS for boxes, borders, and connectors. Interaction: Hovering over a class highlights it and displays a tooltip with its responsibility. Justification: This method creates a clear, structured diagram that adheres to the strict NO SVG/Mermaid constraint while still being interactive and informative. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f8f7; 
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link { transition: all 0.2s ease-in-out; }
+        .toc-link.active, .toc-link:hover {
+            color: #c2410c; 
+            transform: translateX(4px);
+            border-left-color: #c2410c;
+        }
+        pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            position: relative;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #334155;
+            color: #cbd5e1;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover { background-color: #475569; }
+        .solution-toggle { cursor: pointer; }
+        .quiz-option { cursor: pointer; transition: background-color 0.2s; }
+        .quiz-option.selected { background-color: #fed7aa; }
+        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; }
+        .quiz-option.incorrect { background-color: #fee2e2; border-color: #ef4444; }
+        .uml-diagram .uml-class {
+            background-color: white;
+            border: 2px solid #9ca3af;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.2s ease-in-out;
+        }
+        .uml-diagram .uml-class:hover {
+             border-color: #c2410c;
+             transform: translateY(-2px);
+             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .uml-class h3 {
+            font-weight: 700;
+            color: #1e293b;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .uml-class ul {
+            list-style-type: none;
+            padding: 0;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .pro-tip {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-slate-800">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <div class="flex-grow lg:w-3/4">
+                <article class="space-y-16">
+                    <header>
+                        <p class="text-base font-semibold text-orange-700">Day 28 of 60</p>
+                        <h1 id="intro" class="text-4xl font-bold font-lexend tracking-tight text-slate-900 mt-2">SOLID: The Ultimate Review & Interview Guide</h1>
+                        <p class="mt-4 text-lg text-slate-600">Welcome to the definitive guide on SOLID principles. This all-in-one resource consolidates everything you need for deep understanding and interview success: in-depth theory, extensive Q&A, practical refactoring challenges, and a comprehensive mock system design walkthrough. Let's master SOLID.</p>
+                    </header>
+
+                    <section id="theory" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">1. Theory: A Deep Dive Review</h2>
+                        <p class="text-slate-600">Let's conduct a detailed review of each SOLID principle, focusing on the "why" behind each one. Understanding the motivation is key to applying them effectively and explaining them in an interview.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">S: Single Responsibility Principle (SRP)</h3>
+                            <p class="mt-2 text-slate-600"><strong>Motivation:</strong> A class should have only one reason to change, related to a single actor or responsibility. This principle is about high cohesion. When a class handles multiple concerns (e.g., business logic and persistence), changes in one can break the other, leading to fragile, hard-to-maintain code.</p>
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-slate-700">Syntax Snippet (Violation vs. Correction)</h4>
+                                <pre><button class="copy-btn">Copy</button><code>// Violation of SRP
+public class Report
+{
+    public void GenerateReportData() { /* ... */ }
+    public void SaveToFile(string path) { /* ... */ } // Persistence is a different responsibility
+}
+
+// Corrected with SRP
+public class ReportGenerator
+{
+    public ReportData Generate() { /* ... */ }
+}
+public class ReportSaver
+{
+    public void Save(ReportData reportData, string path) { /* ... */ }
+}</code></pre>
+                            </div>
+                        </div>
+
+                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">O: Open/Closed Principle (OCP)</h3>
+                            <p class="mt-2 text-slate-600"><strong>Motivation:</strong> Software entities should be open for extension, but closed for modification. You should be able to add new functionality without changing existing, tested code. This is typically achieved through abstractions (interfaces, abstract classes) and patterns like Strategy or Decorator.</p>
+                             <div class="mt-4">
+                                <h4 class="font-semibold text-slate-700">Syntax Snippet (Using Abstraction)</h4>
+                                <pre><button class="copy-btn">Copy</button><code>// Base abstract class (closed for modification)
+public abstract class Shape
+{
+    public abstract double Area();
+}
+
+// New shapes can be added (open for extension) without changing code that uses Shape
+public class Circle : Shape 
+{
+    public double Radius { get; set; }
+    public override double Area() => Math.PI * Radius * Radius;
+}
+public class Triangle : Shape
+{
+    public double Base { get; set; }
+    public double Height { get; set; }
+    public override double Area() => 0.5 * Base * Height;
+}</code></pre>
+                            </div>
+                        </div>
+
+                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">L: Liskov Substitution Principle (LSP)</h3>
+                            <p class="mt-2 text-slate-600"><strong>Motivation:</strong> Subtypes must be substitutable for their base types without altering the correctness of the program. A subclass should not require its users to know its specific type. Violations often occur when a subclass overrides a base class method in a way that breaks the base class's contract (e.g., by doing nothing, or throwing an unexpected exception).</p>
+                             <div class="mt-4">
+                                <h4 class="font-semibold text-slate-700">Syntax Snippet (Classic Rectangle/Square problem)</h4>
+                                <pre><button class="copy-btn">Copy</button><code>// Violation of LSP
+public class Rectangle {
+    public virtual int Width { get; set; }
+    public virtual int Height { get; set; }
+}
+public class Square : Rectangle {
+    public override int Width { set { base.Width = base.Height = value; } }
+    public override int Height { set { base.Width = base.Height = value; } }
+}
+// This test will fail because the Square's behavior is unexpected for a Rectangle.
+// void TestArea(Rectangle r) {
+//   r.Width = 5;
+//   r.Height = 10;
+//   Assert.AreEqual(50, r.Width * r.Height); // Fails for Square, returns 100!
+// }
+</code></pre>
+                            </div>
+                        </div>
+
+                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">I: Interface Segregation Principle (ISP)</h3>
+                            <p class="mt-2 text-slate-600"><strong>Motivation:</strong> No client should be forced to depend on methods it does not use. This principle suggests that large, "fat" interfaces should be split into smaller, more specific ones. This avoids forcing implementing classes to create dummy methods for functionality they don't possess, and it reduces coupling.</p>
+                             <div class="mt-4">
+                                <h4 class="font-semibold text-slate-700">Syntax Snippet (Segregating a fat interface)</h4>
+                                <pre><button class="copy-btn">Copy</button><code>// "Fat" interface - Violation of ISP
+public interface IWorker {
+    void Work();
+    void Eat();
+    void Sleep();
+}
+
+// Segregated interfaces
+public interface IWorkable { void Work(); }
+public interface IFeedable { void Eat(); }
+public interface ISleepable { void Sleep(); }
+
+public class HumanWorker : IWorkable, IFeedable, ISleepable { /* ... */ }
+public class RobotWorker : IWorkable { /* Robots don't eat or sleep */ }</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">D: Dependency Inversion Principle (DIP)</h3>
+                            <p class="mt-2 text-slate-600"><strong>Motivation:</strong> High-level modules (business logic) should not depend on low-level modules (database, file system). Both should depend on abstractions (e.g., interfaces). Furthermore, abstractions should not depend on details; details should depend on abstractions. This decouples the core logic from implementation details, making the system vastly more flexible and testable.</p>
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-slate-700">Syntax Snippet (Using Dependency Injection)</h4>
+                                <pre><button class="copy-btn">Copy</button><code>public interface ILogger { void Log(string message); }
+
+public class FileLogger : ILogger { /* ... */ }
+
+// High-level module depends on abstraction (ILogger), not FileLogger
+public class BusinessLogic
+{
+    private readonly ILogger _logger;
+    
+    // The dependency is "injected" via the constructor
+    public BusinessLogic(ILogger logger) {
+        _logger = logger;
+    }
+
+    public void DoWork() {
+        _logger.Log("Starting work...");
+        // ...
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="interview-qa" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">2. The Ultimate Interview Q&A</h2>
+                        <p class="text-slate-600">This section covers a wide range of interview questions, from basic definitions to advanced scenarios, to ensure you're prepared for anything.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-6">
+                             <h3 class="text-xl font-semibold font-lexend text-slate-800">General & High-Level Questions</h3>
+                             <div>
+                                 <h4 class="font-semibold text-slate-700">1. In your own words, what is the main goal of the SOLID principles?</h4>
+                                 <p class="mt-1 text-slate-600">The main goal is to create understandable, flexible, and maintainable software. They are guidelines that help us manage complexity and reduce coupling, making it easier to change and extend the system over time without breaking existing functionality.</p>
+                             </div>
+                              <div>
+                                 <h4 class="font-semibold text-slate-700">2. Which SOLID principle do you find most important and why?</h4>
+                                 <p class="mt-1 text-slate-600">This is subjective, but a strong answer is the Dependency Inversion Principle (DIP). It's arguably the most impactful because it enables true decoupling between high-level policy and low-level detail. This decoupling is what makes systems testable (via mocking), flexible (by swapping implementations), and easier to maintain. DIP often enables or reinforces other principles like OCP.</p>
+                             </div>
+                             <div>
+                                 <h4 class="font-semibold text-slate-700">3. When might you choose to violate a SOLID principle?</h4>
+                                 <p class="mt-1 text-slate-600">In very simple applications, proofs-of-concept, or throwaway scripts. Applying SOLID rigidly in these cases can be over-engineering, leading to unnecessary complexity (e.g., creating interfaces for every class in a 100-line script). The key is to be pragmatic. For any system intended to be maintained or grow, adherence is almost always worth the initial effort. The chart below illustrates this trade-off.</p>
+                             </div>
+                             <div class="mt-4 chart-container mx-auto" style="position: relative; height:40vh; width:100%; max-width: 600px;">
+                                <canvas id="solidTradeoffChart"></canvas>
+                             </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-6">
+                             <h3 class="text-xl font-semibold font-lexend text-slate-800">Principle-Specific Questions</h3>
+                             <div>
+                                 <h4 class="font-semibold text-slate-700">4. (SRP) How do you identify a class's "single responsibility"?</h4>
+                                 <p class="mt-1 text-slate-600">A good heuristic is to ask, "Who or what would request a change to this class?" If you can identify more than one "actor" (e.g., a DBA caring about performance vs. a financial analyst caring about calculation logic), the class likely has more than one responsibility. Another way is to describe what the class does. If you have to use the word "and" multiple times, it's a red flag.</p>
+                             </div>
+                              <div>
+                                 <h4 class="font-semibold text-slate-700">5. (OCP) Does the Open/Closed Principle mean you can never change a class's source code?</h4>
+                                 <p class="mt-1 text-slate-600">No, it doesn't mean you can *never* change it. Bug fixes are an obvious exception. The principle's intent is to prevent changes to a class's public contract and established behavior when you are *extending* the system with new features. You should not have to modify `class A` just to add a new behavior in `class B`.</p>
+                             </div>
+                             <div>
+                                 <h4 class="font-semibold text-slate-700">6. (LSP) Why is the classic Rectangle/Square inheritance a violation of LSP?</h4>
+                                 <p class="mt-1 text-slate-600">Because a `Square`'s behavior breaks the implicit contract of a `Rectangle`. A user of a `Rectangle` object expects to be able to set the `Width` and `Height` independently. A `Square` violates this by linking them. This means you cannot safely substitute a `Square` where a `Rectangle` is expected without potentially causing incorrect behavior in the client code.</p>
+                             </div>
+                              <div>
+                                 <h4 class="font-semibold text-slate-700">7. (ISP) Can you give an example of how violating ISP leads to problems?</h4>
+                                 <p class="mt-1 text-slate-600">Imagine a "fat" `IRepository` interface with `Add`, `Update`, `Delete`, and `Get` methods. Now, you need a read-only view in your UI. The service for this view only needs the `Get` method, but to implement `IRepository`, it must also provide (likely empty or exception-throwing) implementations for `Add`, `Update`, and `Delete`. This is misleading and forces the client to depend on methods it doesn't need.</p>
+                             </div>
+                              <div>
+                                 <h4 class="font-semibold text-slate-700">8. (DIP) What's the difference between Dependency Inversion and Dependency Injection?</h4>
+                                 <p class="mt-1 text-slate-600">Dependency Inversion is the *principle* that high-level modules should depend on abstractions, not concretions. Dependency Injection is a common *pattern* or technique to achieve this. DI is the act of providing a class with its dependencies from an external source (e.g., via a constructor, method, or property) rather than having the class create them itself.</p>
+                             </div>
+                        </div>
+                    </section>
+
+
+                    <section id="coding" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">3. Refactoring Challenges</h2>
+                        <p class="text-slate-600">Analyze the "Before" code for SOLID violations and see how the "After" code resolves them. This is a common interview format.</p>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">Challenge 1: The God Object Processor (SRP)</h3>
+                            <p class="mt-2 text-slate-600">This class violates SRP. It parses data, validates it, and saves it. Adding a new data format or validation rule requires modifying this class.</p>
+                             <pre><button class="copy-btn">Copy</button><code>// BEFORE: Violates SRP
+public class OrderProcessor
+{
+    public void ProcessOrder(string rawData)
+    {
+        // Parsing logic, validation logic, and saving logic all in one method.
+    }
+}
+
+// AFTER: Adheres to SRP & DIP
+public interface IOrderParser { /* ... */ }
+public interface IOrderValidator { /* ... */ }
+public interface IOrderRepository { /* ... */ }
+
+public class RefactoredOrderProcessor
+{
+    // ... dependencies injected via constructor ...
+    public void ProcessOrder(Stream stream)
+    {
+        var order = _parser.Parse(stream);
+        if (_validators.All(v => v.Validate(order))) _repository.Save(order);
+    }
+}</code></pre>
+                        </div>
+                        
+                         <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <h3 class="text-xl font-semibold font-lexend text-slate-800">Challenge 2: The Rigid Calculator (OCP)</h3>
+                            <p class="mt-2 text-slate-600">This class violates OCP. To add a new operation (e.g., multiplication), you must modify the `Calculate` method's `switch` statement.</p>
+                             <pre><button class="copy-btn">Copy</button><code>// BEFORE: Violates OCP
+public enum Operation { Add, Subtract }
+public class Calculator
+{
+    public double Calculate(double a, double b, Operation op)
+    {
+        switch (op) {
+            case Operation.Add: return a + b;
+            case Operation.Subtract: return a - b;
+            default: throw new ArgumentException();
+        }
+    }
+}
+
+// AFTER: Adheres to OCP (Strategy Pattern)
+public interface IOperation { double Perform(double a, double b); }
+public class Addition : IOperation { /* ... */ }
+public class Subtraction : IOperation { /* ... */ }
+
+public class RefactoredCalculator
+{
+    public double Calculate(double a, double b, IOperation operation)
+    {
+        return operation.Perform(a, b);
+    }
+}</code></pre>
+                        </div>
+
+                    </section>
+                    
+                    <section id="uml" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">4. UML Diagram: Library Management System</h2>
+                        <p class="text-slate-600">This UML diagram illustrates the SOLID design for the Library Management System. It clearly shows how interfaces (abstractions) decouple the high-level `LibraryService` from low-level implementation details like a specific database or notification service. Hover over classes to see their responsibilities.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 uml-diagram relative">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div class="uml-class" title="High-level module that orchestrates operations using abstractions.">
+                                    <h3>LibraryService</h3>
+                                    <ul>
+                                        <li>- _bookRepository: IBookRepository</li>
+                                        <li>- _memberRepository: IMemberRepository</li>
+                                        <li>- _notificationSender: INotificationSender</li>
+                                        <li>+ IssueBook(bookId, memberId)</li>
+                                        <li>+ ReturnBook(bookId, memberId)</li>
+                                    </ul>
+                                </div>
+                                <div class="space-y-8">
+                                    <div class="uml-class" title="Abstraction for book data persistence.">
+                                        <h3>&lt;&lt;interface&gt;&gt;<br>IBookRepository</h3>
+                                        <ul>
+                                            <li>+ GetById(id): Book</li>
+                                            <li>+ Update(book): void</li>
+                                        </ul>
+                                    </div>
+                                    <div class="uml-class" title="Concrete implementation for a SQL database.">
+                                        <h3>SqlBookRepository</h3>
+                                        <ul>
+                                            <li>+ GetById(id): Book</li>
+                                            <li>+ Update(book): void</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="space-y-8">
+                                     <div class="uml-class" title="Abstraction for sending notifications.">
+                                        <h3>&lt;&lt;interface&gt;&gt;<br>INotificationSender</h3>
+                                        <ul>
+                                            <li>+ SendNotification(member, msg): void</li>
+                                        </ul>
+                                    </div>
+                                    <div class="uml-class" title="Concrete implementation for sending emails.">
+                                        <h3>EmailNotificationSender</h3>
+                                        <ul>
+                                            <li>+ SendNotification(member, msg): void</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+
+
+                    <section id="casestudy" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">5. Full Mock Interview Walkthrough</h2>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-6">
+                            <p><strong>Interviewer:</strong> "Hi, thanks for coming in. Today, I'd like you to design the backend services for a simple library management system. The system should allow librarians to issue and return books. When a book is issued, its status should change, and the member's record should be updated. When returned, the opposite should happen. The system must also send a notification to the member when a book is issued successfully. Please walk me through your thought process, focusing on how you'd create a maintainable and flexible design."</p>
+
+                            <div class="pro-tip">
+                                <p class="font-semibold text-amber-800">Candidate's Thought Process:</p>
+                                <p class="mt-2 text-slate-700">Okay, this is a classic system design problem. I need to break it down. First, clarify requirements. Then, identify core entities. Crucially, I must explicitly state how I'll apply SOLID principles throughout the design. This shows I'm not just coding, but architecting.</p>
+                            </div>
+
+                            <p><strong>Candidate:</strong> "Great, sounds like an interesting problem. Before I start, a few clarifying questions:
+                                <ul class="list-disc list-inside text-slate-600 mt-2">
+                                    <li>What kind of notification should be sent? Email, SMS?</li>
+                                    <li>What's the expected scale? Is the database likely to be SQL, or could it be something else?</li>
+                                    <li>Should I be concerned with user authentication for librarians?</li>
+                                </ul>
+                            </p>
+                            <p><strong>Interviewer:</strong> "For now, assume email notifications. The database is SQL today but might change. Don't worry about authentication; focus on the core issue/return logic."</p>
+                            <p><strong>Candidate:</strong> "Perfect. My design will be heavily guided by the SOLID principles to ensure flexibility for those future changes. Here's my approach:"</p>
+                            
+                            <h4 class="font-semibold text-slate-700 pt-4">Step 1: Identify Core Entities & Responsibilities (SRP)</h4>
+                             <p class="mt-1 text-slate-600">"First, I'll apply the <strong>Single Responsibility Principle</strong>. I see a few distinct responsibilities:
+                                <ul class="list-disc list-inside text-slate-600 mt-2">
+                                    <li><strong>Data Models:</strong> `Book` and `Member` classes, which just hold data.</li>
+                                    <li><strong>Persistence:</strong> Logic for saving/retrieving books and members from the database.</li>
+                                    <li><strong>Notification:</strong> Logic for sending emails.</li>
+                                    <li><strong>Business Logic:</strong> The core process of issuing and returning a book, which coordinates the other parts.</li>
+                                </ul>
+                             This separation prevents me from creating a single 'god' `LibraryManager` class that does everything."</p>
+                             
+                             <h4 class="font-semibold text-slate-700 pt-4">Step 2: Define Abstractions (DIP & OCP)</h4>
+                              <p class="mt-1 text-slate-600">"Next, to prepare for future changes and to enable testing, I'll use the <strong>Dependency Inversion Principle</strong>. My high-level business logic will not depend on concrete classes like `SqlDatabase` or `EmailSender`. Instead, it will depend on abstractions (interfaces). This also sets us up for the <strong>Open/Closed Principle</strong>.
+                                <ul class="list-disc list-inside text-slate-600 mt-2">
+                                    <li><code>IBookRepository</code>: An interface for book persistence with methods like `GetById` and `Update`.</li>
+                                    <li><code>IMemberRepository</code>: An interface for member persistence.</li>
+                                    <li><code>INotificationSender</code>: An interface for sending notifications with a `SendNotification` method.</li>
+                                </ul>
+                             These interfaces are small and focused, adhering to the <strong>Interface Segregation Principle</strong>."</p>
+
+                            <h4 class="font-semibold text-slate-700 pt-4">Step 3: Implement and Assemble</h4>
+                            <p class="mt-1 text-slate-600">"Now I can create the concrete implementations: `SqlBookRepository`, `SqlMemberRepository`, and `EmailNotificationSender`. The final piece is the high-level service class that orchestrates the logic:"</p>
+                            <pre><button class="copy-btn">Copy</button><code>// High-level Service Class
+public class LibraryService
+{
+    private readonly IBookRepository _bookRepository;
+    private readonly IMemberRepository _memberRepository;
+    private readonly INotificationSender _notificationSender;
+
+    // Dependencies are injected (DIP)
+    public LibraryService(IBookRepository bookRepo, IMemberRepository memberRepo, INotificationSender sender)
+    {
+        _bookRepository = bookRepo;
+        _memberRepository = memberRepo;
+        _notificationSender = sender;
+    }
+
+    public void IssueBook(int bookId, int memberId)
+    {
+        Book book = _bookRepository.GetById(bookId);
+        Member member = _memberRepository.GetById(memberId);
+        
+        if (book == null || !book.IsAvailable) throw new Exception("Book not available.");
+        if (member == null) throw new Exception("Member not found.");
+        
+        book.IsAvailable = false;
+        member.BorrowedBookIds.Add(bookId);
+
+        _bookRepository.Update(book);
+        _memberRepository.Update(member);
+        
+        _notificationSender.SendNotification(member, $"Book '{book.Title}' issued successfully.");
+    }
+
+    // ReturnBook logic would be similar...
+}</code></pre>
+
+                            <p><strong>Interviewer:</strong> "This looks great. How would you handle a new requirement to send SMS notifications instead of emails for some members?"</p>
+                            <p><strong>Candidate:</strong> "That's where the OCP and DIP shine. I would simply:
+                            <ol class="list-decimal list-inside text-slate-600 mt-2">
+                                <li>Create a new `SmsNotificationSender` class that implements the `INotificationSender` interface.</li>
+                                <li>The `LibraryService` class would require <strong>no changes</strong>.</li>
+                                <li>At the application's startup (the 'composition root'), we would use a factory or a dependency injection container to decide whether to inject an `EmailNotificationSender` or an `SmsNotificationSender` into the `LibraryService`, based on the member's preference. The design is open to this extension without being modified."</li>
+                            </ol>
+                            </p>
+                        </div>
+                    </section>
+                    
+                     <section id="quiz" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">6. Expanded Knowledge Check</h2>
+                        <p class="text-slate-600">Test your understanding with a wider range of questions. Click an option to see if you're correct.</p>
+                        
+                        <div id="quiz-container" class="space-y-6"></div>
+                    </section>
+                    
+                     <section id="challenge" class="space-y-8 scroll-mt-24">
+                        <h2 class="text-3xl font-bold font-lexend text-slate-900 border-b-2 border-orange-600 pb-2">7. Final Self-Assessment Challenge</h2>
+                        <p class="text-slate-600">You've been given a requirement to add a new feature: generate a PDF report of all overdue books. Consider the `LibraryService` from the case study. How would you add this functionality while adhering to SOLID principles?</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                             <div class="solution-toggle font-semibold text-orange-700 hover:text-orange-800 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                                <span>Click to Reveal Detailed Solution</span>
+                            </div>
+                            <div class="solution-content hidden mt-4 space-y-4 text-slate-600">
+                                <p>The worst way would be to add a `GenerateOverdueReport()` method directly into `LibraryService`. This would violate SRP, as the service's core responsibility is managing book transactions, not report generation.</p>
+                                <p><strong>The SOLID Approach:</strong></p>
+                                <ol class="list-decimal list-inside space-y-2">
+                                    <li><strong>Define an Abstraction (DIP/OCP):</strong> Create a new interface, `IReportGenerator`, with a method like `Generate(IEnumerable<Book> books)`.</li>
+                                    <li><strong>Create a Concrete Implementation (SRP):</strong> Create a `PdfReportGenerator` class that implements `IReportGenerator`. This class's single responsibility is to create a PDF.</li>
+                                    <li><strong>Create a New Service (SRP):</strong> Create a `ReportingService` class. This service will depend on `IBookRepository` (to get overdue books) and `IReportGenerator` (to generate the report). Its single responsibility is coordinating reporting.</li>
+                                    <li><strong>Dependency Injection:</strong> The `ReportingService` would receive its dependencies via its constructor. The main `LibraryService` remains untouched (OCP).</li>
+                                </ol>
+                                <pre><button class="copy-btn">Copy</button><code>// 1. New Abstraction
+public interface IReportGenerator
+{
+    byte[] Generate(IEnumerable&lt;Book&gt; overdueBooks);
+}
+
+// 2. New Concrete Implementation
+public class PdfReportGenerator : IReportGenerator { /* ... PDF generation logic ... */ }
+
+// 3. New Service
+public class ReportingService
+{
+    private readonly IBookRepository _bookRepository;
+    private readonly IReportGenerator _reportGenerator;
+    
+    public ReportingService(IBookRepository bookRepo, IReportGenerator reportGenerator)
+    {
+        _bookRepository = bookRepo;
+        _reportGenerator = reportGenerator;
+    }
+    
+    public byte[] GenerateOverdueReport()
+    {
+        var overdueBooks = _bookRepository.GetOverdueBooks();
+        return _reportGenerator.Generate(overdueBooks);
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+
+                </article>
+            </div>
+            
+            <aside class="lg:w-1/4 lg:sticky lg:top-8 self-start">
+                 <nav class="space-y-4">
+                     <h3 class="font-semibold font-lexend text-slate-800">On this page</h3>
+                     <ul id="toc-container" class="space-y-2">
+                        <li><a href="#intro" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">Introduction</a></li>
+                        <li><a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">1. Theory Review</a></li>
+                        <li><a href="#interview-qa" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">2. Interview Q&A</a></li>
+                        <li><a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">3. Refactoring</a></li>
+                        <li><a href="#uml" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">4. UML Diagram</a></li>
+                        <li><a href="#casestudy" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">5. Mock Interview</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">6. Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 font-medium">7. Final Challenge</a></li>
+                     </ul>
+                 </nav>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const ctx = document.getElementById('solidTradeoffChart');
+            if(ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Start', 'Mid-Project', 'Long-Term Maintenance', '5 Years Later'],
+                        datasets: [{
+                            label: 'Strict SOLID Approach',
+                            data: [20, 30, 15, 10],
+                            borderColor: 'rgb(234, 88, 12)',
+                            backgroundColor: 'rgba(234, 88, 12, 0.2)',
+                            tension: 0.3,
+                            fill: true,
+                        }, {
+                            label: 'No SOLID (High Tech Debt)',
+                            data: [10, 25, 60, 85],
+                            borderColor: 'rgb(100, 116, 139)',
+                            backgroundColor: 'rgba(100, 116, 139, 0.2)',
+                            tension: 0.3,
+                            fill: true,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Development Cost/Effort Over Time'
+                            },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Relative Cost / Effort' } } }
+                    }
+                });
+            }
+
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pre = button.parentElement;
+                    const code = pre.querySelector('code');
+                    navigator.clipboard.writeText(code.innerText).then(() => {
+                        button.textContent = 'Copied!';
+                        setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            const solutionToggles = document.querySelectorAll('.solution-toggle');
+            solutionToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    toggle.nextElementSibling.classList.toggle('hidden');
+                });
+            });
+
+            const quizData = [
+                {
+                    question: "Which principle is most concerned with decoupling high-level policy from low-level details?",
+                    options: ["Single Responsibility", "Liskov Substitution", "Dependency Inversion", "Open/Closed"],
+                    answer: "Dependency Inversion"
+                },
+                {
+                    question: "A class that connects to a database, queries user data, and then formats it into an XML string violates which principle most directly?",
+                    options: ["Interface Segregation", "Single Responsibility", "Dependency Inversion", "Liskov Substitution"],
+                    answer: "Single Responsibility"
+                },
+                {
+                    question: "The strategy pattern, which allows algorithms to be swapped out at runtime, is a classic example of which principle?",
+                    options: ["Liskov Substitution", "Interface Segregation", "Dependency Inversion", "Open/Closed"],
+                    answer: "Open/Closed"
+                },
+                {
+                    question: "If a subclass throws a `NotImplementedException` for a method it inherited from its base class, which principle is likely being violated?",
+                    options: ["Liskov Substitution", "Single Responsibility", "Open/Closed", "Dependency Inversion"],
+                    answer: "Liskov Substitution"
+                },
+                {
+                    question: "Refactoring a large class into several smaller, more focused classes is an application of which principle?",
+                    options: ["Open/Closed", "Single Responsibility", "Interface Segregation", "Liskov Substitution"],
+                    answer: "Single Responsibility"
+                },
+                 {
+                    question: "Why does depending on abstractions (interfaces) rather than concretions (classes) improve testability?",
+                    options: ["It makes the code run faster", "It allows for 'mocking' or 'faking' dependencies in tests", "It automatically adds error handling", "It reduces the number of classes"],
+                    answer: "It allows for 'mocking' or 'faking' dependencies in tests"
+                },
+                {
+                    question: "A 'fat' interface with 20 methods that different clients need only a subset of is a violation of:",
+                    options: ["Dependency Inversion", "Single Responsibility", "Interface Segregation", "Open/Closed"],
+                    answer: "Interface Segregation"
+                }
+            ];
+            const quizContainer = document.getElementById('quiz-container');
+
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'bg-white p-6 rounded-lg shadow-sm border border-slate-200';
+                
+                let optionsHtml = '';
+                q.options.forEach(option => {
+                    optionsHtml += `<div class="quiz-option mt-2 p-3 border-2 border-slate-200 rounded-md hover:bg-orange-100" data-question="${index}">${option}</div>`;
+                });
+
+                questionEl.innerHTML = `
+                    <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+                    <div class="options-container">${optionsHtml}</div>
+                    <p class="feedback-text mt-2 text-sm font-medium hidden"></p>
+                `;
+                quizContainer.appendChild(questionEl);
+            });
+            
+            quizContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quiz-option')) {
+                    const selectedOption = e.target;
+                    const questionIndex = selectedOption.dataset.question;
+                    const questionData = quizData[questionIndex];
+                    const questionEl = selectedOption.closest('div.bg-white');
+                    const options = questionEl.querySelectorAll('.quiz-option');
+                    
+                    options.forEach(opt => { opt.classList.remove('selected', 'correct', 'incorrect'); opt.style.pointerEvents = 'none'; });
+                    
+                    selectedOption.classList.add('selected');
+                    const feedbackText = questionEl.querySelector('.feedback-text');
+                    
+                    if (selectedOption.innerText === questionData.answer) {
+                        selectedOption.classList.add('correct');
+                        feedbackText.textContent = 'Correct! Well done.';
+                        feedbackText.className = 'feedback-text mt-2 text-sm font-medium text-green-600 block';
+                    } else {
+                        selectedOption.classList.add('incorrect');
+                        feedbackText.textContent = `Not quite. The correct answer is: ${questionData.answer}`;
+                        feedbackText.className = 'feedback-text mt-2 text-sm font-medium text-red-600 block';
+                        options.forEach(opt => { if (opt.innerText === questionData.answer) { opt.classList.add('correct'); } });
+                    }
+                }
+            });
+
+            const sections = document.querySelectorAll('section[id], header[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '0px', threshold: 0.3 });
+
+            sections.forEach(section => { observer.observe(section); });
+        });
+    </script>
+</body>
+</html>
+

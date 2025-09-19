@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 27: SOLID Consolidation & Refactoring Project</title>
+    <!-- Chosen Palette: Slate Neutrals with Amber & Sky Blue Accents -->
+    <!-- Application Structure Plan: A two-column layout is used for optimal learning experience. The left, main column contains the core lesson content in a logical, sequential flow (Theory -> Problem -> Refactoring Steps -> Solution -> Assessment). This structure guides the user through the learning process step-by-step. The right column features a sticky table of contents (TOC) for quick navigation, allowing users to jump between sections or track their progress. This design prioritizes content discoverability and user control, making a dense topic digestible. Interactions like code highlighting, quizzes, and solution reveals are integrated directly into the content flow to reinforce learning without navigating away. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Before/After UML Diagrams -> Goal: Organize/Compare -> Viz/Presentation: HTML/CSS block diagrams using Flexbox -> Interaction: None, purely visual. -> Justification: Avoids forbidden SVG/Mermaid. Provides a clear, universally understood structural overview of the code before and after refactoring, which is critical for a design lesson.
+        - Report Info: SOLID Violations in Legacy Code -> Goal: Inform/Analyze -> Viz/Presentation: Code blocks with JS-powered highlighting -> Interaction: Clicking a violation button highlights corresponding code lines -> Justification: Creates a direct, interactive link between theoretical principles and their practical anti-patterns in code, enhancing comprehension.
+        - Report Info: Knowledge Check -> Goal: Assess -> Viz/Presentation: Interactive multiple-choice quiz -> Interaction: User selects an answer, gets immediate feedback. -> Justification: A standard, effective method for self-assessment and knowledge reinforcement.
+        - Report Info: Code Examples -> Goal: Inform -> Viz/Presentation: Styled `<pre><code>` blocks -> Interaction: Copy-to-Clipboard button for each block -> Justification: Essential for a programming tutorial, providing easy access to code for local experimentation.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Lexend', sans-serif; }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            background-color: #4a5568;
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .uml-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .uml-class {
+            background-color: white;
+            border: 2px solid #64748b;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            min-width: 200px;
+        }
+        .uml-class-title {
+            font-weight: 700;
+            font-family: 'Lexend', sans-serif;
+            color: #1e293b;
+        }
+        .uml-interface {
+            border-style: dashed;
+            border-color: #0891b2;
+            color: #0e7490;
+        }
+        .uml-connector {
+            width: 2px;
+            background-color: #94a3b8;
+            flex-grow: 1;
+            min-height: 2rem;
+        }
+        .uml-dependency-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+        }
+        .uml-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #94a3b8;
+        }
+        .highlight-code {
+            background-color: #fef9c3;
+            display: block;
+            margin: -0.25rem -1.5rem;
+            padding: 0.25rem 1.5rem;
+            border-left: 4px solid #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-white text-slate-800">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:flex lg:space-x-12">
+            
+            <main class="lg:w-3/4">
+                <article class="prose prose-slate max-w-none">
+                    <header class="mb-12 border-b pb-8">
+                        <p class="text-sky-600 font-semibold">Day 27</p>
+                        <h2 class="text-4xl font-extrabold tracking-tight text-slate-900">SOLID Consolidation & Refactoring Project</h2>
+                        <p class="mt-4 text-lg text-slate-600">Today, we transition from theory to practice. We'll consolidate our understanding of all five SOLID principles by refactoring a piece of legacy code. This hands-on project is designed to demonstrate how SOLID transforms brittle, hard-to-manage code into a robust, maintainable, and extensible system, ready for real-world business demands.</p>
+                    </header>
+
+                    <section id="theory" class="space-y-8 scroll-mt-24">
+                        <h3 class="text-3xl font-bold tracking-tight">Theory Deep Dive</h3>
+                        
+                        <div>
+                            <h4 class="text-2xl font-semibold">How SOLID Improves Maintainability</h4>
+                            <p>SOLID principles are not arbitrary rules; they are a proven blueprint for building software that stands the test of time. Systems designed with SOLID are inherently easier to maintain, debug, and extend. Here’s a more concrete breakdown of the benefits:</p>
+                            <div class="mt-4 overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-3 font-semibold border-b">Principle</th>
+                                            <th class="p-3 font-semibold border-b">Core Idea</th>
+                                            <th class="p-3 font-semibold border-b">Maintainability Impact</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="align-baseline">
+                                        <tr>
+                                            <td class="p-3 border-b border-slate-200 font-semibold">SRP</td>
+                                            <td class="p-3 border-b border-slate-200">One reason to change</td>
+                                            <td class="p-3 border-b border-slate-200"><strong>Reduces Risk:</strong> Changes are localized. A bug fix in payment logic won't accidentally break order validation.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border-b border-slate-200 font-semibold">OCP</td>
+                                            <td class="p-3 border-b border-slate-200">Extend, don't modify</td>
+                                            <td class="p-3 border-b border-slate-200"><strong>Lowers Cost of Change:</strong> New features are added in new classes, minimizing regression testing on existing, stable code.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border-b border-slate-200 font-semibold">LSP</td>
+                                            <td class="p-3 border-b border-slate-200">Substitutable subtypes</td>
+                                            <td class="p-3 border-b border-slate-200"><strong>Increases Reliability:</strong> Prevents unexpected runtime errors when using polymorphism. Code that works with a base type is guaranteed to work with a subtype.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border-b border-slate-200 font-semibold">ISP</td>
+                                            <td class="p-3 border-b border-slate-200">Lean interfaces</td>
+                                            <td class="p-3 border-b border-slate-200"><strong>Improves Code Clarity:</strong> Clients only know about the methods that are relevant to them, reducing unnecessary coupling.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-3 border-b border-slate-200 font-semibold">DIP</td>
+                                            <td class="p-3 border-b border-slate-200">Depend on abstractions</td>
+                                            <td class="p-3 border-b border-slate-200"><strong>Enables Testability & Flexibility:</strong> Allows for swapping implementations (e.g., a real database for a mock one in tests) and parallel development.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-2xl font-semibold">Applying Multiple Principles Together</h4>
+                            <p>SOLID principles rarely work in isolation; they create a virtuous cycle. A common pattern is the "SRP-DIP-OCP Refactoring Chain":</p>
+                             <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg flex items-center space-x-4">
+                                <div class="text-center p-2 bg-sky-100 rounded-md"><strong>1. SRP</strong><br/><span class="text-sm">Identify multiple responsibilities.</span></div>
+                                <div class="text-2xl text-sky-400 font-thin">&rarr;</div>
+                                <div class="text-center p-2 bg-sky-100 rounded-md"><strong>2. DIP</strong><br/><span class="text-sm">Extract abstractions (interfaces).</span></div>
+                                <div class="text-2xl text-sky-400 font-thin">&rarr;</div>
+                                <div class="text-center p-2 bg-sky-100 rounded-md"><strong>3. OCP</strong><br/><span class="text-sm">Inject dependencies to allow extension.</span></div>
+                            </div>
+                            <p class="mt-4">You start by noticing a class does too much (violating SRP). You break it apart, but now the main class needs to talk to the new classes. To avoid tight coupling, you create interfaces for them and have the main class depend on those (DIP). This structure now allows you to create *new* implementations of those interfaces and "plug them in" without changing the main class at all (OCP).</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-2xl font-semibold">Real-World Consequences of Ignoring SOLID</h4>
+                             <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 text-amber-800 rounded-r-lg">
+                                <p><strong class="font-semibold">Case Study: The Un-updatable Payment Gateway</strong></p>
+                                <p class="mt-1">A startup used a monolithic service like our example. When their primary payment provider suddenly increased fees, they needed to switch. But the payment logic was hardcoded and tangled with validation and database calls. The "quick" switch turned into a 3-month, high-risk rewrite of a core part of their system, causing revenue loss and delaying other features. Adhering to OCP/DIP would have made it a one-week task to simply write a new payment processor and plug it in.</p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="legacy-code" class="space-y-8 scroll-mt-24">
+                        <h3 class="text-3xl font-bold tracking-tight">The Legacy `OrderService`: Before Refactoring</h3>
+                        <p>Below is a typical `OrderService` you might find in a legacy system. It validates the order, processes payment, saves it to a database, and sends a confirmation email. It works, but it's a ticking time bomb of technical debt.</p>
+                        
+                        <h4 class="text-2xl font-semibold">UML Diagram: Before</h4>
+                        <div class="uml-container my-6">
+                            <div class="uml-class">
+                                <div class="uml-class-title">OrderService</div>
+                                <div class="text-slate-500 text-sm mt-2">- order, user<br>+ ProcessOrder()</div>
+                            </div>
+                            <p class="text-sm text-slate-600 text-center">A single, monolithic class handling everything. It is tightly coupled to concrete implementations like `CreditCardService`, `StoreDbContext`, and `SmtpClient`.</p>
+                        </div>
+                        
+                        <h4 class="text-2xl font-semibold">Analysis: Identifying SOLID Violations</h4>
+                        <p>This class violates multiple principles. Click the buttons below to highlight the problematic code sections and see a detailed explanation.</p>
+                        <div class="flex flex-wrap gap-2 my-4">
+                            <button class="violation-btn px-3 py-1.5 text-sm font-semibold rounded-md bg-red-100 text-red-800 hover:bg-red-200 transition-colors" data-target="srp">Violates SRP</button>
+                            <button class="violation-btn px-3 py-1.5 text-sm font-semibold rounded-md bg-orange-100 text-orange-800 hover:bg-orange-200 transition-colors" data-target="ocp">Violates OCP</button>
+                            <button class="violation-btn px-3 py-1.5 text-sm font-semibold rounded-md bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors" data-target="dip">Violates DIP</button>
+                        </div>
+
+                        <div id="violation-explanation" class="p-4 bg-slate-50 border border-slate-200 rounded-lg hidden my-4 transition-opacity duration-300">
+                            <h5 id="explanation-title" class="font-bold text-slate-800"></h5>
+                            <p id="explanation-text" class="text-slate-600 mt-1 text-sm"></p>
+                        </div>
+
+                        <div id="legacy-code-wrapper" class="code-block">
+<pre class="bg-slate-800 text-white p-6 rounded-lg text-sm language-csharp"><code class="language-csharp">
+public class OrderService
+{
+    public void ProcessOrder(Order order, User user)
+    {
+        <span class="code-line" data-violation="srp dip">
+        // 1. Validation Logic
+        if (order == null || order.Items.Count == 0)
+        {
+            throw new Exception("Order is invalid.");
+        }
+        if (user == null || string.IsNullOrEmpty(user.Email))
+        {
+            throw new Exception("User data is missing.");
+        }
+        </span>
+        <span class="code-line" data-violation="srp ocp dip">
+        // 2. Payment Processing Logic
+        // Tightly coupled to a specific payment method
+        if (order.PaymentMethod == "CreditCard")
+        {
+            var creditCardService = new CreditCardService();
+            creditCardService.Charge(order.TotalAmount, user.CreditCardDetails);
+        }
+        else if (order.PaymentMethod == "PayPal")
+        {
+            var payPalService = new PayPalService();
+            payPalService.SendPayment(order.TotalAmount, user.PayPalEmail);
+        }
+        </span>
+        <span class="code-line" data-violation="srp dip">
+        // 3. Database Logic
+        // Tightly coupled to a specific database implementation
+        using (var dbContext = new StoreDbContext())
+        {
+            dbContext.Orders.Add(order);
+            dbContext.SaveChanges();
+        }
+        </span>
+        <span class="code-line" data-violation="srp dip">
+        // 4. Notification Logic
+        // Tightly coupled to email notifications
+        var smtpClient = new SmtpClient("smtp.server.com");
+        var mailMessage = new MailMessage("noreply@example.com", user.Email, "Order Confirmation", "Your order has been placed.");
+        smtpClient.Send(mailMessage);
+        </span>
+    }
+}
+</code></pre>
+                            <button class="copy-button">Copy</button>
+                        </div>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="refactoring" class="space-y-8 scroll-mt-24">
+                        <h3 class="text-3xl font-bold tracking-tight">Refactoring in Action</h3>
+                        <p class="lead"><strong>Business Scenario:</strong> The product team wants to add "Stripe" as a new payment option and also wants to notify users via SMS for high-value orders. With our current design, both tasks require modifying the core `OrderService`, which is risky. Let's refactor to make these new features easy and safe to implement.</p>
+
+                        <div>
+                            <h4 class="text-2xl font-semibold">[Easy] Step 1: Apply the Single Responsibility Principle (SRP)</h4>
+                            <p>Our first step is to break the `OrderService` into smaller classes, each with a single, clear responsibility. We can identify four distinct responsibilities: validation, payment, data persistence, and notification. We will create concrete classes for each.</p>
+                            <div class="code-block mt-4">
+<pre class="bg-slate-800 text-white p-6 rounded-lg text-sm language-csharp"><code class="language-csharp">
+// Responsibility: Validating an order
+public class OrderValidator
+{
+    public bool Validate(Order order, User user)
+    {
+        if (order == null || order.Items.Count == 0) return false;
+        if (user == null || string.IsNullOrEmpty(user.Email)) return false;
+        return true;
+    }
+}
+
+// Responsibility: Persisting an order
+public class OrderRepository
+{
+    private readonly StoreDbContext _dbContext;
+    public OrderRepository(StoreDbContext dbContext) { _dbContext = dbContext; }
+    public void Save(Order order) 
+    {
+        _dbContext.Orders.Add(order);
+        _dbContext.SaveChanges();
+    }
+}
+
+// Responsibility: Notifying the user
+public class EmailService
+{
+    public void SendConfirmationEmail(User user, Order order) 
+    {
+        var smtpClient = new SmtpClient("smtp.server.com");
+        var mailMessage = new MailMessage("noreply@example.com", user.Email, "Order Confirmation", $"Your order #{order.Id} has been placed.");
+        smtpClient.Send(mailMessage);
+    }
+}
+</code></pre>
+                                <button class="copy-button">Copy</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-2xl font-semibold">[Medium] Step 2: Apply the Open/Closed Principle (OCP)</h4>
+                            <p>The original `if/else if` block for payment methods is a classic OCP violation. To fix this, we'll introduce an `IPaymentProcessor` interface (DIP) and a strategy pattern. This allows us to add new payment methods (e.g., Stripe, Apple Pay) without ever modifying the `OrderService`.</p>
+                             <div class="code-block mt-4">
+<pre class="bg-slate-800 text-white p-6 rounded-lg text-sm language-csharp"><code class="language-csharp">
+// Abstraction for payment processing (applying DIP)
+public interface IPaymentProcessor
+{
+    void ProcessPayment(decimal amount, User user);
+}
+
+// Concrete implementation for Credit Card
+public class CreditCardPaymentProcessor : IPaymentProcessor
+{
+    public void ProcessPayment(decimal amount, User user) 
+    {
+        var creditCardService = new CreditCardService();
+        creditCardService.Charge(amount, user.CreditCardDetails);
+    }
+}
+
+// Concrete implementation for PayPal
+public class PayPalPaymentProcessor : IPaymentProcessor
+{
+    public void ProcessPayment(decimal amount, User user) 
+    {
+        var payPalService = new PayPalService();
+        payPalService.SendPayment(amount, user.PayPalEmail);
+    }
+}
+
+// NEW: Adding Stripe is now trivial and requires no changes to existing code.
+public class StripePaymentProcessor : IPaymentProcessor
+{
+    public void ProcessPayment(decimal amount, User user)
+    {
+        var stripeService = new StripeService();
+        stripeService.ProcessTransaction(amount, user.StripeToken);
+    }
+}
+</code></pre>
+                                <button class="copy-button">Copy</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-2xl font-semibold">[Hard] Step 3: Apply DIP & Add Event-Based Notifications</h4>
+                            <p>Finally, we'll use the Dependency Inversion Principle to decouple our `OrderService` from all concrete implementations. Instead of `new`-ing up its dependencies, it will receive them through its constructor (Dependency Injection). This makes the class incredibly flexible and easy to test.</p>
+                            <p>For notifications, we'll go a step further. Instead of directly calling an `IEmailService`, the `OrderService` will raise an `OrderPlaced` event. Other parts of the system (like an `EmailNotifier` or our new `SmsNotifier`) can subscribe to this event. This completely decouples the order process from the notification mechanism, which is great for scalability and resilience.</p>
+                        </div>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="final-code" class="space-y-8 scroll-mt-24">
+                        <h3 class="text-3xl font-bold tracking-tight">The Refactored Design: After</h3>
+                        <p>After applying all the principles, our system is modular, decoupled, and extensible. The `OrderService` is now a clean coordinator that delegates tasks to other specialized components, whose implementations can be changed at will.</p>
+                        
+                        <h4 class="text-2xl font-semibold">UML Diagram: After</h4>
+                        <div class="uml-container my-6">
+                            <div class="uml-dependency-grid">
+                                <div class="uml-class bg-sky-100 border-sky-400">
+                                    <div class="uml-class-title">OrderService</div>
+                                </div>
+                                <div class="uml-arrow">&rarr;</div>
+                                <div class="uml-class uml-interface">
+                                    <div class="uml-class-title">&lt;&lt;interface&gt;&gt;<br>IOrderValidator</div>
+                                    <div class="text-slate-500 text-sm mt-1">+ Validate()</div>
+                                </div>
+                                <div></div> <div class="uml-arrow">&rarr;</div>
+                                <div class="uml-class uml-interface">
+                                    <div class="uml-class-title">&lt;&lt;interface&gt;&gt;<br>IPaymentProcessor</div>
+                                     <div class="text-slate-500 text-sm mt-1">+ ProcessPayment()</div>
+                                </div>
+                                 <div></div> <div class="uml-arrow">&rarr;</div>
+                                <div class="uml-class uml-interface">
+                                    <div class="uml-class-title">&lt;&lt;interface&gt;&gt;<br>IOrderRepository</div>
+                                     <div class="text-slate-500 text-sm mt-1">+ Save()</div>
+                                </div>
+                                <div></div> <div class="uml-arrow">&rarr;</div>
+                                 <div class="uml-class uml-interface">
+                                    <div class="uml-class-title">&lt;&lt;interface&gt;&gt;<br>IEventPublisher</div>
+                                     <div class="text-slate-500 text-sm mt-1">+ Publish()</div>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-600 text-center mt-4">`OrderService` now depends only on abstractions (interfaces), not concretions. New functionality can be added by creating new classes that implement these interfaces.</p>
+                        </div>
+
+                        <h4 class="text-2xl font-semibold">Final C# Solution</h4>
+                        <p>Here is the complete, SOLID-compliant code. Notice how each class has a clear purpose and dependencies are injected via the constructor.</p>
+                         <div class="code-block mt-4">
+<pre class="bg-slate-800 text-white p-6 rounded-lg text-sm language-csharp"><code class="language-csharp">
+// --- ABSTRACTIONS (DIP) ---
+public interface IOrderValidator { bool Validate(Order order, User user); }
+public interface IPaymentProcessor { void ProcessPayment(decimal amount, User user); }
+public interface IOrderRepository { void Save(Order order); }
+public interface IEventPublisher { void Publish(IEvent e); }
+public interface IEventHandler&lt;T&gt; where T : IEvent { void Handle(T e); }
+public interface IEvent { }
+
+// --- EVENTS ---
+public class OrderPlacedEvent : IEvent
+{
+    public Order Order { get; }
+    public User User { get; }
+    public OrderPlacedEvent(Order order, User user) { Order = order; User = user; }
+}
+
+// --- CONCRETE IMPLEMENTATIONS (SRP) ---
+public class OrderValidator : IOrderValidator { /* ... */ }
+public class CreditCardProcessor : IPaymentProcessor { /* ... */ }
+public class PayPalProcessor : IPaymentProcessor { /* ... */ }
+public class OrderRepository : IOrderRepository { /* ... */ }
+public class EventPublisher : IEventPublisher { /* ... */ }
+
+// Notification handlers are now decoupled
+public class EmailNotifier : IEventHandler&lt;OrderPlacedEvent&gt;
+{
+    public void Handle(OrderPlacedEvent e) { /* Send confirmation email to e.User */ }
+}
+public class SmsNotifier : IEventHandler&lt;OrderPlacedEvent&gt;
+{
+    public void Handle(OrderPlacedEvent e) { /* Send confirmation SMS to e.User */ }
+}
+
+// --- CORE LOGIC (THE COORDINATOR) ---
+public class OrderService
+{
+    private readonly IOrderValidator _validator;
+    private readonly IPaymentProcessor _paymentProcessor;
+    private readonly IOrderRepository _repository;
+    private readonly IEventPublisher _eventPublisher;
+
+    // Dependencies are Injected (DI)
+    public OrderService(IOrderValidator validator, IPaymentProcessor paymentProcessor, IOrderRepository repository, IEventPublisher eventPublisher)
+    {
+        _validator = validator;
+        _paymentProcessor = paymentProcessor;
+        _repository = repository;
+        _eventPublisher = eventPublisher;
+    }
+
+    public void ProcessOrder(Order order, User user)
+    {
+        if (!_validator.Validate(order, user))
+        {
+            throw new Exception("Order validation failed.");
+        }
+
+        // Note: The specific payment processor is now determined outside the OrderService
+        _paymentProcessor.ProcessPayment(order.TotalAmount, user);
+        
+        _repository.Save(order);
+
+        // Publish an event. We don't care who is listening or how many listeners there are.
+        _eventPublisher.Publish(new OrderPlacedEvent(order, user));
+    }
+}
+</code></pre>
+                            <button class="copy-button">Copy</button>
+                        </div>
+
+                        <div>
+                            <h4 class="text-2xl font-semibold">Wiring It Up: The Composition Root</h4>
+                            <p>A crucial piece of the puzzle is how these decoupled components get created and connected. This happens in a single place in the application called the "Composition Root" (e.g., in `Program.cs` in an ASP.NET Core application). A Dependency Injection (DI) container is used to manage the object lifetimes and dependencies.</p>
+                             <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 text-amber-800 rounded-r-lg">
+                                <p><strong class="font-semibold">Key Concept:</strong> The `OrderService` doesn't know or care if it gets a `CreditCardProcessor` or a `PayPalProcessor`; it just knows it gets *something* that implements `IPaymentProcessor`. The DI container is responsible for "injecting" the correct concrete class based on the application's configuration or logic.</p>
+                            </div>
+                            <div class="code-block mt-4">
+<pre class="bg-slate-800 text-white p-6 rounded-lg text-sm language-csharp"><code class="language-csharp">
+// In your application's startup file (e.g., Program.cs)
+var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+
+// --- Registering Dependencies with the DI Container ---
+
+// Register the single-responsibility services
+services.AddTransient&lt;IOrderValidator, OrderValidator&gt;();
+services.AddTransient&lt;IOrderRepository, OrderRepository&gt;();
+services.AddSingleton&lt;IEventPublisher, EventPublisher&gt;(); // Singleton for event bus
+
+// Register the event handlers
+services.AddTransient&lt;IEventHandler&lt;OrderPlacedEvent&gt;, EmailNotifier&gt;();
+services.AddTransient&lt;IEventHandler&lt;OrderPlacedEvent&gt;, SmsNotifier&gt;(); // Add SMS notifier
+
+// Register payment processors. We might use a factory to decide which one to use.
+services.AddTransient&lt;CreditCardProcessor&gt;();
+services.AddTransient&lt;PayPalProcessor&gt;();
+services.AddTransient&lt;StripeProcessor&gt;();
+
+// A factory to select the payment processor at runtime
+services.AddTransient&lt;IPaymentProcessor&gt;(serviceProvider => {
+    // Logic to determine payment method (e.g., from HttpContext)
+    var paymentMethod = GetPaymentMethodFromRequest(); 
+    switch (paymentMethod)
+    {
+        case "PayPal": return serviceProvider.GetRequiredService&lt;PayPalProcessor&gt;();
+        case "Stripe": return serviceProvider.GetRequiredService&lt;StripeProcessor&gt;();
+        default: return serviceProvider.GetRequiredService&lt;CreditCardProcessor&gt;();
+    }
+});
+
+// Finally, register our main service
+services.AddTransient&lt;OrderService&gt;();
+
+// Now when we request an OrderService, the DI container will build it with all its dependencies.
+var app = builder.Build();
+var orderService = app.Services.GetRequiredService&lt;OrderService&gt;();
+orderService.ProcessOrder(someOrder, someUser);
+</code></pre>
+                                <button class="copy-button">Copy</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <hr class="my-12">
+
+                    <section id="quiz" class="space-y-8 scroll-mt-24">
+                        <h3 class="text-3xl font-bold tracking-tight">Knowledge Check Quiz</h3>
+                        <div id="quiz-container" class="space-y-6">
+                            <div class="quiz-question bg-slate-50 p-6 rounded-lg border">
+                                <p class="font-semibold">1. Which SOLID principle was most directly violated by the original code's multiple responsibilities (validation, payment, DB, email) within the `OrderService` class?</p>
+                                <div class="mt-4 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q1" value="a" class="mr-2"> a) Open/Closed Principle</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="b" class="mr-2"> b) Liskov Substitution Principle</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="c" class="mr-2"> c) Single Responsibility Principle</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="d" class="mr-2"> d) Dependency Inversion Principle</label>
+                                </div>
+                                <div class="quiz-feedback mt-3 text-sm"></div>
+                            </div>
+                             <div class="quiz-question bg-slate-50 p-6 rounded-lg border">
+                                <p class="font-semibold">2. Introducing the `IPaymentProcessor` interface to handle different payment methods is a direct application of which principle?</p>
+                                <div class="mt-4 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q2" value="a" class="mr-2"> a) Open/Closed Principle</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="b" class="mr-2"> b) Interface Segregation Principle</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="c" class="mr-2"> c) Single Responsibility Principle</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="d" class="mr-2"> d) Liskov Substitution Principle</label>
+                                </div>
+                                <div class="quiz-feedback mt-3 text-sm"></div>
+                            </div>
+                             <div class="quiz-question bg-slate-50 p-6 rounded-lg border">
+                                <p class="font-semibold">3. Changing the `OrderService` to receive dependencies like `IOrderRepository` via its constructor instead of creating them internally is an example of what pattern/principle?</p>
+                                <div class="mt-4 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q3" value="a" class="mr-2"> a) Factory Pattern</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="b" class="mr-2"> b) Singleton Pattern</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="c" class="mr-2"> c) Dependency Inversion & Dependency Injection</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="d" class="mr-2"> d) Interface Segregation Principle</label>
+                                </div>
+                                <div class="quiz-feedback mt-3 text-sm"></div>
+                            </div>
+                             <div class="quiz-question bg-slate-50 p-6 rounded-lg border">
+                                <p class="font-semibold">4. What is the primary benefit of using an event-based system for notifications after an order is placed?</p>
+                                <div class="mt-4 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q4" value="a" class="mr-2"> a) It guarantees that notifications are sent faster.</label>
+                                    <label class="flex items-center"><input type="radio" name="q4" value="b" class="mr-2"> b) It decouples the order process from the notification systems, allowing new notifiers (SMS, Push) to be added without changing the `OrderService`.</label>
+                                    <label class="flex items-center"><input type="radio" name="q4" value="c" class="mr-2"> c) It simplifies the code by putting notification logic directly inside the `OrderService`.</label>
+                                    <label class="flex items-center"><input type="radio" name="q4" value="d" class="mr-2"> d) It ensures the entire order process fails if an email cannot be sent.</label>
+                                </div>
+                                <div class="quiz-feedback mt-3 text-sm"></div>
+                            </div>
+                            <div class="quiz-question bg-slate-50 p-6 rounded-lg border">
+                                <p class="font-semibold">5. Where should the decision of which concrete class (e.g., `CreditCardProcessor` vs `StripeProcessor`) to use be made in a well-structured, DI-based application?</p>
+                                <div class="mt-4 space-y-2">
+                                    <label class="flex items-center"><input type="radio" name="q5" value="a" class="mr-2"> a) Inside the `OrderService` using if/else statements.</label>
+                                    <label class="flex items-center"><input type="radio" name="q5" value="b" class="mr-2"> b) Inside a separate `PaymentHelper` class that the `OrderService` creates.</label>
+                                    <label class="flex items-center"><input type="radio" name="q5" value="c" class="mr-2"> c) In the application's "Composition Root" (e.g., Program.cs), where services are configured for the DI container.</label>
+                                    <label class="flex items-center"><input type="radio" name="q5" value="d" class="mr-2"> d) The concrete class should be hard-coded for stability.</label>
+                                </div>
+                                <div class="quiz-feedback mt-3 text-sm"></div>
+                            </div>
+                            <button id="submit-quiz" class="px-6 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors">Check Answers</button>
+                        </div>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="challenge" class="space-y-4 scroll-mt-24">
+                        <h3 class="text-3xl font-bold tracking-tight">Self-Assessment Challenge</h3>
+                        <p>You have a monolithic `ReportGenerator` service. Its `Generate` method performs three actions: 1) Fetches data from a SQL database, 2) Formats the data as a complex, multi-sheet Excel file using a specific library, and 3) Emails the file to an administrator.</p>
+                        <p>The business now requires two new features: the ability to generate the same report in CSV format, and the ability to save the report to an AWS S3 bucket instead of emailing it. How would you refactor this using SOLID principles to accommodate these changes gracefully?</p>
+                        <button id="toggle-solution-btn" class="px-4 py-2 text-sm font-semibold rounded-md bg-slate-200 text-slate-800 hover:bg-slate-300 transition-colors">Show Solution Outline</button>
+                        <div id="solution-div" class="hidden mt-4 p-6 bg-green-50 border border-green-200 rounded-lg">
+                            <h4 class="font-bold text-lg text-green-800">Solution Outline</h4>
+                            <ol class="list-decimal list-inside mt-2 space-y-3 text-green-900">
+                                <li>
+                                    <strong>Apply SRP:</strong> Break the single method into three distinct responsibilities, each behind an interface (DIP).
+                                    <ul class="list-disc list-inside ml-6 mt-1 text-sm space-y-1">
+                                        <li>`IReportDataProvider`: Fetches the data. A concrete `SqlReportDataProvider` would implement this.</li>
+                                        <li>`IReportFormatter`: Formats the data. You'd have `ExcelReportFormatter` and a new `CsvReportFormatter`.</li>
+                                        <li>`IReportDispatcher`: Delivers the report. You'd have `EmailReportDispatcher` and a new `S3ReportDispatcher`.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>Refactor `ReportGenerator`:</strong> The main service now becomes a coordinator. It takes the three interfaces in its constructor (DI). Its `Generate` method calls a method on each interface in sequence.
+<pre class="bg-green-100 p-2 rounded mt-1 text-xs"><code class="language-csharp">public class ReportGenerator
+{
+    // ... constructor injection
+    public void Generate() {
+        var data = _dataProvider.GetData();
+        var formattedReport = _formatter.Format(data);
+        _dispatcher.Dispatch(formattedReport);
+    }
+}</code></pre>
+                                </li>
+                                <li><strong>Accommodate New Features (OCP):</strong> To add CSV format, you just create the `CsvReportFormatter` class. To add S3 saving, you just create the `S3ReportDispatcher` class. No existing, tested code needs to be modified. The selection of which formatter and dispatcher to use would be handled in your Composition Root / DI Container.</li>
+                            </ol>
+                        </div>
+                    </section>
+                </article>
+            </main>
+
+            <aside class="lg:w-1/4 mt-12 lg:mt-0">
+                <nav id="toc" class="sticky top-24">
+                    <h3 class="font-semibold text-slate-800">On This Page</h3>
+                    <ul class="mt-4 space-y-2">
+                        <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600">Theory Deep Dive</a></li>
+                        <li><a href="#legacy-code" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600">The Legacy Code</a></li>
+                        <li><a href="#refactoring" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600">Refactoring in Action</a></li>
+                        <li><a href="#final-code" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600">The Refactored Design</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                const copyButton = block.querySelector('.copy-button');
+                const code = block.querySelector('code').innerText;
+                if (copyButton) {
+                    copyButton.addEventListener('click', () => {
+                        navigator.clipboard.writeText(code).then(() => {
+                            copyButton.textContent = 'Copied!';
+                            setTimeout(() => {
+                                copyButton.textContent = 'Copy';
+                            }, 2000);
+                        });
+                    });
+                }
+            });
+
+            const sections = document.querySelectorAll('main section');
+            const tocLinks = document.querySelectorAll('#toc a');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px", threshold: 0 });
+            sections.forEach(section => observer.observe(section));
+
+            const violationBtns = document.querySelectorAll('.violation-btn');
+            const codeLines = document.querySelectorAll('#legacy-code-wrapper .code-line');
+            const explanationBox = document.getElementById('violation-explanation');
+            const explanationTitle = document.getElementById('explanation-title');
+            const explanationText = document.getElementById('explanation-text');
+
+            const explanations = {
+                srp: {
+                    title: 'Single Responsibility Principle Violation',
+                    text: 'This class has at least four responsibilities: validation, payment, database persistence, and notifications. A change to the email server settings, the database schema, or payment logic would all require modifying this single class.'
+                },
+                ocp: {
+                    title: 'Open/Closed Principle Violation',
+                    text: 'The if/else if structure for payment methods means that to add a new payment type like Stripe, you must modify this class directly. The class is not closed for modification.'
+                },
+                dip: {
+                    title: 'Dependency Inversion Principle Violation',
+                    text: 'The class directly creates its own dependencies (e.g., new CreditCardService(), new StoreDbContext()). It depends on concrete implementations, not abstractions. This makes it impossible to test without a real database or payment service, and hard to swap implementations.'
+                }
+            };
+
+            violationBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const violation = btn.dataset.target;
+                    
+                    codeLines.forEach(line => line.classList.remove('highlight-code'));
+                    
+                    const linesToHighlight = document.querySelectorAll(`#legacy-code-wrapper .code-line[data-violation*="${violation}"]`);
+                    linesToHighlight.forEach(line => line.classList.add('highlight-code'));
+
+                    explanationTitle.textContent = explanations[violation].title;
+                    explanationText.textContent = explanations[violation].text;
+                    explanationBox.classList.remove('hidden');
+
+                });
+            });
+
+            const quizAnswers = { q1: 'c', q2: 'a', q3: 'c', q4: 'b', q5: 'c' };
+            const submitQuizBtn = document.getElementById('submit-quiz');
+            submitQuizBtn.addEventListener('click', () => {
+                const correctMessages = {
+                    q1: 'Correct! The class clearly has more than one reason to change, violating SRP.',
+                    q2: 'Correct! The interface allows us to extend with new payment types without modifying the code that uses the interface.',
+                    q3: 'Correct! It depends on the abstraction (IOrderRepository) and receives the concrete implementation via injection.',
+                    q4: 'Correct! This decoupling is a key benefit, improving maintainability and resilience.',
+                    q5: 'Correct! This centralizes configuration and keeps the application logic clean from setup details.'
+                };
+
+                Object.keys(quizAnswers).forEach(key => {
+                    const selected = document.querySelector(`input[name="${key}"]:checked`);
+                    const questionDiv = selected ? selected.closest('.quiz-question') : document.querySelector(`input[name="${key}"]`).closest('.quiz-question');
+                    const feedbackDiv = questionDiv.querySelector('.quiz-feedback');
+                    
+                    if (selected && selected.value === quizAnswers[key]) {
+                        feedbackDiv.textContent = correctMessages[key];
+                        feedbackDiv.className = 'quiz-feedback mt-3 text-sm font-semibold text-green-700';
+                    } else if (selected) {
+                        feedbackDiv.textContent = 'Not quite. Review the principles and try again!';
+                        feedbackDiv.className = 'quiz-feedback mt-3 text-sm font-semibold text-red-700';
+                    } else {
+                         feedbackDiv.textContent = 'Please select an answer.';
+                         feedbackDiv.className = 'quiz-feedback mt-3 text-sm font-semibold text-amber-700';
+                    }
+                });
+            });
+            
+            const toggleSolutionBtn = document.getElementById('toggle-solution-btn');
+            const solutionDiv = document.getElementById('solution-div');
+            toggleSolutionBtn.addEventListener('click', () => {
+                const isHidden = solutionDiv.classList.contains('hidden');
+                solutionDiv.classList.toggle('hidden');
+                toggleSolutionBtn.textContent = isHidden ? 'Hide Solution Outline' : 'Show Solution Outline';
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 26: Dependency Inversion Principle (DIP)</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A two-column responsive layout is used. The main content area on the left provides a linear, in-depth learning path, while a sticky Table of Contents on the right allows for quick, non-linear navigation. This structure is ideal for educational content, catering to both first-time learners who need a guided path and experienced developers looking for specific information. Interactions like a quiz, code copying, and solution reveals are integrated to create an active learning experience rather than passive reading. -->
+    <!-- Visualization & Content Choices: Report Info: UML Diagram -> Goal: Explain Relationships -> Viz/Method: Interactive diagram built with HTML/CSS divs and borders -> Interaction: Hover effects to highlight dependencies -> Justification: Makes the abstract concept of dependency flow tangible and easy to grasp. Report Info: Coding Problems -> Goal: Apply Knowledge -> Viz/Method: Syntax-highlighted code blocks with a tabbed interface for complex solutions -> Interaction: Copy-to-clipboard button and tab-switching -> Justification: Improves usability and organizes complex solutions into logical, manageable parts. Report Info: Quiz -> Goal: Test Understanding -> Viz/Method: Interactive multiple-choice form -> Interaction: Instant feedback on answer selection -> Justification: Reinforces learning through active recall. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .quiz-option:hover {
+            background-color: #e0f2fe;
+        }
+        .quiz-option[data-selected="true"][data-correct="true"] {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .quiz-option[data-selected="true"][data-correct="false"] {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        pre {
+           white-space: pre-wrap;
+           word-wrap: break-word;
+        }
+        .syntax-keyword { color: #569cd6; }
+        .syntax-type { color: #4ec9b0; }
+        .syntax-string { color: #d69d85; }
+        .syntax-comment { color: #6a9955; }
+        .syntax-class { color: #4ec9b0; }
+        .syntax-method { color: #dcdcaa; }
+        .syntax-variable { color: #9cdcfe; }
+        .uml-box {
+            border: 2px solid #64748b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            background-color: #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .uml-arrow {
+            position: relative;
+            height: 2px;
+            background-color: #64748b;
+        }
+        .uml-arrow::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 10px solid #64748b;
+        }
+         .uml-dependency {
+            transition: all 0.3s ease;
+        }
+        .uml-group:hover .uml-box {
+            border-color: #38bdf8;
+        }
+        .uml-group:hover .uml-arrow {
+            background-color: #38bdf8;
+        }
+        .uml-group:hover .uml-arrow::after {
+            border-left-color: #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            
+            <div class="lg:w-3/4">
+                <div class="bg-sky-100/60 border-l-4 border-sky-500 text-sky-800 p-4 rounded-r-lg mb-8">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium">Day 26: The Dependency Inversion Principle (DIP)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <article class="prose prose-slate max-w-none prose-headings:font-lexend prose-headings:text-slate-800 prose-a:text-sky-600">
+                    <section id="introduction">
+                        <h2 class="text-3xl font-extrabold tracking-tight">Introduction to the Dependency Inversion Principle (DIP)</h2>
+                        <p>Welcome to Day 26! Today, we're tackling the final letter in the SOLID acronym: 'D' for the Dependency Inversion Principle (DIP). This principle is a cornerstone of loosely coupled and maintainable software architecture. It fundamentally changes how we think about the relationships between different parts of our code, guiding us to build flexible systems that are easy to change and test.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mt-6">
+                            <h3 class="text-xl font-bold text-slate-900 font-lexend">The Core Principle</h3>
+                            <blockquote class="border-l-4 border-sky-500 bg-sky-50/50 p-4 my-4 text-slate-700 italic">
+                                "High-level modules should not depend on low-level modules. Both should depend on abstractions (e.g., interfaces)."<br>
+                                "Abstractions should not depend on details. Details (concrete implementations) should depend on abstractions."
+                            </blockquote>
+                            <p>In simpler terms: <strong class="text-sky-700">depend on abstractions, not concretions</strong>. This means your high-level business logic shouldn't be tied directly to specific, low-level implementation details like a particular database or a specific payment gateway.</p>
+                        </div>
+                    </section>
+
+                    <section id="theory" class="mt-12">
+                        <h2 class="text-3xl font-extrabold tracking-tight">✅ Theory Deep Dive</h2>
+                        <p>Let's break down the concepts that form the Dependency Inversion Principle.</p>
+                        
+                        <div class="mt-6 space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-bold font-lexend">High-Level vs. Low-Level Modules</h3>
+                                <p>To understand DIP, we must first distinguish between high-level and low-level modules:</p>
+                                <ul class="list-disc pl-5 mt-4 space-y-2 text-slate-600">
+                                    <li><strong>High-Level Modules:</strong> These contain the core business logic and policies of your application. They are the "what" of your system (e.g., an `OrderProcessingService` that handles the business rules for processing an order).</li>
+                                    <li><strong>Low-Level Modules:</strong> These handle the implementation details and infrastructure concerns. They are the "how" of your system (e.g., a `SqlOrderRepository` that saves order data to a SQL database, or a `StripePaymentGateway` that processes credit cards).</li>
+                                </ul>
+                                <p class="mt-4">Without DIP, a high-level module like `OrderProcessingService` would directly create and use an instance of `SqlOrderRepository`. This creates a tight coupling, making it difficult to switch to a different database or to test the service in isolation.</p>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-bold font-lexend">Inversion of Control (IoC)</h3>
+                                <p>DIP is often achieved through a pattern called Inversion of Control (IoC). IoC is a design principle where the control of object creation and dependency management is "inverted" – instead of your code controlling the creation of its dependencies, a framework or container does it for you.</p>
+                                <div class="grid md:grid-cols-2 gap-6 mt-4">
+                                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                                        <h4 class="font-bold text-red-800">Traditional Control Flow 👎</h4>
+                                        <p class="text-sm text-red-700">An object is responsible for creating its own dependencies.</p>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">OrderService</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">SqlNotifier</span> <span class="syntax-variable">_notifier</span>;
+
+    <span class="syntax-keyword">public</span> <span class="syntax-method">OrderService</span>()
+    {
+        <span class="syntax-comment">// The service CONTROLS the creation of its dependency.</span>
+        <span class="syntax-variable">_notifier</span> = <span class="syntax-keyword">new</span> <span class="syntax-type">SqlNotifier</span>();
+    }
+}</span></code></pre>
+                                            <button class="copy-button">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                                        <h4 class="font-bold text-green-800">Inversion of Control (IoC) 👍</h4>
+                                        <p class="text-sm text-green-700">Dependencies are provided (injected) from an external source.</p>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">OrderService</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">INotifier</span> <span class="syntax-variable">_notifier</span>;
+
+    <span class="syntax-comment">// The CONTROL is inverted. The service receives its dependency.</span>
+    <span class="syntax-keyword">public</span> <span class="syntax-method">OrderService</span>(<span class="syntax-type">INotifier</span> <span class="syntax-variable">notifier</span>)
+    {
+        <span class="syntax-variable">_notifier</span> = notifier;
+    }
+}</span></code></pre>
+                                            <button class="copy-button">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-2xl font-bold font-lexend">Dependency Injection (DI) in .NET</h3>
+                                <p>Dependency Injection is a specific implementation of the IoC principle. It's the mechanism by which dependencies are supplied to an object. In .NET, DI is a first-class citizen, built directly into the framework.</p>
+                                <p>The most common form of DI is <strong>Constructor Injection</strong>:</p>
+                                <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-comment">// 1. Define an abstraction (interface)</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">IMessageSender</span>
+{
+    <span class="syntax-keyword">void</span> <span class="syntax-method">SendMessage</span>(<span class="syntax-type">string</span> <span class="syntax-variable">message</span>);
+}
+
+<span class="syntax-comment">// 2. Create a concrete implementation</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">EmailSender</span> : <span class="syntax-type">IMessageSender</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">SendMessage</span>(<span class="syntax-type">string</span> <span class="syntax-variable">message</span>) { <span class="syntax-comment">/* sends email */</span> }
+}
+
+<span class="syntax-comment">// 3. The high-level module depends on the abstraction</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">NotificationService</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">IMessageSender</span> <span class="syntax-variable">_sender</span>;
+
+    <span class="syntax-comment">// The dependency is INJECTED via the constructor</span>
+    <span class="syntax-keyword">public</span> <span class="syntax-method">NotificationService</span>(<span class="syntax-type">IMessageSender</span> <span class="syntax-variable">sender</span>)
+    {
+        <span class="syntax-variable">_sender</span> = sender;
+    }
+
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Notify</span>(<span class="syntax-type">string</span> <span class="syntax-variable">notification</span>)
+    {
+        <span class="syntax-variable">_sender</span>.<span class="syntax-method">SendMessage</span>(notification);
+    }
+}
+
+<span class="syntax-comment">// 4. In your application's startup (e.g., Program.cs in ASP.NET Core)</span>
+<span class="syntax-comment">// you register the dependency with the DI container.</span>
+<span class="syntax-type">var</span> builder = WebApplication.<span class="syntax-method">CreateBuilder</span>(args);
+builder.Services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">IMessageSender</span>, <span class="syntax-type">EmailSender</span>&gt;();
+builder.Services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">NotificationService</span>&gt;();
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                                <p class="mt-4">The .NET DI container now knows that whenever something asks for an `IMessageSender`, it should provide an instance of `EmailSender`. When it creates the `NotificationService`, it sees the constructor needs an `IMessageSender`, creates an `EmailSender`, and passes it in automatically.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml" class="mt-12">
+                        <h2 class="text-3xl font-extrabold tracking-tight">✅ UML Diagram Task</h2>
+                        <h3 class="text-2xl font-bold font-lexend">Direct vs. Abstract Dependency</h3>
+                        <p>This diagram illustrates the shift in dependencies when applying DIP. Before DIP, the high-level `OrderProcessor` depends directly on the low-level `DatabaseLogger`. After DIP, both depend on the `ILogger` abstraction, inverting the dependency arrow from the logger.</p>
+
+                        <div class="grid md:grid-cols-2 gap-8 mt-6 text-slate-800">
+                            <div class="uml-group">
+                                <h4 class="text-center font-bold text-red-600 mb-4">Without DIP (Tight Coupling)</h4>
+                                <div class="flex flex-col items-center space-y-4">
+                                    <div class="uml-box w-48"><strong>OrderProcessor</strong><br/>(High-Level)</div>
+                                    <div class="text-2xl text-slate-500">⬇️</div>
+                                    <div class="uml-dependency w-full flex items-center">
+                                        <div class="uml-arrow flex-grow"></div>
+                                    </div>
+                                    <div class="uml-box w-48"><strong>DatabaseLogger</strong><br/>(Low-Level)</div>
+                                </div>
+                                <p class="text-center text-sm mt-4 text-slate-600">The `OrderProcessor` is directly tied to the `DatabaseLogger` implementation.</p>
+                            </div>
+
+                            <div class="uml-group">
+                                <h4 class="text-center font-bold text-green-600 mb-4">With DIP (Loose Coupling)</h4>
+                                <div class="flex flex-col items-center">
+                                    <div class="uml-box w-48"><strong>OrderProcessor</strong><br/>(High-Level)</div>
+                                    <div class="text-2xl text-slate-500">⬇️</div>
+                                    <div class="uml-box w-48 border-sky-500 bg-sky-50"><i><strong>ILogger</strong></i><br/>(Abstraction)</div>
+                                    <div class="text-2xl text-slate-500">⬆️</div>
+                                    <div class="uml-box w-48"><strong>DatabaseLogger</strong><br/>(Low-Level)</div>
+                                </div>
+                                <p class="text-center text-sm mt-4 text-slate-600">Both modules depend on the `ILogger` interface. The dependency direction is inverted for the low-level module.</p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="coding-practice" class="mt-12">
+                        <h2 class="text-3xl font-extrabold tracking-tight">✅ Coding Practice</h2>
+                        <p>Let's put theory into practice with some C# examples.</p>
+
+                        <div class="mt-6 space-y-8">
+                            <div>
+                                <h3 class="text-2xl font-bold font-lexend">[Easy] Logger Injected into a Service</h3>
+                                <p>This is the classic "Hello, World!" of Dependency Injection. We'll create a service that needs to log messages, but it won't know or care *how* they are logged.</p>
+                                <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-comment">// Abstraction</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">ILogger</span>
+{
+    <span class="syntax-keyword">void</span> <span class="syntax-method">Log</span>(<span class="syntax-type">string</span> <span class="syntax-variable">message</span>);
+}
+
+<span class="syntax-comment">// Concrete Implementation</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">ConsoleLogger</span> : <span class="syntax-type">ILogger</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Log</span>(<span class="syntax-type">string</span> <span class="syntax-variable">message</span>)
+    {
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"CONSOLE: {message}"</span>);
+    }
+}
+
+<span class="syntax-comment">// High-Level Module</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">UserService</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">ILogger</span> <span class="syntax-variable">_logger</span>;
+
+    <span class="syntax-keyword">public</span> <span class="syntax-method">UserService</span>(<span class="syntax-type">ILogger</span> <span class="syntax-variable">logger</span>)
+    {
+        <span class="syntax-variable">_logger</span> = logger;
+    }
+
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">RegisterUser</span>(<span class="syntax-type">string</span> <span class="syntax-variable">username</span>)
+    {
+        <span class="syntax-comment">// ... registration logic ...</span>
+        <span class="syntax-variable">_logger</span>.<span class="syntax-method">Log</span>(<span class="syntax-string">$"User '{username}' registered successfully."</span>);
+    }
+}
+
+<span class="syntax-comment">// Usage with DI Container (e.g., in Program.cs)</span>
+<span class="syntax-type">var</span> services = <span class="syntax-keyword">new</span> ServiceCollection();
+services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">ILogger</span>, <span class="syntax-type">ConsoleLogger</span>&gt;();
+services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">UserService</span>&gt;();
+
+<span class="syntax-type">var</span> serviceProvider = services.<span class="syntax-method">BuildServiceProvider</span>();
+<span class="syntax-type">var</span> userService = serviceProvider.<span class="syntax-method">GetService</span>&lt;<span class="syntax-type">UserService</span>&gt;();
+userService.<span class="syntax-method">RegisterUser</span>(<span class="syntax-string">"Alice"</span>);
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-2xl font-bold font-lexend">[Medium] Repository Pattern with DI</h3>
+                                <p>The Repository Pattern abstracts data access logic. Combining it with DI is extremely common and powerful. Our business logic will depend on `IUserRepository`, not a specific database technology.</p>
+                                <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-comment">// Model</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">User</span> { <span class="syntax-keyword">public</span> <span class="syntax-type">int</span> Id { <span class="syntax-keyword">get</span>; <span class="syntax-keyword">set</span>; } <span class="syntax-keyword">public</span> <span class="syntax-type">string</span> Name { <span class="syntax-keyword">get</span>; <span class="syntax-keyword">set</span>; } }
+
+<span class="syntax-comment">// Abstraction (Repository Interface)</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">IUserRepository</span>
+{
+    <span class="syntax-type">User</span> <span class="syntax-method">GetById</span>(<span class="syntax-type">int</span> <span class="syntax-variable">id</span>);
+}
+
+<span class="syntax-comment">// Concrete Implementation (e.g., for SQL Server)</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">SqlUserRepository</span> : <span class="syntax-type">IUserRepository</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-type">User</span> <span class="syntax-method">GetById</span>(<span class="syntax-type">int</span> <span class="syntax-variable">id</span>)
+    {
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Fetching user {id} from SQL database..."</span>);
+        <span class="syntax-keyword">return</span> <span class="syntax-keyword">new</span> <span class="syntax-type">User</span> { Id = id, Name = <span class="syntax-string">"SQL User"</span> };
+    }
+}
+
+<span class="syntax-comment">// Another concrete implementation (for in-memory testing)</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">InMemoryUserRepository</span> : <span class="syntax-type">IUserRepository</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-type">User</span> <span class="syntax-method">GetById</span>(<span class="syntax-type">int</span> <span class="syntax-variable">id</span>)
+    {
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Fetching user {id} from memory..."</span>);
+        <span class="syntax-keyword">return</span> <span class="syntax-keyword">new</span> <span class="syntax-type">User</span> { Id = id, Name = <span class="syntax-string">"In-Memory User"</span> };
+    }
+}
+
+<span class="syntax-comment">// High-Level Module (Business Logic)</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">UserReportGenerator</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">IUserRepository</span> <span class="syntax-variable">_userRepository</span>;
+
+    <span class="syntax-keyword">public</span> <span class="syntax-method">UserReportGenerator</span>(<span class="syntax-type">IUserRepository</span> <span class="syntax-variable">userRepository</span>)
+    {
+        <span class="syntax-variable">_userRepository</span> = userRepository;
+    }
+
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">GenerateReportForUser</span>(<span class="syntax-type">int</span> <span class="syntax-variable">userId</span>)
+    {
+        <span class="syntax-type">var</span> user = <span class="syntax-variable">_userRepository</span>.<span class="syntax-method">GetById</span>(userId);
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Generating report for: {user.Name}"</span>);
+    }
+}
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-bold font-lexend">[Hard] Build a Small DI Container</h3>
+                                <p>To truly understand how DI works, let's build a highly simplified DI container from scratch. It will support transient lifetimes (a new instance every time) and constructor injection.</p>
+                                <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">SimpleDiContainer</span>
+{
+    <span class="syntax-keyword">private readonly</span> Dictionary&lt;<span class="syntax-type">Type</span>, <span class="syntax-type">Type</span>&gt; <span class="syntax-variable">_registrations</span> = <span class="syntax-keyword">new</span>();
+
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Register</span>&lt;<span class="syntax-type">TInterface</span>, <span class="syntax-type">TImplementation</span>&gt;() <span class="syntax-keyword">where</span> <span class="syntax-type">TImplementation</span> : <span class="syntax-type">TInterface</span>
+    {
+        <span class="syntax-variable">_registrations</span>[<span class="syntax-keyword">typeof</span>(<span class="syntax-type">TInterface</span>)] = <span class="syntax-keyword">typeof</span>(<span class="syntax-type">TImplementation</span>);
+    }
+
+    <span class="syntax-keyword">public</span> <span class="syntax-type">T</span> <span class="syntax-method">Resolve</span>&lt;<span class="syntax-type">T</span>&gt;()
+    {
+        <span class="syntax-keyword">return</span> (<span class="syntax-type">T</span>)<span class="syntax-method">Resolve</span>(<span class="syntax-keyword">typeof</span>(<span class="syntax-type">T</span>));
+    }
+
+    <span class="syntax-keyword">private</span> <span class="syntax-type">object</span> <span class="syntax-method">Resolve</span>(<span class="syntax-type">Type</span> <span class="syntax-variable">typeToResolve</span>)
+    {
+        <span class="syntax-keyword">if</span> (!<span class="syntax-variable">_registrations</span>.<span class="syntax-method">ContainsKey</span>(typeToResolve))
+        {
+            <span class="syntax-keyword">throw</span> <span class="syntax-keyword">new</span> <span class="syntax-type">InvalidOperationException</span>(<span class="syntax-string">$"Type {typeToResolve.Name} is not registered."</span>);
+        }
+
+        <span class="syntax-type">var</span> concreteType = <span class="syntax-variable">_registrations</span>[typeToResolve];
+        <span class="syntax-type">var</span> constructor = concreteType.<span class="syntax-method">GetConstructors</span>().<span class="syntax-method">First</span>();
+        <span class="syntax-type">var</span> parameters = constructor.<span class="syntax-method">GetParameters</span>();
+
+        <span class="syntax-keyword">if</span> (!parameters.<span class="syntax-method">Any</span>())
+        {
+            <span class="syntax-keyword">return</span> Activator.<span class="syntax-method">CreateInstance</span>(concreteType);
+        }
+
+        <span class="syntax-type">var</span> parameterInstances = parameters
+            .<span class="syntax-method">Select</span>(p => <span class="syntax-method">Resolve</span>(p.ParameterType))
+            .<span class="syntax-method">ToArray</span>();
+
+        <span class="syntax-keyword">return</span> constructor.<span class="syntax-method">Invoke</span>(parameterInstances);
+    }
+}
+
+<span class="syntax-comment">// --- Usage ---</span>
+<span class="syntax-type">var</span> container = <span class="syntax-keyword">new</span> <span class="syntax-type">SimpleDiContainer</span>();
+container.<span class="syntax-method">Register</span>&lt;<span class="syntax-type">ILogger</span>, <span class="syntax-type">ConsoleLogger</span>&gt;();
+container.<span class="syntax-method">Register</span>&lt;<span class="syntax-type">IUserRepository</span>, <span class="syntax-type">SqlUserRepository</span>&gt;();
+<span class="syntax-comment">// Note: To resolve a concrete class, it must be registered to itself.</span>
+container.<span class="syntax-method">Register</span>&lt;<span class="syntax-type">UserReportGenerator</span>, <span class="syntax-type">UserReportGenerator</span>&gt;();
+
+
+<span class="syntax-type">var</span> reportGenerator = container.<span class="syntax-method">Resolve</span>&lt;<span class="syntax-type">UserReportGenerator</span>&gt;();
+reportGenerator.<span class="syntax-method">GenerateReportForUser</span>(42);
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="case-study" class="mt-12">
+                        <h2 class="text-3xl font-extrabold tracking-tight">✅ Case Study: E-commerce Service Layer</h2>
+                        <p>Let's design the service layer for an e-commerce platform. When an order is placed, we need to process the payment and send a notification. We'll use DI to decouple our `OrderService` from specific payment gateways (like Stripe or PayPal) and notification methods (like Email or SMS).</p>
+                        
+                        <div class="mt-6 space-y-6">
+                            <div>
+                                <h4 class="text-xl font-bold font-lexend">Step 1: Define Abstractions</h4>
+                                <p>We need interfaces for our external services: payment processing and notifications.</p>
+                                <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">IPaymentGateway</span>
+{
+    <span class="syntax-type">bool</span> <span class="syntax-method">ProcessPayment</span>(<span class="syntax-type">decimal</span> <span class="syntax-variable">amount</span>);
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">INotificationService</span>
+{
+    <span class="syntax-keyword">void</span> <span class="syntax-method">SendOrderConfirmation</span>(<span class="syntax-type">int</span> <span class="syntax-variable">orderId</span>);
+}
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xl font-bold font-lexend">Step 2: Create Concrete Implementations</h4>
+                                <p>Now we create classes that implement these interfaces. We can easily add more later (e.g., `PayPalGateway`, `SmsNotificationService`).</p>
+                                <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">StripeGateway</span> : <span class="syntax-type">IPaymentGateway</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-type">bool</span> <span class="syntax-method">ProcessPayment</span>(<span class="syntax-type">decimal</span> <span class="syntax-variable">amount</span>)
+    {
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Processing payment of ${amount} through Stripe."</span>);
+        <span class="syntax-keyword">return</span> <span class="syntax-keyword">true</span>; <span class="syntax-comment">// Assume success</span>
+    }
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">EmailNotificationService</span> : <span class="syntax-type">INotificationService</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">SendOrderConfirmation</span>(<span class="syntax-type">int</span> <span class="syntax-variable">orderId</span>)
+    {
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Sending email confirmation for order {orderId}."</span>);
+    }
+}
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xl font-bold font-lexend">Step 3: Build the High-Level Service</h4>
+                                <p>The `OrderService` depends only on the abstractions. It has no knowledge of Stripe or email.</p>
+                                <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">OrderService</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">IPaymentGateway</span> <span class="syntax-variable">_paymentGateway</span>;
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">INotificationService</span> <span class="syntax-variable">_notificationService</span>;
+
+    <span class="syntax-keyword">public</span> <span class="syntax-method">OrderService</span>(<span class="syntax-type">IPaymentGateway</span> <span class="syntax-variable">paymentGateway</span>, <span class="syntax-type">INotificationService</span> <span class="syntax-variable">notificationService</span>)
+    {
+        <span class="syntax-variable">_paymentGateway</span> = paymentGateway;
+        <span class="syntax-variable">_notificationService</span> = notificationService;
+    }
+
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">PlaceOrder</span>(<span class="syntax-type">int</span> <span class="syntax-variable">orderId</span>, <span class="syntax-type">decimal</span> <span class="syntax-variable">totalAmount</span>)
+    {
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Placing order {orderId}..."</span>);
+        <span class="syntax-keyword">if</span> (<span class="syntax-variable">_paymentGateway</span>.<span class="syntax-method">ProcessPayment</span>(totalAmount))
+        {
+            <span class="syntax-variable">_notificationService</span>.<span class="syntax-method">SendOrderConfirmation</span>(orderId);
+            Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Order {orderId} placed successfully."</span>);
+        }
+        <span class="syntax-keyword">else</span>
+        {
+            Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Payment failed for order {orderId}."</span>);
+        }
+    }
+}
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xl font-bold font-lexend">Step 4: Wire It Up</h4>
+                                <p>Finally, we register our dependencies and resolve the `OrderService`.</p>
+                                <div class="code-block mt-2">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-comment">// In Program.cs or a similar composition root</span>
+<span class="syntax-type">var</span> services = <span class="syntax-keyword">new</span> ServiceCollection();
+
+<span class="syntax-comment">// Register which concrete types to use for our abstractions</span>
+services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">IPaymentGateway</span>, <span class="syntax-type">StripeGateway</span>&gt;();
+services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">INotificationService</span>, <span class="syntax-type">EmailNotificationService</span>&gt;();
+services.<span class="syntax-method">AddTransient</span>&lt;<span class="syntax-type">OrderService</span>&gt;();
+
+<span class="syntax-type">var</span> serviceProvider = services.<span class="syntax-method">BuildServiceProvider</span>();
+
+<span class="syntax-comment">// Get the fully configured service</span>
+<span class="syntax-type">var</span> orderService = serviceProvider.<span class="syntax-method">GetService</span>&lt;<span class="syntax-type">OrderService</span>&gt;();
+
+<span class="syntax-comment">// Use the service</span>
+orderService.<span class="syntax-method">PlaceOrder</span>(101, 199.99m);
+</code></pre>
+                                    <button class="copy-button">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="quiz" class="mt-12">
+                        <h2 class="text-3xl font-extrabold tracking-tight">🧠 Knowledge Check Quiz</h2>
+                        <p>Test your understanding of the Dependency Inversion Principle.</p>
+                        <div id="quiz-container" class="mt-6 space-y-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200"></div>
+                        <div id="quiz-results" class="mt-4 text-center font-bold"></div>
+                    </section>
+
+                    <section id="challenge" class="mt-12">
+                        <h2 class="text-3xl font-extrabold tracking-tight">💪 Self-Assessment Challenge</h2>
+                        <p>Time to put your skills to the test. Refactor the following code to adhere to the Dependency Inversion Principle.</p>
+                        
+                        <div class="mt-6 space-y-4">
+                            <h4 class="text-xl font-bold font-lexend">Problem: Tightly Coupled Data Exporter</h4>
+                            <p>The `DataExporter` class below fetches data directly from a `MySqlDatabase` and writes it directly to a `FileSystemWriter`. This is a violation of DIP. Your task is to refactor this code to use abstractions (`IDataSource`, `IDataDestination`) and constructor injection.</p>
+                            
+                            <div class="code-block">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-comment">// --- BEFORE REFACTORING (VIOLATES DIP) ---</span>
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">MySqlDatabase</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-type">string</span> <span class="syntax-method">GetData</span>()
+    {
+        <span class="syntax-comment">// Simulates getting data from MySQL</span>
+        <span class="syntax-keyword">return</span> <span class="syntax-string">"Data from MySQL"</span>;
+    }
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">FileSystemWriter</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Write</span>(<span class="syntax-type">string</span> <span class="syntax-variable">data</span>)
+    {
+        <span class="syntax-comment">// Simulates writing data to a file</span>
+        Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Writing to file: {data}"</span>);
+    }
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">DataExporter</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Export</span>()
+    {
+        <span class="syntax-type">var</span> db = <span class="syntax-keyword">new</span> <span class="syntax-type">MySqlDatabase</span>(); <span class="syntax-comment">// Direct dependency on a concretion</span>
+        <span class="syntax-type">string</span> data = db.<span class="syntax-method">GetData</span>();
+        
+        <span class="syntax-type">var</span> writer = <span class="syntax-keyword">new</span> <span class="syntax-type">FileSystemWriter</span>(); <span class="syntax-comment">// Another direct dependency</span>
+        writer.<span class="syntax-method">Write</span>(data);
+    }
+}
+</code></pre>
+                                <button class="copy-button">Copy</button>
+                            </div>
+                            
+                            <div>
+                                <button id="reveal-solution-btn" class="bg-sky-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">Reveal Solution</button>
+                                <div id="solution-container" class="hidden mt-4">
+                                    <h4 class="text-xl font-bold font-lexend">Solution</h4>
+                                    <p>Here is one possible solution that correctly applies DIP.</p>
+                                    <div class="code-block mt-2">
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm"><code class="language-csharp"><span class="syntax-comment">// --- AFTER REFACTORING (ADHERES TO DIP) ---</span>
+
+<span class="syntax-comment">// 1. Define abstractions</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">IDataSource</span>
+{
+    <span class="syntax-type">string</span> <span class="syntax-method">GetData</span>();
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">interface</span> <span class="syntax-class">IDataDestination</span>
+{
+    <span class="syntax-keyword">void</span> <span class="syntax-method">Write</span>(<span class="syntax-type">string</span> <span class="syntax-variable">data</span>);
+}
+
+<span class="syntax-comment">// 2. Implementations depend on abstractions</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">MySqlDataSource</span> : <span class="syntax-type">IDataSource</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-type">string</span> <span class="syntax-method">GetData</span>() => <span class="syntax-string">"Data from MySQL"</span>;
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">ApiDataSource</span> : <span class="syntax-type">IDataSource</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-type">string</span> <span class="syntax-method">GetData</span>() => <span class="syntax-string">"Data from an API"</span>;
+}
+
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">FileSystemDestination</span> : <span class="syntax-type">IDataDestination</span>
+{
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Write</span>(<span class="syntax-type">string</span> <span class="syntax-variable">data</span>) => Console.<span class="syntax-method">WriteLine</span>(<span class="syntax-string">$"Writing to file: {data}"</span>);
+}
+
+<span class="syntax-comment">// 3. High-level module depends on abstractions via injection</span>
+<span class="syntax-keyword">public</span> <span class="syntax-keyword">class</span> <span class="syntax-class">DataExporter</span>
+{
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">IDataSource</span> <span class="syntax-variable">_source</span>;
+    <span class="syntax-keyword">private readonly</span> <span class="syntax-type">IDataDestination</span> <span class="syntax-variable">_destination</span>;
+
+    <span class="syntax-keyword">public</span> <span class="syntax-method">DataExporter</span>(<span class="syntax-type">IDataSource</span> <span class="syntax-variable">source</span>, <span class="syntax-type">IDataDestination</span> <span class="syntax-variable">destination</span>)
+    {
+        <span class="syntax-variable">_source</span> = source;
+        <span class="syntax-variable">_destination</span> = destination;
+    }
+
+    <span class="syntax-keyword">public</span> <span class="syntax-keyword">void</span> <span class="syntax-method">Export</span>()
+    {
+        <span class="syntax-type">string</span> data = <span class="syntax-variable">_source</span>.<span class="syntax-method">GetData</span>();
+        <span class="syntax-variable">_destination</span>.<span class="syntax-method">Write</span>(data);
+    }
+}
+
+<span class="syntax-comment">// 4. Usage with DI</span>
+<span class="syntax-type">var</span> exporter = <span class="syntax-keyword">new</span> <span class="syntax-type">DataExporter</span>(<span class="syntax-keyword">new</span> <span class="syntax-type">ApiDataSource</span>(), <span class="syntax-keyword">new</span> <span class="syntax-type">FileSystemDestination</span>());
+exporter.<span class="syntax-method">Export</span>();
+</code></pre>
+                                        <button class="copy-button">Copy</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </div>
+
+            <aside class="lg:w-1/4 mt-12 lg:mt-0">
+                <div class="sticky top-8">
+                    <h3 class="text-lg font-bold font-lexend text-slate-800 mb-4">On This Page</h3>
+                    <nav id="toc" class="flex flex-col space-y-2 border-l-2 border-slate-200">
+                        <a href="#introduction" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">Introduction</a>
+                        <a href="#theory" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">Theory Deep Dive</a>
+                        <a href="#uml" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">UML Diagram</a>
+                        <a href="#coding-practice" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">Coding Practice</a>
+                        <a href="#case-study" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">Case Study</a>
+                        <a href="#quiz" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">Knowledge Check Quiz</a>
+                        <a href="#challenge" class="toc-link pl-4 py-1 text-sm text-slate-600 hover:text-sky-600 transition-colors border-l-2 border-transparent">Self-Assessment</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-20% 0px -80% 0px' });
+
+            sections.forEach(section => observer.observe(section));
+
+            const copyButtons = document.querySelectorAll('.copy-button');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const code = button.previousElementSibling.textContent;
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.textContent = 'Copied!';
+                        setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            const revealButton = document.getElementById('reveal-solution-btn');
+            const solutionContainer = document.getElementById('solution-container');
+            if(revealButton) {
+                revealButton.addEventListener('click', () => {
+                    solutionContainer.classList.toggle('hidden');
+                    revealButton.textContent = solutionContainer.classList.contains('hidden') ? 'Reveal Solution' : 'Hide Solution';
+                });
+            }
+            
+            const quizData = [
+                {
+                    question: "What is the core idea of the Dependency Inversion Principle?",
+                    options: [
+                        "Low-level modules should depend on high-level modules.",
+                        "Depend on concrete classes, not abstractions.",
+                        "High-level modules should not depend on low-level modules; both should depend on abstractions.",
+                        "Classes should have only one reason to change."
+                    ],
+                    correctAnswer: "High-level modules should not depend on low-level modules; both should depend on abstractions."
+                },
+                {
+                    question: "Dependency Injection (DI) is an implementation of which broader principle?",
+                    options: [
+                        "Single Responsibility Principle (SRP)",
+                        "Inversion of Control (IoC)",
+                        "Liskov Substitution Principle (LSP)",
+                        "Open/Closed Principle (OCP)"
+                    ],
+                    correctAnswer: "Inversion of Control (IoC)"
+                },
+                 {
+                    question: "In the phrase 'High-level modules should not depend on low-level modules', what does a 'high-level module' typically represent?",
+                    options: [
+                        "Infrastructure code like database access or API clients.",
+                        "Core business logic and application policies.",
+                        "Utility classes and helper functions.",
+                        "The user interface layer."
+                    ],
+                    correctAnswer: "Core business logic and application policies."
+                },
+                {
+                    question: "Which of the following is NOT a direct benefit of applying DIP?",
+                    options: [
+                        "Reduced coupling between components.",
+                        "Improved testability of classes in isolation.",
+                        "Increased performance and execution speed.",
+                        "Greater flexibility to swap out implementations."
+                    ],
+                    correctAnswer: "Increased performance and execution speed."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            const quizResults = document.getElementById('quiz-results');
+            let userAnswers = {};
+
+            function renderQuiz() {
+                quizContainer.innerHTML = '';
+                quizData.forEach((q, index) => {
+                    const questionEl = document.createElement('div');
+                    questionEl.className = 'quiz-question';
+                    
+                    const questionText = document.createElement('p');
+                    questionText.className = 'font-semibold text-slate-800';
+                    questionText.textContent = `${index + 1}. ${q.question}`;
+                    questionEl.appendChild(questionText);
+
+                    const optionsContainer = document.createElement('div');
+                    optionsContainer.className = 'mt-2 space-y-2';
+
+                    q.options.forEach(optionText => {
+                        const optionEl = document.createElement('div');
+                        optionEl.className = 'quiz-option p-3 border border-slate-300 rounded-lg cursor-pointer transition-colors';
+                        optionEl.textContent = optionText;
+                        optionEl.dataset.questionIndex = index;
+
+                        optionEl.addEventListener('click', () => {
+                            if (userAnswers[index] !== undefined) return;
+                            
+                            userAnswers[index] = optionText;
+                            optionEl.dataset.selected = 'true';
+                            optionEl.dataset.correct = (optionText === q.correctAnswer).toString();
+
+                            const siblings = optionEl.parentElement.children;
+                            for (let sibling of siblings) {
+                                if (sibling.textContent === q.correctAnswer) {
+                                    sibling.dataset.correct = 'true';
+                                    sibling.classList.add('bg-green-100', 'border-green-400');
+                                } else if (sibling.dataset.selected === 'true') {
+                                    sibling.classList.add('bg-red-100', 'border-red-400');
+                                }
+                            }
+                            updateResults();
+                        });
+                        optionsContainer.appendChild(optionEl);
+                    });
+                    
+                    questionEl.appendChild(optionsContainer);
+                    quizContainer.appendChild(questionEl);
+                });
+            }
+
+            function updateResults() {
+                let score = 0;
+                for (let i = 0; i < quizData.length; i++) {
+                    if (userAnswers[i] === quizData[i].correctAnswer) {
+                        score++;
+                    }
+                }
+                const answeredCount = Object.keys(userAnswers).length;
+                if (answeredCount === quizData.length) {
+                    quizResults.textContent = `Quiz Complete! You scored ${score} out of ${quizData.length}.`;
+                    quizResults.className = score > (quizData.length / 2) ? 'text-green-600 mt-4 text-center font-bold' : 'text-red-600 mt-4 text-center font-bold';
+                }
+            }
+            
+            renderQuiz();
+        });
+    </script>
+</body>
+</html>
+

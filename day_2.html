@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2: Constructors, Static Members & Object Lifecycle | LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A single-page, long-scroll educational module with a sticky right-hand Table of Contents for seamless navigation. The structure progresses logically from theory to practice, culminating in a case study and self-assessment. This linear-yet-navigable design is chosen because it mirrors a typical learning path, allowing users to either follow the lesson step-by-step or jump directly to sections for review, maximizing usability for both new learners and those revisiting concepts. -->
+    <!-- Visualization & Content Choices: Object Lifecycle -> Inform -> HTML/CSS Diagram -> Color highlighting on hover -> Simple, clear visual flow without external libraries. Static vs. Instance -> Compare -> HTML Table -> Clear side-by-side text -> Direct comparison for conceptual clarity. UML Diagrams (Logger, Parking Lot) -> Organize -> HTML/CSS Grid & Flexbox -> Styled divs and borders to mimic UML -> Adheres to no-SVG rule while visually representing class structures. Coding Problems/Case Study -> Apply -> Collapsible Code Blocks (HTML/JS) -> Show/Hide solutions -> Allows for self-paced learning and testing before viewing answers. CONFIRMING NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        pre, code {
+            font-family: 'Roboto Mono', monospace;
+        }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #334155;
+            color: #e2e8f0;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            border: 1px solid #475569;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+             background-color: #475569;
+        }
+        .callout {
+            border-left: 4px solid #38bdf8;
+            background-color: #f0f9ff;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50">
+
+    <!-- Header -->
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <!-- Main Content -->
+            <main class="lg:col-span-9">
+                <div class="prose prose-slate max-w-none prose-h1:font-lexend prose-h1:tracking-tight prose-h2:border-b prose-h2:pb-2 prose-h2:font-lexend prose-h2:tracking-tight prose-h3:font-lexend prose-h3:tracking-tight">
+                    <h1>Day 2: Constructors, Static Members & Object Lifecycle</h1>
+                    <p class="text-xl text-slate-600 mt-2">Diving deep into the mechanisms of object creation, shared class-level state, and the complete journey of an object from birth to garbage collection.</p>
+
+                    <!-- Theory Topics Section -->
+                    <section id="theory" class="mt-16 scroll-mt-24">
+                        <h2>✅ Theory Topics</h2>
+                        <p>This section breaks down the fundamental concepts of object creation, shared class members, and the journey of an object from birth to destruction. Understanding these pillars is crucial for writing robust and efficient object-oriented code.</p>
+                        
+                        <!-- Constructors -->
+                        <article class="mt-8">
+                            <h3>Constructors: The Object Architects</h3>
+                            <p>A constructor is a special method in a class that is automatically called when a new instance (object) of that class is created. Its primary job is to initialize the object's data members to valid, starting states. Think of it as the setup crew that prepares a new car on the assembly line, filling it with fluids and setting initial configurations before it rolls out.</p>
+                            
+                            <h4 class="text-xl font-semibold text-slate-800 mt-6 font-lexend">Default Constructor</h4>
+                            <p>A default (or parameterless) constructor takes no arguments. If you don't define any constructor in your class, the C# compiler provides a public, parameterless one for you behind the scenes. This default constructor initializes numeric fields to zero, boolean fields to false, and reference types to null.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class Player
+{
+    public int Health;
+    public string Name;
+
+    // A default constructor explicitly defined
+    public Player()
+    {
+        Health = 100;
+        Name = "Guest";
+    }
+}
+
+// Usage:
+Player newPlayer = new Player(); 
+// newPlayer.Health is 100, newPlayer.Name is "Guest"
+</code></pre>
+                            </div>
+
+                            <h4 class="text-xl font-semibold text-slate-800 mt-6 font-lexend">Parameterized Constructor</h4>
+                            <p>A parameterized constructor accepts one or more arguments. This is incredibly useful for creating objects that are immediately valid and configured with specific data, preventing them from existing in an uninitialized or default state.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class Player
+{
+    public int Health;
+    public string Name;
+
+    // A parameterized constructor
+    public Player(string name, int initialHealth)
+    {
+        this.Name = name; // 'this' keyword refers to the current instance
+        this.Health = initialHealth;
+    }
+}
+
+// Usage:
+Player hero = new Player("Aragorn", 150);
+// hero.Name is "Aragorn", hero.Health is 150
+</code></pre>
+                            </div>
+                        </article>
+
+                        <!-- Static Members -->
+                        <article class="mt-12">
+                            <h3>Static Members: The Class-Level Shared State</h3>
+                            <p>While instance members (fields, methods) belong to a specific object, <strong>static members</strong> belong to the class itself. There is only one copy of a static member, no matter how many objects of the class are created. It's like a shared whiteboard in a classroom: all students (objects) can see and use what's on the board, and if one student changes it, the change is visible to everyone.</p>
+                            <p>Static members are accessed using the class name, not an object reference (e.g., `Game.GameVersion`, not `myGame.GameVersion`).</p>
+                             <div class="callout">
+                                <p><strong>Static Constructor:</strong> A class can also have a static constructor. It is called automatically, at most once, before the first instance is created or any static members are referenced. It's used to initialize static fields.</p>
+                             </div>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class GameConfig
+{
+    // Static field: Shared across the entire application
+    public static readonly string GameVersion;
+    public static int MaxPlayers;
+
+    // Static constructor: Called once before first use of the class.
+    static GameConfig()
+    {
+        // Imagine loading this from a config file
+        GameVersion = "v1.2.5";
+        MaxPlayers = 100;
+        Console.WriteLine("Static GameConfig initialized.");
+    }
+
+    // Static method
+    public static string GetGameInfo()
+    {
+        return $"Version: {GameVersion}, Max Players: {MaxPlayers}";
+    }
+}
+
+// Usage:
+Console.WriteLine(GameConfig.GetGameInfo());
+// The static constructor is called automatically here.
+
+GameConfig.MaxPlayers = 50; // We can change static fields
+Console.WriteLine(GameConfig.GetGameInfo());
+
+// Output:
+// Static GameConfig initialized.
+// Version: v1.2.5, Max Players: 100
+// Version: v1.2.5, Max Players: 50
+</code></pre>
+                            </div>
+                        </article>
+
+                         <!-- Object Lifecycle -->
+                        <article class="mt-12">
+                            <h3>Object Lifecycle: Birth, Life, and Death</h3>
+                            <p>Every object in a managed environment like .NET follows a distinct lifecycle. Understanding this helps in managing resources effectively.</p>
+                            <div class="mt-6 p-6 bg-white rounded-lg shadow-md border">
+                                <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
+                                    <div class="text-center p-4 bg-green-100 border border-green-300 rounded-lg w-full md:w-1/3">
+                                        <div class="text-xl font-bold text-green-700">1. Creation</div>
+                                        <p class="text-sm text-green-600 mt-1">Memory is allocated on the heap, and the constructor is called to initialize the object.</p>
+                                    </div>
+                                    <div class="text-3xl text-slate-400 font-light">→</div>
+                                    <div class="text-center p-4 bg-sky-100 border border-sky-300 rounded-lg w-full md:w-1/3">
+                                        <div class="text-xl font-bold text-sky-700">2. Usage</div>
+                                        <p class="text-sm text-sky-600 mt-1">The object's methods and properties are accessed and used by the application.</p>
+                                    </div>
+                                    <div class="text-3xl text-slate-400 font-light">→</div>
+                                    <div class="text-center p-4 bg-red-100 border border-red-300 rounded-lg w-full md:w-1/3">
+                                        <div class="text-xl font-bold text-red-700">3. Destruction</div>
+                                        <p class="text-sm text-red-600 mt-1">When an object is no longer referenced, it becomes eligible for Garbage Collection (GC), which reclaims its memory.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Static vs Instance Methods -->
+                        <article class="mt-12">
+                            <h3>When to Use Static vs. Instance Members</h3>
+                            <p>Choosing between static and instance members is a key design decision. Here's a guide:</p>
+                            <div class="overflow-x-auto mt-4">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th class="border-b-2 p-4 bg-slate-100 text-slate-700 font-semibold">Aspect</th>
+                                            <th class="border-b-2 p-4 bg-slate-100 text-slate-700 font-semibold">Instance Members</th>
+                                            <th class="border-b-2 p-4 bg-slate-100 text-slate-700 font-semibold">Static Members</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border-b p-4 font-medium">State</td>
+                                            <td class="border-b p-4">Operate on the specific state of an object (instance fields). Can access both instance and static members.</td>
+                                            <td class="border-b p-4">Do not depend on an object's state. Can only access other static members directly.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border-b p-4 font-medium">Invocation</td>
+                                            <td class="border-b p-4">Requires an instance of the class to be called. `myObject.DoWork();`</td>
+                                            <td class="border-b p-4">Called directly on the class name. `MyClass.DoWork();`</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border-b p-4 font-medium">Use Case Example</td>
+                                            <td class="border-b p-4">A `car.Accelerate()` method, which changes the `speed` of that specific car instance.</td>
+                                            <td class="border-b p-4">A `Math.Round()` utility method, which doesn't need an "instance" of math to perform its calculation.</td>
+                                        </tr>
+                                         <tr>
+                                            <td class="p-4 font-medium">Key Question</td>
+                                            <td class="p-4">"Does this action or piece of data belong to a <strong>single, specific object</strong>?"</td>
+                                            <td class="p-4">"Is this a utility function or a piece of data that should be <strong>shared by all objects</strong> of this type?"</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+                    </section>
+                    
+                    <!-- Coding Practice Section -->
+                    <section id="coding-practice" class="mt-16 scroll-mt-24">
+                        <h2>✅ Coding Practice</h2>
+                        <p>Let's put the theory into practice with some hands-on coding exercises. These examples demonstrate common and powerful uses of static members.</p>
+
+                        <article class="mt-8">
+                             <h3>1. Logger Class with a Static Instance (Singleton Pattern)</h3>
+                             <p>The Singleton pattern ensures that a class has only one instance and provides a global point of access to it. This is perfect for managing a shared resource, like a logger or a database connection.</p>
+                             <div class="callout">
+                                <p><strong>Concept:</strong> We make the constructor `private` to prevent direct instantiation. We then expose a `public static` property that creates the single instance on its first access and returns that same instance on all subsequent calls.</p>
+                             </div>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class Logger
+{
+    // The single, static instance of the Logger. Initialized to null.
+    // 'lazy' initialization means we only create it when it's first needed.
+    private static Logger _instance;
+
+    // A private constructor prevents anyone from creating a new Logger instance.
+    private Logger()
+    {
+        Console.WriteLine("Logger instance created.");
+    }
+
+    // The public static property to get the single instance.
+    public static Logger Instance
+    {
+        get
+        {
+            // If the instance hasn't been created yet, create it.
+            if (_instance == null)
+            {
+                _instance = new Logger();
+            }
+            return _instance;
+        }
+    }
+
+    // An instance method to perform logging.
+    public void Log(string message)
+    {
+        Console.WriteLine($"[{DateTime.Now:T}] Log: {message}");
+    }
+}
+
+// --- Usage ---
+// Logger myLogger = new Logger(); // This will cause a compile error because the constructor is private.
+
+Logger.Instance.Log("Application started.");
+Logger.Instance.Log("Processing data...");
+
+// Even if we get the instance again, it's the same object.
+Logger anotherLoggerReference = Logger.Instance;
+anotherLoggerReference.Log("This message comes from the same logger instance.");
+
+// Output:
+// Logger instance created.
+// [12:03:00] Log: Application started.
+// [12:03:00] Log: Processing data...
+// [12:03:00] Log: This message comes from the same logger instance.
+</code></pre>
+                             </div>
+                        </article>
+
+                        <article class="mt-12">
+                             <h3>2. Counting Active Objects with a Static Counter</h3>
+                             <p>This program demonstrates how a static field can track state across all instances of a class. We'll create a class that counts how many of its objects are currently "alive".</p>
+                             <div class="callout">
+                                <p><strong>Concept:</strong> We use a `static` integer to hold the count. The constructor increments this counter, and the destructor (finalizer) decrements it. This gives us a live count of active objects.</p>
+                             </div>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class MonitoredObject
+{
+    private static int _liveObjectCount = 0;
+    private readonly int _id;
+
+    public MonitoredObject(int id)
+    {
+        _id = id;
+        System.Threading.Interlocked.Increment(ref _liveObjectCount); // Thread-safe increment
+        Console.WriteLine($"Object {_id} created. Live objects: {GetLiveObjectCount()}");
+    }
+
+    // This is a finalizer (destructor). It's called by the Garbage Collector.
+    // Note: Use finalizers sparingly, only for unmanaged resources. 
+    // This is for demonstration purposes. IDisposable is the preferred pattern.
+    ~MonitoredObject()
+    {
+        System.Threading.Interlocked.Decrement(ref _liveObjectCount); // Thread-safe decrement
+        Console.WriteLine($"Object {_id} destroyed. Live objects: {GetLiveObjectCount()}");
+    }
+
+    public static int GetLiveObjectCount()
+    {
+        return _liveObjectCount;
+    }
+}
+
+// --- Usage ---
+public class ObjectCounterDemo
+{
+    public static void Run()
+    {
+        Console.WriteLine($"Initial count: {MonitoredObject.GetLiveObjectCount()}");
+        
+        var obj1 = new MonitoredObject(1);
+        var obj2 = new MonitoredObject(2);
+
+        Console.WriteLine($"Count after creation: {MonitoredObject.GetLiveObjectCount()}");
+        
+        var obj3 = new MonitoredObject(3);
+        obj3 = null; // Mark obj3 eligible for collection
+
+        Console.WriteLine("Requesting garbage collection...");
+        GC.Collect();
+        GC.WaitForPendingFinalizers(); // Wait for finalizers to run
+
+        Console.WriteLine($"Count after GC: {MonitoredObject.GetLiveObjectCount()}");
+    }
+}
+
+// To run this, call ObjectCounterDemo.Run();
+</code></pre>
+                             </div>
+                        </article>
+
+                    </section>
+
+                    <!-- Problems & Solutions Section -->
+                    <section id="problems" class="mt-16 scroll-mt-24">
+                        <h2>✅ Problems & Solutions</h2>
+                        <p>Test your understanding with these problems. Try to solve them yourself before looking at the solution.</p>
+
+                        <!-- Problem 1: Easy -->
+                        <article class="mt-8 p-6 bg-white rounded-lg shadow-md border">
+                            <h3 class="text-xl">[Easy] Basic Calculator</h3>
+                            <p class="mt-2 text-slate-600">Implement a `Calculator` class. The constructor should not do anything special. It should have instance methods for `Add`, `Subtract`, `Multiply`, and `Divide`. It should also maintain the `CurrentValue` of the calculator as an instance field, initialized to 0.</p>
+                            <button class="toggle-solution-btn mt-4 px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors">Show Solution</button>
+                            <div class="solution-content hidden mt-4">
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class Calculator
+{
+    // Instance field to store the current result for this specific calculator.
+    public double CurrentValue { get; private set; }
+
+    // Default constructor initializes the state.
+    public Calculator()
+    {
+        CurrentValue = 0;
+    }
+
+    public void Add(double number) => CurrentValue += number;
+    public void Subtract(double number) => CurrentValue -= number;
+    public void Multiply(double number) => CurrentValue *= number;
+    public void Clear() => CurrentValue = 0;
+
+    public void Divide(double number)
+    {
+        if (number == 0)
+        {
+            throw new DivideByZeroException("Cannot divide by zero.");
+        }
+        CurrentValue /= number;
+    }
+}
+
+// --- Usage ---
+var myCalc = new Calculator();
+myCalc.Add(10);       // CurrentValue is 10
+myCalc.Multiply(3);   // CurrentValue is 30
+myCalc.Subtract(5);   // CurrentValue is 25
+myCalc.Divide(2);     // CurrentValue is 12.5
+Console.WriteLine($"Final calculator value: {myCalc.CurrentValue}"); // Output: 12.5
+
+var anotherCalc = new Calculator();
+anotherCalc.Add(100); // CurrentValue is 100, does not affect myCalc
+Console.WriteLine($"Another calculator value: {anotherCalc.CurrentValue}"); // Output: 100
+</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Problem 2: Medium -->
+                        <article class="mt-8 p-6 bg-white rounded-lg shadow-md border">
+                            <h3 class="text-xl">[Medium] Thread-Safe Singleton</h3>
+                            <p class="mt-2 text-slate-600">The basic Singleton implementation is not thread-safe. If two threads try to access `Instance` at the same time when it's `null`, both might pass the `if` check and create separate instances. Modify the `Logger` class to be thread-safe using the double-check locking pattern.</p>
+                            <button class="toggle-solution-btn mt-4 px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors">Show Solution</button>
+                            <div class="solution-content hidden mt-4">
+                                <div class="callout !my-2 !py-3">
+                                <p><strong>Modern Approach:</strong> In modern .NET, the easiest and recommended way to achieve a thread-safe lazy singleton is with `Lazy<T>`, which handles all the locking complexities internally. The double-check lock pattern is shown here for educational purposes.</p>
+                                </div>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public sealed class ThreadSafeLogger
+{
+    // 'volatile' ensures that assignment to _instance is complete
+    // before its value can be read by another thread.
+    private static volatile ThreadSafeLogger _instance;
+
+    // A helper object for locking.
+    private static readonly object _lock = new object();
+
+    private ThreadSafeLogger() { }
+
+    public static ThreadSafeLogger Instance
+    {
+        get
+        {
+            // First check avoids the expensive lock if instance already exists.
+            if (_instance == null)
+            {
+                // Lock ensures only one thread can enter this block at a time.
+                lock (_lock)
+                {
+                    // Second check is crucial. After a thread acquires the lock,
+                    // it must check again if another thread created the instance
+                    // while it was waiting.
+                    if (_instance == null)
+                    {
+                        _instance = new ThreadSafeLogger();
+                    }
+                }
+            }
+            return _instance;
+        }
+    }
+    public void Log(string message) { /* Log logic here */ }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Problem 3: Medium -->
+                        <article class="mt-8 p-6 bg-white rounded-lg shadow-md border">
+                            <h3 class="text-xl">[Medium] Circular Queue</h3>
+                            <p class="mt-2 text-slate-600">Implement a `CircularQueue<T>` class. It should have a fixed size defined in the constructor. Implement `Enqueue` (add item), `Dequeue` (remove item), `IsFull`, and `IsEmpty` methods. A circular queue reuses empty spots in the underlying array.</p>
+                             <div class="callout !my-2 !py-2">
+                                <p><strong>Hint:</strong> You'll need pointers (integer indices) for the `head` and `tail` of the queue. Use the modulo operator (`%`) to wrap around the array.</p>
+                             </div>
+                            <button class="toggle-solution-btn mt-4 px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors">Show Solution</button>
+                            <div class="solution-content hidden mt-4">
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class CircularQueue<T>
+{
+    private readonly T[] _queue;
+    private int _head;
+    private int _tail;
+    private int _count;
+    private readonly int _capacity;
+
+    public CircularQueue(int capacity)
+    {
+        if (capacity <= 0)
+            throw new ArgumentException("Capacity must be greater than zero.");
+        _capacity = capacity;
+        _queue = new T[_capacity];
+        _head = 0;
+        _tail = -1;
+        _count = 0;
+    }
+
+    public bool IsEmpty() => _count == 0;
+    public bool IsFull() => _count == _capacity;
+    public int Count => _count;
+
+    public void Enqueue(T item)
+    {
+        if (IsFull())
+            throw new InvalidOperationException("Queue is full.");
+        _tail = (_tail + 1) % _capacity;
+        _queue[_tail] = item;
+        _count++;
+    }
+
+    public T Dequeue()
+    {
+        if (IsEmpty())
+            throw new InvalidOperationException("Queue is empty.");
+        T item = _queue[_head];
+        _queue[_head] = default(T); // Clear the slot
+        _head = (_head + 1) % _capacity;
+        _count--;
+        return item;
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </article>
+                    </section>
+                    
+                    <!-- UML Task Section -->
+                    <section id="uml-task" class="mt-16 scroll-mt-24">
+                        <h2>✅ UML/Schema Task</h2>
+                        <p>Visualizing the lifecycle of objects and the role of static initialization helps clarify how classes and objects behave at runtime.</p>
+                        
+                        <article class="mt-8">
+                             <h3>UML Object Lifecycle for Singleton Logger</h3>
+                             <p>This diagram shows the states and transitions for our Singleton `Logger` class, highlighting the crucial static initialization step.</p>
+                             <div class="mt-6 p-6 bg-white rounded-lg shadow-lg border">
+                                <div class="text-center font-semibold mb-4 text-slate-700">Logger Class & Instance Lifecycle</div>
+                                <div class="space-y-4">
+                                    <div class="border-2 border-dashed border-sky-400 p-4 rounded-lg bg-sky-50">
+                                        <div class="font-bold text-sky-700 text-center">Static Context (App Domain)</div>
+                                        <div class="mt-4 flex flex-col items-center">
+                                            <div class="bg-slate-200 p-3 rounded-md shadow w-56 text-center">
+                                                <div class="font-mono">Logger Class Loaded</div>
+                                                <div class="text-xs text-slate-600">(First access to Logger)</div>
+                                            </div>
+                                            <div class="text-2xl text-slate-400 my-2">↓</div>
+                                            <div class="bg-yellow-200 p-3 rounded-md shadow w-56 text-center border border-yellow-400">
+                                                <div class="font-mono">Static Field `_instance`</div>
+                                                <div class="text-sm font-bold">Initialized to `null`</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-xl text-slate-500 text-center font-semibold my-4">... `Logger.Instance` is called for the first time ...</div>
+
+                                     <div class="border-2 border-dashed border-emerald-400 p-4 rounded-lg bg-emerald-50">
+                                        <div class="font-bold text-emerald-700 text-center">Instance Context (Heap)</div>
+                                        <div class="mt-4 flex flex-col items-center">
+                                             <div class="bg-slate-200 p-3 rounded-md shadow w-56 text-center">
+                                                <div class="font-mono">`_instance` is `null`? Yes.</div>
+                                            </div>
+                                            <div class="text-2xl text-slate-400 my-2">↓</div>
+                                            <div class="bg-emerald-200 p-3 rounded-md shadow w-56 text-center border border-emerald-400">
+                                                <div class="font-mono">New `Logger` object created</div>
+                                                <div class="text-sm font-bold">(Private Constructor Runs)</div>
+                                            </div>
+                                            <div class="text-2xl text-slate-400 my-2">↓</div>
+                                            <div class="bg-yellow-200 p-3 rounded-md shadow w-56 text-center border border-yellow-400">
+                                                <div class="font-mono">Static `_instance` field</div>
+                                                <div class="text-sm font-bold">Points to new object</div>
+                                            </div>
+                                             <div class="text-2xl text-slate-400 my-2">↓</div>
+                                              <div class="bg-slate-200 p-3 rounded-md shadow w-56 text-center">
+                                                <div class="font-mono">Object reference returned</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-lg text-slate-600 text-center font-semibold mt-4">Subsequent calls to `Logger.Instance` will find `_instance` is not `null` and return the existing object immediately.</div>
+                                </div>
+                             </div>
+                        </article>
+                    </section>
+                    
+                    <!-- Case Study Section -->
+                    <section id="case-study" class="mt-16 scroll-mt-24">
+                        <h2>✅ Case Study: Design Parking Lot System</h2>
+                        <p>This case study challenges you to design a simple parking lot system, applying OOP principles to model a real-world scenario. We'll identify entities, define their responsibilities, and outline the core logic.</p>
+
+                        <article class="mt-8">
+                             <h3>1. Understanding Requirements & Constraints</h3>
+                             <ul class="list-disc list-inside space-y-2 mt-2">
+                                 <li>The parking lot has multiple floors, and each floor has rows of parking slots.</li>
+                                 <li>Slots come in different sizes: `Bike`, `Car`, `Truck`.</li>
+                                 <li>A vehicle can only park in a slot of its size or larger (e.g., a Car can park in a Car or Truck slot).</li>
+                                 <li>The system must handle the lifecycle: vehicle entry, slot allocation, ticket issuance, vehicle exit, and slot release.</li>
+                             </ul>
+                             
+                             <h3>2. Identifying Entities (Classes)</h3>
+                            <p>We can identify the core nouns in our system:</p>
+                             <ul class="list-disc list-inside space-y-2 mt-2">
+                                 <li><strong>ParkingLot:</strong> The main container class, managing floors and the overall process.</li>
+                                 <li><strong>ParkingFloor:</strong> Represents a single floor, manages rows of slots.</li>
+                                 <li><strong>ParkingSlot:</strong> Represents a single parking spot. It has a size and an occupied status.</li>
+                                 <li><strong>Vehicle:</strong> An abstract base class for different vehicle types. `Car`, `Bike`, `Truck` will be subclasses.</li>
+                                 <li><strong>Ticket:</strong> An object created when a vehicle parks, containing information like slot number, entry time, etc.</li>
+                             </ul>
+
+                             <h3>3. UML Class Diagram</h3>
+                             <p>Here's a simplified class diagram representing the entities and their relationships. (Note: Created with HTML/CSS for demonstration).</p>
+                             <div class="p-4 bg-white rounded-lg shadow-lg border mt-4 text-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="border p-3 rounded bg-amber-50 shadow-sm">
+                                        <div class="font-bold text-center border-b pb-1 text-amber-800">ParkingLot</div>
+                                        <ul class="mt-2 list-disc list-inside text-xs text-amber-700"><li>- floors: List&lt;ParkingFloor&gt;</li><li>+ findSlot(vehicle): ParkingSlot</li><li>+ issueTicket(slot): Ticket</li></ul>
+                                    </div>
+                                    <div class="border p-3 rounded bg-teal-50 shadow-sm">
+                                        <div class="font-bold text-center border-b pb-1 text-teal-800">ParkingSlot</div>
+                                        <ul class="mt-2 list-disc list-inside text-xs text-teal-700"><li>- size: SlotSize</li><li>- isOccupied: bool</li><li>- vehicle: Vehicle</li><li>+ park(vehicle): void</li><li>+ release(): void</li></ul>
+                                    </div>
+                                    <div class="border p-3 rounded bg-rose-50 shadow-sm">
+                                        <div class="font-bold text-center border-b pb-1 text-rose-800">Ticket</div>
+                                        <ul class="mt-2 list-disc list-inside text-xs text-rose-700"><li>- ticketId: string</li><li>- entryTime: DateTime</li><li>- slot: ParkingSlot</li></ul>
+                                    </div>
+                                    <div class="border p-3 rounded bg-indigo-50 shadow-sm col-span-1 md:col-span-3">
+                                        <div class="font-bold text-center border-b pb-1 text-indigo-800">Vehicle (abstract)</div>
+                                        <div class="grid grid-cols-3 gap-2 mt-2">
+                                            <div class="border p-2 rounded bg-white text-center"><div class="font-semibold text-indigo-700">Car</div></div>
+                                            <div class="border p-2 rounded bg-white text-center"><div class="font-semibold text-indigo-700">Bike</div></div>
+                                            <div class="border p-2 rounded bg-white text-center"><div class="font-semibold text-indigo-700">Truck</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                             </div>
+
+                             <h3>4. Core Logic & Code Implementation</h3>
+                             <p>Below is a simplified C# implementation focusing on the core classes and their interactions.</p>
+                             <button class="toggle-solution-btn mt-4 px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors">Show Full Code Implementation</button>
+                             <div class="solution-content hidden mt-4">
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// Enums for sizes
+public enum VehicleType { Bike, Car, Truck }
+public enum SlotSize { Small, Medium, Large }
+
+// Vehicle Classes
+public abstract class Vehicle
+{
+    public abstract VehicleType Type { get; }
+    public string LicensePlate { get; }
+    protected Vehicle(string license) { LicensePlate = license; }
+}
+public class Car : Vehicle { public override VehicleType Type => VehicleType.Car; public Car(string license) : base(license) { } }
+public class Bike : Vehicle { public override VehicleType Type => VehicleType.Bike; public Bike(string license) : base(license) { } }
+public class Truck : Vehicle { public override VehicleType Type => VehicleType.Truck; public Truck(string license) : base(license) { } }
+
+
+// Parking Slot
+public class ParkingSlot
+{
+    public int SlotNumber { get; }
+    public SlotSize Size { get; }
+    public bool IsOccupied { get; private set; }
+
+    public ParkingSlot(int number, SlotSize size) { SlotNumber = number; Size = size; }
+
+    public bool CanFitVehicle(VehicleType type)
+    {
+        if (IsOccupied) return false;
+        return (type == VehicleType.Bike && Size >= SlotSize.Small) ||
+               (type == VehicleType.Car && Size >= SlotSize.Medium) ||
+               (type == VehicleType.Truck && Size >= SlotSize.Large);
+    }
+    public void Park() => IsOccupied = true;
+    public void Release() => IsOccupied = false;
+}
+
+// Ticket
+public class Ticket
+{
+    public string TicketId { get; } = Guid.NewGuid().ToString("N").Substring(0, 8);
+    public DateTime EntryTime { get; } = DateTime.Now;
+    public int AssignedSlotNumber { get; }
+    public string VehicleLicensePlate { get; }
+    public Ticket(int slotNumber, string license) { AssignedSlotNumber = slotNumber; VehicleLicensePlate = license; }
+}
+
+// Main ParkingLot class
+public class ParkingLot
+{
+    private readonly List<ParkingSlot> _slots;
+    private readonly Dictionary<string, Ticket> _activeTickets = new();
+
+    public ParkingLot(int small, int medium, int large)
+    {
+        _slots = new List<ParkingSlot>();
+        int counter = 1;
+        for (int i=0; i<small; i++) _slots.Add(new ParkingSlot(counter++, SlotSize.Small));
+        for (int i=0; i<medium; i++) _slots.Add(new ParkingSlot(counter++, SlotSize.Medium));
+        for (int i=0; i<large; i++) _slots.Add(new ParkingSlot(counter++, SlotSize.Large));
+    }
+
+    public Ticket Park(Vehicle vehicle)
+    {
+        ParkingSlot availableSlot = _slots.FirstOrDefault(s => s.CanFitVehicle(vehicle.Type));
+        if (availableSlot != null)
+        {
+            availableSlot.Park();
+            var ticket = new Ticket(availableSlot.SlotNumber, vehicle.LicensePlate);
+            _activeTickets.Add(ticket.TicketId, ticket);
+            Console.WriteLine($"Vehicle {vehicle.LicensePlate} parked in slot {availableSlot.SlotNumber}. Ticket: {ticket.TicketId}");
+            return ticket;
+        }
+        Console.WriteLine($"Sorry, no available slot for vehicle {vehicle.LicensePlate}.");
+        return null;
+    }
+
+    public void Exit(string ticketId)
+    {
+        if (_activeTickets.TryGetValue(ticketId, out Ticket ticket))
+        {
+            var slot = _slots.First(s => s.SlotNumber == ticket.AssignedSlotNumber);
+            slot.Release();
+            _activeTickets.Remove(ticketId);
+            Console.WriteLine($"Vehicle {ticket.VehicleLicensePlate} exited from slot {slot.SlotNumber}.");
+        }
+        else { Console.WriteLine("Invalid ticket ID."); }
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </article>
+                    </section>
+
+                    <!-- Knowledge Check Section -->
+                    <section id="knowledge-check" class="mt-16 scroll-mt-24">
+                        <h2>✅ Knowledge Check</h2>
+                        <p>Test your knowledge with these questions.</p>
+                        <div id="quiz-container" class="space-y-6 mt-6">
+                            <!-- Questions -->
+                            <div class="quiz-question p-4 border rounded-lg bg-white">
+                                <p class="font-semibold">1. What is the primary purpose of a constructor?</p>
+                                <div class="mt-2 space-y-1"><label class="block"><input type="radio" name="q1" value="a"> To destroy an object.</label><label class="block"><input type="radio" name="q1" value="b"> To initialize a new object to a valid state.</label><label class="block"><input type="radio" name="q1" value="c"> To copy one object to another.</label></div>
+                                <p class="quiz-feedback hidden mt-2 text-sm font-medium"></p>
+                            </div>
+                            <div class="quiz-question p-4 border rounded-lg bg-white">
+                                <p class="font-semibold">2. If a class has 10 objects created, how many copies of a `static` integer field exist in memory?</p>
+                                <div class="mt-2 space-y-1"><label class="block"><input type="radio" name="q2" value="a"> 10</label><label class="block"><input type="radio" name="q2" value="b"> 1</label><label class="block"><input type="radio" name="q2" value="c"> 0</label></div>
+                                <p class="quiz-feedback hidden mt-2 text-sm font-medium"></p>
+                            </div>
+                            <div class="quiz-question p-4 border rounded-lg bg-white">
+                                <p class="font-semibold">3. Which method would most likely be `static`?</p>
+                                <div class="mt-2 space-y-1"><label class="block"><input type="radio" name="q3" value="a"> A `Player.TakeDamage(int amount)` method.</label><label class="block"><input type="radio" name="q3" value="b"> A `StringUtils.Reverse(string input)` helper method.</label><label class="block"><input type="radio" name="q3" value="c"> A `Car.StartEngine()` method.</label></div>
+                                <p class="quiz-feedback hidden mt-2 text-sm font-medium"></p>
+                            </div>
+                            <div class="quiz-question p-4 border rounded-lg bg-white">
+                                <p class="font-semibold">4. When is a static constructor for a class `MyClass` called?</p>
+                                <div class="mt-2 space-y-1"><label class="block"><input type="radio" name="q4" value="a"> Every time an object of `MyClass` is created.</label><label class="block"><input type="radio" name="q4" value="b"> Only when explicitly called in code.</label><label class="block"><input type="radio" name="q4" value="c"> Automatically, once, before the first instance is created or any static members are referenced.</label></div>
+                                <p class="quiz-feedback hidden mt-2 text-sm font-medium"></p>
+                            </div>
+                             <div class="quiz-question p-4 border rounded-lg bg-white">
+                                <p class="font-semibold">5. In a Singleton pattern, why is the constructor typically made `private`?</p>
+                                <div class="mt-2 space-y-1"><label class="block"><input type="radio" name="q5" value="a"> To improve performance.</label><label class="block"><input type="radio" name="q5" value="b"> To prevent other classes from creating new instances of the Singleton.</label><label class="block"><input type="radio" name="q5" value="c"> To allow only static methods to call it.</label></div>
+                                <p class="quiz-feedback hidden mt-2 text-sm font-medium"></p>
+                            </div>
+                        </div>
+                        <button id="check-answers-btn" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">Check Answers</button>
+                    </section>
+
+                     <!-- Self-Assessment Challenge Section -->
+                    <section id="self-assessment" class="mt-16 scroll-mt-24">
+                        <h2>✅ Self-Assessment Challenge</h2>
+                        <article class="mt-8 p-6 bg-white rounded-lg shadow-md border">
+                            <h3>Challenge: The Connection Pool</h3>
+                            <p class="mt-2 text-slate-600">Design and implement a `ConnectionPool` class that manages a fixed number of reusable `DatabaseConnection` objects. This is a common pattern for improving performance by avoiding the cost of establishing a new database connection for every request.</p>
+                            <h4 class="font-semibold mt-4">Requirements:</h4>
+                            <ul class="list-disc list-inside space-y-2 mt-2 text-slate-600">
+                                <li>The `ConnectionPool` should be a thread-safe Singleton.</li>
+                                <li>The constructor should create a fixed number of `DatabaseConnection` objects (e.g., 5) and store them.</li>
+                                <li>Implement a `GetConnection()` method that returns an available connection. If no connections are available, it should return null.</li>
+                                <li>Implement a `ReleaseConnection(DatabaseConnection connection)` method that returns a connection to the pool.</li>
+                                <li>The `DatabaseConnection` class can be a mock class with `Open()`/`Close()` methods.</li>
+                            </ul>
+                            <button class="toggle-solution-btn mt-4 px-4 py-2 bg-sky-600 text-white rounded-md hover:bg-sky-700 transition-colors">Show Challenge Solution</button>
+                            <div class="solution-content hidden mt-4">
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre class="bg-slate-900 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System.Collections.Concurrent;
+
+// Mock DatabaseConnection class
+public class DatabaseConnection
+{
+    private static int _idCounter = 0;
+    public int Id { get; } = ++_idCounter;
+    public void Open() => Console.WriteLine($"Connection {Id} opened.");
+    public void Close() => Console.WriteLine($"Connection {Id} closed.");
+}
+
+// Thread-safe Singleton Connection Pool using Lazy<T>
+public sealed class ConnectionPool
+{
+    private static readonly Lazy<ConnectionPool> _lazyInstance =
+        new Lazy<ConnectionPool>(() => new ConnectionPool());
+
+    public static ConnectionPool Instance => _lazyInstance.Value;
+
+    private readonly ConcurrentBag<DatabaseConnection> _pool;
+    
+    private ConnectionPool()
+    {
+        int poolSize = 5; // Fixed pool size
+        _pool = new ConcurrentBag<DatabaseConnection>();
+        for (int i = 0; i < poolSize; i++)
+        {
+            _pool.Add(new DatabaseConnection());
+        }
+        Console.WriteLine($"Connection pool initialized with {poolSize} connections.");
+    }
+
+    public DatabaseConnection GetConnection()
+    {
+        if (_pool.TryTake(out DatabaseConnection connection))
+        {
+            connection.Open();
+            return connection;
+        }
+        Console.WriteLine("No available connections in the pool.");
+        return null;
+    }
+
+    public void ReleaseConnection(DatabaseConnection connection)
+    {
+        if (connection != null)
+        {
+            connection.Close();
+            _pool.Add(connection);
+        }
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                        </article>
+                    </section>
+                </div>
+            </main>
+
+            <!-- Sticky Table of Contents -->
+            <nav id="toc" class="hidden lg:block lg:col-span-3 sticky top-24 self-start">
+                <h3 class="text-lg font-semibold text-slate-900 mb-4 font-lexend">On this page</h3>
+                <ul class="space-y-2 text-slate-600">
+                    <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Theory Topics</a></li>
+                    <li><a href="#coding-practice" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Coding Practice</a></li>
+                    <li><a href="#problems" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Problems & Solutions</a></li>
+                    <li><a href="#uml-task" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">UML/Schema Task</a></li>
+                    <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Case Study: Parking Lot</a></li>
+                    <li><a href="#knowledge-check" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Knowledge Check</a></li>
+                    <li><a href="#self-assessment" class="toc-link block border-l-2 border-transparent pl-4 py-1 hover:text-sky-600 hover:border-sky-600 transition-colors">Self-Assessment Challenge</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold font-lexend">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Copy-to-Clipboard ---
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.closest('.code-block').querySelector('pre code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            // --- Toggle Solutions ---
+            document.querySelectorAll('.toggle-solution-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const content = btn.nextElementSibling;
+                    const isHidden = content.classList.contains('hidden');
+                    content.classList.toggle('hidden');
+                    btn.textContent = isHidden ? btn.textContent.replace('Show', 'Hide') : btn.textContent.replace('Hide', 'Show');
+                });
+            });
+
+            // --- Quiz Logic ---
+            const quizAnswers = { q1: 'b', q2: 'b', q3: 'b', q4: 'c', q5: 'b' };
+            const quizFeedbackText = {
+                q1: { b: 'Correct! The constructor\'s main role is to initialize an object.', incorrect: 'Incorrect. The constructor sets up the initial state of an object.' },
+                q2: { b: 'Correct! Static members belong to the class, so there is only one copy regardless of the number of instances.', incorrect: 'Incorrect. Static fields are shared across all instances, so only one copy exists.' },
+                q3: { b: 'Correct! Utility or helper methods that don\'t rely on instance state are perfect candidates for being static.', incorrect: 'Incorrect. Methods that operate on the specific state of a particular object (like TakeDamage or StartEngine) should be instance methods.' },
+                q4: { c: 'Correct! A static constructor runs only once per application domain.', incorrect: 'Incorrect. A static constructor is run implicitly by the CLR, just before the class is used for the first time.' },
+                q5: { b: 'Correct! This prevents direct instantiation and forces users to go through the public static `Instance` property.', incorrect: 'Incorrect. The core reason is to enforce the single-instance rule of the pattern.' }
+            };
+            document.getElementById('check-answers-btn').addEventListener('click', () => {
+                document.querySelectorAll('.quiz-question').forEach(q => {
+                    const qName = q.querySelector('input').name;
+                    const selected = q.querySelector(`input[name=${qName}]:checked`);
+                    const feedbackEl = q.querySelector('.quiz-feedback');
+                    feedbackEl.classList.remove('hidden', 'text-green-600', 'text-red-600', 'text-yellow-600');
+                    if (selected) {
+                        const isCorrect = selected.value === quizAnswers[qName];
+                        feedbackEl.textContent = isCorrect ? quizFeedbackText[qName][selected.value] : quizFeedbackText[qName]['incorrect'];
+                        feedbackEl.classList.add(isCorrect ? 'text-green-600' : 'text-red-600');
+                    } else {
+                        feedbackEl.textContent = 'Please select an answer.';
+                        feedbackEl.classList.add('text-yellow-600');
+                    }
+                });
+            });
+
+            // --- TOC Active State Scrolling ---
+            const sections = document.querySelectorAll('main section');
+            const tocLinks = document.querySelectorAll('#toc .toc-link');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-40% 0px -60% 0px" });
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 18: .NET Memory Management & GC - Low-Level Design Bootcamp</title>
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: A two-column layout is used for optimal learning. The left, wider column contains the core lesson content, flowing from theory to interactive diagrams, practical coding exercises, and assessments. This linear progression supports structured learning. The right column features a sticky Table of Contents (ToC) for quick, non-linear navigation, catering to users who want to review specific topics. This structure was chosen to balance guided learning with user-driven exploration, making a dense topic like memory management accessible and easy to navigate. -->
+    <!-- Visualization & Content Choices: 
+        - Heap vs. Stack: Goal=Inform/Compare -> Method=Interactive HTML/CSS Diagram -> Interaction=Buttons to add/remove items -> Justification=Makes abstract memory allocation tangible.
+        - GC Generations: Goal=Explain Process -> Method=HTML/CSS bar chart simulation -> Interaction=Button to trigger GC cycle animation -> Justification=Visually demonstrates object promotion, which is key to understanding the GC's efficiency.
+        - GC Lifecycle (UML): Goal=Organize Process -> Method=Multi-step interactive HTML diagram -> Interaction=Buttons for Mark, Sweep, Compact phases -> Justification=More engaging and instructive than a static UML diagram, showing the process step-by-step.
+        - All coding examples use styled blocks with copy/reveal functionality for usability.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #f59e0b;
+            font-weight: 600;
+            border-left-color: #f59e0b;
+        }
+        .code-block {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4b5563;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .quiz-option.selected { background-color: #dbeafe; border-color: #3b82f6; }
+        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; }
+        .quiz-option.incorrect { background-color: #fee2e2; border-color: #ef4444; }
+        .solution-toggle {
+            background-color: #f59e0b;
+            color: white;
+        }
+        .challenge-solution {
+             transition: all 0.5s ease-in-out;
+             max-height: 0;
+             overflow: hidden;
+        }
+        .challenge-solution.visible {
+            max-height: 2000px;
+        }
+        .memory-box {
+            transition: all 0.3s ease;
+        }
+        .gc-object {
+            transition: all 0.5s ease-in-out;
+            transform-origin: bottom;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <p class="text-base font-semibold text-amber-600">Day 18: Advanced .NET Concepts</p>
+            <h2 class="text-4xl font-extrabold font-lexend tracking-tight text-slate-900">Memory Management & Garbage Collection</h2>
+            <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">Mastering how .NET handles memory is not just an academic exercise; it's a critical skill for building applications that are fast, stable, and scalable. A deep understanding of the GC and memory structures prevents bugs, resolves performance bottlenecks, and enables resource-efficient architectures.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-12">
+            <main class="lg:col-span-3">
+                <div class="space-y-16">
+                    <section id="theory">
+                        <h3 class="text-3xl font-bold font-lexend text-slate-900 mb-6">Theory Topics</h3>
+                        <div class="space-y-8">
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-2xl font-semibold font-lexend mb-3">1. Heap vs. Stack: A Detailed Analysis</h4>
+                                <p class="mb-4 text-slate-600">The .NET runtime organizes memory for a running application into two fundamental areas: the Stack and the Heap. Their distinct characteristics and purposes dictate performance and behavior. Think of the <strong class="text-sky-600">Stack</strong> as a neat stack of plates in a cafeteria—the last one placed on top is the first one taken off. It's fast and orderly. The <strong class="text-violet-600">Heap</strong>, in contrast, is like a sprawling warehouse where items are placed wherever there's space, requiring a manager (the Garbage Collector) to keep track of everything.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-lg">
+                                    <div>
+                                        <h5 class="font-bold text-lg text-center mb-2">📥 The Stack (Static Memory Allocation)</h5>
+                                        <p class="text-sm text-slate-600 mb-3">The stack is responsible for tracking what's executing in our code. Each time a method is called, a block of memory, known as a <strong class="text-slate-700">"stack frame,"</strong> is pushed onto the stack. This frame contains the method's parameters, local variables, and the return address. When the method finishes, its frame is popped off, instantly freeing that memory. This LIFO (Last-In, First-Out) mechanism is extremely fast because it's just a simple pointer movement.</p>
+                                        <ul class="list-disc list-inside space-y-2 text-slate-600 mt-2">
+                                            <li><strong class="text-slate-700">Stores:</strong> Value types (`int`, `bool`, `struct`), pointers, and object references. Note that for reference types, the actual object lives on the heap; the stack just holds the "address" pointing to it.</li>
+                                            <li><strong class="text-slate-700">Lifecycle:</strong> Tied directly to method scope. Memory is reclaimed automatically and predictably.</li>
+                                            <li><strong class="text-slate-700">Limitation:</strong> Size is limited, and storing too much data or having too deep a recursion can lead to a `StackOverflowException`.</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold text-lg text-center mb-2">📦 The Heap (Dynamic Memory Allocation)</h5>
+                                         <p class="text-sm text-slate-600 mb-3">The heap is for data whose lifetime is not known at compile time or is too large for the stack. When you use the `new` keyword to create an object (an instance of a class), memory is allocated on the heap, and a reference (pointer) to that memory is returned. This memory persists beyond the method call that created it and is only cleaned up when the Garbage Collector determines it's no longer reachable.</p>
+                                        <ul class="list-disc list-inside space-y-2 text-slate-600 mt-2">
+                                           <li><strong class="text-slate-700">Stores:</strong> Reference types (`class` instances, `string`, arrays, delegates). The data itself resides on the heap.</li>
+                                           <li><strong class="text-slate-700">Lifecycle:</strong> Managed by the Garbage Collector (GC). An object lives as long as there is a valid reference to it.</li>
+                                           <li><strong class="text-slate-700">Advantage:</strong> Allows for creating large, complex objects with a dynamic lifetime, essential for most applications.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-6">
+                                    <h6 class="font-semibold mb-3 text-slate-800">Interactive Allocation Demo</h6>
+                                    <p class="text-sm text-slate-600 mb-3">Click the buttons below to see how different types of data are allocated. Notice how value types (`int`) live entirely on the stack, while reference types (`object`) live on the heap with a pointer to them placed on the stack.</p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg bg-slate-50">
+                                        <div class="border-2 border-dashed rounded-lg p-3 bg-white">
+                                            <h6 class="text-center font-bold">Stack</h6>
+                                            <div id="stack-viz" class="h-48 flex flex-col-reverse justify-start items-center space-y-1 space-y-reverse overflow-hidden p-1"></div>
+                                        </div>
+                                        <div class="border-2 border-dashed rounded-lg p-3 bg-white">
+                                            <h6 class="text-center font-bold">Heap</h6>
+                                            <div id="heap-viz" class="h-48 flex flex-wrap justify-start items-start gap-1 p-1"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2 mt-4 justify-center">
+                                        <button id="add-int-btn" class="px-4 py-2 text-sm font-semibold bg-sky-500 text-white rounded-md hover:bg-sky-600">Allocate `int` (Stack)</button>
+                                        <button id="add-obj-btn" class="px-4 py-2 text-sm font-semibold bg-violet-500 text-white rounded-md hover:bg-violet-600">Allocate `object` (Heap)</button>
+                                        <button id="clear-mem-btn" class="px-4 py-2 text-sm font-semibold bg-slate-500 text-white rounded-md hover:bg-slate-600">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-2xl font-semibold font-lexend mb-3">2. Garbage Collector (GC) Generations Explained</h4>
+                                <p class="mb-4 text-slate-600">The .NET GC is a marvel of engineering, designed to be a "self-tuning," high-performance memory manager. Its core strategy is built upon the <strong class="text-slate-800">Generational Hypothesis</strong>, which empirical studies have shown to be true for most applications: <strong class="text-amber-700">most objects have a very short lifespan</strong>. This insight allows the GC to make a powerful optimization: instead of scanning the entire heap for garbage on every collection, it focuses its efforts on the area most likely to contain garbage—the youngest objects.</p>
+                                <p class="mb-4 text-slate-600">To implement this, the heap is segmented into three generations:</p>
+                                <ul class="list-decimal list-inside space-y-2 mb-4 text-slate-600">
+                                    <li><strong>Generation 0 (Gen 0):</strong> The "nursery" for all newly created objects. Allocations here are very fast. Gen 0 collections are frequent and quick because most objects here are expected to be garbage.</li>
+                                    <li><strong>Generation 1 (Gen 1):</strong> The "survivor" space. Objects that survive a Gen 0 collection are promoted to Gen 1. It acts as a buffer between short-lived and long-lived objects.</li>
+                                    <li><strong>Generation 2 (Gen 2):</strong> The "long-term storage." Objects that survive a Gen 1 collection are promoted here. Gen 2 contains long-lived objects, and collections are less frequent but more expensive as they involve scanning a larger portion of the heap.</li>
+                                </ul>
+                                <div class="bg-sky-50 border-l-4 border-sky-400 p-4 rounded-r-lg">
+                                    <p class="text-sky-800"><strong class="font-semibold">Important Note:</strong> The CLR also maintains a <strong class="font-bold">Large Object Heap (LOH)</strong> for objects larger than 85,000 bytes. These are allocated directly on the LOH to avoid the high cost of copying large memory blocks between generations. The LOH is typically collected during a full Gen 2 collection.</p>
+                                </div>
+                                <div id="gc-generations-container" class="w-full max-w-2xl mx-auto mt-6 p-4 bg-slate-50 rounded-lg">
+                                    <h6 class="text-center font-semibold text-slate-700 mb-2">Generational Collection Simulation</h6>
+                                    <div class="flex justify-around items-end h-64 border-b-2 border-slate-300">
+                                        <div class="flex flex-col items-center w-1/4">
+                                            <div id="gen0-viz" class="w-full h-full flex flex-col-reverse items-center p-1 space-y-1 space-y-reverse"></div>
+                                            <p class="font-bold mt-2">Gen 0</p>
+                                            <p class="text-sm text-slate-500">New Objects</p>
+                                        </div>
+                                        <div class="flex flex-col items-center w-1/4">
+                                            <div id="gen1-viz" class="w-full h-full flex flex-col-reverse items-center p-1 space-y-1 space-y-reverse"></div>
+                                            <p class="font-bold mt-2">Gen 1</p>
+                                            <p class="text-sm text-slate-500">Survivors</p>
+                                        </div>
+                                        <div class="flex flex-col items-center w-1/4">
+                                            <div id="gen2-viz" class="w-full h-full flex flex-col-reverse items-center p-1 space-y-1 space-y-reverse"></div>
+                                            <p class="font-bold mt-2">Gen 2</p>
+                                            <p class="text-sm text-slate-500">Long-lived</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-center gap-4 mt-4">
+                                         <button id="allocate-obj-gc-btn" class="px-4 py-2 text-sm font-semibold bg-sky-500 text-white rounded-md hover:bg-sky-600">Allocate Objects</button>
+                                         <button id="run-gc-btn" class="px-4 py-2 text-sm font-semibold bg-amber-500 text-white rounded-md hover:bg-amber-600">Run GC Cycle</button>
+                                    </div>
+                                    <p id="gc-log" class="text-center text-sm text-slate-600 mt-3 h-5"></p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-2xl font-semibold font-lexend mb-3">3. IDisposable & `using` for Resource Management</h4>
+                                <p class="text-slate-600 mb-4">While the GC excels at managing .NET memory (known as <strong class="text-slate-800">managed resources</strong>), it has no knowledge of resources outside the .NET runtime's control. These <strong class="text-slate-800">unmanaged resources</strong> include things like file handles, database connections, network sockets, GDI handles for graphics, or pointers to memory allocated by native C++ libraries. Leaving these resources open can lead to serious application issues, including file locking, connection pool exhaustion, and memory leaks.</p>
+                                <p class="text-slate-600 mb-4">The `IDisposable` interface provides a standardized mechanism for <strong class="text-amber-700">deterministic cleanup</strong>. By implementing its single method, `Dispose()`, a class can provide its consumer with a way to explicitly release unmanaged resources as soon as they are no longer needed, rather than waiting for the GC to non-deterministically run a finalizer at some unknown future time.</p>
+                                <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                                    <p class="text-amber-800"><strong class="font-semibold">Key Idea:</strong> Implementing `IDisposable` is like creating a contract that says, "I hold onto precious unmanaged resources. Please call my `Dispose()` method when you are done with me so I can clean up."</p>
+                                </div>
+                                <h5 class="font-semibold mt-6 mb-2">Syntax: The `using` Statement</h5>
+                                <p class="text-slate-600 mb-4">Manually calling `Dispose()` in a `try...finally` block is tedious and error-prone. C# provides the `using` statement as powerful syntactic sugar. The compiler automatically translates a `using` block into a `try...finally` block, guaranteeing that `Dispose()` is called on the object, even if an exception is thrown within the block. This is the safest and universally recommended way to work with disposable objects.</p>
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code class="language-csharp">// The 'using' statement guarantees that Dispose() is called
+// when the block is exited, either normally or via an exception.
+using (var fileReader = new StreamReader("myFile.txt"))
+{
+    // Work with the fileReader object...
+} // The compiler generates code equivalent to fileReader.Dispose() here in a finally block.
+</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml">
+                        <h3 class="text-3xl font-bold font-lexend text-slate-900 mb-6">UML Task: Interactive GC Lifecycle Diagram</h3>
+                        <p class="mb-6 text-slate-600">The Garbage Collector's process is often simplified as "cleaning up memory," but the reality is a precise, multi-phase algorithm designed to be both safe and efficient. This interactive diagram breaks down the fundamental "Mark, Sweep, and Compact" phases of a full blocking collection.</p>
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <div class="flex flex-wrap justify-center gap-4 mb-6">
+                                <button id="gc-phase-mark-btn" class="gc-phase-btn px-4 py-2 font-semibold bg-sky-500 text-white rounded-md shadow-sm w-full sm:w-auto">1. Mark Phase</button>
+                                <button id="gc-phase-sweep-btn" class="gc-phase-btn px-4 py-2 font-semibold bg-slate-400 text-white rounded-md w-full sm:w-auto" disabled>2. Sweep Phase</button>
+                                <button id="gc-phase-compact-btn" class="gc-phase-btn px-4 py-2 font-semibold bg-slate-400 text-white rounded-md w-full sm:w-auto" disabled>3. Compact Phase</button>
+                                <button id="gc-phase-reset-btn" class="px-4 py-2 font-semibold bg-slate-600 text-white rounded-md w-full sm:w-auto">Reset Simulation</button>
+                            </div>
+                            <div id="gc-lifecycle-viz" class="grid grid-cols-4 md:grid-cols-8 gap-2 p-4 bg-slate-100 rounded-lg min-h-[12rem]">
+                            </div>
+                            <div id="gc-phase-explanation" class="mt-4 p-4 bg-slate-50 rounded-lg min-h-[6rem] transition-all duration-300">
+                                <h4 class="font-bold text-slate-800">Start the process!</h4>
+                                <p class="text-slate-600">Click the "Mark Phase" button to begin. The diagram shows a snapshot of the heap with allocated objects (grey) and free space. Some allocated objects are "rooted" (reachable from the application), while others are now "garbage" (unreachable).</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="coding">
+                        <h3 class="text-3xl font-bold font-lexend text-slate-900 mb-6">Coding Practice</h3>
+                        <p class="mb-6 text-slate-600">Transition from theory to practical application. These exercises are designed to solidify your understanding of memory management concepts by having you write the code that demonstrates them. The difficulty scales to challenge your grasp of these critical topics.</p>
+                        <div class="bg-white rounded-lg shadow-sm">
+                            <div class="border-b border-slate-200">
+                                <nav class="flex -mb-px" aria-label="Tabs">
+                                    <button class="tab-btn active w-1/3 py-4 px-1 text-center border-b-2 font-medium text-sm text-amber-600 border-amber-500" data-tab="easy">
+                                        [Easy] IDisposable & Leak Demo
+                                    </button>
+                                    <button class="tab-btn w-1/3 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="medium">
+                                        [Medium] The Dispose Pattern
+                                    </button>
+                                    <button class="tab-btn w-1/3 py-4 px-1 text-center border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300" data-tab="hard">
+                                        [Hard] Custom Memory Pool
+                                    </button>
+                                </nav>
+                            </div>
+                            <div class="p-6">
+                                <div id="easy" class="tab-content">
+                                    <h4 class="text-xl font-semibold font-lexend mb-2">IDisposable Demo & Event Handler Leak</h4>
+                                    <p class="text-slate-600 mb-4"><strong>Part 1:</strong> Implement the `IDisposable` interface on a simple class that simulates holding a file resource. Use the `using` statement to ensure its `Dispose` method is called. This demonstrates the core of deterministic cleanup.</p>
+                                    <p class="text-slate-600 mb-4"><strong>Part 2:</strong> Demonstrate one of the most common and subtle memory leaks in .NET: lingering event subscriptions. Create a "Publisher" and "Subscriber" class. Show how the Publisher can inadvertently keep the Subscriber alive even after it should have been garbage collected, because the event subscription creates a strong reference.</p>
+                                    <button class="solution-toggle font-semibold py-2 px-4 rounded-md mb-4 w-full">Show Solution</button>
+                                    <div class="solution-content hidden">
+                                        <p class="font-semibold mb-2 text-slate-800">Part 1: IDisposable Demo Solution</p>
+                                        <div class="code-block mb-4">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre><code class="language-csharp">
+public class FileResource : IDisposable
+{
+    private readonly string _filePath;
+    public FileResource(string filePath)
+    {
+        _filePath = filePath;
+        Console.WriteLine($"Opening file: {_filePath}");
+    }
+
+    public void ReadData()
+    {
+        Console.WriteLine($"Reading data from {_filePath}");
+    }
+
+    public void Dispose()
+    {
+        // This is where you would close the actual file handle.
+        Console.WriteLine($"Closing file: {_filePath}. Resource released!");
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        using (var resource = new FileResource("data.txt"))
+        {
+            resource.ReadData();
+        } // resource.Dispose() is automatically called here.
+        Console.WriteLine("Program finished, resource was disposed correctly.");
+    }
+}
+</code></pre>
+                                        </div>
+                                        <p class="font-semibold mb-2 text-slate-800">Part 2: Event Handler Leak Solution</p>
+                                        <div class="code-block">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre><code class="language-csharp">
+public class Publisher
+{
+    public event Action MyEvent;
+    public void RaiseEvent() => MyEvent?.Invoke();
+}
+
+public class Subscriber // This class needs IDisposable to clean up its subscription
+{
+    private Publisher _publisher;
+    public Subscriber(Publisher publisher)
+    {
+        _publisher = publisher;
+        // The publisher now holds a strong reference back to this subscriber instance.
+        _publisher.MyEvent += OnMyEvent;
+    }
+
+    private void OnMyEvent() => Console.WriteLine("Event received by subscriber!");
+    
+    // To fix the leak, the subscriber must unsubscribe.
+    public void Unsubscribe()
+    {
+        _publisher.MyEvent -= OnMyEvent;
+        Console.WriteLine("Subscriber has unsubscribed.");
+    }
+}
+
+public class LeakDemo
+{
+    public static void Main()
+    {
+        var publisher = new Publisher();
+        var sub = new Subscriber(publisher);
+        publisher.RaiseEvent();
+
+        // At this point, even if 'sub' goes out of scope, the Subscriber object
+        // cannot be collected because 'publisher' holds a reference to its OnMyEvent method.
+        // This is a memory leak. To fix it, you must explicitly break the reference.
+        sub.Unsubscribe(); 
+        Console.WriteLine("Now the subscriber can be collected.");
+    }
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="medium" class="tab-content hidden">
+                                    <h4 class="text-xl font-semibold font-lexend mb-2">Implementing the Full Dispose Pattern</h4>
+                                    <p class="text-slate-600 mb-4">When a class holds both managed resources (other `IDisposable` objects) and unmanaged resources (like raw handles or pointers), a more robust pattern is needed. The full "Dispose Pattern" provides a standard way to handle cleanup correctly, whether it's initiated by a direct call to `Dispose()` or as a last resort by the GC's finalizer. It prevents redundant calls and correctly separates the cleanup logic for managed and unmanaged resources.</p>
+                                    <button class="solution-toggle font-semibold py-2 px-4 rounded-md mb-4 w-full">Show Solution</button>
+                                    <div class="solution-content hidden">
+                                        <div class="code-block">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre><code class="language-csharp">
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+
+public class ComplexResourceHolder : IDisposable
+{
+    // Unmanaged resource (using a SafeHandle is the recommended approach)
+    private SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+    // Managed resource that also needs disposing
+    private readonly StreamReader _managedResource; 
+
+    // To detect redundant calls and prevent errors
+    private bool disposed = false;
+
+    public ComplexResourceHolder(string filePath)
+    {
+        _managedResource = new StreamReader(filePath);
+        Console.WriteLine("Acquired managed and unmanaged resources.");
+    }
+
+    // Public Dispose method (from IDisposable)
+    public void Dispose()
+    {
+        // Call the internal dispose method with 'true' to indicate
+        // that both managed and unmanaged resources should be cleaned up.
+        Dispose(true);
+        // Tell the GC that it doesn't need to call the finalizer,
+        // because we've already done the cleanup.
+        GC.SuppressFinalize(this);
+    }
+
+    // Protected virtual Dispose method for logic reuse
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed) return; // If already disposed, do nothing.
+
+        if (disposing)
+        {
+            // This block is executed when Dispose() is called directly.
+            // It is safe to dispose of other managed objects here.
+            _managedResource?.Dispose();
+            handle?.Dispose();
+            Console.WriteLine("Cleaned up managed resources.");
+        }
+
+        // This block is always executed, for both Dispose() and finalizer calls.
+        // Clean up unmanaged resources here.
+        // (In this case, SafeHandle does it, but logic would go here).
+        Console.WriteLine("Cleaned up unmanaged resources.");
+
+        disposed = true;
+    }
+    
+    // Finalizer (destructor syntax) as a safety net.
+    // This is called by the GC if the user forgets to call Dispose().
+    ~ComplexResourceHolder()
+    {
+        // We should only clean up unmanaged resources from the finalizer,
+        // because we can't be sure about the state of managed objects.
+        // They may have already been finalized themselves.
+        Dispose(false);
+    }
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="hard" class="tab-content hidden">
+                                    <h4 class="text-xl font-semibold font-lexend mb-2">Custom Memory Pool (Object Pooling)</h4>
+                                    <p class="text-slate-600 mb-4">In high-performance scenarios, the process of frequently allocating and de-allocating objects can cause significant GC pressure, leading to pauses and reduced throughput. An <strong class="text-slate-800">Object Pool</strong> is a design pattern that mitigates this. It pre-allocates a collection of objects and keeps them in memory. Instead of creating a new object, the application "borrows" one from the pool, uses it, and then "returns" it. This recycling process dramatically reduces the number of allocations and the workload for the GC. Your task is to implement a simple, generic, thread-safe object pool.</p>
+                                    <button class="solution-toggle font-semibold py-2 px-4 rounded-md mb-4 w-full">Show Solution</button>
+                                    <div class="solution-content hidden">
+                                        <div class="code-block">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre><code class="language-csharp">
+using System.Collections.Concurrent;
+
+// A generic, thread-safe object pool.
+public class ObjectPool&lt;T&gt; where T : new()
+{
+    // ConcurrentBag is ideal for pools because order doesn't matter
+    // and it's optimized for scenarios where the same thread both
+    // adds and removes items.
+    private readonly ConcurrentBag&lt;T&gt; _objects;
+    private readonly Func&lt;T&gt; _objectGenerator;
+
+    public ObjectPool(Func&lt;T&gt; objectGenerator = null)
+    {
+        _objects = new ConcurrentBag&lt;T&gt;();
+        _objectGenerator = objectGenerator ?? (() => new T());
+    }
+
+    // "Borrow" an object from the pool. If the pool is empty, create a new one.
+    public T Get() => _objects.TryTake(out T item) ? item : _objectGenerator();
+
+    // "Return" an object to the pool so it can be reused.
+    public void Return(T item) => _objects.Add(item);
+}
+
+// Example Usage with an object that is "expensive" to create.
+public class ExpensiveObject
+{
+    public Guid Id { get; private set; }
+    public ExpensiveObject()
+    {
+        Id = Guid.NewGuid();
+        Console.WriteLine($"ExpensiveObject created! ID: {Id}");
+        // Simulate a costly initialization (e.g., loading data, network call)
+        Thread.Sleep(50); 
+    }
+}
+
+public class PoolDemo
+{
+    public static void Main()
+    {
+        var pool = new ObjectPool&lt;ExpensiveObject&gt;();
+
+        Console.WriteLine("1. Getting first object from empty pool...");
+        var obj1 = pool.Get(); // This will create a new object.
+
+        Console.WriteLine("2. Returning object to the pool...");
+        pool.Return(obj1);
+
+        Console.WriteLine("3. Getting second object from pool...");
+        var obj2 = pool.Get(); // This should reuse the first object.
+
+        Console.WriteLine($"--> Is obj1 the same instance as obj2? {ReferenceEquals(obj1, obj2)}");
+
+        Console.WriteLine("4. Getting a third object while the second is in use...");
+        var obj3 = pool.Get(); // Pool is empty again, must create a new one.
+        
+        pool.Return(obj2);
+        pool.Return(obj3);
+        Console.WriteLine("Returned obj2 and obj3. Pool now contains 2 objects.");
+    }
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="case-study">
+                        <h3 class="text-3xl font-bold font-lexend text-slate-900 mb-6">Case Study: High-Load API Memory Optimizations</h3>
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-xl font-semibold font-lexend mb-3">Scenario</h4>
+                            <p class="mb-4 text-slate-600">You are tasked with optimizing an ASP.NET Core API endpoint that receives a large comma-separated string in a JSON payload. The endpoint must process this string by trimming whitespace from each value, converting it to uppercase, and returning a new semicolon-separated string. Under performance testing, this endpoint exhibits high memory usage and frequent, costly Gen 2 garbage collections, causing significant latency spikes under load.</p>
+
+                            <h4 class="text-xl font-semibold font-lexend mb-3">Problem Analysis</h4>
+                             <p class="mb-4 text-slate-600">The primary issue is excessive memory allocation. Each call to `string.Split()`, `string.Trim()`, `string.ToUpper()`, and `string.Join()` creates new string objects on the heap. For a large input string with many parts, this results in thousands of small, short-lived objects. This churn rapidly fills Gen 0, forcing frequent GC cycles and promoting objects unnecessarily, ultimately leading to expensive Gen 2 collections that pause the application.</p>
+                            
+                            <div class="space-y-4">
+                               <div class="border border-red-200 bg-red-50 p-4 rounded-lg">
+                                   <h5 class="font-bold text-red-800">Before Optimization (High Allocation Code)</h5>
+                                   <p class="text-sm text-red-700 mb-3">This naive implementation is simple to read but disastrous for performance under load due to its prolific string allocations.</p>
+                                   <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code class="language-csharp">// In an ASP.NET Core Controller
+[HttpPost]
+public IActionResult ProcessData([FromBody] RequestModel model)
+{
+    // ALLOCATION 1: .Split(',') creates a new string array AND a new string for every single part.
+    var parts = model.Data.Split(','); 
+    var results = new List&lt;string&gt;();
+    
+    foreach(var part in parts)
+    {
+        // ALLOCATION 2: .Trim() creates another new string.
+        // ALLOCATION 3: .ToUpper() creates yet another new string.
+        var processedPart = part.Trim().ToUpper();
+        results.Add(processedPart);
+    }
+    
+    // ALLOCATION 4: .Join() allocates a final large string after allocating intermediate strings.
+    var finalResult = string.Join(";", results);
+    return Ok(finalResult);
+}
+</code></pre>
+                                   </div>
+                               </div>
+
+                               <div class="border border-green-200 bg-green-50 p-4 rounded-lg">
+                                   <h5 class="font-bold text-green-800">After Optimization (Low Allocation with Span&lt;T&gt;)</h5>
+                                   <p class="text-sm text-green-700 mb-3">By using `Span&lt;char&gt;` (via `AsSpan()`), we can perform slicing and trimming operations without allocating any new strings. A `Span` is a stack-only type that provides a "view" into an existing piece of memory. We combine this with a `StringBuilder` to efficiently construct the final result with a single heap allocation.</p>
+                                   <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre><code class="language-csharp">
+using System.Text;
+
+[HttpPost]
+public IActionResult ProcessDataV2([FromBody] RequestModel model)
+{
+    // NO ALLOCATION: AsSpan() creates a view over the original string's memory.
+    var dataSpan = model.Data.AsSpan();
+    // ONE ALLOCATION: StringBuilder for efficient final string construction.
+    var resultsBuilder = new StringBuilder(); 
+    
+    while(!dataSpan.IsEmpty)
+    {
+        var nextComma = dataSpan.IndexOf(',');
+        // NO ALLOCATION: Slicing a span just creates a new view, not new data.
+        var slice = nextComma == -1 ? dataSpan : dataSpan.Slice(0, nextComma);
+        
+        // NO ALLOCATION: Trim on a span also just returns a new, adjusted view.
+        var trimmedSlice = slice.Trim();
+        
+        // Loop through the characters in the view and append them to the builder.
+        for(int i = 0; i < trimmedSlice.Length; i++)
+        {
+            resultsBuilder.Append(char.ToUpperInvariant(trimmedSlice[i]));
+        }
+
+        if (nextComma == -1) break; // Reached the end.
+
+        resultsBuilder.Append(';');
+        // Advance the main span past the part we just processed.
+        dataSpan = dataSpan.Slice(nextComma + 1);
+    }
+    
+    // FINAL ALLOCATION: Only one string is allocated on the heap for the final result.
+    return Ok(resultsBuilder.ToString());
+}
+</code></pre>
+                                   </div>
+                               </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="quiz">
+                        <h3 class="text-3xl font-bold font-lexend text-slate-900 mb-6">Knowledge Check</h3>
+                        <div class="bg-white p-6 rounded-lg shadow-sm space-y-8" id="quiz-container">
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <aside class="hidden lg:block">
+                <div class="sticky top-24">
+                    <h4 class="font-semibold font-lexend text-slate-900 mb-4">On this page</h4>
+                    <nav id="toc-nav">
+                        <a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 py-2 text-slate-600 hover:text-slate-800 hover:border-slate-400">Theory Topics</a>
+                        <a href="#uml" class="toc-link block border-l-2 border-slate-200 pl-4 py-2 text-slate-600 hover:text-slate-800 hover:border-slate-400">GC Lifecycle Diagram</a>
+                        <a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-4 py-2 text-slate-600 hover:text-slate-800 hover:border-slate-400">Coding Practice</a>
+                        <a href="#case-study" class="toc-link block border-l-2 border-slate-200 pl-4 py-2 text-slate-600 hover:text-slate-800 hover:border-slate-400">Case Study</a>
+                        <a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 py-2 text-slate-600 hover:text-slate-800 hover:border-slate-400">Knowledge Check</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Code block functionality
+            document.querySelectorAll('.code-block').forEach(block => {
+                const copyBtn = block.querySelector('.copy-btn');
+                const code = block.querySelector('code');
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(code.innerText).then(() => {
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            // Solution toggle functionality
+            document.querySelectorAll('.solution-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const isHidden = content.classList.contains('hidden');
+                    if (isHidden) {
+                        content.classList.remove('hidden');
+                        button.textContent = 'Hide Solution';
+                    } else {
+                        content.classList.add('hidden');
+                        button.textContent = 'Show Solution';
+                    }
+                });
+            });
+
+            // Tabs functionality
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'text-amber-600', 'border-amber-500');
+                        btn.classList.add('text-slate-500', 'border-transparent');
+                    });
+                    button.classList.add('active', 'text-amber-600', 'border-amber-500');
+                    button.classList.remove('text-slate-500', 'border-transparent');
+                    
+                    const tabId = button.dataset.tab;
+                    tabContents.forEach(content => {
+                        if (content.id === tabId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+            document.querySelector('.tab-btn[data-tab="easy"]').click();
+
+            // TOC Scrollspy
+            const sections = document.querySelectorAll('main section');
+            const tocLinks = document.querySelectorAll('#toc-nav .toc-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-30% 0px -70% 0px" });
+            sections.forEach(section => observer.observe(section));
+            
+            // Heap vs Stack Demo
+            const stackViz = document.getElementById('stack-viz');
+            const heapViz = document.getElementById('heap-viz');
+            let heapCounter = 0;
+            document.getElementById('add-int-btn').addEventListener('click', () => {
+                if (stackViz.children.length < 8) {
+                    const el = document.createElement('div');
+                    el.className = 'memory-box w-3/4 bg-sky-200 text-sky-800 text-xs text-center p-1 rounded-sm shadow';
+                    el.innerText = 'int value';
+                    stackViz.appendChild(el);
+                }
+            });
+            document.getElementById('add-obj-btn').addEventListener('click', () => {
+                if (stackViz.children.length < 8 && heapViz.children.length < 12) {
+                    heapCounter++;
+                    const heapEl = document.createElement('div');
+                    heapEl.className = 'memory-box w-16 h-12 bg-violet-200 text-violet-800 text-xs text-center p-1 rounded-sm shadow flex items-center justify-center';
+                    heapEl.innerText = `Obj #${heapCounter}`;
+                    heapEl.id = `heap-obj-${heapCounter}`;
+                    heapViz.appendChild(heapEl);
+
+                    const stackEl = document.createElement('div');
+                    stackEl.className = 'memory-box w-3/4 bg-violet-300 text-violet-900 text-xs text-center p-1 rounded-sm shadow';
+                    stackEl.innerText = `ref to #${heapCounter}`;
+                    stackViz.appendChild(stackEl);
+                }
+            });
+            document.getElementById('clear-mem-btn').addEventListener('click', () => {
+                stackViz.innerHTML = '';
+                heapViz.innerHTML = '';
+                heapCounter = 0;
+            });
+            
+            // GC Generations Demo
+            const gen0Viz = document.getElementById('gen0-viz');
+            const gen1Viz = document.getElementById('gen1-viz');
+            const gen2Viz = document.getElementById('gen2-viz');
+            const gcLog = document.getElementById('gc-log');
+
+            const createGcObject = () => {
+                const obj = document.createElement('div');
+                obj.className = 'gc-object w-4/5 h-3 rounded-sm bg-sky-400';
+                obj.dataset.survive = Math.random() > 0.7; // 30% chance to survive
+                return obj;
+            };
+
+            document.getElementById('allocate-obj-gc-btn').addEventListener('click', () => {
+                for (let i = 0; i < 5; i++) {
+                    if (gen0Viz.children.length < 15) {
+                        gen0Viz.appendChild(createGcObject());
+                    }
+                }
+            });
+            
+            document.getElementById('run-gc-btn').addEventListener('click', () => {
+                gcLog.innerText = 'Running Gen 0 collection...';
+                // Gen 0
+                const gen0Survivors = [];
+                Array.from(gen0Viz.children).forEach(child => {
+                    if (child.dataset.survive === 'true' && gen1Viz.children.length < 15) {
+                        gen0Survivors.push(child);
+                    } else {
+                        child.style.transform = 'scaleY(0)';
+                    }
+                });
+                
+                // Gen 1
+                const gen1Survivors = [];
+                Array.from(gen1Viz.children).forEach(child => {
+                     if (child.dataset.survive === 'true' && gen2Viz.children.length < 15) {
+                        gen1Survivors.push(child);
+                    } else {
+                        child.style.transform = 'scaleY(0)';
+                    }
+                });
+                
+                setTimeout(() => {
+                    gen0Viz.innerHTML = '';
+                    gen1Viz.innerHTML = '';
+                    gen1Survivors.forEach(s => gen2Viz.appendChild(s));
+                    gen0Survivors.forEach(s => gen1Viz.appendChild(s));
+                    gcLog.innerText = 'Collection complete. Survivors promoted.';
+                }, 500);
+            });
+            
+            // GC Lifecycle Demo
+            const gcLifecycleViz = document.getElementById('gc-lifecycle-viz');
+            const gcExplanation = document.getElementById('gc-phase-explanation');
+            const gcButtons = {
+                mark: document.getElementById('gc-phase-mark-btn'),
+                sweep: document.getElementById('gc-phase-sweep-btn'),
+                compact: document.getElementById('gc-phase-compact-btn'),
+                reset: document.getElementById('gc-phase-reset-btn'),
+            }
+            
+            const initializeGcLifecycle = () => {
+                gcLifecycleViz.innerHTML = '';
+                for (let i = 0; i < 32; i++) {
+                    const obj = document.createElement('div');
+                    obj.className = 'h-8 rounded-sm transition-all duration-500';
+                    const isAllocated = Math.random() > 0.4;
+                    if (isAllocated) {
+                        obj.classList.add('bg-slate-400');
+                        obj.dataset.state = 'allocated';
+                        if (Math.random() > 0.5) {
+                            obj.dataset.rooted = 'true';
+                        }
+                    } else {
+                        obj.classList.add('bg-slate-200');
+                        obj.dataset.state = 'free';
+                    }
+                    gcLifecycleViz.appendChild(obj);
+                }
+                gcButtons.mark.disabled = false;
+                gcButtons.sweep.disabled = true;
+                gcButtons.compact.disabled = true;
+                Object.values(gcButtons).forEach(btn => btn.classList.remove('bg-sky-500','bg-amber-500','bg-violet-500'));
+                gcButtons.mark.classList.add('bg-sky-500');
+                gcButtons.sweep.classList.add('bg-slate-400');
+                gcButtons.compact.classList.add('bg-slate-400');
+                gcExplanation.innerHTML = `<h4 class="font-bold text-slate-800">Start the process!</h4><p class="text-slate-600">Click the "Mark Phase" button to begin. The diagram shows a snapshot of the heap with allocated objects (grey) and free space. Some allocated objects are "rooted" (reachable from the application), while others are now "garbage" (unreachable).</p>`;
+            };
+            
+            gcButtons.reset.addEventListener('click', initializeGcLifecycle);
+
+            gcButtons.mark.addEventListener('click', () => {
+                 Array.from(gcLifecycleViz.children).forEach(child => {
+                     if (child.dataset.rooted === 'true') {
+                         child.classList.remove('bg-slate-400');
+                         child.classList.add('bg-sky-500');
+                     }
+                 });
+                 gcExplanation.innerHTML = `<h4 class="font-bold text-sky-800">Phase 1: Mark</h4><p class="text-slate-600">The GC begins at application "roots" (static fields, local variables on the current thread's stack, etc.) and recursively follows every reference. Every object it can reach from a root is marked as "live" (shown in blue). This phase creates a complete map of all accessible objects.</p>`;
+                 gcButtons.mark.disabled = true;
+                 gcButtons.sweep.disabled = false;
+                 gcButtons.mark.classList.replace('bg-sky-500', 'bg-slate-400');
+                 gcButtons.sweep.classList.replace('bg-slate-400', 'bg-amber-500');
+            });
+            
+            gcButtons.sweep.addEventListener('click', () => {
+                Array.from(gcLifecycleViz.children).forEach(child => {
+                     if (child.dataset.state === 'allocated' && child.dataset.rooted !== 'true') {
+                         child.classList.remove('bg-slate-400');
+                         child.classList.add('bg-red-400', 'opacity-50');
+                         child.dataset.state = 'collected';
+                     }
+                 });
+                 gcExplanation.innerHTML = `<h4 class="font-bold text-amber-800">Phase 2: Sweep</h4><p class="text-slate-600">The GC now scans the entire heap from start to finish. Any object that was not marked as "live" during the Mark phase is considered garbage. The memory occupied by these objects is reclaimed and added to a list of free blocks. The heap is now functional but fragmented.</p>`;
+                 gcButtons.sweep.disabled = true;
+                 gcButtons.compact.disabled = false;
+                 gcButtons.sweep.classList.replace('bg-amber-500', 'bg-slate-400');
+                 gcButtons.compact.classList.replace('bg-slate-400', 'bg-violet-500');
+            });
+            
+            gcButtons.compact.addEventListener('click', () => {
+                const liveObjects = Array.from(gcLifecycleViz.children).filter(c => c.dataset.rooted === 'true');
+                gcLifecycleViz.innerHTML = '';
+                liveObjects.forEach(obj => gcLifecycleViz.appendChild(obj));
+                const freeSlots = 32 - liveObjects.length;
+                for (let i = 0; i < freeSlots; i++) {
+                    const freeEl = document.createElement('div');
+                    freeEl.className = 'h-8 rounded-sm bg-slate-200 transition-all duration-500';
+                    gcLifecycleViz.appendChild(freeEl);
+                }
+                 gcExplanation.innerHTML = `<h4 class="font-bold text-violet-800">Phase 3: Compact</h4><p class="text-slate-600">This optional but crucial phase eliminates fragmentation. The GC slides all the live objects together to one end of the heap, updating all references from the application roots and from other objects to point to their new memory locations. This creates a single, large, contiguous block of free memory, making subsequent allocations much faster.</p>`;
+                 gcButtons.compact.disabled = true;
+            });
+
+            initializeGcLifecycle();
+            
+            // Quiz
+            const quizData = [
+                {
+                    question: "Where are value types like `int` and `struct` typically stored?",
+                    options: ["The Heap", "The Stack", "The Large Object Heap", "The Finalizer Queue"],
+                    answer: "The Stack"
+                },
+                {
+                    question: "What is the primary purpose of the `using` statement in C#?",
+                    options: ["To import namespaces", "To create a type alias", "To guarantee that an object's `Dispose()` method is called", "To declare a global variable"],
+                    answer: "To guarantee that an object's `Dispose()` method is called"
+                },
+                {
+                    question: "An object survives a Gen 0 collection. Where does it get promoted to?",
+                    options: ["Gen 0 again", "Gen 1", "Gen 2", "The Large Object Heap"],
+                    answer: "Gen 1"
+                },
+                {
+                    question: "A memory leak can occur with event handlers if you...",
+                    options: ["Subscribe to the event", "Forget to raise the event", "Fail to unsubscribe from the event when the subscriber is no longer needed", "Use an anonymous method for the handler"],
+                    answer: "Fail to unsubscribe from the event when the subscriber is no longer needed"
+                },
+                {
+                    question: "What is the main benefit of an object pool?",
+                    options: ["It makes object creation faster", "It reduces GC pressure by recycling objects instead of creating new ones", "It automatically disposes objects", "It stores objects on the stack"],
+                    answer: "It reduces GC pressure by recycling objects instead of creating new ones"
+                },
+                 {
+                    question: "When is a class's finalizer (e.g., `~MyClass()`) executed?",
+                    options: ["Immediately when the object goes out of scope", "By the Garbage Collector at some non-deterministic time after the object becomes unreachable", "When you explicitly call `Dispose()`", "Never, it is obsolete"],
+                    answer: "By the Garbage Collector at some non-deterministic time after the object becomes unreachable"
+                }
+            ];
+            const quizContainer = document.getElementById('quiz-container');
+            quizData.forEach((q, index) => {
+                const quizItem = document.createElement('div');
+                quizItem.innerHTML = `
+                    <p class="font-semibold text-slate-800 mb-3">${index + 1}. ${q.question}</p>
+                    <div class="space-y-2">
+                        ${q.options.map(opt => `<div class="quiz-option border border-slate-300 p-3 rounded-md cursor-pointer hover:bg-slate-100">${opt}</div>`).join('')}
+                    </div>
+                    <p class="quiz-feedback text-sm mt-3 h-5"></p>
+                `;
+                quizContainer.appendChild(quizItem);
+                
+                const options = quizItem.querySelectorAll('.quiz-option');
+                options.forEach(opt => {
+                    opt.addEventListener('click', () => {
+                        if(quizItem.dataset.answered) return;
+                        quizItem.dataset.answered = "true";
+
+                        options.forEach(o => o.classList.remove('selected'));
+                        opt.classList.add('selected');
+                        
+                        const feedbackEl = quizItem.querySelector('.quiz-feedback');
+                        if (opt.textContent === q.answer) {
+                            opt.classList.add('correct');
+                            feedbackEl.textContent = "Correct! Well done.";
+                            feedbackEl.className = 'quiz-feedback text-sm mt-3 h-5 text-green-600 font-semibold';
+                        } else {
+                            opt.classList.add('incorrect');
+                            feedbackEl.textContent = `Not quite. The correct answer is: ${q.answer}`;
+                            feedbackEl.className = 'quiz-feedback text-sm mt-3 h-5 text-red-600 font-semibold';
+                            options.forEach(o => {
+                                if(o.textContent === q.answer) o.classList.add('correct');
+                            });
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

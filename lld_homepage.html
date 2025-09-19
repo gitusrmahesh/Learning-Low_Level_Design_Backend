@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>60-Day LLD Bootcamp Roadmap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Teal & Slate -->
+    <!-- Application Structure Plan: This version integrates the Gemini API to create an AI-powered learning assistant. New features include dynamic resource generation and a simplified explanation feature within the existing modal structure. A new API call also fetches motivational quotes on load. These additions are designed to provide on-demand, personalized learning support directly within the user's workflow. -->
+    <!-- Visualization & Content Choices: 1. AI Resource Generation -> Goal: Provide real-time, relevant learning materials -> Viz: Dynamically populated modal content -> Interaction: Triggered by "Resources" button, shows a loading state -> Justification: Transforms the static app into an active learning tool with immense value. -> Method: Gemini API Call. 2. Explain Like I'm 10 -> Goal: Simplify complex topics -> Viz: A new section within the modal -> Interaction: Triggered by a new button, shows a loading state -> Justification: Makes difficult concepts more accessible to learners of all levels. -> Method: Gemini API Call. 3. Dynamic Quotes -> Goal: Increase motivation -> Viz: Text in the header -> Interaction: Updates on page load -> Justification: Adds a small, delightful touch to personalize the user's experience. -> Method: Gemini API Call. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .chart-container { position: relative; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto; height: 250px; max-height: 300px; }
+        .nav-button { transition: all 0.3s ease; border: 1px solid transparent; }
+        .nav-button.active { background-color: #0f766e; color: #ffffff; border-color: #0f766e; }
+        .nav-button:not(.active) { border-color: #cbd5e1; }
+        .tab-button { transition: all 0.2s ease-in-out; }
+        .tab-button.active { background-color: #0f766e; color: #ffffff; }
+        .tab-button:not(.active) { background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; }
+        .curriculum-week-btn { transition: all 0.2s ease-in-out; }
+        .curriculum-week-btn.active { background-color: #1e293b; color: #ffffff; }
+        .curriculum-week-btn:not(.active){ background-color: #e2e8f0; color: #334155; }
+        .task-card.completed { opacity: 0.7; border-left: 4px solid #10b981; }
+        .modal-overlay { transition: opacity 0.3s ease; }
+        .streak-icon { filter: grayscale(100%); opacity: 0.3; transition: all 0.3s ease; }
+        .streak-icon.active { filter: grayscale(0%); opacity: 1; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 id="greeting" class="text-3xl font-bold text-slate-700">Welcome!</h1>
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 mt-1">Low-Level Design Bootcamp</h2>
+            <p id="motivational-quote" class="text-slate-600 mt-3 text-md italic">"Loading an inspiring quote for you..."</p>
+        </header>
+
+        <div class="flex justify-center space-x-2 mb-8">
+            <button id="interactive-tab" class="tab-button active px-6 py-2 rounded-full font-semibold">Interactive Roadmap</button>
+            <button id="full-curriculum-tab" class="tab-button px-6 py-2 rounded-full font-semibold">Full Curriculum</button>
+        </div>
+
+        <div id="interactive-view">
+            <main>
+                <div id="today-focus-card" class="mb-8"></div>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg mb-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2">
+                             <div class="flex justify-between items-start">
+                                <div>
+                                    <h2 class="text-2xl font-bold text-slate-900 mb-4">Your Progress</h2>
+                                    <div class="w-full bg-slate-200 rounded-full h-4 mb-2">
+                                        <div id="progress-bar" class="bg-teal-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                    <p class="text-sm text-slate-600 font-medium"><span id="progress-text">0%</span> complete (<span id="days-completed-text">0 of 60</span> days)</p>
+                                </div>
+                                <div class="text-center">
+                                    <h3 class="font-bold text-slate-800">Weekly Streak</h3>
+                                    <div id="streak-container" class="flex gap-1 mt-2"></div>
+                                </div>
+                            </div>
+                           
+                            <div class="mt-6 border-t border-slate-200 pt-6">
+                                <h3 class="text-xl font-bold text-slate-800 mb-3">Performance Snapshot</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                    <div class="bg-slate-100 p-4 rounded-xl"><p class="text-3xl font-bold text-teal-700" id="pace-status">On Track</p><p class="text-sm font-semibold text-slate-600">Current Pace</p></div>
+                                    <div class="bg-sky-100 p-4 rounded-xl"><p class="text-3xl font-bold text-sky-700" id="topics-mastered">0</p><p class="text-sm font-semibold text-slate-600">Topics Mastered</p></div>
+                                    <div id="next-challenge-card" class="bg-amber-100 p-4 rounded-xl"><p class="text-lg font-bold text-amber-800" id="next-challenge-title">Mock Coding</p><p class="text-sm font-semibold text-slate-600">Next Challenge (Day <span id="next-challenge-day">58</span>)</p></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">Topic Distribution</h2>
+                            <div class="chart-container"><canvas id="topicDistributionChart"></canvas></div>
+                            <div id="chart-legend" class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <nav id="topic-nav" class="mb-6"><div id="nav-buttons-container" class="flex flex-wrap justify-center gap-3"></div></nav>
+                <section id="weekly-details" class="min-h-[300px]"></section>
+                <section id="key-outcomes" class="mt-12 bg-teal-800 text-white p-8 rounded-2xl shadow-lg"></section>
+            </main>
+        </div>
+
+        <div id="full-curriculum-view" class="hidden">
+            <div class="flex flex-wrap justify-center gap-2 mb-8" id="curriculum-week-nav"></div>
+            <div id="curriculum-content"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg lg:col-span-2">
+                    <h3 class="text-xl font-bold text-slate-800 mb-3 flex items-center"><span class="text-2xl mr-2">🎯</span> Curriculum Focus</h3>
+                    <p class="text-slate-600">This curriculum provides a balanced foundation in OOP, design patterns, and practical case studies—the cornerstones of robust backend development. The goal is to build deep, transferable skills, not just rote knowledge.</p>
+                    <div class="w-full max-w-xs mx-auto mt-4"><canvas id="curriculumFocusChart"></canvas></div>
+                    <div id="focus-chart-legend" class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 text-sm"></div>
+                </div>
+                <div class="space-y-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-bold text-slate-800 mb-3 flex items-center"><span class="text-2xl mr-2">📅</span> Weekly Practice Plan</h3>
+                        <ul class="text-slate-600 space-y-2">
+                            <li><strong class="text-slate-700">Days 1-4:</strong> Dive deep into theory with guided examples.</li>
+                            <li><strong class="text-slate-700">Days 5-6:</strong> Apply knowledge with focused problem-solving.</li>
+                            <li><strong class="text-slate-700">Day 7:</strong> Consolidate learning and prepare for what's next.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center mt-12 py-6 border-t border-slate-200">
+            <p class="text-slate-500">Your intelligent roadmap for mastering Low-Level Design.</p>
+        </footer>
+    </div>
+    
+    <div id="resource-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md transform transition-transform duration-300 scale-95 relative">
+            <div id="modal-spinner" class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center hidden rounded-2xl">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-2xl font-bold text-slate-900">Resources</h2>
+                <button id="modal-close-btn" class="text-slate-400 hover:text-slate-800 text-3xl">&times;</button>
+            </div>
+            <div id="modal-content" class="text-slate-600 space-y-3">
+                 <div id="gemini-summary"></div>
+                 <div id="gemini-resources"></div>
+                 <div class="border-t pt-4 mt-4">
+                    <button id="eli10-btn" class="flex items-center justify-center w-full bg-amber-100 text-amber-800 font-bold py-2 px-4 rounded-lg hover:bg-amber-200 transition-colors disabled:opacity-50">
+                        ✨ Explain Like I'm 10
+                    </button>
+                    <div id="eli10-content-wrapper" class="hidden">
+                        <div id="eli10-spinner" class="text-center p-2 hidden">Thinking...</div>
+                        <div id="eli10-content" class="mt-4 p-4 bg-slate-50 rounded-md"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="welcome-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0">
+         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg transform transition-transform duration-300 scale-95 text-center">
+            <h2 class="text-3xl font-bold text-teal-600 mb-4">Welcome to Your LLD Bootcamp!</h2>
+            <p class="text-slate-600 mb-6">This interactive dashboard is now supercharged with AI to help you learn faster. Here's how to get the most out of it:</p>
+            <ul class="text-left space-y-3 mb-8">
+                <li class="flex items-start"><strong class="text-teal-600 mr-2">✓</strong> <strong>Track Progress:</strong> Use the main dashboard to see your completion percentage and weekly streak.</li>
+                <li class="flex items-start"><strong class="text-teal-600 mr-2">✓</strong> <strong>Get AI Resources:</strong> Click the book icon (📖) on any task for an AI-generated summary and resource links.</li>
+                 <li class="flex items-start"><strong class="text-teal-600 mr-2">✓</strong> <strong>Simplify Concepts:</strong> Stuck? Use the "✨ Explain Like I'm 10" button in the resources pop-up for a simple analogy.</li>
+            </ul>
+            <button id="welcome-close-btn" class="bg-teal-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors">Let's Get Started!</button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const roadmapData = [
+                 { week: 1, topic: 'OOP Basics', days: 7, color: '#0d9488', concepts: ['Four Pillars of OOP', 'Encapsulation & Abstraction', 'Inheritance vs. Composition', 'Polymorphism'], practical: ['Interfaces vs. Abstract Classes', 'Mini-Project: Basic Class Library', 'Week 1 Review'], summary: "Master the bedrock of modern software. This week is crucial for building a strong mental model for all future design concepts." },
+                { week: 2, topic: 'Advanced .NET', days: 7, color: '#0891b2', concepts: ['Structured Exception Handling', 'Introduction to Reflection', 'Delegates and Events'], practical: ['Custom Exceptions', 'Attributes & Dynamic Loading', 'async/await', 'Week 2 Review'], summary: "Go beyond the basics to handle errors gracefully and write dynamic, event-driven code—essential for real-world applications." },
+                { week: 3, topic: '.NET Features', days: 7, color: '#0ea5e9', concepts: ['LINQ', 'Extension Methods', 'Generics', 'Garbage Collection'], practical: ['Advanced LINQ Queries', 'Expression Trees', 'Week 3 Review'], summary: "Learn to leverage powerful .NET features to write cleaner, more efficient, and type-safe code with less effort." },
+                { week: 4, topic: 'SOLID & Patterns', days: 7, color: '#10b981', concepts: ['SRP, OCP, LSP', 'ISP, DIP', 'Creational Patterns', 'Structural & Behavioral Patterns'], practical: ['Applying SOLID to code', 'Implementing Factory/Observer', 'Week 4 Review'], summary: "This is where you become an architect. Learn the timeless principles and patterns that lead to maintainable and scalable systems." },
+                { week: 5, topic: 'Schema Design', days: 7, color: '#6d28d9', concepts: ['UML: Class & Sequence Diagrams', 'Activity & State Diagrams', 'Database Normalization', 'SQL vs NoSQL'], practical: ['Practical Schema Design Exercise', 'UML for a small system', 'Week 5 Review'], summary: "Translate ideas into blueprints. Learn to design data models and visualize system interactions before writing a single line of code." },
+                { week: 6, topic: 'Internet Works', days: 7, color: '#db2777', concepts: ['HTTP/HTTPS', 'DNS', 'TCP/IP Model', 'Load Balancers & CDNs'], practical: ['Tracing a web request', 'Configuring a domain', 'Week 6 Review'], summary: "Understand the magic behind the curtain. Knowing how data travels across the internet is key to building reliable web services." },
+                { week: 7, topic: 'API & MVC', days: 7, color: '#ea580c', concepts: ['RESTful API Principles', 'API Versioning & Auth', 'Understanding MVC Pattern'], practical: ['Design API Endpoints', 'Build a Simple Controller', 'Connect MVC Components', 'Week 7 Review'], summary: "Learn to build the communication layer for modern applications and structure your code for clarity and separation of concerns." },
+                { week: 8, topic: 'Case Studies', days: 7, color: '#ca8a04', concepts: ['Requirement gathering', 'Identifying classes/objects', 'Defining relationships'], practical: ['Design URL Shortener', 'Design Parking Lot', 'Design Vending Machine', 'Week 8 Review'], summary: "Put it all together. Deconstruct common system design problems and apply your knowledge to create robust solutions." },
+                { week: 9, topic: 'Revision', days: 4, color: '#475569', concepts: ['Full Revision of All Topics'], practical: ['Mock Machine Coding Round 1', 'Mock Machine Coding Round 2', 'Final Review & Next Steps'], summary: "Sharpen your skills under pressure. This final week is about consolidating your knowledge and preparing for technical interviews." }
+            ];
+
+             const dailyPlan = [
+                { day: 1, week: 1, title: "Four Pillars of OOP", tag: "Concept" }, { day: 2, week: 1, title: "Encapsulation & Abstraction", tag: "Concept" }, { day: 3, week: 1, title: "Inheritance vs. Composition", tag: "Concept" }, { day: 4, week: 1, title: "Polymorphism: Static & Dynamic", tag: "Concept" }, { day: 5, week: 1, title: "Interfaces vs. Abstract Classes", tag: "Practice" }, { day: 6, week: 1, title: "Mini-Project: Basic Class Library", tag: "Project" }, { day: 7, week: 1, title: "Week 1 Review & Revision", tag: "Review" },
+                { day: 8, week: 2, title: "Structured Exception Handling", tag: "Concept" }, { day: 9, week: 2, title: "Custom Exceptions & Best Practices", tag: "Practice" }, { day: 10, week: 2, title: "Introduction to Reflection", tag: "Concept" }, { day: 11, week: 2, title: "Attributes and Dynamic Loading", tag: "Practice" }, { day: 12, week: 2, title: "Delegates and Events in .NET", tag: "Concept" }, { day: 13, week: 2, title: "Asynchronous Programming: async/await", tag: "Practice" }, { day: 14, week: 2, title: "Week 2 Review & Revision", tag: "Review" },
+                { day: 15, week: 3, title: "LINQ for Data Manipulation", tag: "Concept" }, { day: 16, week: 3, title: "Advanced LINQ Queries", tag: "Practice" }, { day: 17, week: 3, title: "Extension Methods", tag: "Concept" }, { day: 18, week: 3, title: "Generics and Constraints", tag: "Concept" }, { day: 19, week: 3, title: "Expression Trees", tag: "Advanced" }, { day: 20, week: 3, title: "Garbage Collection & Memory", tag: "Concept" }, { day: 21, week: 3, title: "Week 3 Review & Revision", tag: "Review" },
+                { day: 22, week: 4, title: "Single Responsibility Principle (SRP)", tag: "SOLID" }, { day: 23, week: 4, title: "Open/Closed Principle (OCP)", tag: "SOLID" }, { day: 24, week: 4, title: "Liskov Substitution Principle (LSP)", tag: "SOLID" }, { day: 25, week: 4, title: "Interface Segregation & Dependency Inversion", tag: "SOLID" }, { day: 26, week: 4, title: "Creational Patterns (Singleton, Factory)", tag: "Patterns" }, { day: 27, week: 4, title: "Structural & Behavioral Patterns", tag: "Patterns" }, { day: 28, week: 4, title: "Week 4 Review & Revision", tag: "Review" },
+                { day: 29, week: 5, title: "Intro to UML: Class Diagrams", tag: "UML" }, { day: 30, week: 5, title: "Sequence Diagrams", tag: "UML" }, { day: 31, week: 5, title: "Activity & State Diagrams", tag: "UML" }, { day: 32, week: 5, title: "Database Schema Design: Normalization", tag: "DB" }, { day: 33, week: 5, title: "Choosing SQL vs NoSQL", tag: "DB" }, { day: 34, week: 5, title: "Practical Schema Design Exercise", tag: "Practice" }, { day: 35, week: 5, title: "Week 5 Review & Revision", tag: "Review" },
+                { day: 36, week: 6, title: "HTTP/HTTPS Protocols", tag: "Network" }, { day: 37, week: 6, title: "DNS and How It Works", tag: "Network" }, { day: 38, week: 6, title: "TCP/IP Model", tag: "Network" }, { day: 39, week: 6, title: "Load Balancers and CDNs", tag: "Infra" }, { day: 40, week: 6, title: "Domain Names & Hosting", tag: "Infra" }, { day: 41, week: 6, title: "Browser-Server Interaction", tag: "Concept" }, { day: 42, week: 6, title: "Week 6 Review & Revision", tag: "Review" },
+                { day: 43, week: 7, title: "RESTful API Principles", tag: "API" }, { day: 44, week: 7, title: "Designing API Endpoints", tag: "Practice" }, { day: 45, week: 7, title: "API Versioning & Auth", tag: "API" }, { day: 46, week: 7, title: "Understanding the MVC Pattern", tag: "MVC" }, { day: 47, week: 7, title: "Building a Simple Controller", tag: "Practice" }, { day: 48, week: 7, title: "Connecting MVC Components", tag: "Practice" }, { day: 49, week: 7, title: "Week 7 Review & Revision", tag: "Review" },
+                { day: 50, week: 8, title: "Case Study: URL Shortener", tag: "LLD" }, { day: 51, week: 8, title: "Case Study: Parking Lot", tag: "LLD" }, { day: 52, week: 8, title: "Case Study: Elevator System", tag: "LLD" }, { day: 53, week: 8, title: "Case Study: Vending Machine", tag: "LLD" }, { day: 54, week: 8, title: "Case Study: Chess Game", tag: "LLD" }, { day: 55, week: 8, title: "Case Study: Splitwise App", tag: "LLD" }, { day: 56, week: 8, title: "Week 8 Review & Revision", tag: "Review" },
+                { day: 57, week: 9, title: "Full Revision of All Topics", tag: "Revision" }, { day: 58, week: 9, title: "Mock Machine Coding Round 1", tag: "Challenge" }, { day: 59, week: 9, title: "Mock Machine Coding Round 2", tag: "Challenge" }, { day: 60, week: 9, title: "Final Review & Next Steps", tag: "Revision" }
+            ];
+
+            let activeWeek = 1; let completionStatus = {}; let activeCurriculumWeek = 1;
+
+            const tagColors = { "Concept": "bg-cyan-100 text-cyan-800", "Practice": "bg-amber-100 text-amber-800", "Project": "bg-emerald-100 text-emerald-800", "Review": "bg-slate-200 text-slate-800", "Advanced": "bg-violet-100 text-violet-800", "SOLID": "bg-green-100 text-green-800", "Patterns": "bg-lime-100 text-lime-800", "UML": "bg-purple-100 text-purple-800", "DB": "bg-sky-100 text-sky-800", "Network": "bg-rose-100 text-rose-800", "Infra": "bg-orange-100 text-orange-800", "API": "bg-teal-100 text-teal-800", "MVC": "bg-indigo-100 text-indigo-800", "LLD": "bg-yellow-100 text-yellow-800", "Revision": "bg-gray-200 text-gray-800", "Challenge": "bg-red-200 text-red-800", "default": "bg-slate-100 text-slate-800" };
+            
+            const bootcampStartDate = new Date();
+            bootcampStartDate.setDate(bootcampStartDate.getDate() - 2); 
+            
+            const modal = document.getElementById('resource-modal');
+            const welcomeModal = document.getElementById('welcome-modal');
+
+            function loadCompletionStatus() {
+                const savedStatus = localStorage.getItem('lldRoadmapProgress');
+                completionStatus = savedStatus ? JSON.parse(savedStatus) : {};
+            }
+
+            function saveCompletionStatus() {
+                localStorage.setItem('lldRoadmapProgress', JSON.stringify(completionStatus));
+            }
+            
+            async function callGeminiAPI(prompt) {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        return candidate.content.parts[0].text;
+                    } else {
+                        return "Sorry, I couldn't generate a response. The model may have returned empty content.";
+                    }
+                } catch (error) {
+                    console.error("Gemini API call failed:", error);
+                    return "An error occurred while fetching data. Please check the console for details.";
+                }
+            }
+
+
+            function init() {
+                loadCompletionStatus();
+                setupTabs();
+                createInteractiveNavButtons();
+                renderWeeklyDetails(activeWeek);
+                renderTopicDistributionChart();
+                setupFullCurriculumView();
+                updateActiveInteractiveElements();
+                updateProgress();
+                renderTodaysFocus();
+                setupModals();
+                setGreetingAndQuote();
+                renderKeyOutcomes();
+                if (!localStorage.getItem('lldWelcomeShown')) {
+                    openWelcomeModal();
+                }
+            }
+            
+            const getCurrentDay = () => {
+                const today = new Date();
+                const diffTime = today - bootcampStartDate;
+                return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            };
+
+            async function setGreetingAndQuote() {
+                const hour = new Date().getHours();
+                const greetingEl = document.getElementById('greeting');
+                if (hour < 12) greetingEl.textContent = 'Good Morning!';
+                else if (hour < 18) greetingEl.textContent = 'Good Afternoon!';
+                else greetingEl.textContent = 'Good Evening!';
+                
+                const quoteEl = document.getElementById('motivational-quote');
+                const quotePrompt = "Generate one short, inspiring quote for a software developer about programming, design, or problem-solving. Make it concise and impactful.";
+                const quote = await callGeminiAPI(quotePrompt);
+                quoteEl.textContent = `"${quote.replace(/"/g, '')}"`;
+            }
+            
+            function updateProgress() {
+                const totalDays = 60;
+                const completedDays = Object.values(completionStatus).filter(Boolean).length;
+                const percentage = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+                document.getElementById('progress-bar').style.width = `${percentage}%`;
+                document.getElementById('progress-text').textContent = `${percentage}%`;
+                document.getElementById('days-completed-text').textContent = `${completedDays} of ${totalDays}`;
+                updatePerformanceSnapshot(completedDays);
+                updateWeeklyStreak();
+            }
+            
+            function updatePerformanceSnapshot(completedDays) {
+                const currentDay = getCurrentDay();
+                const paceEl = document.getElementById('pace-status');
+                if (currentDay > 60) paceEl.textContent = "Finished!";
+                else if (completedDays >= currentDay) paceEl.textContent = "Ahead";
+                else if (completedDays >= currentDay - 3) paceEl.textContent = "On Track";
+                else paceEl.textContent = "Behind";
+
+                const completedTags = new Set(Object.keys(completionStatus).filter(day => completionStatus[day]).map(day => dailyPlan.find(d => d.day == day)?.tag).filter(Boolean));
+                document.getElementById('topics-mastered').textContent = completedTags.size;
+
+                const nextChallenge = dailyPlan.find(d => (d.tag === 'Challenge' || d.tag === 'Project') && d.day >= currentDay);
+                if (nextChallenge) {
+                    document.getElementById('next-challenge-title').textContent = nextChallenge.title.split(':')[0];
+                    document.getElementById('next-challenge-day').textContent = nextChallenge.day;
+                } else {
+                    document.getElementById('next-challenge-card').innerHTML = `<p class="text-lg font-bold text-green-800">All Done!</p><p class="text-sm font-semibold text-slate-600">No more challenges</p>`;
+                }
+            }
+
+            function updateWeeklyStreak() {
+                const container = document.getElementById('streak-container'); container.innerHTML = '';
+                const today = new Date();
+                const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1; 
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - dayOfWeek);
+                
+                for (let i = 0; i < 7; i++) {
+                     const date = new Date(startOfWeek);
+                     date.setDate(startOfWeek.getDate() + i);
+                     const dayNumber = Math.floor((date - bootcampStartDate) / (1000 * 60 * 60 * 24)) + 1;
+                     const icon = document.createElement('span');
+                     icon.textContent = '🔥';
+                     icon.className = 'streak-icon text-2xl';
+                     if (completionStatus[dayNumber]) { icon.classList.add('active'); }
+                     container.appendChild(icon);
+                }
+            }
+            
+            function renderTodaysFocus() {
+                const currentDay = getCurrentDay();
+                const container = document.getElementById('today-focus-card');
+                let todaysTask = dailyPlan.find(d => d.day === currentDay);
+                let tomorrowsTask = dailyPlan.find(d => d.day === currentDay + 1);
+                let content = '';
+
+                if (todaysTask) {
+                    content = `
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-teal-500">
+                           <h2 class="text-2xl font-bold text-slate-900 mb-4">Today's Focus: ${todaysTask.title}</h2>
+                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-slate-50 p-4 rounded-xl">
+                                    <p class="font-bold text-slate-800 text-lg">${todaysTask.title}</p>
+                                    <p class="text-sm font-semibold text-slate-500">Day ${todaysTask.day} · ${todaysTask.tag}</p>
+                                </div>
+                                <div class="bg-slate-100 p-4 rounded-xl">
+                                    <p class="font-semibold text-slate-500">Up Next (Tomorrow)</p>
+                                    <p class="font-bold text-slate-800 text-lg">${tomorrowsTask ? tomorrowsTask.title : 'Final Review!'}</p>
+                                </div>
+                           </div>
+                        </div>`;
+                } else {
+                     content = `<div class="bg-white p-6 rounded-2xl shadow-lg text-center"><h2 class="text-xl font-bold text-slate-800">Bootcamp Complete!</h2><p class="text-slate-600">Congratulations on finishing the 60-day LLD roadmap!</p></div>`;
+                }
+                container.innerHTML = content;
+            }
+
+            function renderKeyOutcomes(){
+                document.getElementById('key-outcomes').innerHTML = `
+                    <h2 class="text-3xl font-bold text-center mb-4">Key Takeaways & Outcomes</h2>
+                    <p class="text-center text-teal-100 mb-8 max-w-3xl mx-auto">By completing this plan, you'll gain the practical skills and theoretical knowledge to excel in backend engineering roles.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-teal-700 p-4 rounded-lg flex items-start"><span class="font-bold text-xl mr-3">✔</span> <div><h4 class="font-bold">Architect Scalable Solutions</h4><p class="text-sm text-teal-200">Apply SOLID principles and design patterns to build robust, maintainable systems.</p></div></div>
+                        <div class="bg-teal-700 p-4 rounded-lg flex items-start"><span class="font-bold text-xl mr-3">✔</span> <div><h4 class="font-bold">Design & Build APIs</h4><p class="text-sm text-teal-200">Confidently design, implement, and document RESTful APIs using the MVC pattern.</p></div></div>
+                        <div class="bg-teal-700 p-4 rounded-lg flex items-start"><span class="font-bold text-xl mr-3">✔</span> <div><h4 class="font-bold">Master LLD Interviews</h4><p class="text-sm text-teal-200">Solve common machine coding problems and articulate your design choices effectively.</p></div></div>
+                        <div class="bg-teal-700 p-4 rounded-lg flex items-start"><span class="font-bold text-xl mr-3">✔</span> <div><h4 class="font-bold">Write Professional Code</h4><p class="text-sm text-teal-200">Leverage advanced .NET features to write clean, efficient, and production-ready code.</p></div></div>
+                    </div>`;
+            }
+
+            function setupTabs() {
+                const interactiveTab = document.getElementById('interactive-tab');
+                const fullCurriculumTab = document.getElementById('full-curriculum-tab');
+                const interactiveView = document.getElementById('interactive-view');
+                const fullCurriculumView = document.getElementById('full-curriculum-view');
+                interactiveTab.addEventListener('click', () => {
+                    interactiveView.classList.remove('hidden'); fullCurriculumView.classList.add('hidden');
+                    interactiveTab.classList.add('active'); fullCurriculumTab.classList.remove('active');
+                });
+                fullCurriculumTab.addEventListener('click', () => {
+                    interactiveView.classList.add('hidden'); fullCurriculumView.classList.remove('hidden');
+                    fullCurriculumTab.classList.add('active'); interactiveTab.classList.remove('active');
+                });
+            }
+
+            function createInteractiveNavButtons() {
+                const navButtonsContainer = document.getElementById('nav-buttons-container');
+                roadmapData.forEach(item => {
+                    const button = document.createElement('button');
+                    button.textContent = `Week ${item.week}: ${item.topic}`;
+                    button.className = 'nav-button px-4 py-2 bg-white text-slate-700 rounded-full font-semibold hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500';
+                    button.dataset.week = item.week;
+                    button.addEventListener('click', () => { activeWeek = item.week; renderWeeklyDetails(activeWeek); updateActiveInteractiveElements(); });
+                    navButtonsContainer.appendChild(button);
+                });
+            }
+            
+            function renderWeeklyDetails(week) {
+                const weeklyDetailsContainer = document.getElementById('weekly-details');
+                const weekDays = dailyPlan.filter(day => day.week === week);
+                const cardsHTML = weekDays.map(day => {
+                    const isChecked = completionStatus[day.day] || false; const tagColor = tagColors[day.tag] || tagColors['default'];
+                    return `<div class="task-card bg-white p-4 rounded-xl shadow-md flex items-center justify-between gap-2 transition-all duration-300 ${isChecked ? 'completed' : ''}">
+                                <div class="flex-grow"><p class="text-xs font-semibold text-slate-500">DAY ${day.day}</p><p class="font-bold text-slate-800 text-md">${day.title}</p></div>
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    <button class="resources-btn text-xl text-slate-500 hover:text-teal-600" data-day="${day.day}" title="View Resources">📖</button>
+                                    <span class="text-xs font-bold px-2 py-1 rounded-full ${tagColor}">${day.tag}</span>
+                                    <input type="checkbox" data-day="${day.day}" class="h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                </div></div>`;
+                }).join('');
+                weeklyDetailsContainer.innerHTML = `<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${cardsHTML}</div>`;
+                weeklyDetailsContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    const day = checkbox.dataset.day; checkbox.checked = completionStatus[day] || false;
+                    checkbox.addEventListener('change', (e) => {
+                        completionStatus[day] = e.target.checked; e.target.closest('.task-card').classList.toggle('completed', e.target.checked);
+                        saveCompletionStatus(); updateProgress();
+                    });
+                });
+                weeklyDetailsContainer.querySelectorAll('.resources-btn').forEach(button => { button.addEventListener('click', (e) => openModal(e.target.dataset.day)); });
+            }
+
+            function setupFullCurriculumView() {
+                const weekNavContainer = document.getElementById('curriculum-week-nav');
+                roadmapData.forEach(item => {
+                    const button = document.createElement('button'); button.textContent = `Week ${item.week}`;
+                    button.className = 'curriculum-week-btn px-4 py-2 rounded-md font-semibold'; button.dataset.week = item.week;
+                    button.addEventListener('click', () => { activeCurriculumWeek = item.week; renderCurriculumContent(activeCurriculumWeek); updateActiveCurriculumWeek(); });
+                    weekNavContainer.appendChild(button);
+                });
+                renderCurriculumContent(activeCurriculumWeek); updateActiveCurriculumWeek(); renderCurriculumFocusChart();
+            }
+
+            function renderCurriculumContent(week) {
+                const contentContainer = document.getElementById('curriculum-content'); const weekData = roadmapData.find(w => w.week === week); if (!weekData) return;
+                const conceptsHTML = weekData.concepts.map(c => `<li class="flex items-start"><span class="mr-2 mt-1 text-teal-500">◆</span><span>${c}</span></li>`).join('');
+                const practicalHTML = weekData.practical.map(p => `<li class="flex items-start"><span class="mr-2 mt-1 text-amber-500">◆</span><span>${p}</span></li>`).join('');
+                contentContainer.innerHTML = `<div class="text-center mb-8"><h2 class="text-3xl font-bold text-slate-900">${weekData.topic}</h2><p class="text-slate-500 mt-2 max-w-2xl mx-auto">${weekData.summary}</p></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-xl font-bold text-slate-800 mb-4">Core Concepts</h3><ul class="space-y-2 text-slate-600">${conceptsHTML}</ul></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg"><h3 class="text-xl font-bold text-slate-800 mb-4">Practical Application</h3><ul class="space-y-2 text-slate-600">${practicalHTML}</ul></div></div>`;
+            }
+            
+            function updateActiveCurriculumWeek(){ document.querySelectorAll('#curriculum-week-nav button').forEach(btn => { btn.classList.toggle('active', parseInt(btn.dataset.week) === activeCurriculumWeek); }); }
+            function updateActiveInteractiveElements() { document.querySelectorAll('#nav-buttons-container button').forEach(btn => { btn.classList.toggle('active', parseInt(btn.dataset.week) === activeWeek); }); }
+
+            function renderTopicDistributionChart() {
+                const ctx = document.getElementById('topicDistributionChart').getContext('2d'); const chartLegend = document.getElementById('chart-legend');
+                new Chart(ctx, { type: 'doughnut', data: { labels: roadmapData.map(item => item.topic), datasets: [{ data: roadmapData.map(item => item.days), backgroundColor: roadmapData.map(item => item.color), borderColor: '#ffffff', borderWidth: 4, cutout: '75%', }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } label += `${context.raw} days`; return label; } } } } } });
+                chartLegend.innerHTML = roadmapData.map(item => `<div class="flex items-center"><span class="h-3 w-3 rounded-full mr-2" style="background-color: ${item.color}"></span><span>${item.topic}</span></div>`).join('');
+            }
+            
+            function renderCurriculumFocusChart(){
+                const ctx = document.getElementById('curriculumFocusChart').getContext('2d'); const legendContainer = document.getElementById('focus-chart-legend');
+                const focusData = { labels: ['OOP & SOLID', 'Design Patterns', '.NET & APIs', 'Case Studies'], data: [14, 7, 21, 11], colors: ['#0d9488', '#10b981', '#0891b2', '#ca8a04'] };
+                new Chart(ctx, { type: 'doughnut', data: { labels: focusData.labels, datasets: [{ data: focusData.data, backgroundColor: focusData.colors, borderColor: '#f1f5f9', borderWidth: 4, cutout: '75%', }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return `${context.label}: ~${context.raw} days`; } } } } } });
+                legendContainer.innerHTML = focusData.labels.map((label, index) => `<div class="flex items-center"><span class="h-3 w-3 rounded-full mr-2" style="background-color: ${focusData.colors[index]}"></span><span>${label}</span></div>`).join('');
+            }
+
+            function setupModals() {
+                document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+                modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+                document.getElementById('welcome-close-btn').addEventListener('click', closeWelcomeModal);
+            }
+            
+            function openWelcomeModal() {
+                welcomeModal.classList.remove('hidden');
+                setTimeout(() => { welcomeModal.classList.remove('opacity-0'); welcomeModal.querySelector('div > div').classList.remove('scale-95'); }, 10);
+            }
+
+            function closeWelcomeModal() {
+                localStorage.setItem('lldWelcomeShown', 'true');
+                welcomeModal.classList.add('opacity-0'); welcomeModal.querySelector('div > div').classList.add('scale-95');
+                setTimeout(() => welcomeModal.classList.add('hidden'), 300);
+            }
+
+            async function openModal(day) {
+                const task = dailyPlan.find(d => d.day == day); if (!task) return;
+                
+                document.getElementById('modal-title').textContent = `${task.title}`;
+                const modalSpinner = document.getElementById('modal-spinner');
+                const summaryEl = document.getElementById('gemini-summary');
+                const resourcesEl = document.getElementById('gemini-resources');
+                const eli10ContentWrapper = document.getElementById('eli10-content-wrapper');
+                const eli10Btn = document.getElementById('eli10-btn');
+                
+                summaryEl.innerHTML = ''; resourcesEl.innerHTML = '';
+                eli10ContentWrapper.classList.add('hidden');
+                eli10Btn.onclick = () => getEli10Explanation(task.title);
+
+                modal.classList.remove('hidden'); 
+                setTimeout(() => { modal.classList.remove('opacity-0'); modal.querySelector('div > div').classList.remove('scale-95'); }, 10);
+
+                modalSpinner.classList.remove('hidden');
+                const prompt = `Provide a concise, one-paragraph summary for the software design topic: "${task.title}". Then, list 3 high-quality, distinct learning resource links (1 official documentation, 1 article/blog, 1 video) for it. Format the links as a Markdown list.`;
+                const response = await callGeminiAPI(prompt);
+                modalSpinner.classList.add('hidden');
+
+                const lines = response.split('\n').filter(line => line.trim() !== '');
+                const summary = lines.length > 0 ? `<p>${lines[0]}</p>` : '<p>No summary available.</p>';
+                const resourcesList = lines.slice(1);
+                const resources = resourcesList.length > 0 ? `<h3 class="font-bold mt-4 mb-2">Recommended Resources:</h3><ul class="list-disc pl-5 space-y-1">${resourcesList.map(r => `<li>${r.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" class="text-teal-600 hover:underline">$1</a>')}</li>`).join('')}</ul>` : '';
+
+                summaryEl.innerHTML = summary;
+                resourcesEl.innerHTML = resources;
+            }
+
+            async function getEli10Explanation(topic) {
+                const eli10Btn = document.getElementById('eli10-btn');
+                const eli10Wrapper = document.getElementById('eli10-content-wrapper');
+                const eli10Spinner = document.getElementById('eli10-spinner');
+                const eli10Content = document.getElementById('eli10-content');
+                
+                eli10Btn.disabled = true;
+                eli10Wrapper.classList.remove('hidden');
+                eli10Content.classList.add('hidden');
+                eli10Spinner.classList.remove('hidden');
+                
+                const prompt = `Explain the software design concept "${topic}" in a very simple way, using an analogy, as if you were explaining it to a 10-year-old. Keep it under 100 words.`;
+                const response = await callGeminiAPI(prompt);
+                
+                eli10Content.innerHTML = `<p>${response}</p>`;
+                eli10Spinner.classList.add('hidden');
+                eli10Content.classList.remove('hidden');
+                eli10Btn.disabled = false;
+            }
+
+            function closeModal() {
+                modal.classList.add('opacity-0'); modal.querySelector('div > div').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+            
+            init();
+        });
+    </script>
+</body>
+</html>
+

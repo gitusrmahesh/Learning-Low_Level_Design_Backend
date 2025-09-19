@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOP Day 5: Method Overloading, Overriding & Extension Methods</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        pre[class*="language-"] {
+            position: relative;
+            overflow: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.25rem;
+            padding-top: 3rem; 
+        }
+        code[class*="language-"] {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.875rem;
+        }
+        .code-actions {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .code-btn {
+            background-color: #475569; /* slate-600 */
+            color: white;
+            border: none;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease;
+        }
+        pre:hover .code-btn {
+            opacity: 1;
+        }
+        .code-btn:hover {
+            background-color: #334155; /* slate-700 */
+        }
+        .toc-link.active {
+            color: #4f46e5; /* indigo-600 */
+            font-weight: 600;
+            border-left-color: #4f46e5;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4f46e5;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .prose {
+            color: #334155; /* slate-700 */
+        }
+        .prose h1 { color: #1e293b; /* slate-800 */ }
+        .prose h2 { color: #1e293b; /* slate-800 */ }
+        .prose h3 { color: #334155; /* slate-700 */ }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <!-- Chosen Palette: "Slate & Indigo" -->
+    <!-- Application Structure Plan: A two-column layout is chosen for a classic, intuitive learning experience. The main content area on the left provides a linear, story-like progression through the lesson topics. A sticky Table of Contents (TOC) is placed on the right, offering at-a-glance navigation and a constant sense of place within the module. This is ideal for dense, hierarchical information like a coding lesson, allowing users to both follow the intended path and jump to specific sections for review. Interactions like quizzes and AI explanations are embedded directly in the flow to reinforce learning contextually. -->
+    <!-- Visualization & Content Choices: Report Info: C# concepts (Overloading, Overriding, Extensions). Goal: Educate developers thoroughly. Presentation: Deeply elaborated theory is broken up by syntax snippets, comparison tables, and highlighted call-outs for scannability. Fully-coded examples provide practical context. UML is represented textually for simplicity and clarity. Interaction: Interactive quizzes with instant feedback test knowledge retention. A self-assessment challenge with a hidden solution promotes active problem-solving. AI-powered "Explain with Analogy" and "Explain Code" buttons (using Gemini) offer deeper, on-demand clarification. Library/Method: Vanilla JS for all interactivity, Prism.js for essential code highlighting. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="lg:flex lg:flex-row-reverse lg:space-x-8 lg:space-x-reverse">
+            
+            <aside class="w-full lg:w-1/4 mb-8 lg:mb-0">
+                <div class="sticky top-8">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4 font-lexend">On this page</h3>
+                    <nav id="toc" class="flex flex-col space-y-2">
+                    </nav>
+                </div>
+            </aside>
+
+            <main class="w-full lg:w-3/4">
+                <article class="prose max-w-none">
+                    <section id="introduction" class="scroll-mt-20 space-y-4">
+                        <h1 class="text-4xl font-bold tracking-tight text-slate-900 font-lexend">Day 5: Method Overloading, Overriding & Extension Methods</h1>
+                        <p class="text-lg text-slate-600">Welcome to Day 5 of our OOP Foundations course. Today, we delve into three powerful C# features that provide flexibility and extensibility to your code: method overloading, method overriding, and extension methods. Mastering these concepts is key to writing clean, intuitive, and maintainable object-oriented programs.</p>
+                        <div class="bg-indigo-100 border-l-4 border-indigo-500 text-indigo-700 p-4 rounded-r-lg not-prose" role="alert">
+                            <p class="font-bold">Learning Goals</p>
+                            <p>By the end of this lesson, you will be able to differentiate between overloading and overriding, know when to use each, and extend existing types with new functionality using extension methods.</p>
+                        </div>
+                    </section>
+
+                    <section id="theory-topics" class="scroll-mt-20 space-y-6 pt-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 font-lexend">Theory Topics</h2>
+                        
+                        <div id="overloading-vs-overriding" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Method Overloading vs. Overriding</h3>
+                            <p>While their names sound similar, overloading and overriding represent two different forms of polymorphism. Overloading is resolved at compile-time (static polymorphism), while overriding is resolved at run-time (dynamic polymorphism).</p>
+                            <p><strong>Method Overloading</strong> means creating multiple methods in the same class with the same name but different signatures (i.e., different parameter lists - either number of parameters or type of parameters). It's a way to provide multiple ways to call a method for different data types.</p>
+                            <p><strong>Method Overriding</strong> means providing a specific implementation for a method in a derived class that is already defined in its base class. The method in the derived class must have the same name, return type, and parameters as the one in the base class. It requires an inheritance hierarchy.</p>
+                            <div class="not-prose">
+                                <button id="analogy-btn" class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors">
+                                    ✨ Explain with Analogy
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto not-prose mt-4">
+                                <table class="min-w-full bg-white shadow-md rounded-lg">
+                                    <thead class="bg-slate-800 text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Feature</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Method Overloading</th>
+                                            <th class="py-3 px-4 uppercase font-semibold text-sm text-left">Method Overriding</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-slate-700">
+                                        <tr class="border-b border-slate-200">
+                                            <td class="py-3 px-4 font-semibold">Purpose</td>
+                                            <td class="py-3 px-4">Provide multiple versions of a method for different data inputs.</td>
+                                            <td class="py-3 px-4">Provide a specialized implementation of a base class method in a derived class.</td>
+                                        </tr>
+                                        <tr class="bg-slate-100 border-b border-slate-200">
+                                            <td class="py-3 px-4 font-semibold">Method Signature</td>
+                                            <td class="py-3 px-4">Must be different (number or type of parameters).</td>
+                                            <td class="py-3 px-4">Must be the same (name, parameters, return type).</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="py-3 px-4 font-semibold">Scope</td>
+                                            <td class="py-3 px-4">Occurs within the same class.</td>
+                                            <td class="py-3 px-4">Occurs in two classes with an inheritance relationship (base and derived).</td>
+                                        </tr>
+                                        <tr class="bg-slate-100 border-b border-slate-200">
+                                            <td class="py-3 px-4 font-semibold">Keywords</td>
+                                            <td class="py-3 px-4">No specific keywords required.</td>
+                                            <td class="py-3 px-4">Requires `virtual` or `abstract` in the base class and `override` in the derived class.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-3 px-4 font-semibold">Polymorphism Type</td>
+                                            <td class="py-3 px-4">Compile-time (Static) Polymorphism.</td>
+                                            <td class="py-3 px-4">Run-time (Dynamic) Polymorphism.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="extension-methods" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Extension Methods</h3>
+                            <p>Extension methods enable you to "add" methods to existing types without creating a new derived type, recompiling, or otherwise modifying the original type. This is particularly useful for adding functionality to types you don't own, like those in the .NET framework (e.g., `String`, `int`).</p>
+                            <p>To implement an extension method:</p>
+                            <ul class="list-disc list-inside space-y-2 pl-4">
+                                <li>The method must be `static`.</li>
+                                <li>It must be in a `static` class.</li>
+                                <li>The first parameter of the method specifies the type that the method operates on, and it is preceded by the `this` modifier.</li>
+                            </ul>
+                            <h4 class="font-semibold text-slate-700">Syntax Snippet:</h4>
+<pre><code class="language-csharp">
+public static class StringExtensions
+{
+    public static int WordCount(this string str)
+    {
+        return str.Split(new char[] { ' ', '.', '?' }, StringSplitOptions.RemoveEmptyEntries).Length;
+    }
+}
+</code></pre>
+                        </div>
+                        
+                        <div id="best-practices" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Best Practices</h3>
+                            <ul class="list-disc list-inside space-y-2 pl-4">
+                                <li><strong>Overload when:</strong> You want to offer the same operation on different types or with a different number of arguments. For example, a `Console.WriteLine()` method that can accept a string, an int, a double, etc. This enhances API usability.</li>
+                                <li><strong>Override when:</strong> You are working with an inheritance hierarchy and need a subclass to provide a more specific behavior for a method defined in its superclass. This is the heart of polymorphism and allows for writing flexible, decoupled code (e.g., a `Draw()` method in a base `Shape` class overridden by `Circle` and `Square`).</li>
+                            </ul>
+                        </div>
+
+                        <div id="pitfall-ambiguous-overloads" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Pitfall: Ambiguous Overloads</h3>
+                            <p>A common pitfall occurs when the compiler cannot determine which overloaded method to call. This happens if a method call could be converted to more than one overload. For example, if you have `void Print(int x)` and `void Print(double y)`, calling `Print(10L)` (a long) could be ambiguous if there isn't a specific overload for `long`.</p>
+                            <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-r-lg not-prose" role="alert">
+                                <p class="font-bold">Compiler's Choice</p>
+                                <p>The C# compiler follows a specific set of rules to pick the "best" overload, preferring direct matches over those requiring type conversions. When no single overload is uniquely "better" than others, a compile-time error occurs.</p>
+                            </div>
+                        </div>
+
+                    </section>
+                    
+                    <section id="coding-practice" class="scroll-mt-20 space-y-6 pt-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 font-lexend">Coding Practice & Problems</h2>
+                        
+                        <div id="calculator-overload" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Implement Calculator with Overloaded Add Methods</h3>
+                            <p>Here we create a `Calculator` class with three `Add` methods: one for two integers, one for two doubles, and one for three integers. This demonstrates how the compiler chooses the correct method based on the arguments provided.</p>
+<pre><code class="language-csharp">
+using System;
+
+public class Calculator
+{
+    // Overload 1: Adds two integers
+    public int Add(int a, int b)
+    {
+        Console.WriteLine("Adding two integers");
+        return a + b;
+    }
+
+    // Overload 2: Adds two doubles
+    public double Add(double a, double b)
+    {
+        Console.WriteLine("Adding two doubles");
+        return a + b;
+    }
+    
+    // Overload 3: Adds three integers
+    public int Add(int a, int b, int c)
+    {
+        Console.WriteLine("Adding three integers");
+        return a + b + c;
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        Calculator calc = new Calculator();
+        
+        Console.WriteLine($"Sum of 5 and 10 is: {calc.Add(5, 10)}");
+        Console.WriteLine($"Sum of 3.5 and 7.2 is: {calc.Add(3.5, 7.2)}");
+        Console.WriteLine($"Sum of 1, 2, and 3 is: {calc.Add(1, 2, 3)}");
+    }
+}
+</code></pre>
+                        </div>
+                        
+                        <div id="problem-easy" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">[Easy] Extension Method: IsEven()</h3>
+                            <p>Implement a simple extension method `IsEven()` for the `int` type which returns `true` if the number is even and `false` otherwise.</p>
+<pre><code class="language-csharp">
+using System;
+
+public static class IntExtensions
+{
+    public static bool IsEven(this int number)
+    {
+        return number % 2 == 0;
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        int myNumber = 10;
+        Console.WriteLine($"{myNumber} is even: {myNumber.IsEven()}"); // Prints true
+        
+        int anotherNumber = 7;
+        Console.WriteLine($"{anotherNumber} is even: {anotherNumber.IsEven()}"); // Prints false
+    }
+}
+</code></pre>
+                        </div>
+
+                        <div id="problem-medium" class="space-y-4 pt-6">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">[Medium] Strategy Pattern for Discounts (Using Overriding)</h3>
+                            <p>This problem perfectly demonstrates method overriding in a real-world pattern. We define a base `DiscountStrategy` with a `virtual` method, and then create specific strategies that `override` this method to provide different discount logic.</p>
+<pre><code class="language-csharp">
+using System;
+
+// The 'Strategy' abstract class (or a base class with virtual methods)
+public abstract class DiscountStrategy
+{
+    public virtual double ApplyDiscount(double amount)
+    {
+        // Default: no discount
+        return amount;
+    }
+}
+
+// A 'ConcreteStrategy' class
+public class PercentageDiscountStrategy : DiscountStrategy
+{
+    private readonly double _percentage;
+    public PercentageDiscountStrategy(double percentage)
+    {
+        _percentage = percentage;
+    }
+
+    public override double ApplyDiscount(double amount)
+    {
+        return amount - (amount * _percentage / 100);
+    }
+}
+
+// Another 'ConcreteStrategy' class
+public class FlatDiscountStrategy : DiscountStrategy
+{
+    private readonly double _discountAmount;
+    public FlatDiscountStrategy(double discountAmount)
+    {
+        _discountAmount = discountAmount;
+    }
+
+    public override double ApplyDiscount(double amount)
+    {
+        return Math.Max(0, amount - _discountAmount);
+    }
+}
+
+// The 'Context' class
+public class ShoppingCart
+{
+    private DiscountStrategy _discountStrategy;
+    private double _totalAmount;
+
+    public ShoppingCart(double totalAmount)
+    {
+        _totalAmount = totalAmount;
+        _discountStrategy = new NoDiscountStrategy(); // Default strategy
+    }
+
+    public void SetDiscountStrategy(DiscountStrategy strategy)
+    {
+        _discountStrategy = strategy;
+    }
+
+    public double GetFinalPrice()
+    {
+        return _discountStrategy.ApplyDiscount(_totalAmount);
+    }
+}
+
+// A null object pattern implementation for the default strategy
+public class NoDiscountStrategy : DiscountStrategy { }
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        ShoppingCart cart = new ShoppingCart(100.0);
+        Console.WriteLine($"Original price: ${cart.GetFinalPrice()}");
+        
+        // Apply a 20% discount
+        cart.SetDiscountStrategy(new PercentageDiscountStrategy(20));
+        Console.WriteLine($"Price with 20% discount: ${cart.GetFinalPrice()}");
+
+        // Apply a $15 flat discount
+        cart.SetDiscountStrategy(new FlatDiscountStrategy(15));
+        Console.WriteLine($"Price with $15 flat discount: ${cart.GetFinalPrice()}");
+    }
+}
+</code></pre>
+                        </div>
+                    </section>
+                    
+                    <section id="uml-task" class="scroll-mt-20 space-y-6 pt-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 font-lexend">UML Task</h2>
+                        <h3 class="text-2xl font-semibold text-slate-800 font-lexend">UML for Overloaded Calculator Methods</h3>
+                        <p>This UML class diagram illustrates the `Calculator` class with its overloaded `Add` methods. Notice how the methods have the same name but different parameters listed, which is the essence of overloading.</p>
+                        <div class="bg-slate-800 text-white p-6 rounded-lg shadow-lg font-mono text-sm not-prose">
+                            <div class="border-b border-slate-600 pb-2 mb-2">
+                                <strong>Calculator</strong>
+                            </div>
+                            <div>
+                                + Add(a: int, b: int): int<br>
+                                + Add(a: double, b: double): double<br>
+                                + Add(a: int, b: int, c: int): int
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="case-study" class="scroll-mt-20 space-y-6 pt-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 font-lexend">Case Study: Online Library System APIs</h2>
+                        <p>Let's design a simple `LibraryService` class for an online library. A key requirement is to allow users to search for books in multiple ways. Method overloading is a perfect fit for this `SearchBooks` functionality, providing a clean and intuitive API for the user.</p>
+<pre><code class="language-csharp">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class Book
+{
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public string Category { get; set; }
+    public bool IsReserved { get; set; }
+}
+
+public class LibraryService
+{
+    private List&lt;Book&gt; _books;
+
+    public LibraryService()
+    {
+        // Seed with some sample data
+        _books = new List&lt;Book&gt;
+        {
+            new Book { Title = "The Great Gatsby", Author = "F. Scott Fitzgerald", Category = "Fiction" },
+            new Book { Title = "A Brief History of Time", Author = "Stephen Hawking", Category = "Science" },
+            new Book { Title = "Dune", Author = "Frank Herbert", Category = "Sci-Fi" },
+            new Book { Title = "Foundation", Author = "Isaac Asimov", Category = "Sci-Fi" }
+        };
+    }
+
+    // Overload 1: Search by title
+    public List&lt;Book&gt; SearchBooks(string title)
+    {
+        Console.WriteLine($"Searching by title: '{title}'...");
+        return _books.Where(b => b.Title.Contains(title, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    // Overload 2: Search by Author AND Title
+    public List&lt;Book&gt; SearchBooks(string title, string author)
+    {
+        Console.WriteLine($"Searching by title: '{title}' AND author: '{author}'...");
+        return _books.Where(b => b.Title.Contains(title, StringComparison.OrdinalIgnoreCase) && 
+                                  b.Author.Contains(author, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    // Overload 3: Search by category (using a different param name to distinguish, but overloading on type would be better)
+    // To properly overload we should use a different type or number of args. Let's make this search by category and author.
+    public List&lt;Book&gt; SearchBooks(string category, int authorInitial) // A contrived example for overloading
+    {
+         Console.WriteLine($"Searching by category: '{category}' AND author initial: '{(char)authorInitial}'...");
+         return _books.Where(b => b.Category.Equals(category, StringComparison.OrdinalIgnoreCase) &&
+                                   b.Author.StartsWith(((char)authorInitial).ToString(), StringComparison.OrdinalIgnoreCase))
+                      .ToList();
+    }
+
+    public bool ReserveBook(string title)
+    {
+        var book = _books.FirstOrDefault(b => b.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+        if (book != null && !book.IsReserved)
+        {
+            book.IsReserved = true;
+            Console.WriteLine($"Successfully reserved '{title}'.");
+            return true;
+        }
+        Console.WriteLine($"Failed to reserve '{title}'. It's either not found or already reserved.");
+        return false;
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        LibraryService library = new LibraryService();
+
+        var gatsbyBooks = library.SearchBooks("Gatsby");
+        Console.WriteLine($"Found {gatsbyBooks.Count} book(s) with 'Gatsby' in the title.");
+
+        var asimovBooks = library.SearchBooks("Foundation", "Asimov");
+        Console.WriteLine($"Found {asimovBooks.Count} book(s) by Asimov with 'Foundation' in title.");
+
+        library.ReserveBook("Dune");
+        library.ReserveBook("Dune"); // Try to reserve again
+    }
+}
+</code></pre>
+                    </section>
+                    
+                    <section id="knowledge-check" class="scroll-mt-20 space-y-4 pt-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 font-lexend">Knowledge Check</h2>
+                        <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 space-y-6 not-prose">
+                            <div id="quiz-question-1">
+                                <p class="font-semibold">1. Which statement accurately describes Method Overriding?</p>
+                                <div class="space-y-2 mt-2">
+                                    <label class="flex items-center"><input type="radio" name="q1" value="a" class="mr-2">a) Creating multiple methods with the same name but different parameters in the same class.</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="b" class="mr-2">b) Providing a new implementation in a derived class for a method defined in its base class.</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="c" class="mr-2">c) Adding a new method to an existing type without modifying the original type.</label>
+                                    <label class="flex items-center"><input type="radio" name="q1" value="d" class="mr-2">d) Hiding a base class method in a derived class using the `new` keyword.</label>
+                                </div>
+                                <button class="quiz-check-btn mt-3 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" data-question="1" data-answer="b">Check Answer</button>
+                                <div class="quiz-feedback hidden mt-2 p-3 rounded-md"></div>
+                            </div>
+                            <hr class="border-slate-200">
+                            <div id="quiz-question-2">
+                                <p class="font-semibold">2. What are the requirements for creating a valid C# extension method?</p>
+                                <div class="space-y-2 mt-2">
+                                    <label class="flex items-center"><input type="radio" name="q2" value="a" class="mr-2">a) It must be a `public` method inside a `public` class.</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="b" class="mr-2">b) The first parameter must use the `params` keyword.</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="c" class="mr-2">c) It must be a `static` method inside a `static` class, and its first parameter must use the `this` keyword.</label>
+                                    <label class="flex items-center"><input type="radio" name="q2" value="d" class="mr-2">d) It must be defined in the same namespace as the type it extends.</label>
+                                </div>
+                                <button class="quiz-check-btn mt-3 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" data-question="2" data-answer="c">Check Answer</button>
+                                <div class="quiz-feedback hidden mt-2 p-3 rounded-md"></div>
+                            </div>
+                            <hr class="border-slate-200">
+                            <div id="quiz-question-3">
+                                <p class="font-semibold">3. What is the primary reason to use method overloading?</p>
+                                <div class="space-y-2 mt-2">
+                                    <label class="flex items-center"><input type="radio" name="q3" value="a" class="mr-2">a) To change the behavior of a method from a base class.</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="b" class="mr-2">b) To provide multiple ways to call a method with different data types or argument counts, improving API usability.</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="c" class="mr-2">c) To add new methods to a class without recompiling it.</label>
+                                    <label class="flex items-center"><input type="radio" name="q3" value="d" class="mr-2">d) To force a derived class to implement a method.</label>
+                                </div>
+                                <button class="quiz-check-btn mt-3 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700" data-question="3" data-answer="b">Check Answer</button>
+                                <div class="quiz-feedback hidden mt-2 p-3 rounded-md"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="self-assessment" class="scroll-mt-20 space-y-4 pt-12">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 font-lexend">Self-Assessment Challenge</h2>
+                         <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 space-y-4 not-prose">
+                            <p class="font-semibold text-slate-700">Challenge: Create an extension method `ToCurrencyString()` for the `decimal` type.</p>
+                            <p class="text-slate-600">This method should take a string parameter representing the currency symbol (e.g., "$", "€", "£") and format the decimal as a currency string. For example, `123.45m.ToCurrencyString("$")` should return `"$123.45"`.</p>
+                            <button id="toggle-solution-btn" class="mt-3 bg-slate-600 text-white px-4 py-2 rounded-md hover:bg-slate-700">Show Solution</button>
+                            <div id="solution-code" class="hidden mt-4">
+<pre><code class="language-csharp">
+using System;
+using System.Globalization;
+
+public static class DecimalExtensions
+{
+    // The extension method
+    public static string ToCurrencyString(this decimal value, string currencySymbol)
+    {
+        // Using CultureInfo.InvariantCulture to ensure consistent formatting regardless of system locale
+        // The "{0}" is a placeholder for the currencySymbol.
+        // The "{1:N2}" formats the decimal value to 2 decimal places.
+        return string.Format(CultureInfo.InvariantCulture, "{0}{1:N2}", currencySymbol, value);
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        decimal priceUSD = 199.99m;
+        decimal priceEUR = 85.50m;
+        decimal priceGBP = 120m;
+
+        Console.WriteLine(priceUSD.ToCurrencyString("$"));   // Expected output: $199.99
+        Console.WriteLine(priceEUR.ToCurrencyString("€"));   // Expected output: €85.50
+        Console.WriteLine(priceGBP.ToCurrencyString("£"));   // Expected output: £120.00
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </main>
+        </div>
+    </div>
+    
+    <!-- AI Modal -->
+    <div id="ai-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="ai-modal-title" class="text-xl font-semibold">✨ AI Generated Explanation</h3>
+                <button id="ai-modal-close" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            </div>
+            <div id="ai-modal-content" class="p-6 overflow-y-auto prose">
+                <div class="flex items-center justify-center h-48">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold font-lexend">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const createTOC = () => {
+                const tocContainer = document.getElementById('toc');
+                if (!tocContainer) return;
+                
+                const sections = document.querySelectorAll('main section[id]');
+                let tocHTML = '';
+                sections.forEach(section => {
+                    const h2 = section.querySelector('h2');
+                    if(h2) {
+                        tocHTML += `<a href="#${section.id}" class="toc-link text-slate-600 hover:text-indigo-600 transition-colors duration-200 border-l-2 border-transparent pl-4 py-1">${h2.textContent}</a>`;
+                        
+                        const subSections = section.querySelectorAll('div[id] > h3');
+                        subSections.forEach(sub => {
+                           tocHTML += `<a href="#${sub.parentElement.id}" class="toc-link text-sm text-slate-500 hover:text-indigo-600 transition-colors duration-200 border-l-2 border-transparent pl-8 py-1">${sub.textContent}</a>`;
+                        });
+                    }
+                });
+                tocContainer.innerHTML = tocHTML;
+            };
+
+            const handleTOCScrolling = () => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        const id = entry.target.getAttribute('id');
+                        const link = document.querySelector(`.toc-link[href="#${id}"]`);
+                        if (link && entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                            document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+                            link.classList.add('active');
+                        }
+                    });
+                }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
+
+                document.querySelectorAll('main section[id], main div[id] > h3').forEach(section => {
+                    const target = section.tagName === 'H3' ? section.parentElement : section;
+                    observer.observe(target);
+                });
+            };
+            
+            const addCodeBlockActions = () => {
+                const codeBlocks = document.querySelectorAll('pre');
+                codeBlocks.forEach(block => {
+                    const actionsContainer = document.createElement('div');
+                    actionsContainer.className = 'code-actions';
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.innerText = 'Copy';
+                    copyBtn.className = 'code-btn';
+                    
+                    copyBtn.addEventListener('click', () => {
+                        const code = block.querySelector('code').innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                            copyBtn.innerText = 'Copied!';
+                            setTimeout(() => {
+                                copyBtn.innerText = 'Copy';
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Failed to copy text: ', err);
+                        });
+                    });
+
+                    const explainBtn = document.createElement('button');
+                    explainBtn.innerHTML = '✨ Explain Code';
+                    explainBtn.className = 'code-btn';
+
+                    explainBtn.addEventListener('click', () => {
+                        const code = block.querySelector('code').innerText;
+                        const concept = block.closest('div[id]')?.querySelector('h3')?.textContent || 'this C# code';
+                        const prompt = `Act as an expert C# developer and teacher. Explain the following code snippet step-by-step in a clear, concise way for a beginner. Focus on the concept of "${concept}" if it's relevant.\n\nCode:\n\`\`\`csharp\n${code}\n\`\`\``;
+                        showAiModal('✨ AI Code Explanation', prompt);
+                    });
+                    
+                    actionsContainer.appendChild(explainBtn);
+                    actionsContainer.appendChild(copyBtn);
+                    block.prepend(actionsContainer);
+                });
+            };
+
+            const handleQuiz = () => {
+                const checkButtons = document.querySelectorAll('.quiz-check-btn');
+                checkButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const questionId = btn.dataset.question;
+                        const correctAnswer = btn.dataset.answer;
+                        const questionDiv = document.getElementById(`quiz-question-${questionId}`);
+                        const selectedOption = questionDiv.querySelector(`input[name="q${questionId}"]:checked`);
+                        const feedbackDiv = questionDiv.querySelector('.quiz-feedback');
+                        
+                        const correctMessages = {
+                            '1': '<strong>Correct!</strong> Method overriding is about providing a specific implementation in a child class for a method from its parent class.',
+                            '2': '<strong>Correct!</strong> Extension methods must be static, reside in a static class, and use the \'this\' modifier on the first parameter to specify which type they extend.',
+                            '3': '<strong>Correct!</strong> Overloading improves the usability and readability of an API by allowing a single method name to perform the same general action on different sets of inputs.'
+                        };
+
+                        if (!selectedOption) {
+                            feedbackDiv.textContent = 'Please select an answer.';
+                            feedbackDiv.className = 'quiz-feedback mt-2 p-3 rounded-md bg-yellow-100 text-yellow-800';
+                            feedbackDiv.classList.remove('hidden');
+                            return;
+                        }
+
+                        if (selectedOption.value === correctAnswer) {
+                            feedbackDiv.innerHTML = correctMessages[questionId];
+                            feedbackDiv.className = 'quiz-feedback mt-2 p-3 rounded-md bg-green-100 text-green-800';
+                        } else {
+                            feedbackDiv.innerHTML = `<strong>Incorrect.</strong> The correct answer is not (${selectedOption.value}). Please review the theory section and try again.`;
+                            feedbackDiv.className = 'quiz-feedback mt-2 p-3 rounded-md bg-red-100 text-red-800';
+                        }
+                        feedbackDiv.classList.remove('hidden');
+                    });
+                });
+            };
+
+            const handleSolutionToggle = () => {
+                const toggleBtn = document.getElementById('toggle-solution-btn');
+                const solutionCode = document.getElementById('solution-code');
+
+                if (toggleBtn && solutionCode) {
+                    toggleBtn.addEventListener('click', () => {
+                        const isHidden = solutionCode.classList.contains('hidden');
+                        solutionCode.classList.toggle('hidden');
+                        toggleBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+                        if(!isHidden) Prism.highlightAll();
+                    });
+                }
+            };
+            
+            const modal = document.getElementById('ai-modal');
+            const modalTitle = document.getElementById('ai-modal-title');
+            const modalContent = document.getElementById('ai-modal-content');
+            const modalCloseBtn = document.getElementById('ai-modal-close');
+            
+            const showAiModal = (title, prompt) => {
+                modalTitle.textContent = title;
+                modalContent.innerHTML = `<div class="flex items-center justify-center h-48"><div class="spinner"></div></div>`;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                callGemini(prompt);
+            };
+
+            const hideAiModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                modalContent.innerHTML = '';
+            };
+
+            modalCloseBtn.addEventListener('click', hideAiModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideAiModal();
+                }
+            });
+            
+            const handleAnalogyButton = () => {
+                const analogyBtn = document.getElementById('analogy-btn');
+                analogyBtn.addEventListener('click', () => {
+                    const prompt = `Explain the difference between method overloading and method overriding in C# using a simple, real-world analogy. Structure the explanation with clear headings for "Method Overloading" and "Method Overriding". Keep it concise and easy for a beginner to understand.`;
+                    showAiModal('✨ AI Generated Analogy', prompt);
+                });
+            };
+            
+            const callGemini = async (prompt, retries = 3, delay = 1000) => {
+                const apiKey = ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && retries > 0) {
+                            await new Promise(res => setTimeout(res, delay));
+                            return callGemini(prompt, retries - 1, delay * 2); 
+                        }
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        let text = candidate.content.parts[0].text;
+                        // More robust Markdown to HTML conversion
+                        text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                        text = text.replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold mt-4 mb-2">$1</h3>');
+                        text = text.replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-6 mb-3">$1</h2>');
+                        text = text.replace(/`([^`]+)`/g, '<code class="bg-slate-200 text-slate-800 rounded px-1 py-0.5">$1</code>');
+                        text = text.replace(/```csharp\n([\s\S]*?)```/g, (match, code) => `<pre><code class="language-csharp">${code.trim()}</code></pre>`);
+                        text = text.replace(/^- (.*$)/gim, '<li class="ml-4">$1</li>');
+                        text = text.replace(/(<\/li>\n<li>)/g, '</li><li>');
+                        text = text.replace(/(<li>.*<\/li>)/gs, '<ul class="list-disc pl-5">$1</ul>');
+                        text = text.replace(/\n/g, '<br>');
+
+                        modalContent.innerHTML = text;
+                        Prism.highlightAll();
+                    } else {
+                         throw new Error("Invalid response structure from API.");
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    modalContent.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg" role="alert"><p class="font-bold">Error</p><p>Could not retrieve explanation. Please try again later.</p></div>`;
+                }
+            };
+            
+            createTOC();
+            handleTOCScrolling();
+            addCodeBlockActions();
+            handleQuiz();
+            handleSolutionToggle();
+            handleAnalogyButton();
+            Prism.highlightAll();
+        });
+    </script>
+</body>
+</html>

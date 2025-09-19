@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 3: Inheritance & Polymorphism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .problem-tag { font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-block; }
+        .code-block { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.875rem; overflow-x: auto; }
+        .code-block .keyword { color: #93c5fd; }
+        .code-block .type { color: #86efac; }
+        .code-block .comment { color: #9ca3af; }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8">
+            <a href="roadmap.html" class="text-teal-600 hover:text-teal-800 font-semibold transition-colors duration-200">&larr; Back to Roadmap</a>
+            <h1 class="text-4xl font-extrabold text-slate-800 mt-2 tracking-tight">Day 3: Inheritance & Polymorphism</h1>
+            <p class="mt-2 text-lg text-slate-500">Week 1: OOP Foundations</p>
+        </header>
+        <main class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                <h2 class="font-bold text-xl text-slate-700 mb-3 border-b pb-2 flex items-center gap-2">&#128218; Theory Topics</h2>
+                <div class="space-y-4 pt-2 text-slate-700">
+                    <div>
+                        <h3 class="font-semibold text-lg">Inheritance</h3>
+                        <p>Inheritance allows a new class (derived or child class) to inherit properties and methods from an existing class (base or parent class). This promotes code reuse. The classic example is a `Dog` class inheriting from an `Animal` class. The `Dog` automatically gets the `Animal`'s properties like `Age` and methods like `Eat()`.</p>
+                    </div>
+                     <div>
+                        <h3 class="font-semibold text-lg">Polymorphism</h3>
+                        <p>Meaning "many forms," polymorphism allows objects of different classes to be treated as objects of a common parent class. It's often achieved through `virtual` methods in a base class and `override` methods in a child class. For example, you can have a list of `Shape` objects, where some are `Circle`s and others are `Rectangle`s. When you call the `Draw()` method on each shape, the correct version of `Draw()` (the circle or the rectangle version) is executed automatically.</p>
+                    </div>
+                </div>
+            </div>
+             <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200/80">
+                <h2 class="font-bold text-xl text-slate-700 mb-3 border-b pb-2 flex items-center gap-2">&#128187; Coding Practice</h2>
+                <p class="text-slate-600 pt-1 mb-4">Create a `Shape` base class and derive `Circle` and `Rectangle` from it.</p>
+                <div class="code-block">
+<pre><code><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">Shape</span>
+{
+    <span class="comment">// An abstract method has no body and MUST be implemented by derived classes</span>
+    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="type">double</span> CalculateArea();
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Circle</span> : <span class="type">Shape</span>
+{
+    <span class="keyword">public</span> <span class="type">double</span> Radius { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">double</span> CalculateArea()
+    {
+        <span class="keyword">return</span> Math.PI * Radius * Radius;
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Rectangle</span> : <span class="type">Shape</span>
+{
+    <span class="keyword">public</span> <span class="type">double</span> Width { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="type">double</span> Height { <span class="keyword">get</span>; <span class="keyword">set</span>; }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">double</span> CalculateArea()
+    {
+        <span class="keyword">return</span> Width * Height;
+    }
+}
+</code></pre>
+                </div>
+            </div>
+            <!-- Problems, UML, and Case Study sections for Day 3 would follow -->
+        </main>
+    </div>
+</body>
+</html>
+

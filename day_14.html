@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ultimate Guide to C# Multithreading</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate Tones -->
+    <!-- Application Structure Plan: This application is structured as a comprehensive, single-page educational guide, designed to be a definitive resource on C# multithreading. A sticky right-hand table of contents provides seamless navigation across a deep, thematic curriculum (Core Concepts, Concurrency Hazards, Synchronization, Advanced Patterns, etc.). This design supports both linear learning for beginners and quick reference for experienced developers. Content is logically grouped within collapsible sections, using analogies, syntax snippets, and interactive elements to deconstruct complex topics into digestible modules, creating a focused and user-friendly learning environment. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Race Condition -> Goal: Visually prove how unsynchronized data access leads to corruption. -> Viz/Presentation: Interactive "Run Simulation" feature. -> Interaction: On click, two columns populate in an animated, interleaved fashion, showing how two threads corrupt a shared counter. The final incorrect result is highlighted. -> Justification: A dynamic demonstration is far more impactful than static text for understanding this critical bug. -> Library/Method: Vanilla JS DOM manipulation.
+        - Report Info: Performance vs. Safety Trade-off -> Goal: Make the abstract relationship between locking overhead and application speed tangible. -> Viz/Presentation: A Chart.js bar chart. -> Interaction: A slider for "Synchronization Level" directly controls the chart's bars in real-time, one for "Performance" and one for "Safety," showing their inverse relationship. -> Justification: This interactive element transforms a theoretical concept into a memorable, cause-and-effect experience. -> Library/Method: Chart.js/Canvas.
+        - Report Info: Thread Pool Execution Flow -> Goal: Demystify the lifecycle of a task submitted to a thread pool. -> Viz/Presentation: An HTML/CSS-based activity diagram. -> Interaction: Hovering over each stage (e.g., "Task Queued," "Worker Thread Waits") reveals a tooltip with a detailed explanation. -> Justification: Provides a clean, accessible UML-style diagram without external images or forbidden libraries, enhancing comprehension. -> Library/Method: HTML/Tailwind CSS.
+        - Report Info: All other theoretical topics (Async/Await, Deadlocks, Mutex, ReaderWriterLockSlim, Concurrent Collections) -> Goal: Deliver in-depth, clear explanations. -> Viz/Presentation: Detailed text with analogies, formal definitions, syntax snippets, and use-case analysis, all within collapsible sections. -> Interaction: Users expand/collapse topics, controlling the information density of the page. -> Justification: This structured approach provides encyclopedic depth while maintaining a clean, uncluttered user interface. -> Library/Method: HTML/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #334155; /* slate-700 */
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #4338ca; /* indigo-700 */
+            font-weight: 600;
+            border-left-color: #4338ca; /* indigo-700 */
+        }
+        .toc-link-sub {
+            padding-left: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #e2e8f0; /* slate-200 */
+            color: #475569; /* slate-600 */
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .copy-button:hover {
+            background-color: #cbd5e1; /* slate-300 */
+            color: #1e293b; /* slate-800 */
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #22c55e; /* green-500 */
+            color: #15803d; /* green-700 */
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        pre {
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <!-- HEADER -->
+        <div class="bg-slate-100/80 border-b border-slate-200 sticky top-0 z-20">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                <!-- Main Content -->
+                <main class="w-full lg:w-3/4">
+                    <section id="introduction" class="mb-16 scroll-mt-28">
+                        <p class="text-lg text-slate-600 leading-relaxed">Welcome to the definitive guide on C# multithreading. This module is designed as a one-stop solution, taking you from the fundamental building blocks like <code class="font-semibold text-slate-700">Threads</code> and <code class="font-semibold text-slate-700">Tasks</code>, through the critical dangers of race conditions and deadlocks, and into the advanced synchronization techniques and collections that enable powerful, modern parallel processing. Each section is crafted to build upon the last, complete with analogies, interactive examples, and full code solutions.</p>
+                    </section>
+                    
+                    <section id="core" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Core Concepts: The Building Blocks</h2>
+                        <div class="space-y-6">
+                             <details class="bg-white p-6 rounded-lg shadow-md" open>
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">Threads, Tasks, and Async/Await</summary>
+                                <div class="mt-4 text-slate-600 space-y-6">
+                                    <div>
+                                        <h3 class="font-semibold text-lg text-slate-800 mb-2">Thread</h3>
+                                        <p><strong class="text-slate-700">Analogy:</strong> A <code class="bg-slate-200 rounded px-1">Thread</code> is a single, dedicated worker. Hiring this worker (creating a thread) is a costly, time-consuming process for the operating system. It's powerful for long-running, CPU-intensive jobs, but inefficient for many small, quick tasks.</p>
+                                        <div class="code-block mt-3">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">// Direct, low-level control over an execution path.
+Thread worker = new Thread(() => {
+    Console.WriteLine("Executing a long-running, CPU-bound task.");
+    Thread.Sleep(2000); // Simulate heavy work
+});
+worker.Start(); // OS creates and starts the thread.
+worker.Join();  // Main thread blocks and waits for the worker to finish.
+</code></pre>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-lg text-slate-800 mb-2">Task</h3>
+                                        <p><strong class="text-slate-700">Analogy:</strong> A <code class="bg-slate-200 rounded px-1">Task</code> is a work order given to a highly efficient temp agency (the .NET Thread Pool). The agency has a pool of pre-hired workers ready to go. When a work order comes in, an available worker picks it up instantly. This avoids the cost of "hiring" a new worker for every job, making it ideal for most concurrent operations.</p>
+                                        <div class="code-block mt-3">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">// A modern abstraction representing an asynchronous operation.
+Task myTask = Task.Run(() => {
+    Console.WriteLine("Executing work efficiently via the Thread Pool.");
+});
+myTask.Wait(); // Main thread waits for this specific task to complete.
+</code></pre>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-lg text-slate-800 mb-2">Async / Await</h3>
+                                        <p><strong class="text-slate-700">Analogy:</strong> A master chef making a sauce. The chef starts the sauce simmering (an I/O-bound operation like a web request or file download). Instead of watching the pot, the chef <code class="bg-slate-200 rounded px-1">awaits</code> it and starts chopping vegetables for another dish. The kitchen (the thread) is not blocked. When the sauce is ready, a timer goes off, and the chef seamlessly returns to the sauce. This pattern is essential for keeping applications responsive, especially UIs and servers handling many requests.</p>
+                                        <div class="code-block mt-3">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">public async Task<string> DownloadWebsiteContentAsync()
+{
+    Console.WriteLine("Starting website download...");
+    using var client = new HttpClient();
+    // 'await' frees up the current thread to do other work.
+    // It does NOT block the thread.
+    string content = await client.GetStringAsync("https://www.microsoft.com");
+    Console.WriteLine("Download complete.");
+    return content;
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <section id="hazards" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Concurrency Hazards: The Dangers</h2>
+                        <div class="space-y-6">
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-xl font-semibold text-slate-700">Race Conditions and Locks</h3>
+                                <p class="text-slate-600 my-2"><strong class="text-slate-700">The Problem:</strong> A race condition occurs when the final outcome of an operation depends on the unpredictable sequence in which threads are scheduled. The classic "check-then-act" or "read-modify-write" operations are prime suspects. Without protection, shared data becomes corrupted.</p>
+                                <div class="flex flex-col md:flex-row gap-6 mt-4">
+                                    <div class="w-full md:w-1/2">
+                                        <h4 class="font-semibold text-slate-800 mb-2">Live Simulation</h4>
+                                        <p class="text-sm text-slate-500 mb-3">Two threads will each try to increment a shared counter 10 times. The expected final result is 20. Click "Run" to see the unpredictable, incorrect result due to the race condition.</p>
+                                        <button id="runRaceSimButton" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition font-semibold shadow">Run Simulation</button>
+                                        <div id="raceOutput" class="h-48 bg-slate-100 p-3 rounded overflow-y-auto mt-3 font-mono text-xs border border-slate-200"></div>
+                                    </div>
+                                    <div class="w-full md:w-1/2">
+                                        <h4 class="font-semibold text-slate-800 mb-2">The Solution: `lock`</h4>
+                                        <p class="text-sm text-slate-500 mb-3">The <code class="bg-slate-200 rounded px-1">lock</code> statement acquires a mutual-exclusion lock for a given object, executes a statement block, and then releases the lock. This ensures that the block is atomic.</p>
+                                        <div class="code-block mt-2">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">private int _sharedCounter = 0;
+private readonly object _counterLock = new object();
+
+public void SafeIncrement()
+{
+    // The lock ensures that the read, modify,
+    // and write operations of _sharedCounter++
+    // happen as a single, uninterruptible unit.
+    lock(_counterLock)
+    {
+        _sharedCounter++;
+    }
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">Deadlocks and Prevention</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p><strong class="text-slate-700">The Problem:</strong> A deadlock is a state where two or more threads are stuck in a circular wait, each waiting for a resource that another thread in the cycle holds. They will wait forever.</p>
+                                    <p><strong class="text-slate-700">Analogy:</strong> Thread A locks Resource 1. Thread B locks Resource 2. Now, Thread A tries to lock Resource 2 (but it's held by B), so it waits. Then, Thread B tries to lock Resource 1 (held by A), so it also waits. Both are now blocked indefinitely.</p>
+                                    <h4 class="font-semibold text-slate-800 mt-4">Deadlock Prevention Strategy</h4>
+                                    <p>The most reliable way to prevent deadlocks is to enforce a consistent lock acquisition order. If all threads that need to lock both Resource 1 and Resource 2 must always lock them in the same order (e.g., always 1 then 2), a circular wait becomes impossible.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">object lockA = new object();
+object lockB = new object();
+
+// Thread 1
+lock(lockA) {
+    Thread.Sleep(100); // Simulate work
+    lock(lockB) { /* Do work */ }
+}
+
+// Thread 2 (Potential Deadlock if order is reversed)
+// lock(lockB) {
+//    lock(lockA) { /* This creates a risk */ }
+// }
+
+// Thread 2 (Correct, follows order)
+lock(lockA) {
+    lock(lockB) { /* Safe */ }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+                    
+                    <section id="sync" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Synchronization Primitives: The Toolkit</h2>
+                        <p class="mb-8 text-slate-600">C# provides a rich set of tools to manage thread interactions. Choosing the right tool for the job is key to building efficient and correct concurrent systems.</p>
+                        <div class="space-y-6">
+                            <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">Mutex vs. Semaphore</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                     <div>
+                                        <h3 class="font-semibold text-lg text-slate-800 mb-2">Mutex (Mutual Exclusion)</h3>
+                                        <p><strong class="text-slate-700">Analogy:</strong> A special key to a conference room that works across an entire office building (the operating system). A <code class="bg-slate-200 rounded px-1">Mutex</code> can be "named," allowing different programs (processes) to coordinate. Its primary use is to ensure that only one instance of an application can run or access a shared system resource at a time.</p>
+                                        <div class="code-block mt-3">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">// Use a named mutex to ensure only one instance of the app runs.
+private static Mutex _appMutex = new Mutex(true, "Global\\MyUniqueAppGuid");
+
+static void Main()
+{
+    if (!_appMutex.WaitOne(TimeSpan.Zero, true))
+    {
+        Console.WriteLine("Another instance is already running.");
+        return;
+    }
+    try { /* Run application */ }
+    finally { _appMutex.ReleaseMutex(); }
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                     <div>
+                                        <h3 class="font-semibold text-lg text-slate-800 mb-2">SemaphoreSlim</h3>
+                                        <p><strong class="text-slate-700">Analogy:</strong> A restaurant with a limited number of tables (e.g., 5). The host (the <code class="bg-slate-200 rounded px-1">SemaphoreSlim</code>) allows up to 5 parties (threads) to be seated. The 6th party must wait until a table becomes free. This is perfect for throttling or limiting concurrency on a resource pool, like database connections or API calls.</p>
+                                        <div class="code-block mt-3">
+                                            <button class="copy-button">Copy</button>
+                                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">// Limit concurrent API calls to a maximum of 10.
+private SemaphoreSlim _apiThrottler = new SemaphoreSlim(10, 10);
+
+public async Task MakeApiCallAsync()
+{
+    await _apiThrottler.WaitAsync(); // Wait for an empty "slot".
+    try
+    {
+        // await httpClient.GetAsync(...);
+    }
+    finally
+    {
+        _apiThrottler.Release(); // Release the "slot" for others.
+    }
+}
+</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                             <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">ReaderWriterLockSlim</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p><strong class="text-slate-700">The Use Case:</strong> For data structures that are read far more often than they are written to (e.g., a rarely changing application cache). A standard <code class="bg-slate-200 rounded px-1">lock</code> is pessimistic and allows only one thread in, whether it's reading or writing. This creates an unnecessary bottleneck for readers.</p>
+                                    <p><strong class="text-slate-700">Analogy:</strong> A museum exhibit. Multiple visitors (reader threads) can look at the exhibit at the same time. However, if a curator (a writer thread) needs to update the exhibit, they must get exclusive access. The doors are closed, all current visitors leave, the curator makes the change, and then the doors reopen for visitors. <code class="bg-slate-200 rounded px-1">ReaderWriterLockSlim</code> optimizes for this "many readers, one writer" scenario.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">private ReaderWriterLockSlim _cacheLock = new ReaderWriterLockSlim();
+private Dictionary<string, string> _appCache = new Dictionary<string, string>();
+
+public string ReadFromCache(string key)
+{
+    _cacheLock.EnterReadLock(); // Multiple threads can enter here simultaneously.
+    try
+    {
+        return _appCache.GetValueOrDefault(key);
+    }
+    finally
+    {
+        _cacheLock.ExitReadLock();
+    }
+}
+
+public void WriteToCache(string key, string value)
+{
+    _cacheLock.EnterWriteLock(); // Only one thread can enter here. Blocks all readers.
+    try
+    {
+        _appCache[key] = value;
+    }
+    finally
+    {
+        _cacheLock.ExitWriteLock();
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+                    
+                    <section id="advanced" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Advanced Topics & Patterns</h2>
+                        <div class="space-y-6">
+                            <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">Thread-Safe & Concurrent Collections</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p>Manually locking access to standard collections like <code class="bg-slate-200 rounded px-1">List&lt;T&gt;</code> or <code class="bg-slate-200 rounded px-1">Dictionary</code> is tedious and error-prone. The <code class="bg-slate-200 rounded px-1">System.Collections.Concurrent</code> namespace provides highly optimized collections with built-in synchronization.</p>
+                                    <p><strong class="text-slate-700">Analogy:</strong> These are like self-managing filing cabinets. With a regular cabinet (<code class="bg-slate-200 rounded px-1">Dictionary</code>), you need to hire a security guard (<code class="bg-slate-200 rounded px-1">lock</code>) to ensure only one person accesses it at a time. A concurrent cabinet (<code class="bg-slate-200 rounded px-1">ConcurrentDictionary</code>) has a sophisticated internal mechanism that allows multiple people to file and retrieve documents simultaneously without getting in each other's way.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">using System.Collections.Concurrent;
+
+// A dictionary where multiple threads can safely add/update keys without explicit locks.
+ConcurrentDictionary<string, int> userScores = new ConcurrentDictionary<string, int>();
+
+// Multiple threads can call this method safely. The update logic is atomic.
+public void IncrementScore(string userId)
+{
+    userScores.AddOrUpdate(userId, 1, (key, existingScore) => existingScore + 1);
+}
+
+// A thread-safe FIFO queue, perfect for the Producer-Consumer pattern.
+BlockingCollection<string> messageQueue = new BlockingCollection<string>();
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                            <div class="bg-white p-6 rounded-lg shadow-md">
+                                <h3 class="text-xl font-semibold text-slate-700 mb-4">Interactive: The Performance vs. Safety Trade-off</h3>
+                                <p class="mb-4 text-slate-600">Every lock or synchronization primitive you add introduces a small amount of overhead. Threads may have to wait, and the coordination itself takes CPU time. This creates a fundamental trade-off: the more you lock to increase thread safety, the more you can potentially decrease raw performance. This visualization makes that relationship clear.</p>
+                                <div class="chart-container">
+                                    <canvas id="perfSafetyChart"></canvas>
+                                </div>
+                                <div class="mt-6">
+                                    <label for="syncLevel" class="block mb-2 text-sm font-medium text-slate-900">Synchronization Level (More Locking →)</label>
+                                    <input id="syncLevel" type="range" min="1" max="100" value="20" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="coding" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Coding Practice & Mini-Project</h2>
+                        <div class="space-y-6">
+                            <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">[Easy] Print Numbers Alternately</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p><strong>Goal:</strong> Use two threads to print numbers from 1 to 100 in perfect alternating sequence (Thread 1 prints 1, Thread 2 prints 2, Thread 1 prints 3, etc.). This requires careful signaling between threads using <code class="bg-slate-200 rounded px-1">Monitor.Wait</code> and <code class="bg-slate-200 rounded px-1">Monitor.Pulse</code>.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">public class AlternatePrinter
+{
+    private readonly object _lock = new object();
+    private bool _isOddTurn = true;
+
+    public void Run()
+    {
+        var oddThread = new Thread(PrintOdd);
+        var evenThread = new Thread(PrintEven);
+        oddThread.Start();
+        evenThread.Start();
+        oddThread.Join();
+        evenThread.Join();
+    }
+
+    private void PrintOdd()
+    {
+        for (int i = 1; i <= 100; i += 2)
+        {
+            lock (_lock)
+            {
+                while (!_isOddTurn) Monitor.Wait(_lock);
+                Console.WriteLine($"T1: {i}");
+                _isOddTurn = false;
+                Monitor.Pulse(_lock); // Signal the even thread it's their turn
+            }
+        }
+    }
+
+    private void PrintEven()
+    {
+        for (int i = 2; i <= 100; i += 2)
+        {
+            lock (_lock)
+            {
+                while (_isOddTurn) Monitor.Wait(_lock);
+                Console.WriteLine($"T2: {i}");
+                _isOddTurn = true;
+                Monitor.Pulse(_lock); // Signal the odd thread
+            }
+        }
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                            <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">[Medium] Multi-threaded Download Manager</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p><strong>Goal:</strong> Design a manager that can download multiple files concurrently but uses a <code class="bg-slate-200 rounded px-1">SemaphoreSlim</code> to limit the number of simultaneous downloads to avoid overwhelming the network.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">public class DownloadManager
+{
+    private readonly SemaphoreSlim _semaphore;
+    private readonly HttpClient _httpClient;
+
+    public DownloadManager(int maxConcurrentDownloads)
+    {
+        _semaphore = new SemaphoreSlim(maxConcurrentDownloads);
+        _httpClient = new HttpClient();
+    }
+
+    public async Task DownloadAllAsync(IEnumerable<string> urls)
+    {
+        var downloadTasks = urls.Select(url => DownloadFileAsync(url));
+        await Task.WhenAll(downloadTasks);
+    }
+
+    private async Task DownloadFileAsync(string url)
+    {
+        await _semaphore.WaitAsync(); // Acquire a slot
+        try
+        {
+            Console.WriteLine($"[START] Downloading {url}");
+            var content = await _httpClient.GetByteArrayAsync(url);
+            Console.WriteLine($"[END] Downloaded {url} - {content.Length} bytes.");
+        }
+        catch (Exception ex) { Console.WriteLine($"[ERROR] {url} - {ex.Message}"); }
+        finally { _semaphore.Release(); } // Release the slot
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                            <details class="bg-white p-6 rounded-lg shadow-md">
+                                <summary class="font-semibold text-xl cursor-pointer text-slate-700">[Hard] Implement a Mini Thread Pool</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p><strong>Goal:</strong> Implement a basic fixed-size thread pool from scratch. It must have a queue for tasks (<code class="bg-slate-200 rounded px-1">BlockingCollection</code> is perfect for this) and a number of worker threads that continuously pull tasks from the queue and execute them.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">public class MiniThreadPool : IDisposable
+{
+    private readonly BlockingCollection<Action> _taskQueue = new BlockingCollection<Action>();
+    private readonly List<Thread> _workerThreads;
+
+    public MiniThreadPool(int threadCount)
+    {
+        _workerThreads = new List<Thread>(threadCount);
+        for (int i = 0; i < threadCount; i++)
+        {
+            var worker = new Thread(WorkerLoop) { IsBackground = true, Name = $"Pool Worker {i}" };
+            worker.Start();
+            _workerThreads.Add(worker);
+        }
+    }
+
+    public void QueueTask(Action task) => _taskQueue.Add(task);
+
+    private void WorkerLoop()
+    {
+        // GetConsumingEnumerable blocks until a task is available or queue is closed.
+        foreach (var task in _taskQueue.GetConsumingEnumerable())
+        {
+            try { task(); }
+            catch (Exception ex) { Console.WriteLine($"Task error: {ex.Message}"); }
+        }
+    }
+
+    public void Dispose()
+    {
+        _taskQueue.CompleteAdding(); // Signal workers to stop after queue is empty.
+        foreach (var worker in _workerThreads) worker.Join();
+        _taskQueue.Dispose();
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+
+                    <section id="design" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">System Design & Case Study</h2>
+                         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                            <h3 class="text-xl font-semibold text-slate-700 mb-4">Activity Diagram: Thread Pool Execution</h3>
+                            <p class="mb-6 text-slate-600">This diagram illustrates the lifecycle of a task submitted to a thread pool. Hover over each step for a detailed explanation.</p>
+                            <div class="flex flex-col items-center space-y-2 text-sm">
+                                <div class="relative group bg-blue-100 text-blue-800 p-3 rounded-lg shadow w-72 text-center font-medium">Task Submitted by Main Thread</div>
+                                <div class="text-2xl text-slate-400">↓</div>
+                                <div class="relative group bg-indigo-100 text-indigo-800 p-3 rounded-lg shadow w-72 text-center font-medium">Task Added to Concurrent Queue
+                                    <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-slate-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">The task (an Action delegate) is enqueued in a thread-safe collection.</div>
+                                </div>
+                                <div class="text-2xl text-slate-400">↓</div>
+                                <div class="relative group bg-yellow-100 text-yellow-800 p-3 rounded-lg shadow w-72 text-center border-2 border-dashed border-yellow-400 font-medium">Worker Thread is Waiting...
+                                     <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-slate-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">An idle worker thread is blocked, efficiently waiting for an item to appear in the queue.</div>
+                                </div>
+                                <div class="text-2xl text-slate-400">↓</div>
+                                <div class="relative group bg-green-100 text-green-800 p-3 rounded-lg shadow w-72 text-center font-medium">Worker Dequeues & Executes Task
+                                    <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 bg-slate-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">The worker thread wakes up, takes the task, and executes its code.</div>
+                                </div>
+                                <div class="text-2xl text-slate-400 transform -scale-x-100 -rotate-90 -translate-x-24 -translate-y-12">⤴</div>
+                                 <p class="text-slate-500 italic text-xs -mt-12 ml-24">Thread loops back to wait</p>
+                            </div>
+                        </div>
+                        <details class="bg-white p-6 rounded-lg shadow-md">
+                            <summary class="font-semibold text-xl cursor-pointer text-slate-700">Case Study: Async Notification System</summary>
+                             <div class="mt-4 text-slate-600 space-y-4">
+                                <p><strong>Problem:</strong> Design a system that can send notifications (email, SMS, push) without blocking the main application thread (e.g., an HTTP request thread). The system must be resilient to transient failures by retrying failed jobs.</p>
+                                <h4 class="font-semibold text-slate-800 mt-4">System Components (Producer-Consumer Pattern):</h4>
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Producers:</strong> Your main application logic (e.g., after a user signs up). A producer's only job is to create a `Notification` object and add it to a central queue. This is a very fast, non-blocking operation.</li>
+                                    <li><strong>Notification Queue:</strong> A thread-safe, in-memory queue. <code class="bg-slate-200 rounded px-1">BlockingCollection&lt;Notification&gt;</code> is the perfect tool for this, acting as the buffer between producers and consumers.</li>
+                                    <li><strong>Consumers (Worker Service):</strong> A background service (e.g., an `IHostedService` in ASP.NET Core) containing a pool of long-running tasks. Each consumer task runs in a loop, pulling a notification from the queue and attempting to process it.</li>
+                                    <li><strong>Retry & Dead-Letter Logic:</strong> When a consumer processes a notification, it calls the external email/SMS service. If this call fails:
+                                        <ul class="list-['–'] list-inside ml-4 mt-1">
+                                            <li>It should check the notification's `RetryCount`. If less than a max (e.g., 3), it increments the count and re-adds the notification to the back of the queue, possibly after a small delay.</li>
+                                            <li>If the `RetryCount` is maxed out, the notification is moved to a persistent "dead-letter" queue (e.g., a database table or a file log) for manual inspection by an engineer.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </details>
+                    </section>
+                    
+                    <section id="quiz" class="mb-12 scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Knowledge Check Quiz</h2>
+                        <form id="quizForm" class="bg-white p-6 rounded-lg shadow-md space-y-8">
+                            <div>
+                                <p class="font-semibold text-slate-800">1. Which scenario is the primary use case for `async` and `await`?</p>
+                                <div class="mt-2 space-y-2"><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q1" value="a" class="mr-3"> Long-running, CPU-intensive calculations like video encoding.</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q1" value="b" class="mr-3"> I/O-bound operations like network requests or database queries, to keep the application responsive.</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q1" value="c" class="mr-3"> Short, simple loops that need to run in parallel.</label></div>
+                            </div>
+                             <div>
+                                <p class="font-semibold text-slate-800">2. You have a shared resource that is read 1000 times per second but only written to twice per day. Which lock provides the best performance?</p>
+                                <div class="mt-2 space-y-2"><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="a" class="mr-3"> A standard `lock` (Monitor).</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="b" class="mr-3"> `SemaphoreSlim`</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q2" value="c" class="mr-3"> `ReaderWriterLockSlim`</label></div>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">3. What is the most common cause of a deadlock?</p>
+                                <div class="mt-2 space-y-2"><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q3" value="a" class="mr-3"> Too many threads being created at once.</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q3" value="b" class="mr-3"> Threads acquiring multiple locks in an inconsistent order, creating a circular wait.</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q3" value="c" class="mr-3"> A race condition corrupting a shared variable.</label></div>
+                            </div>
+                             <div>
+                                <p class="font-semibold text-slate-800">4. Which of these collections from `System.Collections.Concurrent` is ideal for implementing a producer-consumer queue?</p>
+                                <div class="mt-2 space-y-2"><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q4" value="a" class="mr-3"> `ConcurrentDictionary<TKey, TValue>`</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q4" value="b" class="mr-3"> `ConcurrentBag<T>`</label><label class="quiz-option block p-4 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50"><input type="radio" name="q4" value="c" class="mr-3"> `BlockingCollection<T>`</label></div>
+                            </div>
+                            <div class="flex items-center gap-4 pt-4">
+                                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition font-semibold shadow">Check Answers</button>
+                                <p id="quizResult" class="font-bold text-lg"></p>
+                            </div>
+                        </form>
+                    </section>
+                    
+                    <section id="challenge" class="scroll-mt-28">
+                        <h2 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-slate-300 pb-3 mb-8">Self-Assessment Challenge</h2>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h3 class="text-xl font-semibold text-slate-700">The Dining Philosophers Problem</h3>
+                            <p class="text-slate-600 my-2">This is a classic concurrency problem that serves as an excellent exercise for deadlock prevention. Five philosophers sit at a round table. Between each pair of philosophers is one fork. A philosopher must have both their left and right forks to eat. They must pick up one fork at a time.</p>
+                            <p class="text-slate-600 mt-4"><strong>Your Task:</strong> Write a C# console application that simulates this scenario. Use threads to represent philosophers and locks to represent forks. Your primary goal is to implement a strategy that prevents deadlock, ensuring no philosopher starves.</p>
+                            <details class="mt-6">
+                                <summary class="cursor-pointer text-indigo-600 font-semibold hover:text-indigo-800">Click to Reveal Detailed Solution & Explanation</summary>
+                                <div class="mt-4 text-slate-600 space-y-4">
+                                    <p>The key to solving this problem is breaking the circular wait condition. If every philosopher picks up their left fork first, you can get a state where all five are holding one fork and waiting for the one to their right—a deadlock. The standard solution is to make one philosopher (e.g., the last one) pick up their forks in the reverse order (right then left). This breaks the symmetry and prevents a circular dependency.</p>
+                                    <div class="code-block mt-3">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md text-sm"><code class="language-csharp">public class DiningPhilosophers
+{
+    private const int PhilosopherCount = 5;
+    private readonly object[] _forks = new object[PhilosopherCount];
+    
+    public DiningPhilosophers()
+    {
+        for (int i = 0; i < PhilosopherCount; i++) _forks[i] = new object();
+    }
+
+    public void StartDinner()
+    {
+        var philosophers = new Thread[PhilosopherCount];
+        for (int i = 0; i < PhilosopherCount; i++)
+        {
+            int philosopherId = i;
+            philosophers[i] = new Thread(() => Dine(philosopherId)) { Name = $"Philosopher {philosopherId}" };
+            philosophers[i].Start();
+        }
+        foreach (var p in philosophers) p.Join();
+    }
+
+    private void Dine(int id)
+    {
+        int leftFork = id;
+        int rightFork = (id + 1) % PhilosopherCount;
+
+        // *** DEADLOCK AVOIDANCE STRATEGY ***
+        // Enforce a global lock acquisition order to break the circular wait.
+        // We define the lower-indexed fork as "first" and higher as "second".
+        object firstLock = _forks[Math.Min(leftFork, rightFork)];
+        object secondLock = _forks[Math.Max(leftFork, rightFork)];
+
+        for(int i = 0; i < 3; i++) // Eat 3 times
+        {
+            Console.WriteLine($"{Thread.CurrentThread.Name} is thinking.");
+            Thread.Sleep(new Random().Next(100, 500));
+
+            lock (firstLock)
+            {
+                Console.WriteLine($"{Thread.CurrentThread.Name} picked up first fork.");
+                lock (secondLock)
+                {
+                    Console.WriteLine($"\t{Thread.CurrentThread.Name} picked up second fork and is eating.");
+                    Thread.Sleep(new Random().Next(100, 500));
+                }
+            }
+            Console.WriteLine($"{Thread.CurrentThread.Name} put down forks.");
+        }
+    }
+}
+</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </section>
+                </main>
+
+                <!-- Sticky Table of Contents -->
+                <aside class="w-full lg:w-1/4 lg:sticky lg:top-32 h-full">
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h3 class="font-bold text-lg mb-4 text-slate-800 font-lexend">On This Page</h3>
+                        <nav>
+                            <ul class="space-y-2">
+                                <li><a href="#core" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Core Concepts</a></li>
+                                <li><a href="#hazards" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Concurrency Hazards</a></li>
+                                <li><a href="#sync" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Synchronization Toolkit</a></li>
+                                <li><a href="#advanced" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Advanced Topics</a></li>
+                                <li><a href="#coding" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Coding Practice</a></li>
+                                <li><a href="#design" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">System Design</a></li>
+                                <li><a href="#quiz" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Knowledge Check</a></li>
+                                <li><a href="#challenge" class="toc-link block border-l-4 border-transparent p-2 text-slate-600 hover:text-indigo-600 font-medium">Self-Assessment</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </aside>
+            </div>
+        </div>
+        
+        <!-- FOOTER -->
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold font-lexend">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        tocLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, { rootMargin: '-28% 0px -70% 0px' });
+            sections.forEach(section => observer.observe(section));
+            
+            document.querySelectorAll('.copy-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const code = button.closest('.code-block').querySelector('code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        button.textContent = 'Copied!';
+                        setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            const ctx = document.getElementById('perfSafetyChart').getContext('2d');
+            const perfSafetyChart = new Chart(ctx, {
+                type: 'bar', data: { labels: ['Performance', 'Thread Safety'], datasets: [{ label: 'Level', data: [90, 20], backgroundColor: ['rgba(79, 70, 229, 0.6)', 'rgba(234, 88, 12, 0.6)'], borderColor: ['#312e81', '#c2410c'], borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 110 } }, plugins: { legend: { display: false }, title: { display: false } } }
+            });
+            document.getElementById('syncLevel').addEventListener('input', (e) => {
+                const safety = parseInt(e.target.value);
+                const performance = 105 - safety;
+                perfSafetyChart.data.datasets[0].data = [performance, safety];
+                perfSafetyChart.update();
+            });
+
+            const runRaceSimButton = document.getElementById('runRaceSimButton');
+            const raceOutput = document.getElementById('raceOutput');
+            runRaceSimButton.addEventListener('click', () => {
+                raceOutput.innerHTML = '';
+                runRaceSimButton.disabled = true;
+                runRaceSimButton.textContent = 'Running...';
+                let sharedCounter = 0;
+                
+                function createTask(id, colorClass) {
+                    for(let i=0; i<10; i++) {
+                         setTimeout(() => {
+                           let currentVal = sharedCounter;
+                           raceOutput.innerHTML += `<span class="${colorClass}">T${id} reads ${currentVal}</span><br>`;
+                           setTimeout(() => {
+                               sharedCounter = currentVal + 1;
+                               raceOutput.innerHTML += `<span class="${colorClass}">T${id} writes ${sharedCounter}</span><br>`;
+                               raceOutput.scrollTop = raceOutput.scrollHeight;
+                           }, Math.random() * 10 + 5);
+                        }, Math.random() * 500);
+                    }
+                }
+                createTask(1, 'text-slate-800');
+                createTask(2, 'text-indigo-600');
+                setTimeout(() => {
+                     raceOutput.innerHTML += `<br><b class="text-red-600">Final Result: ${sharedCounter}</b> (Expected: 20)<br>`;
+                     runRaceSimButton.disabled = false;
+                     runRaceSimButton.textContent = 'Run Simulation';
+                }, 1000);
+            });
+            
+            const quizForm = document.getElementById('quizForm');
+            const quizResult = document.getElementById('quizResult');
+            const correctAnswers = { q1: 'b', q2: 'c', q3: 'b', q4: 'c' };
+
+            quizForm.addEventListener('submit', e => {
+                e.preventDefault();
+                let score = 0;
+                const totalQuestions = Object.keys(correctAnswers).length;
+                const formData = new FormData(quizForm);
+
+                document.querySelectorAll('.quiz-option').forEach(el => el.classList.remove('correct', 'incorrect'));
+                
+                for(const [question, userAnswer] of formData.entries()) {
+                    const label = quizForm.querySelector(`input[name="${question}"][value="${userAnswer}"]`).parentElement;
+                    if (userAnswer === correctAnswers[question]) {
+                        score++;
+                        label.classList.add('correct');
+                    } else {
+                        label.classList.add('incorrect');
+                    }
+                }
+                
+                Object.entries(correctAnswers).forEach(([q, a]) => {
+                    const correctLabel = quizForm.querySelector(`input[name="${q}"][value="${a}"]`).parentElement;
+                    if(!correctLabel.classList.contains('correct')) {
+                        correctLabel.classList.add('correct');
+                    }
+                });
+
+                quizResult.textContent = `You scored ${score} out of ${totalQuestions}!`;
+                 if(score === totalQuestions) {
+                    quizResult.classList.add('text-green-600');
+                    quizResult.classList.remove('text-red-600');
+                 } else {
+                    quizResult.classList.add('text-red-600');
+                    quizResult.classList.remove('text-green-600');
+                 }
+            });
+        });
+    </script>
+</body>
+</html>
+

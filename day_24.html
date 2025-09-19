@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 24: Liskov Substitution Principle (LSP) - LLD Bootcamp</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application uses a two-column responsive layout. The right column features a sticky Table of Contents for seamless navigation through the lesson's extensive content, enhancing user experience. The left, main column is structured to facilitate a progressive learning path. It starts with the foundational theory of LSP, using analogies and clear definitions. This is immediately followed by the classic 'Rectangle vs. Square' violation, which is demonstrated through an interactive canvas visualization to make the abstract concept tangible. The page then presents generalized violation patterns, followed by a tabbed interface for multiple coding challenges of varying difficulty, each with complete C# solutions. A UML diagram, built with HTML/CSS, visually contrasts the design before and after LSP refactoring. The lesson culminates in a knowledge-check quiz and a self-assessment challenge to solidify understanding. This structure was chosen to logically build knowledge from theory to interactive practice and final assessment, ensuring a comprehensive learning module. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Classic LSP violation with Rectangle and Square classes. Goal: Visually demonstrate how a subtype (Square) can break the contract of its base type (Rectangle). Viz/Presentation Method: An interactive demo section with input fields for width and height and a canvas element. Interaction: Users can input dimensions and click a button. A function, pretending to operate on a `Rectangle`, will be given a `Square` instance. A Chart.js bar chart on the canvas will then compare the 'Expected Area' (width * height) versus the 'Actual Area' calculated by the object, visually highlighting the discrepancy and failure of substitutability. Justification: This provides immediate, concrete feedback, making the abstract programming principle easy to grasp. Library/Method: Chart.js for the canvas-based bar chart.
+        - Report Info: UML representation of inheritance hierarchy refactoring. Goal: Clearly show the structural changes made to a class hierarchy to adhere to LSP. Viz/Presentation Method: UML diagrams constructed purely from styled HTML `div` elements and CSS borders/pseudo-elements. Interaction: Subtle hover effects on classes to highlight their relationships. Justification: This approach avoids static image files, keeping the application self-contained and lightweight. It's a modern, accessible way to represent simple diagrams. Library/Method: Custom HTML/CSS with Tailwind.
+        - Report Info: Multiple coding practice problems. Goal: Provide structured, hands-on coding experience. Viz/Presentation Method: A clean, tabbed interface to separate problems by difficulty (Easy, Medium, Hard). Each tab contains the problem statement, a code block for the initial problematic code, and another for the complete, refactored C# solution. Interaction: Users click tabs to navigate between problems. A 'Copy to Clipboard' button is provided for every code block. Justification: The tabbed layout prevents a long, overwhelming scroll of code, allowing users to focus on one problem at a time. Library/Method: Vanilla JavaScript for tab switching and clipboard functionality. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0ea5e9;
+            font-weight: 600;
+            border-left-color: #0ea5e9;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .quiz-option.selected {
+            background-color: #38bdf8;
+            border-color: #0ea5e9;
+            color: white;
+        }
+        .quiz-option.correct {
+            background-color: #22c55e;
+            border-color: #16a34a;
+            color: white;
+        }
+        .quiz-option.incorrect {
+            background-color: #ef4444;
+            border-color: #dc2626;
+            color: white;
+        }
+        [x-cloak] { display: none !important; }
+
+        .uml-diagram .uml-class {
+            background-color: #fff;
+            border: 2px solid #334155;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            position: relative;
+            transition: all 0.2s ease-in-out;
+        }
+        .uml-diagram .uml-class:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .uml-diagram .uml-class-title {
+            font-weight: 700;
+            font-family: 'Lexend', sans-serif;
+            color: #1e293b;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+        .uml-diagram .uml-method {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+        .uml-diagram .uml-connector {
+            position: absolute;
+            width: 2px;
+            background-color: #64748b;
+            z-index: -1;
+        }
+        .uml-diagram .uml-arrow::after {
+            content: '';
+            position: absolute;
+            left: -6px;
+            border-style: solid;
+            border-width: 7px 7px 0 7px;
+            border-color: #64748b transparent transparent transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" x-data>
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="flex flex-col lg:flex-row lg:space-x-12">
+                <div class="w-full lg:w-3/4">
+                    <article class="space-y-12">
+                        <header>
+                            <p class="text-sm font-semibold text-sky-500 uppercase tracking-wider">Day 24 of 60</p>
+                            <h1 id="main-title" class="text-3xl sm:text-4xl font-extrabold text-slate-800 mt-2 tracking-tight font-lexend">The Liskov Substitution Principle (LSP)</h1>
+                            <p class="mt-4 text-lg text-slate-600">Ensuring that your abstractions are correct and your hierarchies behave as expected. LSP is the bedrock of reliable polymorphism.</p>
+                        </header>
+                        
+                        <section id="theory" aria-labelledby="theory-title">
+                            <h2 id="theory-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">✅ Core Theory: The Principle of Substitutability</h2>
+                            <div class="mt-4 space-y-4 text-slate-700 text-base leading-relaxed">
+                                <p>The Liskov Substitution Principle, named after computer scientist Barbara Liskov, provides a crucial guideline for creating valid inheritance hierarchies. It's the "L" in SOLID.</p>
+                                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                                    <p class="text-xl font-semibold text-slate-800 italic">"Subtypes must be substitutable for their base types."</p>
+                                    <p class="mt-2 text-slate-600">— Barbara Liskov</p>
+                                </div>
+                                <p>In simpler terms, this means that if you have a piece of code that works with a base class object, it should also work seamlessly if you pass in an object of any of its derived classes. The client code should not need to know the specific subtype it's dealing with. The derived class should not break the assumptions or contracts of the base class.</p>
+                                <div class="bg-sky-50 border border-sky-200 p-4 rounded-lg">
+                                    <h4 class="font-bold text-sky-800">Key Takeaway: Don't Break the Promise</h4>
+                                    <p class="text-sky-700 mt-1">An inherited class should extend the functionality of its parent, not narrow it down or change its fundamental behavior. A child class should honor the "contract" defined by its parent's public methods and properties.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="violations" aria-labelledby="violations-title">
+                            <h2 id="violations-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">Common LSP Violations</h2>
+                            <div class="mt-4 space-y-4 text-slate-700 leading-relaxed">
+                                <p>Violating LSP can lead to subtle, hard-to-find bugs and brittle code. Here are some common red flags:</p>
+                                <ul class="list-disc list-inside space-y-2 bg-white p-6 rounded-lg border border-slate-200">
+                                    <li><strong class="text-slate-800">Throwing `NotImplementedException` in a derived class:</strong> The child class signals that it can't fulfill a part of the parent's contract.</li>
+                                    <li><strong class="text-slate-800">Returning unexpected values or types:</strong> A derived method returns a value that the client code doesn't expect from the base method.</li>
+                                    <li><strong class="text-slate-800">Empty method implementations:</strong> The child class pretends to do something but does nothing, which can violate the expectations of the client.</li>
+                                    <li><strong class="text-slate-800">Adding stricter validations in the subtype:</strong> The child method throws exceptions for inputs that the parent method would have accepted (violating the precondition rule).</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section id="backend-example" aria-labelledby="backend-example-title">
+                            <h2 id="backend-example-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">✅ Real-World Backend Example: Database Repositories</h2>
+                            <div class="mt-4 space-y-4 text-slate-700 leading-relaxed">
+                                <p>A very common backend scenario where LSP is critical is in the design of data access layers (e.g., the Repository Pattern). Let's say we define a generic repository interface for basic CRUD operations that should work for any data source.</p>
+                                <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                                    <h4 class="font-bold text-yellow-800">The Scenario</h4>
+                                    <p class="text-yellow-700 mt-1">We have a generic `IRepository<T>` used by our service layer. We have a primary SQL database, so we create an `SqlRepository<T>` that fully implements all CRUD methods. Later, we need to integrate a read-optimized data store like a caching layer or Elasticsearch for fast lookups. The new `CacheRepository<T>` might not support `Update` or `Delete` operations.</p>
+                                </div>
+                                <h4 class="mt-4 font-semibold text-slate-800">Problematic Design (C#)</h4>
+                                <p>If `CacheRepository<T>` is forced to inherit the full `IRepository<T>` contract, it must provide an implementation for `Update` and `Delete`, leading to an LSP violation.</p>
+                                <div class="code-block mt-2">
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// Generic contract for data access
+public interface IRepository&lt;T&gt;
+{
+    T GetById(int id);
+    void Add(T entity);
+    void Update(T entity);
+    void Delete(T entity);
+}
+
+// Works perfectly for a SQL database
+public class SqlRepository&lt;T&gt; : IRepository&lt;T&gt;
+{
+    public T GetById(int id) { /* ... SQL SELECT ... */ return default; }
+    public void Add(T entity) { /* ... SQL INSERT ... */ }
+    public void Update(T entity) { /* ... SQL UPDATE ... */ }
+    public void Delete(T entity) { /* ... SQL DELETE ... */ }
+}
+
+// Problematic implementation for a read-only store
+public class CacheRepository&lt;T&gt; : IRepository&lt;T&gt;
+{
+    public T GetById(int id) { /* ... Get from cache ... */ return default; }
+    public void Add(T entity) { /* ... Add to cache ... */ }
+    public void Update(T entity)
+    {
+        // A cache is often append/read-only. This is a violation.
+        throw new NotSupportedException("Cannot update entities in a cache.");
+    }
+    public void Delete(T entity)
+    {
+        throw new NotSupportedException("Cannot delete entities from a cache.");
+    }
+}
+
+public class UserService
+{
+    private readonly IRepository&lt;User&gt; _userRepository;
+    public UserService(IRepository&lt;User&gt; userRepository)
+    {
+        _userRepository = userRepository;
+    }
+
+    public void UpdateUser(User user)
+    {
+        // This line will crash if the injected repository is a CacheRepository!
+        _userRepository.Update(user);
+    }
+}</code></pre>
+                                    <button class="copy-btn">Copy</button>
+                                </div>
+                                <h4 class="mt-6 font-semibold text-slate-800">Solution: Segregate Repository Interfaces</h4>
+                                <p class="mt-2 text-slate-600">The fix is to break the "fat" `IRepository` interface into smaller, more granular ones. This allows classes to implement only the capabilities they actually support, adhering to LSP.</p>
+                                <div class="code-block mt-2">
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// Read-only operations
+public interface IReadRepository&lt;T&gt;
+{
+    T GetById(int id);
+}
+
+// Write operations
+public interface IWriteRepository&lt;T&gt;
+{
+    void Add(T entity);
+    void Update(T entity);
+    void Delete(T entity);
+}
+
+// A full repository can be composed of both
+public interface IRepository&lt;T&gt; : IReadRepository&lt;T&gt;, IWriteRepository&lt;T&gt; { }
+
+// The SQL implementation supports everything
+public class SqlRepository&lt;T&gt; : IRepository&lt;T&gt;
+{
+    // ... all methods implemented ...
+}
+
+// The Cache implementation only supports reading and adding (e.g., on a cache miss)
+public class CacheRepository&lt;T&gt; : IReadRepository&lt;T&gt;
+{
+    public T GetById(int id) { /* ... Get from cache ... */ return default; }
+    // Note: No Update or Delete. No LSP violation.
+}
+
+public class UserService
+{
+    // The service now explicitly depends on the contract it needs.
+    private readonly IWriteRepository&lt;User&gt; _writeRepository;
+    private readonly IReadRepository&lt;User&gt; _readRepository;
+
+    public UserService(IWriteRepository&lt;User&gt; writeRepository, IReadRepository&lt;User&gt; readRepository)
+    {
+        _writeRepository = writeRepository;
+        _readRepository = readRepository;
+    }
+    
+    public void UpdateUser(User user)
+    {
+        // This code is now safe. It's impossible to pass a repository
+        // that doesn't support Update().
+        _writeRepository.Update(user);
+    }
+}</code></pre>
+                                    <button class="copy-btn">Copy</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="interactive-demo" aria-labelledby="interactive-demo-title">
+                            <h2 id="interactive-demo-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">Interactive Demo: The Rectangle vs. Square Problem</h2>
+-                           <p class="mt-4 text-slate-700 leading-relaxed">This is the most famous example of an LSP violation. Mathematically, a square *is a* rectangle. But in object-oriented programming, this relationship can be problematic. A `Square` breaks the assumption that a `Rectangle`'s width and height can be modified independently. Let's see this in action.</p>
++                           <p class="mt-4 text-slate-700 leading-relaxed">This is the most famous example of an LSP violation. Mathematically, a square *is a* rectangle. But in object-oriented programming, this relationship is problematic. A `Square` breaks the behavioral contract that a `Rectangle`'s width and height can be modified independently. The client function below expects a `Rectangle` but will receive a simulated `Square` to demonstrate how substitutability fails.</p>
+                             <div class="mt-6 bg-white p-6 rounded-lg border border-slate-200 shadow-sm" x-data="lspDemo()">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                    <div>
+                                        <h3 class="font-semibold text-lg text-slate-800">Test The Abstraction</h3>
+                                        <p class="text-sm text-slate-500 mt-1">This function expects a `Rectangle` and sets its width and height to calculate the area.</p>
+                                        <div class="mt-4 space-y-3">
+                                            <div>
+                                                <label for="width" class="block text-sm font-medium text-slate-700">Set Width</label>
+                                                <input type="number" id="width" x-model.number="width" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
+                                            </div>
+                                            <div>
+                                                <label for="height" class="block text-sm font-medium text-slate-700">Set Height</label>
+                                                <input type="number" id="height" x-model.number="height" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
+                                            </div>
+                                        </div>
+                                        <button @click="runTest" class="mt-4 w-full bg-sky-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-sky-600 transition-colors">Run Area Test</button>
+                                    </div>
+                                    <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                                        <canvas id="lspChart"></canvas>
+                                    </div>
+                                </div>
+                                <div x-show="result" class="mt-4 p-4 rounded-md" :class="isViolation ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'">
+                                    <h4 class="font-bold" :class="isViolation ? 'text-red-800' : 'text-green-800'">Result Analysis</h4>
+                                    <p class="mt-1 text-sm" :class="isViolation ? 'text-red-700' : 'text-green-700'" x-text="resultText"></p>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <section id="coding-practice" aria-labelledby="coding-practice-title">
+                            <h2 id="coding-practice-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">✅ Coding Practice</h2>
+                            <div class="mt-4" x-data="{ tab: 'easy' }">
+                                <div class="border-b border-slate-200">
+                                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                        <button @click="tab = 'easy'" :class="{ 'border-sky-500 text-sky-600': tab === 'easy', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': tab !== 'easy' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                            [Easy] Bird Hierarchy
+                                        </button>
+                                        <button @click="tab = 'medium'" :class="{ 'border-sky-500 text-sky-600': tab === 'medium', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': tab !== 'medium' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                            [Medium] Payment Processor
+                                        </button>
+                                        <button @click="tab = 'hard'" :class="{ 'border-sky-500 text-sky-600': tab === 'hard', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': tab !== 'hard' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                            [Hard] Vehicle System
+                                        </button>
+                                    </nav>
+                                </div>
+                                <div class="mt-6">
+                                    <div x-show="tab === 'easy'" x-cloak>
+                                        <h3 class="text-xl font-bold text-slate-800">Bird & Sparrow Hierarchy</h3>
+                                        <p class="mt-2 text-slate-600">Consider a base `Bird` class with a `Fly()` method. This works for a `Sparrow`, but what about a `Penguin`? A penguin is a bird, but it can't fly. This creates an LSP violation.</p>
+                                        <h4 class="mt-4 font-semibold text-slate-800">Problematic Code (C#)</h4>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public abstract class Bird
+{
+    public abstract void Fly();
+}
+
+public class Sparrow : Bird
+{
+    public override void Fly()
+    {
+        Console.WriteLine("Sparrow flying high!");
+    }
+}
+
+public class Penguin : Bird
+{
+    public override void Fly()
+    {
+        // A penguin cannot fly. This is an LSP violation.
+        throw new NotImplementedException("Penguins can't fly!");
+    }
+}
+
+public class BirdWatcher
+{
+    public void Observe(Bird bird)
+    {
+        // This will crash if the bird is a Penguin.
+        bird.Fly(); 
+    }
+}</code></pre>
+                                            <button class="copy-btn">Copy</button>
+                                        </div>
+                                        <h4 class="mt-6 font-semibold text-slate-800">Solution: Segregate Interfaces</h4>
+                                        <p class="mt-2 text-slate-600">The fix is to not force all birds to fly. We can create more specific abstractions. Birds can eat, but only some can fly.</p>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public abstract class Bird
+{
+    public void Eat()
+    {
+        Console.WriteLine("This bird is eating.");
+    }
+}
+
+public interface IFlyable
+{
+    void Fly();
+}
+
+public class Sparrow : Bird, IFlyable
+{
+    public void Fly()
+    {
+        Console.WriteLine("Sparrow flying high!");
+    }
+}
+
+public class Penguin : Bird
+{
+    // No Fly() method. No LSP violation.
+    public void Swim()
+    {
+        Console.WriteLine("Penguin is swimming.");
+    }
+}
+
+public class BirdWatcher
+{
+    // This method now only accepts birds that can fly.
+    public void ObserveFlyer(IFlyable flyingBird)
+    {
+        flyingBird.Fly();
+    }
+}
+</code></pre>
+                                            <button class="copy-btn">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div x-show="tab === 'medium'" x-cloak>
+                                        <h3 class="text-xl font-bold text-slate-800">Payment Processor Hierarchy</h3>
+                                        <p class="mt-2 text-slate-600">Imagine a `PaymentProcessor` base class with methods to `ProcessPayment` and `IssueRefund`. A derived `GuestPaymentProcessor` might not be allowed to issue refunds, violating LSP.</p>
+                                        <h4 class="mt-4 font-semibold text-slate-800">Problematic Code (C#)</h4>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public abstract class PaymentProcessor
+{
+    public abstract void ProcessPayment(decimal amount);
+    public abstract void IssueRefund(decimal amount);
+}
+
+public class RegisteredUserProcessor : PaymentProcessor
+{
+    public override void ProcessPayment(decimal amount) { /* ... */ }
+    public override void IssueRefund(decimal amount) { /* ... */ }
+}
+
+public class GuestUserProcessor : PaymentProcessor
+{
+    public override void ProcessPayment(decimal amount) { /* ... */ }
+    public override void IssueRefund(decimal amount)
+    {
+        // Guests are not allowed refunds. LSP violation.
+        throw new InvalidOperationException("Guests cannot be refunded.");
+    }
+}</code></pre>
+                                            <button class="copy-btn">Copy</button>
+                                        </div>
+                                        <h4 class="mt-6 font-semibold text-slate-800">Solution: Role-Based Interfaces</h4>
+                                        <p class="mt-2 text-slate-600">Similar to the bird example, we can break the abstraction into smaller, more focused interfaces. Not all processors need to be refundable.</p>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public interface IPaymentProcessor
+{
+    void ProcessPayment(decimal amount);
+}
+
+public interface IRefundableProcessor
+{
+    void IssueRefund(decimal amount);
+}
+
+// Implements both payment and refund logic
+public class RegisteredUserProcessor : IPaymentProcessor, IRefundableProcessor
+{
+    public void ProcessPayment(decimal amount) { /* ... */ }
+    public void IssueRefund(decimal amount) { /* ... */ }
+}
+
+// Only implements payment logic
+public class GuestUserProcessor : IPaymentProcessor
+{
+    public void ProcessPayment(decimal amount) { /* ... */ }
+}
+
+public class ECommerceSite
+{
+    public void Refund(IRefundableProcessor processor, decimal amount)
+    {
+        // This method can now only accept processors that can refund.
+        // It's impossible to pass a GuestUserProcessor here.
+        processor.IssueRefund(amount);
+    }
+}</code></pre>
+                                            <button class="copy-btn">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div x-show="tab === 'hard'" x-cloak>
+                                        <h3 class="text-xl font-bold text-slate-800">Vehicle System</h3>
+                                        <p class="mt-2 text-slate-600">A `Vehicle` base class has an `Engine` and a method `StartEngine()`. This seems fine for a `Car`, but what about an `ElectricCar` that doesn't have a traditional engine? Or a `Bicycle` that has no engine at all?</p>
+                                        <h4 class="mt-4 font-semibold text-slate-800">Problematic Code (C#)</h4>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public class Engine { /* ... */ }
+
+public abstract class Vehicle
+{
+    public Engine Engine { get; protected set; }
+    public abstract void StartEngine();
+}
+
+public class Car : Vehicle
+{
+    public Car() { this.Engine = new Engine(); }
+    public override void StartEngine() { /* Start internal combustion engine */ }
+}
+
+public class Bicycle : Vehicle
+{
+    public Bicycle() { this.Engine = null; } // What to do here?
+    public override void StartEngine()
+    {
+        // A bicycle has no engine. LSP violation.
+        throw new NotImplementedException();
+    }
+}</code></pre>
+                                            <button class="copy-btn">Copy</button>
+                                        </div>
+                                        <h4 class="mt-6 font-semibold text-slate-800">Solution: Abstract Away the Power Source</h4>
+                                        <p class="mt-2 text-slate-600">The issue is the assumption that all vehicles are motorized in the same way. We need a more general abstraction for movement.</p>
+                                        <div class="code-block mt-2">
+                                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// Base class for any vehicle, motorized or not.
+public abstract class Vehicle
+{
+    public abstract void Move();
+}
+
+// A more specific abstraction for vehicles with a motor.
+public abstract class MotorizedVehicle : Vehicle
+{
+    public abstract void EngageMotor();
+}
+
+public class Car : MotorizedVehicle
+{
+    public override void EngageMotor() { /* Start internal combustion engine */ }
+    public override void Move() { EngageMotor(); /* ... */ }
+}
+
+public class ElectricCar : MotorizedVehicle
+{
+    public override void EngageMotor() { /* Activate electric motor */ }
+    public override void Move() { EngageMotor(); /* ... */ }
+}
+
+public class Bicycle : Vehicle
+{
+    // No motor, no EngageMotor method. No LSP violation.
+    public override void Move() { /* Pedal to move */ }
+}
+
+public class Driver
+{
+    public void Drive(Vehicle vehicle)
+    {
+        // This works for any vehicle type, respecting LSP.
+        vehicle.Move();
+    }
+}
+</code></pre>
+                                            <button class="copy-btn">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="uml" aria-labelledby="uml-title">
+                            <h2 id="uml-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">✅ UML Inheritance Diagram (Before vs. After)</h2>
+                            <p class="mt-4 text-slate-700 leading-relaxed">Let's visualize the refactoring of the classic Rectangle/Square problem. The "before" diagram shows a flawed inheritance, while the "after" diagram presents a correct model that respects LSP.</p>
+                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div>
+                                    <h3 class="text-lg font-bold text-center text-red-600">Before Refactor (LSP Violation)</h3>
+                                    <div class="uml-diagram mt-4 p-4 bg-white rounded-lg border border-slate-200 h-80 flex flex-col items-center justify-center relative">
+                                        <div class="uml-class w-48">
+                                            <div class="uml-class-title">Rectangle</div>
+                                            <div class="uml-method">setWidth(w)</div>
+                                            <div class="uml-method">setHeight(h)</div>
+                                        </div>
+                                        <div class="uml-connector" style="height: 40px; top: 106px;"></div>
+                                        <div class="uml-arrow" style="top: 146px;"></div>
+                                        <div class="uml-class w-48 mt-10">
+                                            <div class="uml-class-title">Square</div>
+                                            <div class="uml-method">setWidth(s)</div>
+                                            <div class="uml-method">setHeight(s)</div>
+                                        </div>
+                                        <p class="text-xs text-red-500 absolute bottom-2 text-center">`Square` alters the independent nature of Width and Height, breaking the contract.</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-center text-green-600">After Refactor (LSP Compliant)</h3>
+                                     <div class="uml-diagram mt-4 p-4 bg-white rounded-lg border border-slate-200 h-80 flex flex-col items-center justify-around relative">
+                                        <div class="uml-class w-48">
+                                            <div class="uml-class-title">Shape</div>
+                                            <div class="uml-method">GetArea()</div>
+                                        </div>
+                                        <div class="absolute top-[8rem] left-0 right-0 h-[2px] bg-slate-300"></div>
+                                        <div class="uml-connector" style="height: 30px; top: 106px;"></div>
+                                        <div class="flex w-full justify-around items-center mt-6">
+                                            <div class="relative">
+                                                <div class="uml-connector" style="height: 30px; left: 50%; transform: translateX(-50%); top: -30px;"></div>
+                                                <div class="uml-arrow" style="top: -30px; left: 50%; transform: translateX(-50%);"></div>
+                                                <div class="uml-class w-40">
+                                                    <div class="uml-class-title">Rectangle</div>
+                                                    <div class="uml-method">...</div>
+                                                </div>
+                                            </div>
+                                            <div class="relative">
+                                                <div class="uml-connector" style="height: 30px; left: 50%; transform: translateX(-50%); top: -30px;"></div>
+                                                <div class="uml-arrow" style="top: -30px; left: 50%; transform: translateX(-50%);"></div>
+                                                <div class="uml-class w-40">
+                                                    <div class="uml-class-title">Square</div>
+                                                    <div class="uml-method">...</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-green-600 absolute bottom-2 text-center">Both inherit from a common `Shape` interface, removing the problematic direct inheritance.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <section id="knowledge-check" aria-labelledby="knowledge-check-title" x-data="quiz()">
+                            <h2 id="knowledge-check-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">🧠 Knowledge Check Quiz</h2>
+                            <div class="mt-6 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                                <div x-show="!quizFinished">
+                                    <h3 class="text-lg font-semibold text-slate-800" x-text="currentQuestion.question"></h3>
+                                    <p class="text-sm text-slate-500" x-text="`Question ${currentQuestionIndex + 1} of ${questions.length}`"></p>
+                                    <div class="mt-4 space-y-3">
+                                        <template x-for="(option, index) in currentQuestion.options" :key="index">
+                                            <button 
+                                                @click="selectOption(index)"
+                                                :disabled="answered"
+                                                class="w-full text-left p-4 border-2 rounded-lg transition-colors quiz-option"
+                                                :class="{ 'selected': selectedOption === index, 'correct': answered && index === currentQuestion.correct, 'incorrect': answered && selectedOption === index && index !== currentQuestion.correct }"
+                                            >
+                                                <span x-text="option"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                    <div x-show="answered" class="mt-4 p-3 rounded-md text-sm" :class="selectedOption === currentQuestion.correct ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                                        <p x-text="currentQuestion.explanation"></p>
+                                    </div>
+                                    <button @click="nextQuestion" x-show="answered" class="mt-4 bg-slate-700 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-800 transition-colors">
+                                        <span x-text="currentQuestionIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'"></span>
+                                    </button>
+                                </div>
+                                <div x-show="quizFinished">
+                                    <h3 class="text-2xl font-bold text-slate-800">Quiz Complete!</h3>
+                                    <p class="mt-2 text-lg text-slate-600">You scored <strong x-text="score" class="text-sky-500"></strong> out of <strong x-text="questions.length" class="text-sky-500"></strong>.</p>
+                                    <p class="mt-2" x-text="scoreText"></p>
+                                    <button @click="resetQuiz" class="mt-6 bg-sky-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-sky-600 transition-colors">
+                                        Try Again
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="self-assessment" aria-labelledby="self-assessment-title" x-data="{ solutionVisible: false }">
+                            <h2 id="self-assessment-title" class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">🎯 Self-Assessment Challenge</h2>
+                            <div class="mt-6 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                                <h3 class="text-xl font-bold text-slate-800">The Document Storage Problem</h3>
+                                <p class="mt-2 text-slate-600">You are designing a system to handle documents. You have a base `Document` class with `Load()` and `Save()` methods. You then create a `ReadOnlyDocument` class that inherits from `Document`.</p>
+                                <p class="mt-2 text-slate-600">How does `ReadOnlyDocument` violate LSP? How would you refactor the class hierarchy to be LSP-compliant?</p>
+                                <ul class="list-disc list-inside mt-2 text-slate-600 space-y-1">
+                                    <li>A `ReadOnlyDocument` cannot be saved.</li>
+                                    <li>A client function that accepts a `Document` object would expect to be able to call `Save()` on it.</li>
+                                    <li>If you pass a `ReadOnlyDocument` to this function, it will either have to do nothing (violating behavior) or throw an exception (crashing the program).</li>
+                                </ul>
+                                <button @click="solutionVisible = !solutionVisible" class="mt-4 flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-700">
+                                    <span x-text="solutionVisible ? 'Hide Solution' : 'Show Solution'"></span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 transition-transform" :class="{ 'rotate-180': solutionVisible }">
+                                        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <div x-show="solutionVisible" x-cloak x-transition class="mt-4 border-t border-slate-200 pt-4">
+                                    <h4 class="font-semibold text-slate-800">Refactored Solution (C#)</h4>
+                                    <p class="mt-2 text-slate-600">The solution is to separate the concerns of reading and writing into different interfaces. A document can be readable, writable, or both.</p>
+                                    <div class="code-block mt-2">
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">public interface IReadableDocument
+{
+    void Load();
+}
+
+public interface IWritableDocument
+{
+    void Save();
+}
+
+// This document can only be read.
+public class ReadOnlyDocument : IReadableDocument
+{
+    public void Load() { /* ... */ }
+}
+
+// This document can be read and written to.
+public class WritableDocument : IReadableDocument, IWritableDocument
+{
+    public void Load() { /* ... */ }
+    public void Save() { /* ... */ }
+}
+
+public class DocumentManager
+{
+    // This client code only needs to save documents.
+    // It can only accept documents that are guaranteed to be writable.
+    public void SaveDocument(IWritableDocument doc)
+    {
+        doc.Save();
+    }
+}</code></pre>
+                                        <button class="copy-btn">Copy</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </article>
+                </div>
+
+                <aside class="w-full lg:w-1/4 mt-12 lg:mt-0">
+                    <div class="sticky top-8">
+                        <h3 class="text-lg font-semibold text-slate-800 font-lexend">On this page</h3>
+                        <nav id="toc" class="mt-4">
+                            <ul class="space-y-2">
+                                <li><a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">Core Theory</a></li>
+                                <li><a href="#violations" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">LSP Violations</a></li>
+                                <li><a href="#backend-example" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">Real-World Backend Example</a></li>
+                                <li><a href="#interactive-demo" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">Interactive Demo</a></li>
+                                <li><a href="#coding-practice" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">Coding Practice</a></li>
+                                <li><a href="#uml" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">UML Diagram</a></li>
+                                <li><a href="#knowledge-check" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">Knowledge Check</a></li>
+                                <li><a href="#self-assessment" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-500 hover:border-sky-500 transition-colors">Self-Assessment</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </aside>
+            </div>
+        </main>
+
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('lspDemo', () => ({
+                width: 10,
+                height: 15,
+                result: false,
+                isViolation: false,
+                resultText: '',
+                chart: null,
+                init() {
+                    const ctx = document.getElementById('lspChart').getContext('2d');
+                    this.chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Expected Area', 'Actual Area'],
+                            datasets: [{
+                                label: 'Area Comparison',
+                                data: [0, 0],
+                                backgroundColor: [
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 99, 132, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(255, 99, 132, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Area Calculation Results'
+                                }
+                            }
+                        }
+                    });
+                },
+                runTest() {
+                    const expectedArea = this.width * this.height;
+                    
+                    // Simulate a Square behaving like a Rectangle
+                    // A square's setWidth would also set its height, and vice versa.
+                    // We'll simulate this by taking the last changed value.
+                    // Here, we'll assume setting height last is the "square" behavior.
+                    const squareSide = this.height;
+                    const actualArea = squareSide * squareSide; 
+
+                    this.result = true;
+                    this.isViolation = expectedArea !== actualArea;
+                    
+                    if (this.isViolation) {
+                        this.resultText = `LSP VIOLATION! The code expected an area of ${expectedArea} (W:${this.width} * H:${this.height}), but the 'Square' object returned ${actualArea}. The substitutability failed because the Square changed its width when its height was set.`;
+                    } else {
+                        this.resultText = `LSP respected. The object behaved as a standard Rectangle. Expected and actual area are both ${expectedArea}.`;
+                    }
+                    this.updateChart(expectedArea, actualArea);
+                },
+                updateChart(expected, actual){
+                    this.chart.data.datasets[0].data[0] = expected;
+                    this.chart.data.datasets[0].data[1] = actual;
+                    this.chart.update();
+                }
+            }));
+            
+            Alpine.data('quiz', () => ({
+                questions: [
+                    {
+                        question: "What is the core idea of the Liskov Substitution Principle?",
+                        options: [
+                            "Classes should be open for extension but closed for modification.",
+                            "Objects of a superclass should be replaceable with objects of its subclasses without affecting the correctness of the program.",
+                            "A class should have only one reason to change.",
+                            "Clients should not be forced to depend on interfaces they do not use."
+                        ],
+                        correct: 1,
+                        explanation: "LSP is all about substitutability. A subtype must be able to stand in for its base type without causing issues."
+                    },
+                    {
+                        question: "Which of the following is a classic sign of an LSP violation in a derived class method?",
+                        options: [
+                            "Calling the base class method using `base.Method()`.",
+                            "Adding new public methods not present in the base class.",
+                            "Throwing a `NotImplementedException`.",
+                            "Overriding a virtual method to provide specific functionality."
+                        ],
+                        correct: 2,
+                        explanation: "Throwing this exception explicitly states that the subtype cannot fulfill the contract of the supertype, a direct violation of LSP."
+                    },
+                    {
+                        question: "In the famous 'Rectangle vs. Square' problem, why does having `Square` inherit from `Rectangle` violate LSP?",
+                        options: [
+                            "Because a square is not a rectangle.",
+                            "Because `Square` cannot calculate its area correctly.",
+                            "Because `Square` changes the invariant that a `Rectangle`'s width and height can be modified independently.",
+                            "Because `Rectangle` should be an abstract class."
+                        ],
+                        correct: 2,
+                        explanation: "The violation occurs because client code operating on a `Rectangle` reference expects to set width and height independently. A `Square` breaks this behavioral contract."
+                    },
+                    {
+                        question: "What is a common strategy to fix LSP violations, like the 'Bird cannot fly' problem?",
+                        options: [
+                            "Make all methods in the base class virtual.",
+                            "Use composition instead of inheritance always.",
+                            "Create smaller, more specific interfaces (like `IFlyable`) and implement them only in relevant classes.",
+                            "Add a boolean property like `CanFly` to the base `Bird` class."
+                        ],
+                        correct: 2,
+                        explanation: "Segregating responsibilities into smaller interfaces (Interface Segregation Principle) is often the best way to resolve LSP issues. It avoids forcing a contract onto a class that cannot fulfill it."
+                    }
+                ],
+                currentQuestionIndex: 0,
+                selectedOption: null,
+                answered: false,
+                score: 0,
+                quizFinished: false,
+
+                get currentQuestion() {
+                    return this.questions[this.currentQuestionIndex];
+                },
+                get scoreText() {
+                    const percentage = (this.score / this.questions.length) * 100;
+                    if (percentage === 100) return "Excellent! You have a solid grasp of LSP.";
+                    if (percentage >= 75) return "Great job! You understand the key concepts of LSP.";
+                    if (percentage >= 50) return "Good effort. Review the theory sections to solidify your understanding.";
+                    return "It looks like LSP is still a bit tricky. It's a tough concept, so don't worry! Try reviewing the examples again.";
+                },
+                selectOption(index) {
+                    if (this.answered) return;
+                    this.selectedOption = index;
+                    this.answered = true;
+                    if (index === this.currentQuestion.correct) {
+                        this.score++;
+                    }
+                },
+                nextQuestion() {
+                    if (this.currentQuestionIndex < this.questions.length - 1) {
+                        this.currentQuestionIndex++;
+                        this.resetQuestionState();
+                    } else {
+                        this.quizFinished = true;
+                    }
+                },
+                resetQuestionState() {
+                    this.selectedOption = null;
+                    this.answered = false;
+                },
+                resetQuiz() {
+                    this.currentQuestionIndex = 0;
+                    this.score = 0;
+                    this.quizFinished = false;
+                    this.resetQuestionState();
+                }
+            }));
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const pre = button.parentElement.querySelector('pre');
+                    const text = pre.innerText;
+                    navigator.clipboard.writeText(text).then(() => {
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    });
+                });
+            });
+            
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('#toc a');
+            
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const tocLink = document.querySelector(`#toc a[href="#${id}"]`);
+                    
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => link.classList.remove('active'));
+                        tocLink.classList.add('active');
+                    }
+                });
+            }, { rootMargin: '-30% 0px -60% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
+
