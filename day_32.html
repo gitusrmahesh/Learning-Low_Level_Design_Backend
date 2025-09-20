@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 32: Prototype Pattern - Low-Level Design Bootcamp</title>
+    <!-- Chosen Palette: Calm Neutrals with Slate and Amber Accents -->
+    <!-- Application Structure Plan: A linear, single-page lesson format with a sticky right-hand table of contents for seamless navigation. The structure progresses from theory to interactive visualization, then to practical coding, and finally to assessment. This was chosen to mirror a natural learning path, where concepts are introduced, visually demonstrated, practiced, and then tested, ensuring a comprehensive and user-friendly educational experience. -->
+    <!-- Visualization & Content Choices: Report Info: Shallow vs Deep copy -> Goal: Clarify the abstract difference -> Viz/Presentation: Interactive HTML/CSS diagram -> Interaction: User clicks 'Shallow Copy'/'Deep Copy' buttons to see visual changes in object references and values. Justification: This provides immediate, concrete feedback that is more effective than static text for understanding memory and reference concepts. Method: Vanilla JS DOM manipulation. Report Info: UML Diagram -> Goal: Present class relationships -> Viz/Presentation: HTML/CSS structure using Tailwind's flexbox/grid. Justification: Avoids static images/SVG, keeping the entire page self-contained and easily maintainable. Method: HTML/CSS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #f59e0b;
+            font-weight: 600;
+            border-left-color: #f59e0b;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #4a5568;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #2d3748;
+        }
+        .quiz-option:hover {
+            background-color: #f0f4f8;
+        }
+        .quiz-option.selected {
+            border-color: #3b82f6;
+            background-color: #dbeafe;
+        }
+        .quiz-option.correct {
+            border-color: #22c55e;
+            background-color: #dcfce7;
+        }
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background-color: #fee2e2;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="#" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:flex lg:space-x-12">
+            <main class="lg:w-3/4">
+                <article class="prose max-w-none">
+                    <header>
+                        <p class="text-amber-600 font-semibold">Creational Design Patterns (Days 29–35)</p>
+                        <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight font-lexend">Day 32: Prototype Pattern</h1>
+                        <p class="mt-4 text-lg text-slate-600">Learn how to create new objects by copying existing ones, a technique that boosts performance and flexibility by avoiding costly instantiation.</p>
+                    </header>
+                            <p class="mt-4 text-slate-700">The Prototype pattern offers an elegant solution. Instead of building a new object from scratch, you ask an existing object (the "prototype") to make a copy of itself. This pattern specifies the kinds of objects to create using a prototypical instance, and creates new objects by copying this prototype.</p>
+                         <div class="bg-amber-100/60 border-l-4 border-amber-500 text-amber-800 p-4 rounded-r-lg mt-6" role="alert">
+                            <p><strong class="font-semibold">Core Idea:</strong> Instead of `new MyObject()`, you use `existingObject.Clone()`. This delegates the creation process to the object itself, which knows best how to create a faithful copy.</p>
+                        </div>
+                        <div class="mt-8 text-center">
+                            
+                            <p class="text-xs text-slate-500 italic mt-2">Analogy: The Prototype pattern acts like a photocopier for objects, creating new instances from a master copy.</p>
+                        </div>
+                    </section>
+
+                    <section id="theory" class="mt-12 scroll-mt-24">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-800 font-lexend">✅ Theory Deep Dive</h2>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">When to Use the Prototype Pattern</h3>
+                            <p class="mt-2 text-slate-700">The Prototype pattern is particularly useful in the following scenarios:</p>
+                            <ul class="mt-4 list-disc list-inside space-y-2 text-slate-700">
+                                <li><strong>Performance Optimization:</strong> When the cost of creating an object is more expensive or complex than copying an existing one. Think of objects that require database calls, network requests, or heavy computations during instantiation.</li>
+                                <li><strong>Decoupling Client from Concrete Classes:</strong> When you want to avoid coupling your client code to the specific classes of the objects you need to create. The client can work with any object that supports a cloning interface.</li>
+                                <li><strong>Convenience:</strong> When you need an object that's almost identical to an existing object, with just a few properties changed. Cloning and then modifying is often easier than constructing from scratch.</li>
+                                <li><strong>Dynamic Configuration:</strong> When a system needs to be configured with objects whose classes are not known until runtime. You can register prototype instances and then clone them when needed.</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-8">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Shallow vs. Deep Copy</h3>
+                            <p class="mt-2 text-slate-700">This is the most critical concept in the Prototype pattern. The way you implement the cloning process determines the relationship between the original object and its copy.</p>
+                            <div class="mt-4 grid md:grid-cols-2 gap-8">
+                                <div class="bg-white p-6 rounded-lg border border-slate-200">
+                                    <h4 class="font-semibold text-slate-900">Shallow Copy</h4>
+                                    <p class="mt-2 text-sm text-slate-600">A shallow copy creates a new object and then copies the values of the original object's fields. If a field is a value type (like `int`, `bool`), its value is copied. However, if a field is a reference type (like another object, array, or string), only the reference (the memory address) is copied, not the object itself. Both the original and the clone end up pointing to the <span class="font-semibold">same</span> nested object.</p>
+                                    <div class="mt-3 text-sm bg-red-100 text-red-800 p-3 rounded-md"><strong>Danger:</strong> Modifying the referenced object through the clone will also change it for the original object, leading to unintended side effects.</div>
+                                </div>
+                                <div class="bg-white p-6 rounded-lg border border-slate-200">
+                                    <h4 class="font-semibold text-slate-900">Deep Copy</h4>
+                                    <p class="mt-2 text-sm text-slate-600">A deep copy creates a new object and then recursively creates new copies of all objects referenced by the original. The clone is a completely independent replica of the original and its entire object graph. No shared references (except for immutable types like strings) exist between the original and the clone.</p>
+                                    <div class="mt-3 text-sm bg-green-100 text-green-800 p-3 rounded-md"><strong>Benefit:</strong> The clone is fully independent. Changes made to the clone or its nested objects have no effect on the original object.</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 overflow-x-auto">
+                                <h4 class="text-xl font-bold text-slate-800 font-lexend mb-4">Comparison at a Glance</h4>
+                                <table class="w-full text-sm text-left text-slate-600 border border-slate-200 rounded-lg">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 rounded-tl-lg">Feature</th>
+                                            <th scope="col" class="px-6 py-3">Shallow Copy</th>
+                                            <th scope="col" class="px-6 py-3 rounded-tr-lg">Deep Copy</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="bg-white border-b border-slate-200">
+                                            <th scope="row" class="px-6 py-4 font-medium text-slate-900">Performance</th>
+                                            <td class="px-6 py-4">Fast, as it only copies references.</td>
+                                            <td class="px-6 py-4">Slower, as it must create new objects for every reference.</td>
+                                        </tr>
+                                        <tr class="bg-white border-b border-slate-200">
+                                            <th scope="row" class="px-6 py-4 font-medium text-slate-900">Object Independence</th>
+                                            <td class="px-6 py-4">Low. Original and clone share referenced objects.</td>
+                                            <td class="px-6 py-4">High. Original and clone are completely separate.</td>
+                                        </tr>
+                                        <tr class="bg-white border-b border-slate-200">
+                                            <th scope="row" class="px-6 py-4 font-medium text-slate-900">Implementation</th>
+                                            <td class="px-6 py-4">Simple (e.g., `MemberwiseClone()`).</td>
+                                            <td class="px-6 py-4">Complex. Requires manual cloning of each referenced object.</td>
+                                        </tr>
+                                        <tr class="bg-white">
+                                            <th scope="row" class="px-6 py-4 font-medium text-slate-900">Use Case</th>
+                                            <td class="px-6 py-4">Good for objects with only value types or when shared state is desired.</td>
+                                            <td class="px-6 py-4">Essential when you need a true, independent replica of a complex object.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="copy-visualizer" class="mt-8 p-6 bg-white rounded-lg border border-slate-200 scroll-mt-24">
+                            <h4 class="text-xl font-bold text-slate-800 font-lexend text-center">Interactive Copy Visualizer</h4>
+                            <p class="text-center text-slate-600 text-sm mt-1">Click the buttons to see the difference in memory representation.</p>
+                            <div class="flex justify-center space-x-4 mt-4">
+                                <button id="shallowCopyBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">Perform Shallow Copy</button>
+                                <button id="deepCopyBtn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Perform Deep Copy</button>
+                                <button id="resetBtn" class="bg-slate-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-600 transition-colors">Reset</button>
+                            </div>
+                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-start relative" id="visualizer-area">
+                                <!-- Original Object -->
+                                <div>
+                                    <h5 class="font-semibold text-center text-slate-700">Original User Profile</h5>
+                                    <div id="original" class="mt-2 p-4 border-2 border-slate-400 rounded-lg bg-slate-50 min-h-[150px]">
+                                        <p class="text-sm"><strong>ID:</strong> <span class="font-mono bg-slate-200 px-1 rounded">123</span></p>
+                                        <p class="mt-1 text-sm"><strong>Name:</strong> <span class="font-mono bg-slate-200 px-1 rounded">"Alex"</span></p>
+                                        <div class="mt-2 text-sm">
+                                            <strong>Settings (Object):</strong>
+                                            <div id="originalSettings" class="ml-4 mt-1 p-2 border border-slate-300 rounded bg-white">
+                                                <p><strong>Theme:</strong> <input id="originalTheme" type="text" value="Dark" class="font-mono bg-slate-200 px-1 rounded w-20"></p>
+                                                <p class="mt-1"><strong>Notifications:</strong> <span class="font-mono bg-slate-200 px-1 rounded">true</span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Cloned Object -->
+                                <div>
+                                    <h5 class="font-semibold text-center text-slate-700">Cloned User Profile</h5>
+                                    <div id="cloneContainer" class="mt-2 p-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 min-h-[150px] flex items-center justify-center">
+                                        <p class="text-slate-500">Waiting for copy...</p>
+                                    </div>
+                                    <p id="cloneExplanation" class="text-xs text-center mt-2 text-slate-500 h-8"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <h3 class="text-2xl font-semibold text-slate-800 font-lexend">Cloning Objects in C#</h3>
+                            <p class="mt-2 text-slate-700">C# provides built-in mechanisms to support cloning, primarily through the <code class="bg-slate-200 text-sm font-mono p-1 rounded">ICloneable</code> interface and the <code class="bg-slate-200 text-sm font-mono p-1 rounded">MemberwiseClone()</code> method.</p>
+                            
+                            <h4 class="mt-4 font-semibold text-slate-900">The `ICloneable` Interface</h4>
+                            <p class="text-slate-700">This interface defines a single method, <code class="bg-slate-200 text-sm font-mono p-1 rounded">object Clone()</code>. Implementing this interface signals that an object can be cloned. However, the .NET documentation recommends against using it in public APIs because it doesn't specify whether the clone is shallow or deep.</p>
+                             <div class="code-block mt-2">
+                                <button class="copy-button">Copy</button>
+                                <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">public interface ICloneable
+{
+    object Clone();
+}</code></pre>
+                            </div>
+
+                            <h4 class="mt-4 font-semibold text-slate-900">`Object.MemberwiseClone()`</h4>
+                            <p class="text-slate-700">This is a <code class="bg-slate-200 text-sm font-mono p-1 rounded">protected</code> method available to all objects. It performs a <span class="font-semibold">shallow copy</span>. It creates a new object and copies the non-static fields of the current object to the new object. You typically call this method from within your own `Clone()` implementation.</p>
+                             <div class="code-block mt-2">
+                                <button class="copy-button">Copy</button>
+                                <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">public class MyClass : ICloneable
+{
+    public int ValueType;
+    public SomeReferenceType ReferenceType;
+
+    public object Clone()
+    {
+        // This performs a shallow copy.
+        return this.MemberwiseClone();
+    }
+}</code></pre>
+                            </div>
+                        </div>
+
+                    </section>
+                    
+                    <section id="coding" class="mt-12 scroll-mt-24">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-800 font-lexend">✅ Coding Practice</h2>
+
+                        <div class="mt-8 bg-white p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-bold text-slate-800 font-lexend">[Easy] Clone Shape Objects</h3>
+                            <p class="mt-2 text-slate-600">Create an abstract `Shape` class that can be cloned. Implement concrete `Circle` and `Rectangle` classes. Show how to create a new circle by cloning an existing one.</p>
+                             <div class="mt-4">
+                                <button class="toggle-solution-btn bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Solution</button>
+                                <div class="solution-content hidden mt-4 border-t border-slate-200 pt-4">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">
+using System;
+
+public abstract class Shape
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public string Color { get; set; }
+
+    public abstract Shape Clone();
+
+    public override string ToString()
+    {
+        return $"Position: ({X},{Y}), Color: {Color}";
+    }
+}
+
+public class Circle : Shape
+{
+    public int Radius { get; set; }
+
+    public override Shape Clone()
+    {
+        return (Shape)this.MemberwiseClone();
+    }
+    
+    public override string ToString()
+    {
+        return $"Circle - {base.ToString()}, Radius: {Radius}";
+    }
+}
+
+public class Rectangle : Shape
+{
+    public int Width { get; set; }
+    public int Height { get; set; }
+
+    public override Shape Clone()
+    {
+        return (Shape)this.MemberwiseClone();
+    }
+    
+    public override string ToString()
+    {
+        return $"Rectangle - {base.ToString()}, Width: {Width}, Height: {Height}";
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        Circle originalCircle = new Circle
+        {
+            X = 10,
+            Y = 20,
+            Color = "Red",
+            Radius = 5
+        };
+
+        Circle clonedCircle = (Circle)originalCircle.Clone();
+        clonedCircle.Color = "Blue"; // Change color of the clone
+
+        Console.WriteLine("Original Circle: " + originalCircle);
+        Console.WriteLine("Cloned Circle: " + clonedCircle);
+    }
+}
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 bg-white p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-bold text-slate-800 font-lexend">[Medium] Deep Copy with Manual Implementation</h3>
+                            <p class="mt-2 text-slate-600">Create a `PurchaseOrder` class that contains a reference to a `CustomerDetails` class. Implement a deep copy `Clone` method for the `PurchaseOrder`.</p>
+                             <div class="mt-4">
+                                <button class="toggle-solution-btn bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Solution</button>
+                                <div class="solution-content hidden mt-4 border-t border-slate-200 pt-4">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">
+using System;
+
+public class CustomerDetails
+{
+    public string Name { get; set; }
+    public string ShippingAddress { get; set; }
+    
+    public CustomerDetails Clone()
+    {
+        return (CustomerDetails)this.MemberwiseClone();
+    }
+}
+
+public class PurchaseOrder
+{
+    public int OrderId { get; set; }
+    public CustomerDetails Customer { get; set; }
+    
+    public PurchaseOrder Clone()
+    {
+        // Start with a shallow copy of the PurchaseOrder itself.
+        PurchaseOrder clonedOrder = (PurchaseOrder)this.MemberwiseClone();
+        
+        // Now, manually create a deep copy of the referenced CustomerDetails object.
+        clonedOrder.Customer = this.Customer.Clone();
+        
+        return clonedOrder;
+    }
+    
+    public override string ToString()
+    {
+        return $"Order ID: {OrderId}, Customer: {Customer.Name}, Address: {Customer.ShippingAddress}";
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        PurchaseOrder originalOrder = new PurchaseOrder
+        {
+            OrderId = 101,
+            Customer = new CustomerDetails { Name = "John Doe", ShippingAddress = "123 Main St" }
+        };
+
+        PurchaseOrder deepClonedOrder = originalOrder.Clone();
+        
+        // Modify the cloned order's customer details
+        deepClonedOrder.Customer.ShippingAddress = "456 Oak Ave";
+
+        Console.WriteLine("Original Order: " + originalOrder);
+        Console.WriteLine("Deep Cloned Order: " + deepClonedOrder);
+        
+        // Note that the original order's address remains unchanged.
+    }
+}
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-sky-100/60 border-l-4 border-sky-500 text-sky-800 p-4 rounded-r-lg mt-8" role="alert">
+                           <p><strong class="font-semibold">Pro Tip: Deep Copy via Serialization</strong></p>
+                           <p class="mt-1 text-sm">Manually implementing deep copy can be tedious for complex object graphs. A common, generic alternative is to serialize the object to a format like JSON or XML, and then deserialize it back into a new object. This automatically creates a deep copy, but comes with a performance cost and may require attributes (like `[Serializable]`) on your classes.</p>
+                       </div>
+
+                        <div class="mt-8 bg-white p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-bold text-slate-800 font-lexend">[Hard] Clone Employee Hierarchy with Deep Copy</h3>
+                            <p class="mt-2 text-slate-600">Design a system to represent an employee hierarchy. An `Employee` can have a `Manager` (who is also an `Employee`) and a list of `Subordinates`. Implement a deep cloning mechanism for an `Employee` object, ensuring the entire reporting chain is correctly cloned.</p>
+                             <div class="mt-4">
+                                <button class="toggle-solution-btn bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Solution</button>
+                                <div class="solution-content hidden mt-4 border-t border-slate-200 pt-4">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class Employee
+{
+    public string Name { get; set; }
+    public Employee Manager { get; set; }
+    public List<Employee> Subordinates { get; set; }
+
+    public Employee()
+    {
+        Subordinates = new List<Employee>();
+    }
+
+    public Employee DeepClone()
+    {
+        // 1. Create a shallow copy of the current employee
+        Employee clone = (Employee)this.MemberwiseClone();
+
+        // 2. Create a new list for subordinates
+        clone.Subordinates = new List<Employee>();
+        
+        // 3. Recursively clone each subordinate
+        foreach (var subordinate in this.Subordinates)
+        {
+            var clonedSubordinate = subordinate.DeepClone();
+            
+            // 4. Important: Set the manager of the cloned subordinate to be this clone
+            clonedSubordinate.Manager = clone;
+            clone.Subordinates.Add(clonedSubordinate);
+        }
+        
+        return clone;
+    }
+
+    public void PrintHierarchy(string indent = "")
+    {
+        Console.WriteLine($"{indent}- {Name} (Manager: {(Manager?.Name ?? "N/A")})");
+        foreach (var subordinate in Subordinates)
+        {
+            subordinate.PrintHierarchy(indent + "  ");
+        }
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        // Build the original hierarchy
+        Employee ceo = new Employee { Name = "Alice (CEO)" };
+        Employee vpEng = new Employee { Name = "Bob (VP Eng)", Manager = ceo };
+        Employee leadDev = new Employee { Name = "Charlie (Lead Dev)", Manager = vpEng };
+        Employee dev1 = new Employee { Name = "David (Dev)", Manager = leadDev };
+        
+        ceo.Subordinates.Add(vpEng);
+        vpEng.Subordinates.Add(leadDev);
+        leadDev.Subordinates.Add(dev1);
+
+        Console.WriteLine("Original Hierarchy:");
+        ceo.PrintHierarchy();
+        Console.WriteLine("\n------------------\n");
+        
+        // Clone the entire hierarchy starting from the VP
+        Employee clonedVpEng = vpEng.DeepClone();
+
+        // Let's modify the cloned hierarchy to prove it's independent
+        clonedVpEng.Name = "Bob Clone (New VP)";
+        clonedVpEng.Subordinates.First().Name = "Charlie Clone (New Lead)";
+        
+        // Add a new employee to the cloned hierarchy
+        var newDev = new Employee { Name = "Eve (New Dev)", Manager = clonedVpEng.Subordinates.First() };
+        clonedVpEng.Subordinates.First().Subordinates.Add(newDev);
+        
+        Console.WriteLine("Cloned & Modified Hierarchy (from VP):");
+        clonedVpEng.PrintHierarchy();
+        Console.WriteLine("\n------------------\n");
+
+        Console.WriteLine("Original Hierarchy (unchanged):");
+        ceo.PrintHierarchy();
+    }
+}
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="uml" class="mt-12 scroll-mt-24">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-800 font-lexend">✅ UML for Prototype Pattern</h2>
+                        <p class="mt-4 text-slate-700">The UML diagram for the Prototype pattern is straightforward. It highlights the client's interaction with an abstract prototype interface and the concrete implementation of cloning.</p>
+                        <div class="mt-6 p-6 bg-white rounded-lg border border-slate-200 flex flex-col items-center">
+                            <div class="w-full max-w-2xl">
+                                <!-- Prototype Interface -->
+                                <div class="border-2 border-slate-400 rounded-lg p-4 bg-slate-50 text-center">
+                                    <p class="font-semibold text-slate-800">&lt;&lt;interface&gt;&gt;</p>
+                                    <p class="font-bold text-lg text-slate-900">IPrototype</p>
+                                    <hr class="my-2 border-slate-300">
+                                    <p class="font-mono text-sm text-slate-700">Clone(): IPrototype</p>
+                                </div>
+                                <!-- Inheritance Arrow -->
+                                <div class="h-8 flex justify-center">
+                                    <div class="w-0.5 bg-slate-400"></div>
+                                </div>
+                                <div class="flex justify-center -mt-8">
+                                    <div class="w-4 h-4 border-l-2 border-b-2 border-slate-400 transform rotate-45 bg-white"></div>
+                                </div>
+                                <!-- Concrete Prototypes -->
+                                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-8">
+                                    <div class="border-2 border-slate-400 rounded-lg p-4 bg-white text-center">
+                                        <p class="font-bold text-lg text-slate-900">ConcretePrototype1</p>
+                                        <hr class="my-2 border-slate-300">
+                                        <p class="font-mono text-sm text-slate-700">Clone(): IPrototype</p>
+                                    </div>
+                                    <div class="border-2 border-slate-400 rounded-lg p-4 bg-white text-center">
+                                        <p class="font-bold text-lg text-slate-900">ConcretePrototype2</p>
+                                        <hr class="my-2 border-slate-300">
+                                        <p class="font-mono text-sm text-slate-700">Clone(): IPrototype</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-8 text-left w-full max-w-2xl">
+                                <h4 class="font-semibold text-slate-900">Components:</h4>
+                                <ul class="mt-2 list-disc list-inside space-y-1 text-slate-700">
+                                    <li><strong>IPrototype:</strong> An interface or abstract class that declares the `Clone` method.</li>
+                                    <li><strong>ConcretePrototype:</strong> A class that implements the `Clone` method. This class is responsible for copying itself.</li>
+                                    <li><strong>Client:</strong> The class that needs a new object. It asks a prototype object to clone itself instead of creating a new object directly.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="text-right mt-4 text-sm">
+                            <a href="#introduction" class="text-amber-600 hover:text-amber-700 font-semibold">↑ Back to Top</a>
+                        </div>
+                    </section>
+                    
+                    <section id="case-study" class="mt-12 scroll-mt-24">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-800 font-lexend">✅ Case Study: User Profile Cache for a Recommendation Engine</h2>
+                        <p class="mt-4 text-slate-700">Imagine you're building a high-performance recommendation engine for an e-commerce platform. To generate recommendations, you frequently need access to user profile data (purchase history, preferences, demographics). Fetching and assembling this data from the database for every request is slow and inefficient.</p>
+                        
+                        <h3 class="mt-6 text-2xl font-semibold text-slate-800 font-lexend">The Problem</h3>
+                        <p class="mt-2 text-slate-700">We need a way to quickly get user profile objects. A good approach is to have a cache of pre-loaded, template user profiles (e.g., "New User", "Book Lover", "Electronics Enthusiast"). When a new session starts, instead of building a profile from scratch, we want to grab a template and customize it. However, we can't give the session the actual cached template object, because any modifications would corrupt the template for subsequent users.</p>
+                        
+                        <h3 class="mt-6 text-2xl font-semibold text-slate-800 font-lexend">The Prototype Solution</h3>
+                        <p class="mt-2 text-slate-700">The Prototype pattern is perfect here. We can create a `ProfileCache` that stores prototype instances of different user profiles. When the recommendation engine needs a profile, it asks the cache for a clone of a specific template. This provides a fully independent, ready-to-use object without the cost of database access or complex construction.</p>
+                        
+                        <div class="mt-4">
+                            <button class="toggle-solution-btn bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Case Study Implementation</button>
+                            <div class="solution-content hidden mt-4 border-t border-slate-200 pt-4">
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">
+using System;
+using System.Collections.Generic;
+
+// Prototype
+public abstract class UserProfile
+{
+    public List<string> PurchaseHistory { get; set; }
+    public Dictionary<string, string> Preferences { get; set; }
+
+    public abstract UserProfile Clone();
+    
+    public void Display()
+    {
+        Console.WriteLine($"--- Profile ---");
+        Console.WriteLine("History: " + string.Join(", ", PurchaseHistory));
+        Console.WriteLine("Preferences:");
+        foreach(var pref in Preferences)
+        {
+            Console.WriteLine($"  {pref.Key}: {pref.Value}");
+        }
+        Console.WriteLine();
+    }
+}
+
+// Concrete Prototype
+public class StandardUserProfile : UserProfile
+{
+    public override UserProfile Clone()
+    {
+        // Deep copy implementation
+        var clone = (StandardUserProfile)this.MemberwiseClone();
+        clone.PurchaseHistory = new List<string>(this.PurchaseHistory);
+        clone.Preferences = new Dictionary<string, string>(this.Preferences);
+        return clone;
+    }
+}
+
+// Prototype Registry/Cache
+public class ProfileCache
+{
+    private Dictionary<string, UserProfile> _profiles = new Dictionary<string, UserProfile>();
+
+    public UserProfile GetProfile(string key)
+    {
+        return _profiles[key].Clone();
+    }
+
+    public void LoadCache()
+    {
+        Console.WriteLine("Loading profile prototypes into cache...");
+        
+        var bookLover = new StandardUserProfile
+        {
+            PurchaseHistory = new List<string> { "Book A", "Book B" },
+            Preferences = new Dictionary<string, string> { { "genre", "Sci-Fi" }, { "format", "eBook" } }
+        };
+        _profiles.Add("BookLover", bookLover);
+
+        var techie = new StandardUserProfile
+        {
+            PurchaseHistory = new List<string> { "Laptop", "Mouse" },
+            Preferences = new Dictionary<string, string> { { "brand", "BrandX" }, { "os", "Linux" } }
+        };
+        _profiles.Add("Techie", techie);
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        ProfileCache cache = new ProfileCache();
+        cache.LoadCache();
+
+        // Get a clone for a new user who likes books
+        UserProfile user1Profile = cache.GetProfile("BookLover");
+        Console.WriteLine("Got profile for User 1 (based on BookLover):");
+        user1Profile.Display();
+
+        // Customize it for User 1 without affecting the cache
+        user1Profile.PurchaseHistory.Add("Book C");
+        user1Profile.Preferences["author"] = "Author Y";
+        Console.WriteLine("Customized profile for User 1:");
+        user1Profile.Display();
+        
+        // Get another clone, it should be the original template
+        UserProfile user2Profile = cache.GetProfile("BookLover");
+        Console.WriteLine("Got profile for User 2 (based on BookLover):");
+        user2Profile.Display();
+    }
+}
+                                    </code></pre>
+                                </div>
+                                <div class="mt-6">
+                                    <h4 class="font-semibold text-slate-900">Key Benefits Realized:</h4>
+                                    <ul class="mt-2 list-disc list-inside space-y-1 text-slate-700">
+                                        <li><strong>Performance:</strong> Cloning an in-memory object is orders of magnitude faster than hitting the database and constructing a new one.</li>
+                                        <li><strong>Reduced Complexity:</strong> The client (recommendation engine) doesn't need to know how to build a `UserProfile`. It just asks the cache for a pre-built model.</li>
+                                        <li><strong>Encapsulation:</strong> The cloning logic is hidden within the `UserProfile` class, adhering to good object-oriented principles.</li>
+                                        <li><strong>Flexibility:</strong> New profile templates can be added to the cache at runtime without changing the client code.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right mt-4 text-sm">
+                            <a href="#introduction" class="text-amber-600 hover:text-amber-700 font-semibold">↑ Back to Top</a>
+                        </div>
+                    </section>
+                    
+                    <section id="quiz" class="mt-12 scroll-mt-24">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-800 font-lexend">🧠 Knowledge Check</h2>
+                        <div id="quiz-container" class="mt-6 space-y-8"></div>
+                        <div class="text-right mt-4 text-sm">
+                            <a href="#introduction" class="text-amber-600 hover:text-amber-700 font-semibold">↑ Back to Top</a>
+                        </div>
+                    </section>
+                    
+                    <section id="challenge" class="mt-12 scroll-mt-24">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-800 font-lexend">🚀 Self-Assessment Challenge</h2>
+                         <div class="mt-6 bg-white p-6 rounded-lg border border-slate-200">
+                             <h3 class="text-xl font-bold text-slate-800 font-lexend">Challenge: Cloneable Game Level Configuration</h3>
+                             <p class="mt-2 text-slate-600">You are creating a game with many levels. Each `Level` object contains a list of `Enemy` objects and a `Map` object. The `Map` has properties like `TerrainType` and `Size`. You need to create a feature that allows level designers to create new levels by using existing levels as templates. Implement a deep cloning mechanism for the `Level` class. Ensure that when a level is cloned, the new level has its own independent list of enemies and its own map object.</p>
+                             <div class="mt-4">
+                                <button class="toggle-solution-btn bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Challenge Solution</button>
+                                <div class="solution-content hidden mt-4 border-t border-slate-200 pt-4">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre><code class="language-csharp" style="display: block; overflow-x: auto; padding: 1em; background: #282c34; color: #abb2bf; border-radius: 8px;">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class Map
+{
+    public string TerrainType { get; set; }
+    public int Size { get; set; }
+    
+    public Map Clone() => (Map)this.MemberwiseClone();
+}
+
+public class Enemy
+{
+    public string Type { get; set; }
+    public int Health { get; set; }
+    
+    public Enemy Clone() => (Enemy)this.MemberwiseClone();
+}
+
+public class Level
+{
+    public string LevelName { get; set; }
+    public Map LevelMap { get; set; }
+    public List<Enemy> Enemies { get; set; }
+
+    public Level()
+    {
+        Enemies = new List<Enemy>();
+    }
+
+    public Level DeepClone()
+    {
+        // 1. Shallow copy the Level object itself
+        Level clone = (Level)this.MemberwiseClone();
+        
+        // 2. Deep copy the Map
+        clone.LevelMap = this.LevelMap.Clone();
+        
+        // 3. Deep copy the list of Enemies
+        clone.Enemies = this.Enemies.Select(enemy => enemy.Clone()).ToList();
+        
+        return clone;
+    }
+    
+    public void PrintDetails()
+    {
+        Console.WriteLine($"--- Level: {LevelName} ---");
+        Console.WriteLine($"Map: {LevelMap.TerrainType}, Size: {LevelMap.Size}");
+        Console.WriteLine("Enemies:");
+        foreach(var enemy in Enemies)
+        {
+            Console.WriteLine($"  - {enemy.Type} (Health: {enemy.Health})");
+        }
+        Console.WriteLine();
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var forestTemplate = new Level
+        {
+            LevelName = "Forest of Shadows Template",
+            LevelMap = new Map { TerrainType = "Forest", Size = 100 },
+            Enemies = new List<Enemy>
+            {
+                new Enemy { Type = "Goblin", Health = 50 },
+                new Enemy { Type = "Wolf", Health = 75 }
+            }
+        };
+
+        Console.WriteLine("Original Template Level:");
+        forestTemplate.PrintDetails();
+
+        // Create a new level based on the template
+        Level level1 = forestTemplate.DeepClone();
+        level1.LevelName = "Level 1: Whispering Woods";
+        
+        // Modify the cloned level to prove it's a deep copy
+        level1.LevelMap.Size = 120; // Change map size
+        level1.Enemies.First().Health = 60; // Buff a goblin
+        level1.Enemies.Add(new Enemy { Type = "Giant Spider", Health = 150 }); // Add a new enemy
+        
+        Console.WriteLine("--- After Cloning & Modifying ---");
+        Console.WriteLine("\nNew Level 1:");
+        level1.PrintDetails();
+
+        Console.WriteLine("\nOriginal Template Level (should be unchanged):");
+        forestTemplate.PrintDetails();
+    }
+}
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                         <div class="text-right mt-4 text-sm">
+                            <a href="#introduction" class="text-amber-600 hover:text-amber-700 font-semibold">↑ Back to Top</a>
+                        </div>
+                    </section>
+
+                </article>
+            </main>
+            
+            <aside class="hidden lg:block lg:w-1/4">
+                <div class="sticky top-24">
+                    <h3 class="font-semibold text-slate-800 font-lexend">On this page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">Introduction</a></li>
+                            <li><a href="#theory" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">Theory Deep Dive</a></li>
+                            <li><a href="#copy-visualizer" class="toc-link block text-slate-500 hover:text-amber-600 border-l-2 border-transparent pl-8 transition-colors text-sm">Interactive Visualizer</a></li>
+                            <li><a href="#coding" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">Coding Practice</a></li>
+                            <li><a href="#uml" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">UML Diagram</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block text-slate-600 hover:text-amber-600 border-l-2 border-transparent pl-4 transition-colors">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // TOC Logic
+    const sections = document.querySelectorAll('section[id]');
+    const tocLinks = document.querySelectorAll('#toc a');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const id = entry.target.getAttribute('id');
+            const correspondingLink = document.querySelector(`#toc a[href="#${id}"]`);
+            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                tocLinks.forEach(link => link.classList.remove('active'));
+                if(correspondingLink) {
+                    correspondingLink.classList.add('active');
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+    
+    // Copy to Clipboard
+    document.querySelectorAll('.copy-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const code = button.nextElementSibling.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+    });
+
+    // Toggle Solutions
+    document.querySelectorAll('.toggle-solution-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const solutionContent = button.nextElementSibling;
+            const isHidden = solutionContent.classList.contains('hidden');
+            solutionContent.classList.toggle('hidden');
+            button.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+        });
+    });
+
+    // Interactive Visualizer
+    const originalContainer = document.getElementById('original');
+    const cloneContainer = document.getElementById('cloneContainer');
+    const explanation = document.getElementById('cloneExplanation');
+    const originalThemeInput = document.getElementById('originalTheme');
+    const visualizerArea = document.getElementById('visualizer-area');
+    
+    const initialOriginalHTML = originalContainer.innerHTML;
+    const initialCloneHTML = cloneContainer.innerHTML;
+
+    function resetVisualizer() {
+        originalContainer.innerHTML = initialOriginalHTML;
+        cloneContainer.innerHTML = initialCloneHTML;
+        cloneContainer.className = 'mt-2 p-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 min-h-[150px] flex items-center justify-center';
+        explanation.textContent = '';
+        
+        const existingLine = visualizerArea.querySelector('.connector-line');
+        if (existingLine) {
+            existingLine.remove();
+        }
+
+        document.getElementById('originalTheme').addEventListener('input', handleThemeChange);
+    }
+    
+    function performShallowCopy() {
+        resetVisualizer();
+        const cloneHTML = `
+            <p class="text-sm"><strong>ID:</strong> <span class="font-mono bg-slate-200 px-1 rounded">123</span></p>
+            <p class="mt-1 text-sm"><strong>Name:</strong> <span class="font-mono bg-slate-200 px-1 rounded">"Alex"</span></p>
+            <div class="mt-2 text-sm">
+                <strong>Settings (Object - SHARED REFERENCE):</strong>
+                <div id="clonedSettings" class="ml-4 mt-1 p-2 border-2 border-dashed border-red-400 rounded bg-red-50">
+                    <p><strong>Theme:</strong> <span id="clonedTheme" class="font-mono bg-slate-200 px-1 rounded">${originalThemeInput.value}</span></p>
+                    <p class="mt-1"><strong>Notifications:</strong> <span class="font-mono bg-slate-200 px-1 rounded">true</span></p>
+                </div>
+            </div>
+        `;
+        cloneContainer.innerHTML = cloneHTML;
+        cloneContainer.className = 'mt-2 p-4 border-2 border-red-400 rounded-lg bg-red-50 min-h-[150px]';
+        explanation.textContent = 'Shallow Copy: The "Settings" object is shared. Change the original theme to see it reflect here.';
+
+        // Draw a line to indicate shared reference
+        const line = document.createElement('div');
+        line.className = 'connector-line absolute top-[105px] left-1/2 w-[calc(50%-4rem)] h-0.5 bg-red-500/70 -translate-x-1/2';
+        line.style.transformOrigin = 'left';
+        visualizerArea.appendChild(line);
+
+        const dot1 = document.createElement('div');
+        dot1.className = 'absolute w-2 h-2 bg-red-500 rounded-full top-[103px] left-[calc(25%-1rem)]';
+        visualizerArea.appendChild(dot1);
+        
+        const dot2 = document.createElement('div');
+        dot2.className = 'absolute w-2 h-2 bg-red-500 rounded-full top-[103px] right-[calc(25%-1rem)]';
+        visualizerArea.appendChild(dot2);
+
+        line.querySelectorAll('.dot').forEach(d => d.remove());
+        line.appendChild(dot1);
+        line.appendChild(dot2);
+    }
+
+    function performDeepCopy() {
+        resetVisualizer();
+        const cloneHTML = `
+            <p class="text-sm"><strong>ID:</strong> <span class="font-mono bg-slate-200 px-1 rounded">123</span></p>
+            <p class="mt-1 text-sm"><strong>Name:</strong> <span class="font-mono bg-slate-200 px-1 rounded">"Alex"</span></p>
+            <div class="mt-2 text-sm">
+                <strong>Settings (Object - INDEPENDENT COPY):</strong>
+                <div id="clonedSettings" class="ml-4 mt-1 p-2 border border-green-400 rounded bg-green-50">
+                    <p><strong>Theme:</strong> <input type="text" value="${originalThemeInput.value}" class="font-mono bg-slate-200 px-1 rounded w-20"></p>
+                    <p class="mt-1"><strong>Notifications:</strong> <span class="font-mono bg-slate-200 px-1 rounded">true</span></p>
+                </div>
+            </div>
+        `;
+        cloneContainer.innerHTML = cloneHTML;
+        cloneContainer.className = 'mt-2 p-4 border-2 border-green-400 rounded-lg bg-green-50 min-h-[150px]';
+        explanation.textContent = 'Deep Copy: The "Settings" object is a separate copy. Changes are independent.';
+    }
+
+    function handleThemeChange(e) {
+        const clonedThemeSpan = document.getElementById('clonedTheme');
+        if (clonedThemeSpan) { // Only exists in shallow copy view
+            clonedThemeSpan.textContent = e.target.value;
+        }
+    }
+
+    document.getElementById('shallowCopyBtn').addEventListener('click', performShallowCopy);
+    document.getElementById('deepCopyBtn').addEventListener('click', performDeepCopy);
+    document.getElementById('resetBtn').addEventListener('click', resetVisualizer);
+    originalThemeInput.addEventListener('input', handleThemeChange);
+
+    // Quiz Logic
+    const quizData = [
+        {
+            question: "What is the primary intent of the Prototype pattern?",
+            options: [
+                "To ensure a class only has one instance.",
+                "To create objects by cloning an existing instance.",
+                "To define a family of algorithms and make them interchangeable.",
+                "To separate the construction of a complex object from its representation."
+            ],
+            answer: 1,
+            explanation: "The core idea of the Prototype pattern is to create new objects by copying or cloning an existing object (the prototype), rather than creating them from scratch."
+        },
+        {
+            question: "In a shallow copy, what happens to reference-type fields?",
+            options: [
+                "A new copy of the referenced object is created.",
+                "The reference (memory address) is copied, but not the object itself.",
+                "They are ignored and set to null in the clone.",
+                "An exception is thrown."
+            ],
+            answer: 1,
+            explanation: "A shallow copy only copies the reference, meaning both the original and the clone point to the exact same object in memory. This can lead to unintended side effects."
+        },
+        {
+            question: "Which C# method is commonly used to perform a shallow copy?",
+            options: [
+                "Object.DeepClone()",
+                "Object.Copy()",
+                "Object.MemberwiseClone()",
+                "Object.Instantiate()"
+            ],
+            answer: 2,
+            explanation: "Object.MemberwiseClone() is a protected method that creates a new object and copies the fields of the current object, performing a shallow copy."
+        },
+        {
+            question: "When is a deep copy more appropriate than a shallow copy?",
+            options: [
+                "When performance is the absolute top priority.",
+                "When you want the original object and its clone to be completely independent.",
+                "When the object contains only value types.",
+                "When you want changes in the clone to affect the original object."
+            ],
+            answer: 1,
+            explanation: "A deep copy is necessary when you need to ensure that the cloned object is a fully independent replica, so that modifications to it or its nested objects do not affect the original."
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+
+    quizData.forEach((q, index) => {
+        const questionEl = document.createElement('div');
+        questionEl.className = 'bg-white p-6 rounded-lg border border-slate-200';
+        
+        let optionsHTML = '';
+        q.options.forEach((option, i) => {
+            optionsHTML += `<div class="quiz-option mt-2 p-3 border-2 border-slate-200 rounded-lg cursor-pointer" data-index="${i}">${option}</div>`;
+        });
+
+        questionEl.innerHTML = `
+            <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+            <div class="options-container mt-4">${optionsHTML}</div>
+            <div class="feedback-container hidden mt-4 p-4 rounded-lg"></div>
+        `;
+        quizContainer.appendChild(questionEl);
+    });
+
+    quizContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('quiz-option')) {
+            const questionEl = e.target.closest('.bg-white');
+            const questionIndex = Array.from(quizContainer.children).indexOf(questionEl);
+            const selectedOptionIndex = parseInt(e.target.dataset.index);
+            const questionData = quizData[questionIndex];
+            const feedbackContainer = questionEl.querySelector('.feedback-container');
+            const options = questionEl.querySelectorAll('.quiz-option');
+
+            options.forEach(opt => opt.classList.remove('selected'));
+            e.target.classList.add('selected');
+            
+            options.forEach((opt, i) => {
+                opt.classList.remove('correct', 'incorrect');
+                if (i === questionData.answer) {
+                    opt.classList.add('correct');
+                } else if (i === selectedOptionIndex) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            feedbackContainer.innerHTML = `<strong class="font-semibold">Explanation:</strong> ${questionData.explanation}`;
+            feedbackContainer.classList.remove('hidden');
+        }
+    });
+    
+});
+</script>
+
+</body>
+</html>
+
