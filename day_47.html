@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 47: REST Best Practices - Low-Level Design Bootcamp</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertically flowing educational module with a sticky table of contents (TOC) on the right for easy navigation. This structure was chosen because it mimics a chapter in a textbook, allowing users to either read linearly or jump directly to topics of interest. The flow is logical: starting with foundational theory (what REST is), moving to practical application (how to build it with a case study), and finishing with reinforcement (quizzes and challenges). This user flow supports both initial learning and later reference, making it a highly usable and effective educational tool. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: HTTP Status Codes. Goal: Organize/Inform. Viz/Method: A Chart.js doughnut chart categorizes status codes (2xx, 4xx, etc.). Interaction: Hovering over segments reveals the category name. Justification: This provides a quick visual summary of code types before diving into the detailed list, making the information more digestible. Library: Chart.js (Canvas).
+        - Report Info: API Resource Model. Goal: Organize. Viz/Method: A custom diagram built with HTML/CSS and Tailwind. Interaction: None, purely informational. Justification: A clear visual representation of how resources relate to URIs is fundamental. HTML/CSS is sufficient and avoids external dependencies. Method: HTML/CSS.
+        - Report Info: Code Examples. Goal: Inform/Practice. Viz/Method: Syntax-highlighted code blocks with a copy button. Interaction: Click to copy. Justification: Essential for a coding tutorial. Makes it easy for users to grab and experiment with the code. Method: HTML/CSS + JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .copy-button:active {
+            background-color: #334155;
+        }
+        .quiz-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .syntax-keyword { color: #569cd6; }
+        .syntax-type { color: #4ec9b0; }
+        .syntax-string { color: #d69d85; }
+        .syntax-comment { color: #6a9955; }
+        .syntax-method { color: #dcdcaa; }
+        .syntax-number { color: #b5cea8; }
+        .syntax-class { color: #4ec9b0; }
+        .syntax-attribute { color: #dcdcaa; }
+        .syntax-parameter { color: #9cdcfe; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <p class="text-base font-semibold text-sky-600">Networking & API Design (Days 43-49)</p>
+            <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight mt-2">Day 47: REST Best Practices</h2>
+            <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">Master the art of designing clean, predictable, and scalable RESTful APIs that developers love to use.</p>
+        </div>
+
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <main class="lg:col-span-9">
+                
+                <section id="theory" class="scroll-mt-20 space-y-8">
+                    <h2 class="text-3xl font-extrabold text-slate-900 border-b border-slate-200 pb-4">✅ Theory Topics</h2>
+                    <p class="text-slate-700 text-lg">
+                        Before we write a single line of code, it's crucial to understand the architectural principles that make REST APIs so effective. These aren't just rules; they are guidelines that lead to APIs that are consistent, scalable, and easy for other developers to understand and consume. We will explore the three pillars of RESTful design: how we model our data, how we name the paths to access it, and how we communicate the results of any operation.
+                    </p>
+                </section>
+                
+                <section id="resource-modeling" class="scroll-mt-20 space-y-6 pt-12">
+                    <h3 class="text-2xl font-bold text-slate-800">Resource Modeling</h3>
+                    <p class="text-slate-700">
+                        The absolute heart of REST is the concept of a <strong class="font-semibold text-slate-900">resource</strong>. A resource is any piece of information that can be named and represented. Think of it as a noun: a User, a Product, an Order, a Photo. It is an object with a type, associated data, relationships to other resources, and a set of methods that can be applied to it.
+                    </p>
+                    <p class="text-slate-700">
+                        When modeling resources, your goal is to identify the core "nouns" of your system. If you were building an e-commerce platform, your primary resources would be things like `Products`, `Customers`, and `Orders`. You can also have resources that are collections of other resources (e.g., a collection of all `Products`) and singleton resources (e.g., the current `User's Shopping Cart`).
+                    </p>
+                    <div class="bg-sky-50 border border-sky-200 text-sky-800 p-4 rounded-lg">
+                        <p><strong class="font-semibold">Analogy:</strong> Think of a library. The resources are the books, the magazines, and the library members. Each one is a distinct entity. A "collection" resource would be an entire shelf of books (e.g., all science fiction novels), while a single book is an "item" resource.</p>
+                    </div>
+                </section>
+
+                <section id="restful-uris" class="scroll-mt-20 space-y-6 pt-12">
+                    <h3 class="text-2xl font-bold text-slate-800">RESTful URIs</h3>
+                    <p class="text-slate-700">
+                        A Uniform Resource Identifier (URI) is the "address" used to locate a resource. In REST, we design URIs to be intuitive and hierarchical. The key principle is that <strong class="font-semibold text-slate-900">URIs should identify resources, not actions</strong>. We use HTTP methods (verbs) to specify the action.
+                    </p>
+                    <h4 class="text-xl font-semibold text-slate-800 pt-4">Best Practices for URI Design:</h4>
+                    <ul class="list-disc list-inside space-y-3 text-slate-700">
+                        <li>
+                            <strong class="font-semibold text-slate-900">Use Nouns, Not Verbs:</strong> URIs should refer to the resource itself.
+                            <ul class="list-none pl-8 mt-2 space-y-2">
+                                <li><span class="text-green-600 font-mono bg-green-50 p-1 rounded">GOOD:</span> `/products/123`</li>
+                                <li><span class="text-red-600 font-mono bg-red-50 p-1 rounded">BAD:</span> `/getProductById?id=123`</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong class="font-semibold text-slate-900">Use Plural Nouns for Collections:</strong> To represent a collection of resources, use plural nouns. This creates a clear and consistent hierarchy.
+                            <ul class="list-none pl-8 mt-2 space-y-2">
+                                <li><span class="text-green-600 font-mono bg-green-50 p-1 rounded">GOOD:</span> `/users` (for the list of all users)</li>
+                                <li><span class="text-green-600 font-mono bg-green-50 p-1 rounded">GOOD:</span> `/users/5` (for the specific user with ID 5)</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong class="font-semibold text-slate-900">Use Lowercase and Hyphens:</strong> Stick to lowercase letters for URI paths and use hyphens (`-`) to separate words for readability.
+                            <ul class="list-none pl-8 mt-2 space-y-2">
+                                <li><span class="text-green-600 font-mono bg-green-50 p-1 rounded">GOOD:</span> `/product-categories`</li>
+                                <li><span class="text-red-600 font-mono bg-red-50 p-1 rounded">BAD:</span> `/ProductCategories` or `/product_categories`</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong class="font-semibold text-slate-900">Nest Resources for Relationships:</strong> If a resource is logically contained within another, express this in the URI.
+                            <ul class="list-none pl-8 mt-2 space-y-2">
+                                <li><span class="text-green-600 font-mono bg-green-50 p-1 rounded">GOOD:</span> `/orders/101/items` (to get all items for order 101)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </section>
+
+                <section id="status-codes" class="scroll-mt-20 space-y-6 pt-12">
+                    <h3 class="text-2xl font-bold text-slate-800">HTTP Status Codes</h3>
+                    <p class="text-slate-700">
+                        HTTP status codes are the API's way of communicating the outcome of a request back to the client. Using them correctly is vital for building predictable APIs. They are grouped into five classes. The chart below shows the distribution of common codes by class.
+                    </p>
+                    
+                    <div class="chart-container bg-white p-6 rounded-xl shadow-sm border border-slate-200" style="position: relative; height:300px; width:100%; max-width: 400px; margin: 2rem auto;">
+                        <canvas id="statusCodesChart"></canvas>
+                    </div>
+
+                    <h4 class="text-xl font-semibold text-slate-800 pt-4">Common Status Codes by Class:</h4>
+                    <div class="space-y-4">
+                        <p><strong class="font-semibold text-green-700">2xx Success:</strong> The request was successfully received, understood, and accepted.</p>
+                        <ul class="list-disc list-inside pl-4 text-slate-700 space-y-1">
+                            <li><strong class="font-mono text-slate-800">200 OK:</strong> Standard response for successful GET, PUT, PATCH requests.</li>
+                            <li><strong class="font-mono text-slate-800">201 Created:</strong> The request was successful and a new resource was created as a result. Typically returned for POST requests.</li>
+                            <li><strong class="font-mono text-slate-800">204 No Content:</strong> The server successfully processed the request but there is no content to return. Often used for successful DELETE requests.</li>
+                        </ul>
+
+                        <p><strong class="font-semibold text-sky-700">4xx Client Error:</strong> The request contains bad syntax or cannot be fulfilled.</p>
+                        <ul class="list-disc list-inside pl-4 text-slate-700 space-y-1">
+                            <li><strong class="font-mono text-slate-800">400 Bad Request:</strong> The server cannot process the request due to a client error (e.g., malformed request body, invalid parameters).</li>
+                            <li><strong class="font-mono text-slate-800">401 Unauthorized:</strong> The client must authenticate itself to get the requested response.</li>
+                            <li><strong class="font-mono text-slate-800">403 Forbidden:</strong> The client does not have access rights to the content. They are authenticated, but not authorized.</li>
+                            <li><strong class="font-mono text-slate-800">404 Not Found:</strong> The server cannot find the requested resource.</li>
+                        </ul>
+
+                        <p><strong class="font-semibold text-red-700">5xx Server Error:</strong> The server failed to fulfill an apparently valid request.</p>
+                        <ul class="list-disc list-inside pl-4 text-slate-700 space-y-1">
+                            <li><strong class="font-mono text-slate-800">500 Internal Server Error:</strong> A generic error message, given when an unexpected condition was encountered.</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <section id="api-diagram" class="scroll-mt-20 space-y-6 pt-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 border-b border-slate-200 pb-4">✅ API Resource Diagram</h2>
+                    <p class="text-slate-700">
+                        This diagram illustrates the resource model for our Product Catalog API case study. It shows the relationship between HTTP methods, URIs, and the actions they perform. Notice how the URI identifies the "what" (the resource) and the method identifies the "how" (the action).
+                    </p>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 font-mono text-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div>
+                                <div class="font-bold text-slate-800 text-base mb-2">/products</div>
+                                <div class="flex items-center mb-1"><span class="font-semibold text-green-600 w-16">GET</span><span>Returns a list of all products.</span></div>
+                                <div class="flex items-center"><span class="font-semibold text-sky-600 w-16">POST</span><span>Creates a new product.</span></div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-base mb-2">/products/{id}</div>
+                                <div class="flex items-center mb-1"><span class="font-semibold text-green-600 w-16">GET</span><span>Retrieves a single product.</span></div>
+                                <div class="flex items-center mb-1"><span class="font-semibold text-amber-600 w-16">PUT</span><span>Updates a product completely.</span></div>
+                                <div class="flex items-center mb-1"><span class="font-semibold text-orange-600 w-16">PATCH</span><span>Partially updates a product.</span></div>
+                                <div class="flex items-center"><span class="font-semibold text-red-600 w-16">DELETE</span><span>Deletes a product.</span></div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-base mb-2">/categories</div>
+                                <div class="flex items-center mb-1"><span class="font-semibold text-green-600 w-16">GET</span><span>Returns a list of all categories.</span></div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 text-base mb-2">/categories/{id}/products</div>
+                                <div class="flex items-center mb-1"><span class="font-semibold text-green-600 w-16">GET</span><span>Returns all products in a category.</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="coding-practice" class="scroll-mt-20 space-y-6 pt-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 border-b border-slate-200 pb-4">✅ Coding Practice: The Product Catalog API</h2>
+                    <p class="text-slate-700">
+                        Now let's apply these principles by building a REST API for a product catalog. We'll use C# with ASP.NET Core Minimal APIs for concise, modern examples. We'll start with basic CRUD operations and progressively add more advanced features like pagination, filtering, and sorting.
+                    </p>
+                    <div class="bg-slate-100 p-4 rounded-lg text-slate-700">
+                        <p><strong class="font-semibold text-slate-800">Setup:</strong> All examples will use an in-memory list of products, so you can run them without a database. Here's the basic setup and our data model.</p>
+                    </div>
+                    <div class="code-block">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp"><span class="syntax-keyword">using</span> Microsoft.AspNetCore.Builder;
+<span class="syntax-keyword">using</span> Microsoft.AspNetCore.Http;
+<span class="syntax-keyword">using</span> System.Collections.Generic;
+<span class="syntax-keyword">using</span> System.Linq;
+
+<span class="syntax-keyword">var</span> builder = WebApplication.CreateBuilder(args);
+<span class="syntax-keyword">var</span> app = builder.Build();
+
+<span class="syntax-comment">// Data Model and In-Memory Store</span>
+<span class="syntax-keyword">public record</span> <span class="syntax-class">Product</span>(<span class="syntax-type">int</span> Id, <span class="syntax-type">string</span> Name, <span class="syntax-type">string</span> Category, <span class="syntax-type">decimal</span> Price);
+
+<span class="syntax-keyword">var</span> products = <span class="syntax-keyword">new</span> List&lt;<span class="syntax-type">Product</span>&gt;
+{
+    <span class="syntax-keyword">new</span>(<span class="syntax-number">1</span>, <span class="syntax-string">"Laptop"</span>, <span class="syntax-string">"Electronics"</span>, <span class="syntax-number">1200.00m</span>),
+    <span class="syntax-keyword">new</span>(<span class="syntax-number">2</span>, <span class="syntax-string">"Keyboard"</span>, <span class="syntax-string">"Electronics"</span>, <span class="syntax-number">75.50m</span>),
+    <span class="syntax-keyword">new</span>(<span class="syntax-number">3</span>, <span class="syntax-string">"Coffee Mug"</span>, <span class="syntax-string">"Kitchen"</span>, <span class="syntax-number">15.00m</span>),
+    <span class="syntax-keyword">new</span>(<span class="syntax-number">4</span>, <span class="syntax-string">"Desk Chair"</span>, <span class="syntax-string">"Furniture"</span>, <span class="syntax-number">250.00m</span>)
+};
+
+<span class="syntax-comment">// API endpoints will be defined here...</span>
+
+app.Run();
+</code></pre>
+                    </div>
+                </section>
+
+                <section id="crud-api" class="scroll-mt-20 space-y-6 pt-12">
+                    <h3 class="text-2xl font-bold text-slate-800">[Easy] CRUD API</h3>
+                    <p class="text-slate-700">
+                        CRUD stands for Create, Read, Update, and Delete. These are the four fundamental operations for any data storage. Let's map them to their corresponding HTTP methods and URIs.
+                    </p>
+                    <div class="code-block">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp"><span class="syntax-comment">// [READ] GET all products</span>
+app.<span class="syntax-method">MapGet</span>(<span class="syntax-string">"/products"</span>, () => products);
+
+<span class="syntax-comment">// [READ] GET a single product by ID</span>
+app.<span class="syntax-method">MapGet</span>(<span class="syntax-string">"/products/{id}"</span>, (<span class="syntax-type">int</span> <span class="syntax-parameter">id</span>) => 
+{
+    <span class="syntax-keyword">var</span> product = products.<span class="syntax-method">FirstOrDefault</span>(p => p.Id == id);
+    <span class="syntax-keyword">return</span> product <span class="syntax-keyword">is not null</span> ? Results.<span class="syntax-method">Ok</span>(product) : Results.<span class="syntax-method">NotFound</span>();
+});
+
+<span class="syntax-comment">// [CREATE] POST a new product</span>
+app.<span class="syntax-method">MapPost</span>(<span class="syntax-string">"/products"</span>, (<span class="syntax-type">Product</span> <span class="syntax-parameter">product</span>) => 
+{
+    products.<span class="syntax-method">Add</span>(product);
+    <span class="syntax-keyword">return</span> Results.<span class="syntax-method">Created</span>($<span class="syntax-string">"/products/{product.Id}"</span>, product);
+});
+
+<span class="syntax-comment">// [UPDATE] PUT to update a product</span>
+app.<span class="syntax-method">MapPut</span>(<span class="syntax-string">"/products/{id}"</span>, (<span class="syntax-type">int</span> <span class="syntax-parameter">id</span>, <span class="syntax-type">Product</span> <span class="syntax-parameter">updatedProduct</span>) => 
+{
+    <span class="syntax-keyword">var</span> product = products.<span class="syntax-method">FirstOrDefault</span>(p => p.Id == id);
+    <span class="syntax-keyword">if</span> (product <span class="syntax-keyword">is null</span>) <span class="syntax-keyword">return</span> Results.<span class="syntax-method">NotFound</span>();
+    
+    products.<span class="syntax-method">Remove</span>(product);
+    products.<span class="syntax-method">Add</span>(updatedProduct);
+    <span class="syntax-keyword">return</span> Results.<span class="syntax-method">Ok</span>(updatedProduct);
+});
+
+<span class="syntax-comment">// [DELETE] DELETE a product</span>
+app.<span class="syntax-method">MapDelete</span>(<span class="syntax-string">"/products/{id}"</span>, (<span class="syntax-type">int</span> <span class="syntax-parameter">id</span>) => 
+{
+    <span class="syntax-keyword">var</span> product = products.<span class="syntax-method">FirstOrDefault</span>(p => p.Id == id);
+    <span class="syntax-keyword">if</span> (product <span class="syntax-keyword">is null</span>) <span class="syntax-keyword">return</span> Results.<span class="syntax-method">NotFound</span>();
+
+    products.<span class="syntax-method">Remove</span>(product);
+    <span class="syntax-keyword">return</span> Results.<span class="syntax-method">NoContent</span>();
+});
+</code></pre>
+                    </div>
+                </section>
+
+                <section id="pagination-api" class="scroll-mt-20 space-y-6 pt-12">
+                    <h3 class="text-2xl font-bold text-slate-800">[Medium] Pagination API</h3>
+                    <p class="text-slate-700">
+                        When a resource collection is large, returning all items at once is inefficient. Pagination solves this by allowing clients to request data in "pages". We'll implement a common approach using `page` and `pageSize` query parameters.
+                    </p>
+                    <div class="bg-sky-50 border border-sky-200 text-sky-800 p-4 rounded-lg">
+                        <p><strong class="font-semibold">Example URI:</strong> <code class="font-mono">/products?page=2&pageSize=10</code>. This would request the second page of products, with 10 products per page.</p>
+                    </div>
+                    <div class="code-block">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp"><span class="syntax-comment">// [READ] GET all products with pagination</span>
+app.<span class="syntax-method">MapGet</span>(<span class="syntax-string">"/products-paginated"</span>, (<span class="syntax-type">int</span>? <span class="syntax-parameter">page</span>, <span class="syntax-type">int</span>? <span class="syntax-parameter">pageSize</span>) => 
+{
+    <span class="syntax-keyword">var</span> currentPage = page ?? <span class="syntax-number">1</span>;
+    <span class="syntax-keyword">var</span> currentPageSize = pageSize ?? <span class="syntax-number">5</span>;
+
+    <span class="syntax-keyword">var</span> paginatedProducts = products
+        .<span class="syntax-method">Skip</span>((currentPage - <span class="syntax-number">1</span>) * currentPageSize)
+        .<span class="syntax-method">Take</span>(currentPageSize)
+        .<span class="syntax-method">ToList</span>();
+
+    <span class="syntax-keyword">return</span> Results.<span class="syntax-method">Ok</span>(paginatedProducts);
+});
+</code></pre>
+                    </div>
+                </section>
+                
+                <section id="filter-sort-api" class="scroll-mt-20 space-y-6 pt-12">
+                    <h3 class="text-2xl font-bold text-slate-800">[Hard] Filter + Sort API</h3>
+                    <p class="text-slate-700">
+                        To make the API even more powerful, we can allow clients to filter the results based on certain criteria (like category) and sort them (by price or name). This is also done using query parameters.
+                    </p>
+                    <div class="bg-sky-50 border border-sky-200 text-sky-800 p-4 rounded-lg">
+                        <p><strong class="font-semibold">Example URI:</strong> <code class="font-mono">/products-advanced?category=Electronics&sortBy=price&sortOrder=desc</code></p>
+                    </div>
+                    <div class="code-block">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp"><span class="syntax-comment">// [READ] GET products with filtering and sorting</span>
+app.<span class="syntax-method">MapGet</span>(<span class="syntax-string">"/products-advanced"</span>, (<span class="syntax-type">string</span>? <span class="syntax-parameter">category</span>, <span class="syntax-type">string</span>? <span class="syntax-parameter">sortBy</span>, <span class="syntax-type">string</span>? <span class="syntax-parameter">sortOrder</span>) => 
+{
+    IEnumerable&lt;<span class="syntax-type">Product</span>&gt; query = products;
+
+    <span class="syntax-comment">// Filtering</span>
+    <span class="syntax-keyword">if</span> (!<span class="syntax-type">string</span>.<span class="syntax-method">IsNullOrEmpty</span>(category))
+    {
+        query = query.<span class="syntax-method">Where</span>(p => p.Category.<span class="syntax-method">Equals</span>(category, StringComparison.OrdinalIgnoreCase));
+    }
+
+    <span class="syntax-comment">// Sorting</span>
+    <span class="syntax-keyword">if</span> (!<span class="syntax-type">string</span>.<span class="syntax-method">IsNullOrEmpty</span>(sortBy))
+    {
+        <span class="syntax-keyword">var</span> isDescending = <span class="syntax-type">string</span>.<span class="syntax-method">Equals</span>(sortOrder, <span class="syntax-string">"desc"</span>, StringComparison.OrdinalIgnoreCase);
+        query = sortBy.<span class="syntax-method">ToLower</span>() <span class="syntax-keyword">switch</span>
+        {
+            <span class="syntax-string">"price"</span> => isDescending ? query.<span class="syntax-method">OrderByDescending</span>(p => p.Price) : query.<span class="syntax-method">OrderBy</span>(p => p.Price),
+            <span class="syntax-string">"name"</span> => isDescending ? query.<span class="syntax-method">OrderByDescending</span>(p => p.Name) : query.<span class="syntax-method">OrderBy</span>(p => p.Name),
+            _ => query
+        };
+    }
+
+    <span class="syntax-keyword">return</span> Results.<span class="syntax-method">Ok</span>(query.<span class="syntax-method">ToList</span>());
+});
+</code></pre>
+                    </div>
+                </section>
+                
+                <section id="case-study" class="scroll-mt-20 space-y-6 pt-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 border-b border-slate-200 pb-4">✅ Case Study: Product Catalog API</h2>
+                    <p class="text-slate-700">
+                        Throughout our coding practice, we've built a robust Product Catalog API. Let's summarize how it adheres to REST best practices:
+                    </p>
+                    <ul class="list-disc list-inside space-y-3 text-slate-700">
+                        <li><strong class="font-semibold text-slate-900">Resource-Oriented:</strong> We identified `Product` as our core resource. Our URIs (`/products`, `/products/{id}`) are nouns that represent these resources directly.</li>
+                        <li><strong class="font-semibold text-slate-900">Proper Use of HTTP Methods:</strong> We used `GET` for retrieval, `POST` for creation, `PUT` for updates, and `DELETE` for removal. The action is separate from the identifier.</li>
+                        <li><strong class="font-semibold text-slate-900">Meaningful Status Codes:</strong> We return `200 OK` on success, `201 Created` for new items, `204 No Content` on deletion, and `404 Not Found` when a resource doesn't exist. This provides clear, standardized feedback to the client.</li>
+                        <li><strong class="font-semibold text-slate-900">Statelessness:</strong> Each request from the client contains all the information needed to process it (e.g., the ID in the path, the product data in the body). The server doesn't need to remember previous requests.</li>
+                    </ul>
+                    <div class="bg-green-50 border border-green-200 text-green-800 p-4 rounded-lg">
+                        <p><strong class="font-semibold">Real-world Example:</strong> The GitHub API is a fantastic example of REST principles in action. You can interact with resources like repositories (`/repos/{owner}/{repo}`), users (`/users/{username}`), and issues (`/repos/{owner}/{repo}/issues`). It's a clean, well-documented, and predictable API that developers find easy to work with.</p>
+                    </div>
+                </section>
+                
+                <section id="quiz" class="scroll-mt-20 space-y-8 pt-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 border-b border-slate-200 pb-4">✅ Knowledge Check</h2>
+                    <p class="text-slate-700">Test your understanding of REST best practices with these questions.</p>
+                    <div id="quiz-container" class="space-y-8"></div>
+                </section>
+
+                <section id="challenge" class="scroll-mt-20 space-y-6 pt-12">
+                    <h2 class="text-3xl font-extrabold text-slate-900 border-b border-slate-200 pb-4">✅ Self-Assessment Challenge</h2>
+                    <p class="text-slate-700">
+                        Ready to apply what you've learned? Here's your challenge.
+                    </p>
+                    <div class="bg-slate-100 p-6 rounded-lg text-slate-700 border border-slate-200">
+                        <h4 class="font-bold text-slate-800 text-lg">Your Task:</h4>
+                        <p class="mt-2">
+                            Add a new endpoint to the Product Catalog API. This endpoint should handle the following request:
+                        </p>
+                        <p class="mt-4 font-mono font-semibold bg-white p-3 rounded text-slate-900">
+                            PATCH /products/{id}/price
+                        </p>
+                        <p class="mt-2">
+                            This endpoint should only update the price of a specific product. It should accept a simple JSON body like `{"newPrice": 99.99}`. Ensure it handles cases where the product is not found and returns appropriate status codes.
+                        </p>
+                    </div>
+                    <div class="mt-6">
+                        <button id="toggle-solution-btn" class="bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">
+                            Show Solution
+                        </button>
+                        <div id="solution-block" class="hidden mt-4">
+                            <p class="text-slate-700 mb-4">Here's one way to solve the challenge:</p>
+                            <div class="code-block">
+                                <button class="copy-button">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp"><span class="syntax-comment">// Data Transfer Object for the request body</span>
+<span class="syntax-keyword">public record</span> <span class="syntax-class">PriceUpdate</span>(<span class="syntax-type">decimal</span> NewPrice);
+
+<span class="syntax-comment">// The PATCH endpoint definition</span>
+app.<span class="syntax-method">MapPatch</span>(<span class="syntax-string">"/products/{id}/price"</span>, (<span class="syntax-type">int</span> <span class="syntax-parameter">id</span>, <span class="syntax-type">PriceUpdate</span> <span class="syntax-parameter">update</span>) => 
+{
+    <span class="syntax-keyword">var</span> product = products.<span class="syntax-method">FirstOrDefault</span>(p => p.Id == id);
+    <span class="syntax-keyword">if</span> (product <span class="syntax-keyword">is null</span>) <span class="syntax-keyword">return</span> Results.<span class="syntax-method">NotFound</span>();
+
+    <span class="syntax-comment">// Create a new record with the updated price</span>
+    <span class="syntax-keyword">var</span> updatedProduct = product <span class="syntax-keyword">with</span> { Price = update.NewPrice };
+
+    <span class="syntax-comment">// Replace the old product in the list</span>
+    <span class="syntax-keyword">var</span> index = products.<span class="syntax-method">FindIndex</span>(p => p.Id == id);
+    products[index] = updatedProduct;
+
+    <span class="syntax-keyword">return</span> Results.<span class="syntax-method">Ok</span>(updatedProduct);
+});
+</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="hidden lg:block lg:col-span-3">
+                <nav id="toc" class="sticky top-8">
+                    <h3 class="font-semibold text-slate-800 mb-4">On this page</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#theory" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-4 transition-colors">Theory Topics</a></li>
+                        <li><a href="#resource-modeling" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-8 transition-colors">Resource Modeling</a></li>
+                        <li><a href="#restful-uris" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-8 transition-colors">RESTful URIs</a></li>
+                        <li><a href="#status-codes" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-8 transition-colors">Status Codes</a></li>
+                        <li><a href="#api-diagram" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-4 transition-colors">API Resource Diagram</a></li>
+                        <li><a href="#coding-practice" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-4 transition-colors">Coding Practice</a></li>
+                        <li><a href="#crud-api" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-8 transition-colors">[Easy] CRUD API</a></li>
+                        <li><a href="#pagination-api" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-8 transition-colors">[Medium] Pagination</a></li>
+                        <li><a href="#filter-sort-api" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-8 transition-colors">[Hard] Filtering & Sorting</a></li>
+                        <li><a href="#case-study" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-4 transition-colors">Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-4 transition-colors">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block text-slate-600 hover:text-slate-900 border-l-2 border-transparent pl-4 transition-colors">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const sections = document.querySelectorAll('main section[id]');
+    const tocLinks = document.querySelectorAll('#toc .toc-link');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                tocLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${id}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: '0px 0px -75% 0px' });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+    
+    const copyButtons = document.querySelectorAll('.copy-button');
+    copyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const code = button.nextElementSibling.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+    });
+
+    const quizData = [
+        {
+            question: "Which URI follows RESTful best practices for retrieving a specific user?",
+            options: ["/getUser?id=42", "/users/42", "/Users/fetch/42", "/api/user/retrieve-42"],
+            answer: "/users/42"
+        },
+        {
+            question: "A client sends a POST request to /orders to create a new order. What is the most appropriate success status code the server should return?",
+            options: ["200 OK", "204 No Content", "400 Bad Request", "201 Created"],
+            answer: "201 Created"
+        },
+        {
+            question: "What is the primary purpose of using plural nouns (e.g., /products) in URIs?",
+            options: ["It's required by the HTTP specification.", "To clearly indicate the URI represents a collection of resources.", "To make the URI longer and more descriptive.", "To differentiate from singular nouns used for actions."],
+            answer: "To clearly indicate the URI represents a collection of resources."
+        },
+        {
+            question: "A user tries to access a resource they are not authorized to view (e.g., another user's private profile). They are correctly logged in. Which status code should be returned?",
+            options: ["404 Not Found", "401 Unauthorized", "403 Forbidden", "500 Internal Server Error"],
+            answer: "403 Forbidden"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    quizData.forEach((q, index) => {
+        const questionEl = document.createElement('div');
+        questionEl.className = 'bg-white p-6 rounded-lg shadow-sm border border-slate-200';
+        
+        const questionText = document.createElement('p');
+        questionText.className = 'font-semibold text-slate-800 mb-4';
+        questionText.textContent = `${index + 1}. ${q.question}`;
+        questionEl.appendChild(questionText);
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'space-y-3';
+        
+        q.options.forEach(optionText => {
+            const optionEl = document.createElement('div');
+            optionEl.className = 'quiz-option p-3 border border-slate-300 rounded-md cursor-pointer hover:bg-slate-100';
+            optionEl.textContent = optionText;
+            optionEl.addEventListener('click', () => {
+                if (optionEl.classList.contains('correct') || optionEl.classList.contains('incorrect')) return;
+
+                const parent = optionEl.parentElement;
+                Array.from(parent.children).forEach(child => {
+                    if (child.textContent === q.answer) {
+                        child.classList.add('correct');
+                    } else {
+                        child.classList.add('incorrect');
+                    }
+                });
+            });
+            optionsContainer.appendChild(optionEl);
+        });
+        
+        questionEl.appendChild(optionsContainer);
+        quizContainer.appendChild(questionEl);
+    });
+
+    const toggleSolutionBtn = document.getElementById('toggle-solution-btn');
+    const solutionBlock = document.getElementById('solution-block');
+    toggleSolutionBtn.addEventListener('click', () => {
+        const isHidden = solutionBlock.classList.toggle('hidden');
+        toggleSolutionBtn.textContent = isHidden ? 'Show Solution' : 'Hide Solution';
+    });
+
+    const ctx = document.getElementById('statusCodesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['2xx Success', '4xx Client Error', '5xx Server Error', '1xx Info / 3xx Redirect'],
+            datasets: [{
+                label: 'HTTP Status Code Classes',
+                data: [3, 4, 1, 2],
+                backgroundColor: [
+                    '#16a34a', // green-600
+                    '#0284c7', // sky-600
+                    '#dc2626', // red-600
+                    '#64748b'  // slate-500
+                ],
+                borderColor: '#fff',
+                borderWidth: 4,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            family: "'Inter', sans-serif",
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Common HTTP Status Code Categories',
+                    font: {
+                        family: "'Lexend', sans-serif",
+                        size: 16
+                    },
+                    color: '#1e293b'
+                }
+            },
+            cutout: '60%'
+        }
+    });
+
+});
+</script>
+
+</body>
+</html>
+

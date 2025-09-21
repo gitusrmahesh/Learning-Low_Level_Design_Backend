@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 49: API Documentation with Swagger</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A single-page, vertically flowing educational module. The structure is a guided lesson, starting with theory, moving to practical coding examples, a UML diagram, a case study, and ending with assessments. This linear flow is optimal for learning a new technical topic step-by-step. A sticky table of contents on the right allows for easy navigation and reference within the long-form content, enhancing user experience without breaking the learning flow. Interactivity is focused on utility (copying code) and assessment (quiz, challenge reveal). -->
+    <!-- Visualization & Content Choices: The primary 'visualization' is a sequence diagram built with structured HTML and Tailwind CSS to represent the data flow from client to database. Goal: Explain a process. Method: Styled divs and flexbox to create lanes and arrows. Interaction: Static visualization, as its purpose is purely explanatory. Justification: This method avoids external libraries or SVG/Mermaid as required, while still clearly communicating the architectural flow. All other content is presented as deeply-explained text and fully-coded, copyable examples, which is the most effective way to teach a programming topic. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0ea5e9;
+            font-weight: 600;
+            border-left-color: #0ea5e9;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .copy-button:active {
+            background-color: #334155;
+        }
+        .quiz-option:hover {
+            background-color: #f1f5f9;
+        }
+        .quiz-option.selected {
+            background-color: #e0f2fe;
+            border-color: #0ea5e9;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            
+            <main class="w-full lg:w-3/4">
+                <div class="mb-8">
+                    <p class="text-sky-500 font-semibold">DAY 49 of 60</p>
+                    <h2 class="text-3xl font-bold text-slate-900 mt-2">API Documentation with Swagger</h2>
+                    <p class="mt-4 text-lg text-slate-600">Today, we dive into one of the most critical aspects of modern API development: documentation. We'll explore how Swagger and the OpenAPI specification provide a universal language for describing, visualizing, and interacting with REST APIs, making them easier to build, consume, and maintain.</p>
+                </div>
+
+                <article id="theory" class="space-y-12">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Theory Topics</h3>
+                    
+                    <section id="theory-intro">
+                        <h4 class="text-xl font-semibold text-slate-800">Introduction to Swagger (OpenAPI)</h4>
+                        <p class="mt-3 text-slate-600">Imagine trying to assemble furniture with no instructions. You might figure it out, but it would be frustrating and time-consuming. An API without documentation is the same for a developer trying to use it. Swagger and OpenAPI are those instructions.</p>
+                        <p class="mt-3 text-slate-600"><span class="font-semibold text-slate-700">OpenAPI Specification:</span> This is the core rulebook. It's a standard, language-agnostic format (written in YAML or JSON) for describing REST APIs. It defines everything: the available endpoints, the operations on each endpoint (GET, POST, etc.), the parameters for each operation, authentication methods, and the structure of the data sent and received.</p>
+                        <p class="mt-3 text-slate-600"><span class="font-semibold text-slate-700">Swagger:</span> This is a suite of tools built around the OpenAPI Specification. While people often use the terms interchangeably, Swagger refers to the tools that use the OpenAPI spec. The most famous tool is <span class="font-semibold text-slate-700">Swagger UI</span>, which takes an OpenAPI document and generates a beautiful, interactive web page that lets you visualize and test the API directly in your browser.</p>
+                        <blockquote class="mt-4 border-l-4 border-sky-400 bg-sky-50 p-4 rounded-r-lg">
+                            <p class="text-sky-800"><span class="font-bold">Analogy:</span> Think of the <span class="font-semibold">OpenAPI Specification</span> as the official blueprint for a building. <span class="font-semibold">Swagger UI</span> is the interactive 3D model generated from that blueprint, which lets you walk through the virtual building, open doors, and see what's in each room.</p>
+                        </blockquote>
+                    </section>
+                    
+                    <section id="theory-setup">
+                        <h4 class="text-xl font-semibold text-slate-800">Setting up Swagger in .NET Core (Swashbuckle.AspNetCore)</h4>
+                        <p class="mt-3 text-slate-600">In the .NET ecosystem, the go-to library for integrating Swagger is <span class="font-semibold text-slate-700">Swashbuckle.AspNetCore</span>. It's a powerful NuGet package that automatically generates OpenAPI documents from your C# controllers and models.</p>
+                        <p class="mt-3 font-semibold text-slate-700">Step 1: Install the Package</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-powershell">dotnet add package Swashbuckle.AspNetCore</code></pre>
+                        </div>
+                        <p class="mt-4 font-semibold text-slate-700">Step 2: Configure the Service</p>
+                        <p class="mt-2 text-slate-600">In your `Program.cs` file (for .NET 6+), you need to register the Swagger generator service.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+// 1. Add Swagger Generator
+builder.Services.AddEndpointsApiExplorer(); // Required for minimal APIs, good practice for controllers
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+// ... rest of the file
+                            </code></pre>
+                        </div>
+                        <p class="mt-4 font-semibold text-slate-700">Step 3: Enable the Middleware</p>
+                        <p class="mt-2 text-slate-600">Still in `Program.cs`, you need to add the middleware that serves the generated JSON document and the Swagger UI itself. This should typically only be enabled in the development environment.</p>
+                         <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+// 2. Enable middleware to serve generated Swagger as a JSON endpoint.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+                            </code></pre>
+                        </div>
+                        <p class="mt-3 text-slate-600">That's it! When you run your application, you can navigate to `/swagger` to see the interactive documentation.</p>
+                    </section>
+
+                    <section id="theory-customize">
+                        <h4 class="text-xl font-semibold text-slate-800">Customizing Swagger UI</h4>
+                        <p class="mt-3 text-slate-600">The default setup is great, but Swashbuckle allows for deep customization to make your documentation even more useful.</p>
+                        <p class="mt-3 font-semibold text-slate-700">Adding Metadata</p>
+                        <p class="mt-2 text-slate-600">You can add a title, version, description, and contact info. This is done in the `AddSwaggerGen` configuration.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "ToDo API",
+        Description = "An ASP.NET Core Web API for managing ToDo items",
+        TermsOfService = new Uri("https://example.com/terms"),
+        Contact = new OpenApiContact
+        {
+            Name = "Example Contact",
+            Url = new Uri("https://example.com/contact")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Example License",
+            Url = new Uri("https://example.com/license")
+        }
+    });
+});
+                            </code></pre>
+                        </div>
+                        <p class="mt-4 font-semibold text-slate-700">Handling Authentication</p>
+                        <p class="mt-2 text-slate-600">If your API is secured (e.g., with JWT), you need to tell Swagger about it so you can test protected endpoints. This adds an "Authorize" button to the UI.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">builder.Services.AddSwaggerGen(options =>
+{
+    // Define the security scheme
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    
+    // Make sure swagger uses the security scheme
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
+                            </code></pre>
+                        </div>
+                         <p class="mt-3 text-slate-600">After adding this, an "Authorize" button appears. You can click it, enter `Bearer {your_jwt_token}`, and Swagger will include the `Authorization` header in its requests to your API.</p>
+                    </section>
+                    
+                    <section id="theory-importance">
+                        <h4 class="text-xl font-semibold text-slate-800">Why API Documentation Matters</h4>
+                        <p class="mt-3 text-slate-600">Good documentation is not a "nice-to-have"; it's a fundamental part of a successful API. It acts as a contract between the provider and the consumer.</p>
+                        <ul class="mt-4 list-disc list-inside space-y-3 text-slate-600">
+                            <li><span class="font-semibold text-slate-700">Improved Collaboration:</span> Frontend and backend teams can work in parallel. The frontend team doesn't need to wait for the backend to be finished; they just need the OpenAPI spec. They can even use it to generate mock servers.</li>
+                            <li><span class="font-semibold text-slate-700">Faster Onboarding:</span> New developers (internal or external) can understand and start using your API in minutes, not days. The interactive UI lets them learn by doing, without writing a single line of client code.</li>
+                            <li><span class="font-semibold text-slate-700">Simplified Testing:</span> Swagger UI is a powerful, built-in testing tool. You can quickly send requests to your endpoints with different parameters and see the responses, making it easy to debug and verify behavior.</li>
+                            <li><span class="font-semibold text-slate-700">Automatic Client SDK Generation:</span> The OpenAPI specification is machine-readable. This means you can use tools like OpenAPI Generator to automatically create client libraries in dozens of languages (Java, Python, TypeScript, etc.), saving massive amounts of development time.</li>
+                        </ul>
+                    </section>
+                </article>
+
+                <article id="coding" class="space-y-12 mt-16">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Coding Practice</h3>
+                    
+                    <section id="coding-easy">
+                        <h4 class="text-xl font-semibold text-slate-800">[Easy] Create Swagger Docs for a CRUD API</h4>
+                        <p class="mt-3 text-slate-600">Let's start with a simple `ProductsController` and add Swagger. After configuring Swagger as shown in the setup section, Swashbuckle will automatically inspect this controller and generate the documentation.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+// Models/Product.cs
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+
+// Controllers/ProductsController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    private static readonly List&lt;Product> _products = new List&lt;Product>
+    {
+        new Product { Id = 1, Name = "Laptop", Price = 1200 },
+        new Product { Id = 2, Name = "Mouse", Price = 25 }
+    };
+
+    [HttpGet]
+    public ActionResult&lt;IEnumerable&lt;Product>> GetProducts()
+    {
+        return Ok(_products);
+    }
+
+    [HttpGet("{id}")]
+    public ActionResult&lt;Product> GetProduct(int id)
+    {
+        var product = _products.FirstOrDefault(p => p.Id == id);
+        if (product == null) return NotFound();
+        return Ok(product);
+    }
+
+    [HttpPost]
+    public ActionResult&lt;Product> CreateProduct(Product product)
+    {
+        product.Id = _products.Max(p => p.Id) + 1;
+        _products.Add(product);
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+    }
+}
+                            </code></pre>
+                        </div>
+                        <p class="mt-3 text-slate-600">When you run this and go to `/swagger`, you'll see endpoints for GET all, GET by ID, and POST, complete with example request bodies and response schemas.</p>
+                    </section>
+                    
+                    <section id="coding-medium">
+                        <h4 class="text-xl font-semibold text-slate-800">[Medium] Add API Versioning</h4>
+                        <p class="mt-3 text-slate-600">As APIs evolve, you'll need to support multiple versions. We can configure Swashbuckle to generate separate documents for each version and provide a dropdown in the UI to switch between them.</p>
+                        <p class="mt-3 font-semibold text-slate-700">Step 1: Install Versioning Packages</p>
+                         <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-powershell">dotnet add package Asp.Versioning.Mvc
+dotnet add package Asp.Versioning.Mvc.ApiExplorer</code></pre>
+                        </div>
+                         <p class="mt-4 font-semibold text-slate-700">Step 2: Configure Services in `Program.cs`</p>
+                         <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">// Add API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// Update SwaggerGen to create docs for each version
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API v1", Version = "v1" });
+    options.SwaggerDoc("v2", new OpenApiInfo { Title = "My API v2", Version = "v2" });
+});
+                            </code></pre>
+                        </div>
+                        <p class="mt-4 font-semibold text-slate-700">Step 3: Update Controllers with Versioning Attributes</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+public class ProductsController : ControllerBase 
+{
+    // V1 endpoints here...
+}
+
+[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("2.0")]
+public class ProductsV2Controller : ControllerBase 
+{
+    [HttpGet]
+    public IActionResult Get() 
+    {
+        return Ok("This is version 2 of the products API.");
+    }
+}
+                            </code></pre>
+                        </div>
+                        <p class="mt-3 text-slate-600">Now, your Swagger UI will have a dropdown in the top right, allowing you to switch between the `v1` and `v2` documentation.</p>
+                    </section>
+
+                    <section id="coding-hard">
+                        <h4 class="text-xl font-semibold text-slate-800">[Hard] Add JWT Authentication & Use "Authorize"</h4>
+                        <p class="mt-3 text-slate-600">Let's secure an endpoint and use the Swagger UI "Authorize" button to test it. This assumes you have JWT authentication set up in your application.</p>
+                        <p class="mt-3 font-semibold text-slate-700">Step 1: Configure Swagger for JWT (as shown in theory)</p>
+                        <p class="mt-2 text-slate-600">Add the `AddSecurityDefinition` and `AddSecurityRequirement` configuration to your `AddSwaggerGen` call in `Program.cs`.</p>
+                        <p class="mt-4 font-semibold text-slate-700">Step 2: Secure an Endpoint</p>
+                        <p class="mt-2 text-slate-600">Add the `[Authorize]` attribute to an action in your controller.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    // ... other methods ...
+
+    [HttpDelete("{id}")]
+    [Authorize] // This endpoint is now protected
+    public IActionResult DeleteProduct(int id)
+    {
+        // ... logic to delete product ...
+        return NoContent();
+    }
+}
+                            </code></pre>
+                        </div>
+                        <p class="mt-4 font-semibold text-slate-700">Step 3: Test in Swagger UI</p>
+                        <ol class="mt-2 list-decimal list-inside space-y-2 text-slate-600">
+                            <li>Run your application. You will see a padlock icon next to the `DELETE /api/Products/{id}` endpoint.</li>
+                            <li>Try to execute it without authorization. You will get a `401 Unauthorized` response.</li>
+                            <li>Obtain a valid JWT token from your authentication endpoint (you might need to create a simple `AuthController` for this).</li>
+                            <li>Click the green "Authorize" button at the top of the Swagger UI.</li>
+                            <li>In the dialog, type `Bearer ` followed by your token (e.g., `Bearer eyJhbGci...`) and click Authorize.</li>
+                            <li>Now, execute the DELETE endpoint again. It will succeed with a `204 No Content` response because Swagger is now sending the `Authorization` header with your token.</li>
+                        </ol>
+                    </section>
+                </article>
+
+                <article id="uml" class="mt-16">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ UML/Schema Task</h3>
+                    <h4 class="mt-4 text-xl font-semibold text-slate-800">Sequence Diagram: Client → Swagger → Controller → Database</h4>
+                    <p class="mt-3 text-slate-600">This diagram illustrates the flow of a request initiated by a developer using the Swagger UI to test an API endpoint that retrieves data from a database.</p>
+                    
+                    <div class="mt-6 p-4 border rounded-lg bg-white shadow-sm overflow-x-auto">
+                        <div class="relative mx-auto" style="min-width: 600px; height: 420px;">
+                            <!-- Participants -->
+                            <div class="absolute text-center font-bold text-sm w-1/4" style="left: 0%;">Developer (Client)</div>
+                            <div class="absolute text-center font-bold text-sm w-1/4" style="left: 25%;">Swagger UI</div>
+                            <div class="absolute text-center font-bold text-sm w-1/4" style="left: 50%;">API Controller</div>
+                            <div class="absolute text-center font-bold text-sm w-1/4" style="left: 75%;">Database</div>
+
+                            <!-- Lifelines -->
+                            <div class="absolute top-10 bottom-4 w-0.5 bg-slate-300" style="left: 12.5%;"></div>
+                            <div class="absolute top-10 bottom-4 w-0.5 bg-slate-300" style="left: 37.5%;"></div>
+                            <div class="absolute top-10 bottom-4 w-0.5 bg-slate-300" style="left: 62.5%;"></div>
+                            <div class="absolute top-10 bottom-4 w-0.5 bg-slate-300" style="left: 87.5%;"></div>
+
+                            <!-- Messages -->
+                            <!-- 1. Executes GET -->
+                            <div class="absolute text-xs text-slate-700" style="top: 50px; left: 12.5%; width: 25%;">
+                                <p class="text-center">1. Executes GET /products/{id}</p>
+                                <div class="mt-1 h-0.5 bg-slate-600 relative">
+                                    <div class="absolute right-0 top-1/2 -mt-1 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-slate-600"></div>
+                                </div>
+                            </div>
+                            <!-- 2. HTTP GET Request -->
+                            <div class="absolute text-xs text-slate-700" style="top: 100px; left: 37.5%; width: 25%;">
+                                <p class="text-center">2. HTTP GET Request</p>
+                                <div class="mt-1 h-0.5 bg-slate-600 relative">
+                                    <div class="absolute right-0 top-1/2 -mt-1 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-slate-600"></div>
+                                </div>
+                            </div>
+                            <!-- 3. Query for product -->
+                            <div class="absolute text-xs text-slate-700" style="top: 150px; left: 62.5%; width: 25%;">
+                                <p class="text-center">3. Query for product with ID</p>
+                                <div class="mt-1 h-0.5 bg-slate-600 relative">
+                                    <div class="absolute right-0 top-1/2 -mt-1 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-l-[6px] border-l-slate-600"></div>
+                                </div>
+                            </div>
+                             <!-- 4. Returns product data -->
+                            <div class="absolute text-xs text-slate-700" style="top: 200px; left: 62.5%; width: 25%;">
+                                <p class="text-center">4. Returns product data</p>
+                                <div class="mt-1 h-0.5 bg-slate-500 border-dashed relative">
+                                    <div class="absolute left-0 top-1/2 -mt-1 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-r-[6px] border-r-slate-500"></div>
+                                </div>
+                            </div>
+                            <!-- 5. Returns 200 OK -->
+                            <div class="absolute text-xs text-slate-700" style="top: 250px; left: 37.5%; width: 25%;">
+                                <p class="text-center">5. Returns 200 OK with Product DTO</p>
+                                <div class="mt-1 h-0.5 bg-slate-500 border-dashed relative">
+                                    <div class="absolute left-0 top-1/2 -mt-1 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-r-[6px] border-r-slate-500"></div>
+                                </div>
+                            </div>
+                            <!-- 6. Displays response -->
+                             <div class="absolute text-xs text-slate-700" style="top: 300px; left: 12.5%; width: 25%;">
+                                <p class="text-center">6. Displays response in UI</p>
+                                <div class="mt-1 h-0.5 bg-slate-500 border-dashed relative">
+                                    <div class="absolute left-0 top-1/2 -mt-1 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-r-[6px] border-r-slate-500"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ol class="mt-4 list-decimal list-inside space-y-2 text-slate-600">
+                        <li>The developer clicks the "Execute" button for an endpoint in the Swagger UI.</li>
+                        <li>Swagger UI constructs and sends a real HTTP request to the API endpoint hosted by the application.</li>
+                        <li>The API Controller receives the request, parses the parameters (like an ID), and executes a query against the Database.</li>
+                        <li>The Database returns the requested data to the Controller.</li>
+                        <li>The Controller serializes the data into a JSON response and sends it back with an appropriate HTTP status code (e.g., 200 OK).</li>
+                        <li>Swagger UI receives the HTTP response and neatly displays the status code, headers, and response body for the developer to inspect.</li>
+                    </ol>
+                </article>
+
+                <article id="case-study" class="mt-16">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Case Study / Machine Coding Exercise</h3>
+                    <h4 class="mt-4 text-xl font-semibold text-slate-800">Build a Public To-Do API with Swagger Documentation</h4>
+                    <p class="mt-3 text-slate-600">In this exercise, we'll build a simple but complete To-Do API. The key is to make it fully self-documented using Swashbuckle, so anyone can discover and use it without assistance.</p>
+                    <p class="mt-3 font-semibold text-slate-700">Step 1: Project Setup and Models</p>
+                    <p class="mt-2 text-slate-600">Create a new ASP.NET Core Web API project and add the `Swashbuckle.AspNetCore` package. Define `TodoItem` and `User` models.</p>
+                    <div class="code-block mt-4">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+// Models/TodoItem.cs
+public class TodoItem
+{
+    public long Id { get; set; }
+    public string? Name { get; set; }
+    public bool IsComplete { get; set; }
+    public int UserId { get; set; }
+}
+
+// Models/User.cs
+public class User
+{
+    public int Id { get; set; }
+    public string Username { get; set; }
+}
+                        </code></pre>
+                    </div>
+
+                    <p class="mt-4 font-semibold text-slate-700">Step 2: Create Controllers</p>
+                    <p class="mt-2 text-slate-600">Create two controllers, one for `Todos` and one for `Users`. We'll use a simple in-memory list for this example.</p>
+                    <div class="code-block mt-4">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+// Controllers/UsersController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class UsersController : ControllerBase
+{
+    private static readonly List&lt;User> _users = new List&lt;User> 
+    { 
+        new User { Id = 1, Username = "Alice" },
+        new User { Id = 2, Username = "Bob" }
+    };
+    
+    [HttpGet]
+    public ActionResult&lt;IEnumerable&lt;User>> GetUsers() => Ok(_users);
+}
+
+// Controllers/TodosController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class TodosController : ControllerBase
+{
+    private static readonly List&lt;TodoItem> _todos = new List&lt;TodoItem>
+    {
+        new TodoItem { Id = 1, Name = "Learn Swagger", IsComplete = true, UserId = 1 },
+        new TodoItem { Id = 2, Name = "Build an API", IsComplete = false, UserId = 1 },
+        new TodoItem { Id = 3, Name = "Write documentation", IsComplete = false, UserId = 2 }
+    };
+
+    [HttpGet]
+    public ActionResult&lt;IEnumerable&lt;TodoItem>> GetTodos([FromQuery] int? userId)
+    {
+        if (userId.HasValue)
+        {
+            return Ok(_todos.Where(t => t.UserId == userId.Value));
+        }
+        return Ok(_todos);
+    }
+
+    [HttpGet("{id}")]
+    public ActionResult&lt;TodoItem> GetTodoItem(long id)
+    {
+        var todo = _todos.FirstOrDefault(t => t.Id == id);
+        return todo == null ? NotFound() : Ok(todo);
+    }
+}
+                        </code></pre>
+                    </div>
+
+                    <p class="mt-4 font-semibold text-slate-700">Step 3: Enhance Swagger with XML Comments</p>
+                    <p class="mt-2 text-slate-600">To make the documentation even richer, we can use standard C# XML comments. First, enable XML documentation file generation in your `.csproj` file:</p>
+                    <div class="code-block mt-2">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-xml">&lt;PropertyGroup>
+  &lt;GenerateDocumentationFile>true&lt;/GenerateDocumentationFile>
+  &lt;NoWarn>$(NoWarn);1591&lt;/NoWarn>
+&lt;/PropertyGroup></code></pre>
+                    </div>
+                    <p class="mt-3 text-slate-600">Next, tell Swashbuckle to include these comments:</p>
+                     <div class="code-block mt-2">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">builder.Services.AddSwaggerGen(options =>
+{
+    // ... other options
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});</code></pre>
+                    </div>
+                    <p class="mt-3 text-slate-600">Finally, add comments to your controller actions:</p>
+                    <div class="code-block mt-2">
+                        <button class="copy-button">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+/// &lt;summary>
+/// Gets a list of all To-Do items.
+/// &lt;/summary>
+/// &lt;param name="userId">Optional. Filters the list to items belonging to a specific user.&lt;/param>
+/// &lt;returns>A list of To-Do items.&lt;/returns>
+[HttpGet]
+public ActionResult&lt;IEnumerable&lt;TodoItem>> GetTodos([FromQuery] int? userId)
+{
+    // ...
+}
+                        </code></pre>
+                    </div>
+                    <p class="mt-3 text-slate-600">Now, when you view the Swagger UI, these summaries and parameter descriptions will appear directly in the documentation, making your API crystal clear to consumers.</p>
+                </article>
+
+                <article id="quiz" class="mt-16">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">🧠 Knowledge Check Quiz</h3>
+                    <div id="quiz-container" class="mt-4 space-y-6"></div>
+                    <button id="submit-quiz" class="mt-6 bg-sky-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-600 transition-colors">Submit Answers</button>
+                </article>
+
+                <article id="challenge" class="mt-16">
+                    <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">🚀 Self-Assessment Challenge</h3>
+                    <div class="mt-4 bg-white p-6 rounded-lg shadow-sm">
+                        <p class="font-semibold text-slate-800">Your Task:</p>
+                        <p class="mt-2 text-slate-600">Modify the `TodosController` from the case study. Add a `POST` endpoint to create a new `TodoItem`. This endpoint should return a `201 Created` response with a `Location` header pointing to the newly created resource.</p>
+                        <p class="mt-3 text-slate-600">Additionally, use XML comments to fully document this new endpoint, explaining what it does, what the request body should be, and what it returns on success.</p>
+                        <div class="mt-6">
+                            <button id="toggle-solution" class="bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Solution</button>
+                            <div id="solution" class="hidden mt-4 border-t pt-4">
+                                <p class="text-slate-600 mb-2">Here is the complete code for the new action inside `TodosController`:</p>
+                                <div class="code-block">
+                                    <button class="copy-button">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+/// &lt;summary>
+/// Creates a new To-Do item.
+/// &lt;/summary>
+/// &lt;param name="todoItem">The To-Do item to create.&lt;/param>
+/// &lt;returns>The newly created To-Do item.&lt;/returns>
+/// &lt;remarks>
+/// Sample request:
+///
+///     POST /api/Todos
+///     {
+///        "name": "Walk the dog",
+///        "isComplete": false,
+///        "userId": 1
+///     }
+///
+/// &lt;/remarks>
+/// &lt;response code="201">Returns the newly created item&lt;/response>
+/// &lt;response code="400">If the item is null&lt;/response>
+[HttpPost]
+[ProducesResponseType(StatusCodes.Status201Created)]
+[ProducesResponseType(StatusCodes.Status400BadRequest)]
+public ActionResult&lt;TodoItem> PostTodoItem(TodoItem todoItem)
+{
+    if (todoItem == null)
+    {
+        return BadRequest();
+    }
+    
+    todoItem.Id = _todos.Any() ? _todos.Max(t => t.Id) + 1 : 1;
+    _todos.Add(todoItem);
+
+    return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, todoItem);
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+            </main>
+
+            <aside class="w-full lg:w-1/4 mt-12 lg:mt-0">
+                <nav id="toc" class="sticky top-8 bg-white p-4 rounded-lg shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-3">On This Page</h3>
+                    <ul class="space-y-2 text-sm text-slate-500">
+                        <li><a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">✅ Theory Topics</a>
+                            <ul class="space-y-2 mt-2 pl-3">
+                                <li><a href="#theory-intro" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">Intro to Swagger</a></li>
+                                <li><a href="#theory-setup" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">Setup in .NET</a></li>
+                                <li><a href="#theory-customize" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">Customizing UI</a></li>
+                                <li><a href="#theory-importance" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">Why it Matters</a></li>
+                            </ul>
+                        </li>
+                         <li><a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800 mt-2">✅ Coding Practice</a>
+                            <ul class="space-y-2 mt-2 pl-3">
+                                <li><a href="#coding-easy" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">[Easy] CRUD Docs</a></li>
+                                <li><a href="#coding-medium" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">[Medium] Versioning</a></li>
+                                <li><a href="#coding-hard" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800">[Hard] Authentication</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#uml" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800 mt-2">✅ UML/Schema Task</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800 mt-2">✅ Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800 mt-2">🧠 Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-slate-200 pl-3 hover:text-slate-800 mt-2">🚀 Challenge</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const tocLinks = document.querySelectorAll('.toc-link');
+        const sections = document.querySelectorAll('main > article');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (entry.isIntersecting && entry.intersectionRatio > 0.2) {
+                    document.querySelectorAll('.toc-link.active').forEach(link => link.classList.remove('active'));
+                    if(tocLink) tocLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: '0px', threshold: 0.2 });
+
+        sections.forEach(section => {
+            if(section.id) observer.observe(section);
+        });
+        
+        const codeBlocks = document.querySelectorAll('.code-block');
+        codeBlocks.forEach(block => {
+            const copyButton = block.querySelector('.copy-button');
+            const code = block.querySelector('code').innerText;
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(code).then(() => {
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyButton.textContent = 'Copy';
+                    }, 2000);
+                });
+            });
+        });
+
+        const toggleSolutionBtn = document.getElementById('toggle-solution');
+        const solutionDiv = document.getElementById('solution');
+        toggleSolutionBtn.addEventListener('click', () => {
+            const isHidden = solutionDiv.classList.contains('hidden');
+            solutionDiv.classList.toggle('hidden');
+            toggleSolutionBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+        });
+        
+        const quizData = [
+            {
+                question: "What is the primary purpose of the OpenAPI Specification?",
+                options: [
+                    "To automatically generate client-side code.",
+                    "To provide a standard, language-agnostic interface for describing REST APIs.",
+                    "To replace JSON with YAML in API development.",
+                    "To secure API endpoints against unauthorized access."
+                ],
+                answer: "To provide a standard, language-agnostic interface for describing REST APIs."
+            },
+            {
+                question: "Which NuGet package is commonly used to integrate Swagger/OpenAPI into an ASP.NET Core project?",
+                options: [
+                    "Newtonsoft.Json",
+                    "Microsoft.EntityFrameworkCore",
+                    "Swashbuckle.AspNetCore",
+                    "AutoMapper"
+                ],
+                answer: "Swashbuckle.AspNetCore"
+            },
+            {
+                question: "How do you enable the Swagger UI in a .NET 6+ application's request pipeline?",
+                options: [
+                    "app.UseMvc();",
+                    "app.AddSwagger();",
+                    "builder.Services.AddSwaggerUI();",
+                    "app.UseSwagger(); and app.UseSwaggerUI();"
+                ],
+                answer: "app.UseSwagger(); and app.UseSwaggerUI();"
+            },
+            {
+                question: "What is the main benefit of using XML comments with Swashbuckle?",
+                options: [
+                    "It improves application performance.",
+                    "It allows you to write API logic directly in XML.",
+                    "It automatically adds rich descriptions and summaries to your API documentation in Swagger UI.",
+                    "It is required for enabling authentication."
+                ],
+                answer: "It automatically adds rich descriptions and summaries to your API documentation in Swagger UI."
+            },
+            {
+                question: "To test a JWT-protected endpoint in Swagger UI, what is the first step after obtaining a token?",
+                options: [
+                    "Add the token to the URL query string.",
+                    "Click the padlock icon next to the endpoint.",
+                    "Click the global 'Authorize' button and enter the token in the format 'Bearer {token}'.",
+                    "Modify the `Program.cs` file to include the token."
+                ],
+                answer: "Click the global 'Authorize' button and enter the token in the format 'Bearer {token}'."
+            }
+        ];
+
+        const quizContainer = document.getElementById('quiz-container');
+        quizData.forEach((q, index) => {
+            const questionEl = document.createElement('div');
+            questionEl.className = 'bg-white p-5 rounded-lg shadow-sm';
+            questionEl.innerHTML = `<p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>`;
+            
+            const optionsEl = document.createElement('div');
+            optionsEl.className = 'mt-3 space-y-2';
+            optionsEl.dataset.questionIndex = index;
+
+            q.options.forEach(option => {
+                const optionEl = document.createElement('div');
+                optionEl.className = 'quiz-option p-3 border rounded-md cursor-pointer transition-colors';
+                optionEl.textContent = option;
+                optionEl.addEventListener('click', () => {
+                    const parent = optionEl.parentElement;
+                    parent.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+                    optionEl.classList.add('selected');
+                });
+                optionsEl.appendChild(optionEl);
+            });
+            
+            questionEl.appendChild(optionsEl);
+            const feedbackEl = document.createElement('div');
+            feedbackEl.className = 'mt-2 text-sm font-medium';
+            questionEl.appendChild(feedbackEl);
+            quizContainer.appendChild(questionEl);
+        });
+
+        document.getElementById('submit-quiz').addEventListener('click', () => {
+            const allQuestions = quizContainer.querySelectorAll('[data-question-index]');
+            allQuestions.forEach(questionDiv => {
+                const qIndex = parseInt(questionDiv.dataset.questionIndex);
+                const selectedOption = questionDiv.querySelector('.quiz-option.selected');
+                const feedbackEl = questionDiv.nextElementSibling;
+                
+                if (selectedOption) {
+                    const selectedAnswer = selectedOption.textContent;
+                    const correctAnswer = quizData[qIndex].answer;
+                    
+                    questionDiv.querySelectorAll('.quiz-option').forEach(o => {
+                        o.style.cursor = 'default';
+                        if(o.textContent === correctAnswer) {
+                            o.classList.add('correct');
+                        } else if(o.classList.contains('selected')){
+                            o.classList.add('incorrect');
+                        }
+                    });
+
+                    if (selectedAnswer === correctAnswer) {
+                        feedbackEl.textContent = 'Correct!';
+                        feedbackEl.className = 'mt-2 text-sm font-medium text-green-600';
+                    } else {
+                        feedbackEl.innerHTML = `Incorrect. The correct answer is: <span class="font-bold">${correctAnswer}</span>`;
+                        feedbackEl.className = 'mt-2 text-sm font-medium text-red-600';
+                    }
+                } else {
+                    feedbackEl.textContent = 'Please select an answer.';
+                    feedbackEl.className = 'mt-2 text-sm font-medium text-amber-600';
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 48: API Versioning & Pagination - LLD Bootcamp</title>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-column, long-form educational page with a sticky table of contents (ToC) on the right for easy navigation. This structure is ideal for a deep-dive lesson, allowing users to scroll through content linearly or jump to specific sections. The flow is logical: start with core theories (Versioning, Pagination), provide interactive coding practice to solidify understanding, visualize the API lifecycle, analyze a real-world case study, and finally test knowledge with a quiz and a self-assessment. This top-down approach from theory to practice is chosen for its proven effectiveness in learning complex technical topics. -->
+    <!-- Visualization & Content Choices: 
+        - Versioning/Pagination Theory: Presented using detailed text, analogies, and comparison tables (HTML/Tailwind) to clearly compare strategies. Goal: Inform & Compare.
+        - Coding Demos: Interactive sandboxes (HTML/JS) where users click buttons ('Next Page', 'Switch Version') to see simulated API responses update in real-time. Goal: Organize & Change. This hands-on method is more effective than static code blocks for understanding dynamic behavior.
+        - API Lifecycle: An interactive flowchart built with HTML/Tailwind/JS. Users click on stages to reveal details. Goal: Organize. This is more engaging than a static UML diagram and keeps the UI clean.
+        - Quiz/Challenge: Interactive elements (JS) provide immediate feedback, reinforcing learning. Goal: Inform & Test.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .code-block {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #cbd5e1;
+            color: #475569;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #94a3b8;
+        }
+        .toc-link.active {
+            color: #0891b2;
+            font-weight: 600;
+            border-left-color: #0891b2;
+        }
+        .prose-custom {
+             --tw-prose-body: #334155;
+             --tw-prose-headings: #1e293b;
+             --tw-prose-lead: #475569;
+             --tw-prose-links: #0891b2;
+             --tw-prose-bold: #1e293b;
+             --tw-prose-counters: #64748b;
+             --tw-prose-bullets: #0891b2;
+             --tw-prose-hr: #e2e8f0;
+             --tw-prose-quotes: #1e293b;
+             --tw-prose-quote-borders: #cbd5e1;
+             --tw-prose-captions: #64748b;
+             --tw-prose-code: #1e293b;
+             --tw-prose-pre-code: #e2e8f0;
+             --tw-prose-pre-bg: #f1f5f9;
+             --tw-prose-th-borders: #cbd5e1;
+             --tw-prose-td-borders: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <main class="lg:col-span-9 prose prose-custom max-w-none">
+                <div class="mb-12">
+                    <p class="text-sm font-semibold text-cyan-600">DAY 48: NETWORKING & API DESIGN</p>
+                    <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">API Versioning & Pagination</h2>
+                    <p class="mt-4 text-lg text-slate-600">Welcome to Day 48! Today, we'll tackle two fundamental concepts for building scalable, maintainable, and user-friendly APIs: Versioning and Pagination. These aren't just features; they are essential strategies for managing an API's evolution and handling large datasets efficiently.</p>
+                </div>
+
+                <section id="theory-versioning" class="scroll-mt-24 space-y-6">
+                    <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ Theory: API Versioning Strategies</h3>
+                    <p>Imagine your API is a popular video game. You can't just change the rules or characters overnight without warning; players would be confused and frustrated. API versioning is how you release "new editions" of your API, allowing existing users to continue playing the old version while others can adopt the new one at their own pace.</p>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                        <p class="font-semibold text-yellow-800">The Core Problem:</p>
+                        <p class="text-yellow-700">Changing your API is inevitable. New features, data model changes, or security fixes will require breaking changes. Versioning provides a stable contract for your consumers, preventing their applications from breaking unexpectedly.</p>
+                    </div>
+
+                    <h4 class="text-2xl font-semibold tracking-tight text-slate-700">1. URI Path Versioning</h4>
+                    <p>This is the most common and explicit method. You include the version number directly in the URL path.</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <pre><code class="language-http">GET /api/v1/users/123
+GET /api/v2/users/123</code></pre>
+                    </div>
+                    <ul class="list-disc list-outside space-y-2 pl-5">
+                        <li><strong class="text-slate-700">Pros:</strong> Extremely clear and easy to see which version is being used. Simple to implement in routing logic. Easy to explore different versions in a browser.</li>
+                        <li><strong class="text-slate-700">Cons:</strong> Violates the principle that a URI should represent a unique resource. Can lead to cluttered routing files.</li>
+                    </ul>
+
+                    <h4 class="text-2xl font-semibold tracking-tight text-slate-700">2. Query Parameter Versioning</h4>
+                    <p>The version is specified as a query parameter in the URL.</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <pre><code class="language-http">GET /api/users/123?version=1
+GET /api/users/123?version=2</code></pre>
+                    </div>
+                    <ul class="list-disc list-outside space-y-2 pl-5">
+                        <li><strong class="text-slate-700">Pros:</strong> Simpler to implement in code than URI versioning. Keeps the base URI clean. Easy to default to the latest version if the parameter is omitted.</li>
+                        <li><strong class="text-slate-700">Cons:</strong> Less explicit than URI versioning. Can be messier to manage with other query parameters.</li>
+                    </ul>
+
+                    <h4 class="text-2xl font-semibold tracking-tight text-slate-700">3. Custom Header Versioning</h4>
+                    <p>The version is specified in a custom HTTP header, often the `Accept` header.</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <pre><code class="language-http">GET /api/users/123
+Accept: application/vnd.yourapi.v1+json
+
+GET /api/users/123
+Accept: application/vnd.yourapi.v2+json</code></pre>
+                    </div>
+                     <ul class="list-disc list-outside space-y-2 pl-5">
+                        <li><strong class="text-slate-700">Pros:</strong> Considered the "purest" RESTful approach as it keeps the URI clean and represents the resource correctly. Uses HTTP's content negotiation feature as intended.</li>
+                        <li><strong class="text-slate-700">Cons:</strong> Much harder for humans to test and explore (can't just use a browser). Can be more complex to implement and document.</li>
+                    </ul>
+                </section>
+
+                <section id="theory-pagination" class="scroll-mt-24 space-y-6 mt-12">
+                    <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ Theory: Offset vs. Cursor Pagination</h3>
+                    <p>If your API returns a list of 1 million items, sending them all at once would be a disaster for both the server and the client. Pagination is like reading a book one page at a time instead of trying to read the whole library at once. It breaks down large datasets into manageable chunks.</p>
+                    
+                    <h4 class="text-2xl font-semibold tracking-tight text-slate-700">1. Offset Pagination (Page-based)</h4>
+                    <p>This is the classic "page number" approach you see everywhere. You specify a `limit` (how many items per page) and an `offset` (how many items to skip).</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <pre><code class="language-sql">-- To get Page 1 (10 items)
+SELECT * FROM products ORDER BY id LIMIT 10 OFFSET 0;
+
+-- To get Page 2 (10 items)
+SELECT * FROM products ORDER BY id LIMIT 10 OFFSET 10;</code></pre>
+                    </div>
+                    <ul class="list-disc list-outside space-y-2 pl-5">
+                        <li><strong class="text-slate-700">Pros:</strong> Simple to understand and implement. Allows users to jump to any specific page easily.</li>
+                        <li><strong class="text-slate-700">Cons:</strong> Can be inefficient for large datasets as the database still has to scan through the `offset` rows. Suffers from the "page drift" problem: if new items are added while a user is paginating, items can be skipped or appear on multiple pages.</li>
+                    </ul>
+
+                    <h4 class="text-2xl font-semibold tracking-tight text-slate-700">2. Cursor Pagination (Keyset-based)</h4>
+                    <p>Instead of a page number, you use a "cursor" which is a pointer to a specific item in the dataset. The client asks for items "after" that cursor.</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <pre><code class="language-sql">-- To get the first page (10 items)
+SELECT * FROM products ORDER BY id LIMIT 10;
+
+-- Let's say the last item's ID was 15. The cursor is now 15.
+-- To get the next page:
+SELECT * FROM products WHERE id > 15 ORDER BY id LIMIT 10;</code></pre>
+                    </div>
+                    <ul class="list-disc list-outside space-y-2 pl-5">
+                        <li><strong class="text-slate-700">Pros:</strong> Highly performant on large datasets, especially with an indexed column. Avoids the "page drift" problem, making it ideal for real-time feeds. Stateless on the server.</li>
+                        <li><strong class="text-slate-700">Cons:</strong> More complex to implement. The ordering column must be unique and sequential. Doesn't allow users to jump to a specific page number.</li>
+                    </ul>
+                    
+                    <div class="w-full overflow-x-auto mt-8">
+                        <h4 class="text-2xl font-semibold tracking-tight text-slate-700">Comparison: Offset vs. Cursor</h4>
+                        <table class="w-full text-left border-collapse mt-4">
+                            <thead>
+                                <tr class="bg-slate-200">
+                                    <th class="p-4 border border-slate-300 font-semibold">Feature</th>
+                                    <th class="p-4 border border-slate-300 font-semibold">Offset Pagination</th>
+                                    <th class="p-4 border border-slate-300 font-semibold">Cursor Pagination</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-4 border border-slate-300 font-semibold">Performance</td>
+                                    <td class="p-4 border border-slate-300">Slows down on deep pages (large offsets).</td>
+                                    <td class="p-4 border border-slate-300">Fast and consistent, regardless of page depth.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 border border-slate-300 font-semibold">Data Consistency</td>
+                                    <td class="p-4 border border-slate-300">Prone to skipping or duplicating items in real-time data.</td>
+                                    <td class="p-4 border border-slate-300">Stable and reliable, even with frequent writes.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 border border-slate-300 font-semibold">Navigation</td>
+                                    <td class="p-4 border border-slate-300">Can jump to any page number.</td>
+                                    <td class="p-4 border border-slate-300">Can only go to the next/previous page.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 border border-slate-300 font-semibold">Use Case</td>
+                                    <td class="p-4 border border-slate-300">Stable datasets where users need to access specific pages (e.g., e-commerce product catalogs).</td>
+                                    <td class="p-4 border border-slate-300">Infinite scrolling feeds (e.g., social media timelines, news feeds).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="coding-practice" class="scroll-mt-24 space-y-6 mt-12">
+                    <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ Coding Practice</h3>
+                    <p>Let's get hands-on. The examples below simulate a Node.js/Express backend. You can interact with them to see the concepts in action.</p>
+                    
+                    <div id="pagination-demo" class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <h4 class="text-2xl font-semibold tracking-tight text-slate-700">Interactive Pagination Demo</h4>
+                        <p class="text-slate-600 mb-4">See the "page drift" problem with Offset pagination firsthand.</p>
+                        
+                        <div class="flex items-center space-x-4 mb-4">
+                            <button id="offset-btn" class="px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-sm hover:bg-cyan-700">Offset Demo</button>
+                            <button id="cursor-btn" class="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300">Cursor Demo</button>
+                        </div>
+
+                        <div id="demo-controls" class="flex items-center space-x-2 mb-4 p-4 bg-slate-100 rounded-lg">
+                            <button id="prev-page-btn" class="px-3 py-1.5 bg-white border border-slate-300 rounded-md shadow-sm">Previous</button>
+                            <button id="next-page-btn" class="px-3 py-1.5 bg-white border border-slate-300 rounded-md shadow-sm">Next</button>
+                            <button id="add-item-btn" class="px-3 py-1.5 bg-yellow-400 text-yellow-900 font-semibold rounded-md shadow-sm ml-auto">Add New Item to Top</button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-semibold text-slate-800">API Response:</h5>
+                                <div class="code-block mt-2">
+                                     <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                     <pre><code id="api-response-code" class="language-json" style="max-height: 300px; overflow-y: auto;"></code></pre>
+                                </div>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-slate-800">Rendered Items:</h5>
+                                <div id="rendered-items" class="mt-2 space-y-2 p-4 bg-slate-50 border rounded-lg h-[332px] overflow-y-auto"></div>
+                            </div>
+                        </div>
+                         <p id="demo-explanation" class="mt-4 text-sm text-slate-600 p-3 bg-blue-50 border border-blue-200 rounded-lg"></p>
+                    </div>
+
+                     <div id="versioning-demo" class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm mt-8">
+                        <h4 class="text-2xl font-semibold tracking-tight text-slate-700">[Hard] API Versioning Demo</h4>
+                        <p class="text-slate-600 mb-4">Select a version to see how the API response for a user resource changes.</p>
+                        
+                        <div class="flex items-center space-x-4 mb-4">
+                            <label for="version-select" class="font-semibold text-slate-700">API Version:</label>
+                            <select id="version-select" class="p-2 border border-slate-300 rounded-md">
+                                <option value="v1">v1</option>
+                                <option value="v2">v2</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <h5 class="font-semibold text-slate-800">Request:</h5>
+                            <div class="code-block mt-2">
+                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                 <pre><code id="version-request-code" class="language-http"></code></pre>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h5 class="font-semibold text-slate-800">Response:</h5>
+                            <div class="code-block mt-2">
+                                 <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                 <pre><code id="version-response-code" class="language-json"></code></pre>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-sm text-slate-600 p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <strong>Key Change:</strong> In v1, the user's name is a single `name` field. In v2, it's split into `firstName` and `lastName` for better structure. This is a common breaking change that necessitates versioning.
+                        </p>
+                    </div>
+
+                </section>
+                
+                <section id="uml-task" class="scroll-mt-24 space-y-6 mt-12">
+                    <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ UML/Schema Task: API Lifecycle Diagram</h3>
+                    <p>An API has a life of its own, from creation to retirement. Understanding this lifecycle is crucial for long-term maintenance. Click on each stage below to learn more.</p>
+                    <div id="api-lifecycle" class="w-full flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-2">
+                        <!-- Stages will be inserted here by JS -->
+                    </div>
+                    <div id="lifecycle-details" class="mt-4 p-4 bg-slate-100 rounded-lg border border-slate-200 min-h-[100px]">
+                        <h4 id="lifecycle-title" class="text-xl font-semibold text-slate-800"></h4>
+                        <p id="lifecycle-description" class="text-slate-600 mt-2"></p>
+                    </div>
+                </section>
+
+                <section id="case-study" class="scroll-mt-24 space-y-6 mt-12">
+                    <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ Case Study: A Versioned Search API</h3>
+                    <p>Let's analyze a common scenario: evolving a product search API for an e-commerce platform.</p>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-slate-200">
+                        <h4 class="text-xl font-semibold text-slate-700">Initial Requirement (v1)</h4>
+                        <p class="text-slate-600">The first version needs a simple keyword search on product names.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre><code class="language-http">GET /api/v1/products?search=laptop</code></pre>
+                        </div>
+                        <p class="mt-2 text-slate-600">The response is a simple array of product objects.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre><code class="language-json">[
+    { "id": 101, "name": "UltraBook Laptop", "price": 1200 },
+    { "id": 105, "name": "Gaming Laptop Pro", "price": 1800 }
+]</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-slate-200">
+                        <h4 class="text-xl font-semibold text-slate-700">New Requirements (v2)</h4>
+                        <p class="text-slate-600">The business now wants to add filtering by category and sorting by price. They also want a more structured response that includes pagination metadata.</p>
+                        <div class="code-block mt-2">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre><code class="language-http">GET /api/v2/products?search=laptop&category=electronics&sort=price_desc&limit=10</code></pre>
+                        </div>
+                        <p class="mt-2 text-slate-600">This is a breaking change because the response structure is completely different. Using URI versioning (`/v2/`) makes this change safe for existing consumers.</p>
+                         <div class="code-block mt-2">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre><code class="language-json">{
+    "metadata": {
+        "totalItems": 2,
+        "perPage": 10,
+        "currentPage": 1
+    },
+    "data": [
+        { "id": 105, "name": "Gaming Laptop Pro", "price": 1800, "category": "electronics" },
+        { "id": 101, "name": "UltraBook Laptop", "price": 1200, "category": "electronics" }
+    ]
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="knowledge-check" class="scroll-mt-24 space-y-6 mt-12">
+                     <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ Knowledge Check Quiz</h3>
+                     <div id="quiz-container" class="space-y-8"></div>
+                </section>
+
+                <section id="self-assessment" class="scroll-mt-24 space-y-6 mt-12">
+                    <h3 class="text-3xl font-bold tracking-tight text-slate-800 border-b-2 border-cyan-500 pb-2">✅ Self-Assessment Challenge</h3>
+                    <div class="bg-slate-100 p-6 rounded-lg border border-slate-200">
+                        <p class="font-semibold text-slate-800">Your Challenge:</p>
+                        <p class="mt-2 text-slate-700">Design an API endpoint for fetching comments on a blog post. The API must evolve from v1 to v2.
+                            <ul class="list-disc pl-5 mt-2 space-y-1">
+                                <li><strong>v1:</strong> Should return a simple list of comment texts. Use offset pagination with a default limit of 20.</li>
+                                <li><strong>v2:</strong> Should return a list of comment objects, each containing the author's details and a timestamp. It MUST use cursor pagination, ordered by the timestamp. The response should include the `nextCursor`.</li>
+                            </ul>
+                        </p>
+                        <p class="mt-2 text-slate-700">Describe the URI structure, query parameters, and response bodies for both versions fetching the "next page" of comments for a post with ID `987`.</p>
+                        <button id="reveal-solution-btn" class="mt-4 px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-sm hover:bg-cyan-700">Reveal Solution</button>
+                        <div id="solution" class="hidden mt-4 pt-4 border-t border-slate-300">
+                           <h4 class="text-xl font-bold text-slate-800">Challenge Solution</h4>
+                           
+                           <h5 class="text-lg font-semibold mt-4 text-slate-700">Version 1 (Offset Pagination)</h5>
+                           <p><strong>Request for Page 2:</strong></p>
+                           <div class="code-block mt-2">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <pre><code class="language-http">GET /api/v1/posts/987/comments?limit=20&offset=20</code></pre>
+                            </div>
+                           <p class="mt-2"><strong>Response Body:</strong></p>
+                           <div class="code-block mt-2">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <pre><code class="language-json">[
+    "This is comment 21.",
+    "This is comment 22.",
+    ...
+    "This is comment 40."
+]</code></pre>
+                            </div>
+
+                            <h5 class="text-lg font-semibold mt-6 text-slate-700">Version 2 (Cursor Pagination)</h5>
+                            <p>Assume the last comment from the first page had a timestamp of `1672531200` (which is our cursor).</p>
+                           <p><strong>Request for next page:</strong></p>
+                           <div class="code-block mt-2">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <pre><code class="language-http">GET /api/v2/posts/987/comments?limit=20&after=1672531200</code></pre>
+                            </div>
+                           <p class="mt-2"><strong>Response Body:</strong> (Assume the next comment has timestamp `1672531260`)</p>
+                           <div class="code-block mt-2">
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <pre><code class="language-json">{
+    "data": [
+        {
+            "id": "c_21",
+            "text": "This is comment 21.",
+            "author": { "id": "u_45", "name": "Jane Doe" },
+            "timestamp": 1672531205
+        },
+        ...
+    ],
+    "paging": {
+        "nextCursor": "1672531260"
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="hidden lg:block lg:col-span-3">
+                <nav id="toc" class="sticky top-24">
+                    <h3 class="font-semibold text-slate-800 mb-3">On this page</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#theory-versioning" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">Theory: Versioning</a></li>
+                        <li><a href="#theory-pagination" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">Theory: Pagination</a></li>
+                        <li><a href="#coding-practice" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">Coding Practice</a></li>
+                        <li><a href="#uml-task" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">API Lifecycle</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">Case Study</a></li>
+                        <li><a href="#knowledge-check" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">Knowledge Check</a></li>
+                        <li><a href="#self-assessment" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const copyCode = (button) => {
+            const codeBlock = button.nextElementSibling;
+            const code = codeBlock.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        };
+        window.copyCode = copyCode;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const link = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (entry.isIntersecting) {
+                    document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
+
+        document.querySelectorAll('main section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Pagination Demo Logic
+        const paginationDemo = (() => {
+            let masterData = Array.from({ length: 50 }, (_, i) => ({ id: i + 1, value: `Item ${i + 1}` }));
+            let mode = 'offset'; // 'offset' or 'cursor'
+            let offset = 0;
+            let cursor = 0;
+            const limit = 5;
+
+            const offsetBtn = document.getElementById('offset-btn');
+            const cursorBtn = document.getElementById('cursor-btn');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+            const addBtn = document.getElementById('add-item-btn');
+            const responseCodeEl = document.getElementById('api-response-code');
+            const renderedItemsEl = document.getElementById('rendered-items');
+            const explanationEl = document.getElementById('demo-explanation');
+
+            function fetchData() {
+                let pageData, response;
+                if (mode === 'offset') {
+                    pageData = masterData.slice(offset, offset + limit);
+                    response = {
+                        data: pageData,
+                        paging: {
+                            total: masterData.length,
+                            limit,
+                            offset
+                        }
+                    };
+                } else { // cursor
+                    const cursorIndex = masterData.findIndex(item => item.id === cursor);
+                    const startIndex = cursorIndex + 1;
+                    pageData = masterData.slice(startIndex, startIndex + limit);
+                    const nextCursor = pageData.length > 0 ? pageData[pageData.length - 1].id : null;
+                    response = {
+                        data: pageData,
+                        paging: {
+                            nextCursor
+                        }
+                    };
+                }
+                render(response);
+            }
+
+            function render(response) {
+                responseCodeEl.textContent = JSON.stringify(response, null, 2);
+                renderedItemsEl.innerHTML = response.data.map(item => `<div class="p-2 bg-white border rounded shadow-sm">${item.value} (ID: ${item.id})</div>`).join('');
+                updateButtons(response);
+            }
+
+            function updateButtons(response) {
+                if (mode === 'offset') {
+                    prevBtn.disabled = offset === 0;
+                    nextBtn.disabled = offset + limit >= masterData.length;
+                    explanationEl.innerHTML = `<strong>Offset Mode:</strong> We are showing items from index ${offset} to ${offset + limit - 1}. Click 'Add New Item' and then 'Next' to see how an item might get skipped.`;
+                } else {
+                    prevBtn.disabled = true; // Simplified demo, no prev for cursor
+                    nextBtn.disabled = !response.paging.nextCursor;
+                    explanationEl.innerHTML = `<strong>Cursor Mode:</strong> We are showing items after ID ${cursor}. Even if you add new items, the next page will correctly start after the last item you saw.`;
+                }
+            }
+
+            function switchMode(newMode) {
+                mode = newMode;
+                offset = 0;
+                cursor = 0;
+                if (mode === 'offset') {
+                    offsetBtn.classList.add('bg-cyan-600', 'text-white');
+                    offsetBtn.classList.remove('bg-slate-200', 'text-slate-700');
+                    cursorBtn.classList.add('bg-slate-200', 'text-slate-700');
+                    cursorBtn.classList.remove('bg-cyan-600', 'text-white');
+                } else {
+                    cursorBtn.classList.add('bg-cyan-600', 'text-white');
+                    cursorBtn.classList.remove('bg-slate-200', 'text-slate-700');
+                    offsetBtn.classList.add('bg-slate-200', 'text-slate-700');
+                    offsetBtn.classList.remove('bg-cyan-600', 'text-white');
+                }
+                fetchData();
+            }
+
+            nextBtn.addEventListener('click', () => {
+                if (mode === 'offset') {
+                    offset += limit;
+                } else {
+                    const lastItemResponse = JSON.parse(responseCodeEl.textContent);
+                    cursor = lastItemResponse.paging.nextCursor;
+                }
+                fetchData();
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (mode === 'offset') {
+                    offset = Math.max(0, offset - limit);
+                    fetchData();
+                }
+            });
+
+            addBtn.addEventListener('click', () => {
+                const newItemId = Math.max(...masterData.map(i => i.id)) + 1;
+                masterData.unshift({ id: newItemId, value: `New Item ${newItemId}` });
+                fetchData();
+            });
+
+            offsetBtn.addEventListener('click', () => switchMode('offset'));
+            cursorBtn.addEventListener('click', () => switchMode('cursor'));
+
+            switchMode('offset');
+        })();
+
+        // Versioning Demo Logic
+        const versioningDemo = (() => {
+            const select = document.getElementById('version-select');
+            const reqCode = document.getElementById('version-request-code');
+            const resCode = document.getElementById('version-response-code');
+
+            const v1Response = { id: 42, name: 'John Doe', email: 'john.doe@example.com' };
+            const v2Response = { id: 42, firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' };
+
+            function render() {
+                const version = select.value;
+                if (version === 'v1') {
+                    reqCode.textContent = 'GET /api/v1/users/42';
+                    resCode.textContent = JSON.stringify(v1Response, null, 2);
+                } else {
+                    reqCode.textContent = 'GET /api/v2/users/42';
+                    resCode.textContent = JSON.stringify(v2Response, null, 2);
+                }
+            }
+            select.addEventListener('change', render);
+            render();
+        })();
+        
+        // API Lifecycle Logic
+        const lifecycleDemo = (() => {
+            const stages = [
+                { id: 'dev', title: 'Development', color: 'bg-blue-500', description: 'The API is actively being designed and built. It is not publicly available and is subject to major breaking changes. Endpoints are tested locally.' },
+                { id: 'test', title: 'Testing', color: 'bg-yellow-500', description: 'The API is deployed to a staging environment. QA teams and automated tests verify its functionality, performance, and security. It may be available to a small group of beta testers.' },
+                { id: 'active', title: 'Active', color: 'bg-green-500', description: 'The API is live in production and publicly available. It is considered stable and is supported. New non-breaking features may be added.' },
+                { id: 'dep', title: 'Deprecated', color: 'bg-orange-500', description: 'A new version of the API is available. This version is still active but will be removed in the future. Developers are encouraged to migrate to the new version.' },
+                { id: 'ret', title: 'Retired', color: 'bg-red-500', description: 'The API version is no longer available. Calls to its endpoints will result in an error. It has been fully replaced by a newer version.' }
+            ];
+            
+            const container = document.getElementById('api-lifecycle');
+            const titleEl = document.getElementById('lifecycle-title');
+            const descEl = document.getElementById('lifecycle-description');
+            
+            let html = '';
+            stages.forEach((stage, index) => {
+                html += `
+                    <div class="flex-1 text-center">
+                        <button data-stage="${stage.id}" class="lifecycle-stage w-24 h-24 md:w-32 md:h-32 rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base shadow-lg transition-transform hover:scale-105 ${stage.color}">${stage.title}</button>
+                    </div>
+                `;
+                if (index < stages.length - 1) {
+                    html += `<div class="flex-shrink-0 w-full md:w-auto h-1 md:h-auto md:flex-1 bg-slate-300 md:bg-transparent relative"><div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-slate-300"></div></div>`;
+                }
+            });
+            container.innerHTML = html;
+
+            function showDetails(stageId) {
+                const stage = stages.find(s => s.id === stageId);
+                titleEl.textContent = stage.title;
+                descEl.textContent = stage.description;
+                document.querySelectorAll('.lifecycle-stage').forEach(btn => {
+                    btn.classList.remove('ring-4', 'ring-offset-2', `ring-${stage.color.replace('bg-','').replace('-500','')}-400`);
+                });
+                document.querySelector(`button[data-stage="${stageId}"]`).classList.add('ring-4', 'ring-offset-2', `ring-${stage.color.replace('bg-','').replace('-500','')}-400`);
+            }
+            
+            container.addEventListener('click', (e) => {
+                if (e.target.closest('.lifecycle-stage')) {
+                    showDetails(e.target.closest('.lifecycle-stage').dataset.stage);
+                }
+            });
+            
+            showDetails('dev');
+        })();
+
+        // Quiz Logic
+        const quiz = (() => {
+            const questions = [
+                {
+                    question: "Which API versioning strategy is considered the most RESTful because it doesn't alter the resource URI?",
+                    options: ["URI Path Versioning", "Query Parameter Versioning", "Custom Header Versioning", "Payload Versioning"],
+                    answer: "Custom Header Versioning",
+                    explanation: "Custom Header Versioning keeps the URI clean and uses HTTP's content negotiation mechanism, which aligns best with REST principles."
+                },
+                {
+                    question: "What is the primary disadvantage of Offset pagination, especially for real-time data feeds?",
+                    options: ["It is complex to implement.", "It is slow for the first few pages.", "It can skip or duplicate items if new data is added (page drift).", "It does not allow jumping to a specific page."],
+                    answer: "It can skip or duplicate items if new data is added (page drift).",
+                    explanation: "The 'page drift' problem is the main drawback of offset pagination, making it unreliable for datasets that change frequently."
+                },
+                 {
+                    question: "A social media company wants to build an API for its infinite scrolling timeline. Which pagination method is most suitable?",
+                    options: ["Offset Pagination", "Cursor Pagination", "Page Number Pagination", "No Pagination"],
+                    answer: "Cursor Pagination",
+                    explanation: "Cursor pagination is ideal for infinite scrolling because it's highly performant and stable, ensuring no posts are missed even as new ones are added."
+                }
+            ];
+
+            const container = document.getElementById('quiz-container');
+
+            questions.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'bg-white p-6 rounded-lg border border-slate-200';
+                
+                let optionsHtml = '';
+                q.options.forEach(opt => {
+                    optionsHtml += `
+                        <button data-correct="${opt === q.answer}" class="quiz-option block w-full text-left p-3 mt-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+                            ${opt}
+                        </button>
+                    `;
+                });
+                
+                questionEl.innerHTML = `
+                    <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+                    <div class="mt-3">${optionsHtml}</div>
+                    <div class="quiz-feedback hidden mt-3 p-3 rounded-lg"></div>
+                `;
+                
+                container.appendChild(questionEl);
+            });
+
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quiz-option')) {
+                    const parent = e.target.closest('.bg-white');
+                    const feedbackEl = parent.querySelector('.quiz-feedback');
+                    const isCorrect = e.target.dataset.correct === 'true';
+                    const explanation = questions.find(q => q.question === parent.querySelector('p').textContent.substring(3)).explanation;
+
+                    parent.querySelectorAll('.quiz-option').forEach(btn => btn.disabled = true);
+
+                    if(isCorrect) {
+                        e.target.classList.remove('bg-slate-100');
+                        e.target.classList.add('bg-green-200', 'border', 'border-green-400');
+                        feedbackEl.innerHTML = `<strong class="text-green-800">Correct!</strong> ${explanation}`;
+                        feedbackEl.className = 'quiz-feedback mt-3 p-3 rounded-lg bg-green-50 text-green-700';
+                    } else {
+                        e.target.classList.remove('bg-slate-100');
+                        e.target.classList.add('bg-red-200', 'border', 'border-red-400');
+                        feedbackEl.innerHTML = `<strong class="text-red-800">Incorrect.</strong> ${explanation}`;
+                        feedbackEl.className = 'quiz-feedback mt-3 p-3 rounded-lg bg-red-50 text-red-700';
+                        parent.querySelector('.quiz-option[data-correct="true"]').classList.add('bg-green-200', 'border', 'border-green-400');
+                    }
+                     feedbackEl.classList.remove('hidden');
+                }
+            });
+        })();
+
+        // Solution Toggle
+        const solutionBtn = document.getElementById('reveal-solution-btn');
+        const solutionDiv = document.getElementById('solution');
+        solutionBtn.addEventListener('click', () => {
+            const isHidden = solutionDiv.classList.contains('hidden');
+            if(isHidden) {
+                solutionDiv.classList.remove('hidden');
+                solutionBtn.textContent = 'Hide Solution';
+            } else {
+                solutionDiv.classList.add('hidden');
+                solutionBtn.textContent = 'Reveal Solution';
+            }
+        });
+
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 34: Decorator Pattern - LLD Bootcamp</title>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page educational module with a two-column layout. The main content area (left, 3/4 width) provides a linear, scrollable learning path from theory to practical application. A sticky Table of Contents (right, 1/4 width) allows for quick, non-linear navigation. This structure was chosen because it supports both guided learning for beginners and quick reference for experienced users. Key interactions include: interactive toggles for the coffee calculator to demonstrate the pattern dynamically, copy-to-clipboard for code efficiency, a quiz for knowledge reinforcement, and a revealable solution for the final challenge. This flow promotes active learning over passive reading. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Decorator Pattern Definition -> Goal: Inform -> Presentation: Textual explanation with analogies -> Interaction: None -> Justification: Foundational theory needs clear, direct explanation.
+        - Report Info: Coffee Cost Calculation -> Goal: Demonstrate Dynamic Behavior -> Viz: Interactive checkboxes and a dynamic bar chart -> Interaction: User toggles addons (decorators), chart and total cost update instantly -> Justification: Visually connects the abstract concept of "wrapping" an object with a concrete, tangible outcome. Library: Chart.js (Canvas).
+        - Report Info: UML Structure -> Goal: Organize/Visualize Relationships -> Presentation: HTML/CSS diagram -> Interaction: Static -> Justification: Adheres to the NO SVG/Mermaid rule while still providing a clear structural overview of the pattern's components. Method: Styled divs and borders.
+        - Report Info: Coding Examples & Case Study -> Goal: Apply Knowledge -> Presentation: Fully-coded examples in C# with copy functionality -> Interaction: Copy to clipboard -> Justification: Facilitates easy use and experimentation with the provided code.
+        - Report Info: Knowledge Check -> Goal: Assess Understanding -> Presentation: Multiple-choice quiz -> Interaction: Instant feedback on selection -> Justification: Reinforces learning through immediate validation.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0d9488; /* teal-600 */
+            font-weight: 600;
+            border-left-color: #0d9488; /* teal-600 */
+        }
+        .code-block {
+            background-color: #f1f5f9; /* slate-100 */
+            border: 1px solid #e2e8f0; /* slate-200 */
+            border-radius: 0.5rem;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #e2e8f0; /* slate-200 */
+            color: #475569; /* slate-600 */
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #cbd5e1; /* slate-300 */
+        }
+        .copy-btn.copied {
+            background-color: #10b981; /* green-500 */
+            color: white;
+        }
+        /* Simple Syntax Highlighting */
+        .code-block pre code .keyword { color: #be185d; font-weight: 600; }
+        .code-block pre code .type { color: #059669; }
+        .code-block pre code .comment { color: #64748b; }
+        .code-block pre code .string { color: #4338ca; }
+        .code-block pre code .method { color: #86198f; }
+        .code-block pre code .number { color: #ea580c; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="text-center mb-12">
+            <p class="text-base font-semibold text-teal-600">Day 34 of 60</p>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight">Creational Patterns: Decorator</h2>
+            <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">Learn how to attach new behaviors to objects dynamically by placing them inside special wrapper objects.</p>
+        </div>
+
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+
+            <div class="lg:col-span-9 space-y-16">
+                
+                <section id="theory" class="scroll-mt-24">
+                    <div class="p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800">✅ Theory: The Decorator Pattern</h3>
+                        <p class="mt-4 text-slate-600">This section breaks down the core concepts of the Decorator pattern. We'll explore its definition, purpose, and how it allows for adding functionality to objects at runtime without altering their class structure, promoting flexibility and adherence to the Open/Closed Principle.</p>
+                        
+                        <div class="mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">Definition and Analogy</h4>
+                            <p class="mt-2 text-slate-600">The Decorator pattern is a structural design pattern that lets you attach new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors. It's like dressing a person: the person is the core component. You can then "decorate" them with a shirt, then a jacket, then a scarf. Each item adds something new without changing the person themselves.</p>
+                             <div class="mt-4 p-4 bg-teal-50 border-l-4 border-teal-500 text-teal-800 rounded-r-lg">
+                                <p><span class="font-bold">Key Idea:</span> The Decorator pattern is used to extend the functionality of an object dynamically without having to resort to subclassing. It's a flexible alternative to inheritance.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">Adding Behavior Dynamically</h4>
+                            <p class="mt-2 text-slate-600">Imagine you have a simple `Notification` class that sends a message. Now, you need to add functionality to send notifications via Email, then SMS, then maybe also log the notification. Instead of creating subclasses like `EmailNotification`, `SMSNotification`, `EmailAndSMSNotification`, etc. (which leads to a class explosion), you can create decorators.</p>
+                            <p class="mt-2 text-slate-600">You start with a basic `Notifier` object. To add email functionality, you wrap it in an `EmailDecorator`. To also add SMS functionality, you wrap the `EmailDecorator` object in an `SMSDecorator`. The call stack would look like this: `SMSDecorator` -> `EmailDecorator` -> `Notifier`. When you call `send()`, each wrapper adds its own behavior before (or after) calling the `send()` method of the object it wraps.</p>
+                        </div>
+                        
+                        <div class="mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">Example: Stream Decorators</h4>
+                            <p class="mt-2 text-slate-600">A classic example is handling data streams, common in languages like Java and C#. You might start with a simple `FileStream` that reads/writes raw bytes to a file. To add buffering, you can wrap it in a `BufferedStreamDecorator`. To add compression, you can wrap the buffered stream in a `GZipStreamDecorator`. To add encryption, you wrap that in a `CryptoStreamDecorator`. Each layer adds a specific responsibility. The client code interacts with the outermost layer through a common stream interface, unaware of the complex stack underneath.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="uml" class="scroll-mt-24">
+                    <div class="p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800">✅ UML/Schema Task: Decorator Pattern</h3>
+                        <p class="mt-4 text-slate-600">This UML diagram, built with HTML and CSS, illustrates the structure of the Decorator pattern. It shows how both the Concrete Component and the Decorators share a common Component interface, enabling the "wrapping" mechanism.</p>
+                        <div class="mt-6 p-4 border border-slate-200 rounded-lg bg-slate-50 flex flex-col items-center justify-center min-h-[400px] relative font-mono text-sm">
+                           
+                            <div class="absolute top-4 text-center text-slate-600">Client uses the Component interface</div>
+                            
+                            <div class="border-2 border-teal-600 bg-teal-50 p-3 rounded-lg w-48 text-center">
+                                <p class="font-bold">&lt;&lt;interface&gt;&gt;</p>
+                                <p>IComponent</p>
+                                <hr class="my-1 border-teal-400">
+                                <p>+ Operation()</p>
+                            </div>
+
+                            <div class="absolute w-full h-1/3 top-24 left-0 flex justify-center">
+                                <div class="w-px h-full bg-slate-400 border-l border-dashed"></div>
+                                <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 border-l border-t border-slate-400 rotate-45 bg-slate-50"></div>
+                            </div>
+                            
+                            <div class="absolute top-1/3 w-full flex justify-around">
+                                <div class="relative w-48 text-center">
+                                    <div class="border-2 border-slate-600 bg-slate-100 p-3 rounded-lg">
+                                        <p class="font-bold">ConcreteComponent</p>
+                                        <hr class="my-1 border-slate-400">
+                                        <p>+ Operation()</p>
+                                    </div>
+                                </div>
+                                <div class="relative w-48 text-center">
+                                    <div class="border-2 border-slate-600 bg-slate-100 p-3 rounded-lg">
+                                        <p class="font-bold">BaseDecorator</p>
+                                        <p class="text-xs">(implements IComponent)</p>
+                                        <hr class="my-1 border-slate-400">
+                                        <p>- wrappee: IComponent</p>
+                                        <p>+ Operation()</p>
+                                    </div>
+                                    <div class="absolute w-full h-12 -bottom-12 left-0 flex justify-center">
+                                         <div class="w-px h-full bg-slate-400 border-l border-dashed"></div>
+                                         <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 border-l border-t border-slate-400 rotate-45 bg-slate-50"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="absolute w-px h-8 bottom-[136px] left-[75%] bg-slate-400 border-l border-dashed"></div>
+                            
+                            <div class="absolute bottom-12 w-full flex justify-end">
+                                <div class="relative w-72 text-center mr-8">
+                                    <div class="w-3/4 mx-auto h-px bg-slate-400 border-t border-dashed"></div>
+                                    <div class="absolute -left-1 top-0 w-px h-8 bg-slate-400 border-l border-dashed"></div>
+                                    <div class="absolute -right-1 top-0 w-px h-8 bg-slate-400 border-l border-dashed"></div>
+                                </div>
+                            </div>
+                           
+                            <div class="absolute bottom-4 w-full flex justify-end">
+                                <div class="w-72 flex justify-around mr-8">
+                                    <div class="border-2 border-indigo-600 bg-indigo-50 p-2 rounded-lg w-32 text-center">
+                                        <p class="font-bold">DecoratorA</p>
+                                        <hr class="my-1 border-indigo-400">
+                                        <p>+ Operation()</p>
+                                    </div>
+                                    <div class="border-2 border-indigo-600 bg-indigo-50 p-2 rounded-lg w-32 text-center">
+                                        <p class="font-bold">DecoratorB</p>
+                                        <hr class="my-1 border-indigo-400">
+                                        <p>+ Operation()</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <section id="practice" class="scroll-mt-24">
+                    <div class="p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800">✅ Coding Practice</h3>
+                        <p class="mt-4 text-slate-600">Apply your knowledge with these hands-on coding exercises. We start with a simple text formatter, move to an interactive coffee cost calculator, and finish with a multi-channel notification system. All solutions are provided in C#.</p>
+
+                        <div class="mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">[Easy] Text Formatter</h4>
+                            <p class="mt-2 text-slate-600">Create a simple text formatting tool. Start with a plain text component and add decorators for bold, italics, and underline.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn" onclick="copyCode('code-formatter')">Copy</button>
+                                <pre class="p-4 overflow-x-auto text-sm"><code id="code-formatter"><span class="comment">// C# Solution</span>
+<span class="keyword">public</span> <span class="keyword">interface</span> <span class="type">IText</span> {
+    <span class="type">string</span> <span class="method">GetContent</span>();
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">PlainText</span> : <span class="type">IText</span> {
+    <span class="keyword">private</span> <span class="type">string</span> _text;
+    <span class="keyword">public</span> <span class="method">PlainText</span>(<span class="type">string</span> text) => _text = text;
+    <span class="keyword">public</span> <span class="type">string</span> <span class="method">GetContent</span>() => _text;
+}
+
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">TextDecorator</span> : <span class="type">IText</span> {
+    <span class="keyword">protected</span> <span class="type">IText</span> _wrappee;
+    <span class="keyword">public</span> <span class="method">TextDecorator</span>(<span class="type">IText</span> text) => _wrappee = text;
+    <span class="keyword">public</span> <span class="keyword">virtual</span> <span class="type">string</span> <span class="method">GetContent</span>() => _wrappee.<span class="method">GetContent</span>();
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">BoldDecorator</span> : <span class="type">TextDecorator</span> {
+    <span class="keyword">public</span> <span class="method">BoldDecorator</span>(<span class="type">IText</span> text) : <span class="keyword">base</span>(text) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="method">GetContent</span>() => <span class="string">$"&lt;b&gt;{base.GetContent()}&lt;/b&gt;"</span>;
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">ItalicDecorator</span> : <span class="type">TextDecorator</span> {
+    <span class="keyword">public</span> <span class="method">ItalicDecorator</span>(<span class="type">IText</span> text) : <span class="keyword">base</span>(text) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="method">GetContent</span>() => <span class="string">$"&lt;i&gt;{base.GetContent()}&lt;/i&gt;"</span>;
+}
+
+<span class="comment">// Usage</span>
+<span class="type">IText</span> myText = <span class="keyword">new</span> <span class="type">PlainText</span>(<span class="string">"Hello World"</span>);
+myText = <span class="keyword">new</span> <span class="type">BoldDecorator</span>(myText);
+myText = <span class="keyword">new</span> <span class="type">ItalicDecorator</span>(myText);
+Console.<span class="method">WriteLine</span>(myText.<span class="method">GetContent</span>()); <span class="comment">// Output: &lt;i&gt;&lt;b&gt;Hello World&lt;/b&gt;&lt;/i&gt;</span>
+</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">[Medium] Interactive Coffee Cost Calculator</h4>
+                            <p class="mt-2 text-slate-600">Build a coffee shop system where you can start with a base coffee (like Espresso) and add extras (decorators) like Milk, Sugar, and Whipped Cream. Each addition increases the total cost. Try toggling the options below to see the pattern in action!</p>
+                            
+                            <div class="mt-4 grid md:grid-cols-2 gap-8 items-center">
+                                <div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                    <h5 class="font-semibold text-slate-800 text-center">Build Your Coffee</h5>
+                                    <div class="mt-4 space-y-3">
+                                        <div class="flex items-center">
+                                            <input id="coffee-base" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500" checked disabled>
+                                            <label for="coffee-base" class="ml-3 block text-sm font-medium text-slate-700">Espresso (Base)</label>
+                                            <span class="ml-auto font-mono text-slate-500">$2.00</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input id="add-milk" name="coffee-decorator" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                            <label for="add-milk" class="ml-3 block text-sm font-medium text-slate-700">Add Milk</label>
+                                            <span class="ml-auto font-mono text-slate-500">$0.50</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input id="add-sugar" name="coffee-decorator" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                            <label for="add-sugar" class="ml-3 block text-sm font-medium text-slate-700">Add Sugar</label>
+                                            <span class="ml-auto font-mono text-slate-500">$0.25</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <input id="add-whip" name="coffee-decorator" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                            <label for="add-whip" class="ml-3 block text-sm font-medium text-slate-700">Add Whipped Cream</label>
+                                            <span class="ml-auto font-mono text-slate-500">$0.75</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 pt-4 border-t-2 border-dashed border-slate-300 flex justify-between items-center">
+                                        <span class="text-lg font-bold text-slate-800">Total Cost:</span>
+                                        <span id="coffee-total" class="text-2xl font-extrabold text-teal-600 font-mono">$2.00</span>
+                                    </div>
+                                </div>
+                                <div class="chart-container w-full max-w-md mx-auto h-64 md:h-80">
+                                    <canvas id="coffee-chart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="code-block mt-6">
+                                <button class="copy-btn" onclick="copyCode('code-coffee')">Copy</button>
+                                <pre class="p-4 overflow-x-auto text-sm"><code id="code-coffee"><span class="comment">// C# Solution</span>
+<span class="keyword">public</span> <span class="keyword">interface</span> <span class="type">ICoffee</span> {
+    <span class="type">double</span> <span class="method">GetCost</span>();
+    <span class="type">string</span> <span class="method">GetDescription</span>();
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Espresso</span> : <span class="type">ICoffee</span> {
+    <span class="keyword">public</span> <span class="type">double</span> <span class="method">GetCost</span>() => <span class="number">2.00</span>;
+    <span class="keyword">public</span> <span class="type">string</span> <span class="method">GetDescription</span>() => <span class="string">"Espresso"</span>;
+}
+
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">CoffeeDecorator</span> : <span class="type">ICoffee</span> {
+    <span class="keyword">protected</span> <span class="type">ICoffee</span> _coffee;
+    <span class="keyword">public</span> <span class="method">CoffeeDecorator</span>(<span class="type">ICoffee</span> coffee) => _coffee = coffee;
+    <span class="keyword">public</span> <span class="keyword">virtual</span> <span class="type">double</span> <span class="method">GetCost</span>() => _coffee.<span class="method">GetCost</span>();
+    <span class="keyword">public</span> <span class="keyword">virtual</span> <span class="type">string</span> <span class="method">GetDescription</span>() => _coffee.<span class="method">GetDescription</span>();
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">MilkDecorator</span> : <span class="type">CoffeeDecorator</span> {
+    <span class="keyword">public</span> <span class="method">MilkDecorator</span>(<span class="type">ICoffee</span> coffee) : <span class="keyword">base</span>(coffee) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">double</span> <span class="method">GetCost</span>() => base.<span class="method">GetCost</span>() + <span class="number">0.50</span>;
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="method">GetDescription</span>() => base.<span class="method">GetDescription</span>() + <span class="string">", Milk"</span>;
+}
+<span class="comment">// Similar decorators for Sugar (0.25) and Whip (0.75)</span>
+</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">[Hard] Notification System</h4>
+                            <p class="mt-2 text-slate-600">Design a notification service that can send alerts through multiple channels. The client should be able to combine channels dynamically, e.g., send a notification via SMS and Email, or SMS, Email, and a Push notification.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn" onclick="copyCode('code-notification')">Copy</button>
+                                <pre class="p-4 overflow-x-auto text-sm"><code id="code-notification"><span class="comment">// C# Solution</span>
+<span class="keyword">public</span> <span class="keyword">interface</span> <span class="type">INotifier</span> {
+    <span class="keyword">void</span> <span class="method">Send</span>(<span class="type">string</span> message);
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Notifier</span> : <span class="type">INotifier</span> {
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">Send</span>(<span class="type">string</span> message) {
+        Console.<span class="method">WriteLine</span>(<span class="string">$"Base notification: {message}"</span>);
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">BaseDecorator</span> : <span class="type">INotifier</span> {
+    <span class="keyword">protected</span> <span class="type">INotifier</span> _wrappee;
+    <span class="keyword">public</span> <span class="method">BaseDecorator</span>(<span class="type">INotifier</span> notifier) => _wrappee = notifier;
+    <span class="keyword">public</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="method">Send</span>(<span class="type">string</span> message) => _wrappee.<span class="method">Send</span>(message);
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">SMSDecorator</span> : <span class="type">BaseDecorator</span> {
+    <span class="keyword">public</span> <span class="method">SMSDecorator</span>(<span class="type">INotifier</span> n) : <span class="keyword">base</span>(n) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="keyword">void</span> <span class="method">Send</span>(<span class="type">string</span> message) {
+        base.<span class="method">Send</span>(message);
+        Console.<span class="method">WriteLine</span>(<span class="string">$"Sending SMS: {message}"</span>);
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">EmailDecorator</span> : <span class="type">BaseDecorator</span> {
+    <span class="keyword">public</span> <span class="method">EmailDecorator</span>(<span class="type">INotifier</span> n) : <span class="keyword">base</span>(n) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="keyword">void</span> <span class="method">Send</span>(<span class="type">string</span> message) {
+        base.<span class="method">Send</span>(message);
+        Console.<span class="method">WriteLine</span>(<span class="string">$"Sending Email: {message}"</span>);
+    }
+}
+<span class="comment">// PushDecorator would be similar</span>
+
+<span class="comment">// Usage</span>
+<span class="type">INotifier</span> notifier = <span class="keyword">new</span> <span class="type">Notifier</span>();
+notifier = <span class="keyword">new</span> <span class="type">SMSDecorator</span>(notifier);
+notifier = <span class="keyword">new</span> <span class="type">EmailDecorator</span>(notifier);
+notifier.<span class="method">Send</span>(<span class="string">"System alert!"</span>);
+</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="case-study" class="scroll-mt-24">
+                     <div class="p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800">✅ Case Study / Machine Coding Exercise</h3>
+                        <p class="mt-4 text-slate-600">Let's do a deep-dive into designing the Notification Service from the hard exercise. This is a common real-world problem where the Decorator pattern shines by providing a scalable and maintainable solution for handling multiple notification channels.</p>
+                        
+                        <div class="mt-6 border-t border-slate-200 pt-6 space-y-4 text-slate-600">
+                             <h4 class="text-lg font-semibold text-slate-700">1. Problem Statement</h4>
+                             <p>A software application needs a notification system. Initially, it just needs to log notifications to the console. However, future requirements will include sending notifications via SMS, Email, and Push Notifications. The system must allow for any combination of these channels for a single notification event (e.g., send via Email and SMS, but not Push).</p>
+
+                             <h4 class="text-lg font-semibold text-slate-700">2. Initial thought process: Why not inheritance?</h4>
+                             <p>A naive approach would be to use inheritance. We could have a base `Notifier` class and subclasses like `SMSNotifier`, `EmailNotifier`. But what if we need both? We'd have to create `SMSEmailNotifier`. What about all three? `SMSEmailPushNotifier`. This leads to a combinatorial explosion of classes and is extremely rigid. If a new channel (like Slack) is added, the number of required classes grows exponentially. This clearly violates the Open/Closed Principle.</p>
+                             
+                             <h4 class="text-lg font-semibold text-slate-700">3. Applying the Decorator Pattern</h4>
+                             <p>The Decorator pattern is a perfect fit here. We can treat each notification channel as a "layer" of functionality that we can add to a base object.</p>
+                             <ul class="list-disc list-inside space-y-2 pl-4">
+                                <li><strong>Component (`INotifier`):</strong> First, we define a common interface that all our notification objects will use. It will have a single method, `Send(string message)`.</li>
+                                <li><strong>Concrete Component (`Notifier`):</strong> This is our basic, core object. In this case, it might simply write the notification to the console or do nothing at all. It's the object that will be "decorated."</li>
+                                <li><strong>Base Decorator (`BaseDecorator`):</strong> This is an abstract class that also implements `INotifier`. It holds a reference to another `INotifier` object (the "wrappee"). Its own `Send` method simply delegates the call to the wrappee. This class is crucial for avoiding repetitive code in the concrete decorators.</li>
+                                <li><strong>Concrete Decorators (`SMSDecorator`, `EmailDecorator`):</strong> These are the actual "wrappers." Each one inherits from `BaseDecorator`. In its `Send` method, it first calls the parent's `Send` method (which passes the call down the chain) and then adds its own specific logic (e.g., calling an SMS API, sending an email).</li>
+                             </ul>
+
+                             <h4 class="text-lg font-semibold text-slate-700">4. Final Design and Client Code</h4>
+                             <p>The client code becomes incredibly simple and flexible. The client can compose the desired notification stack at runtime:</p>
+                             <div class="p-4 bg-slate-100 rounded-md text-sm font-mono text-slate-800">
+                                <span class="text-gray-500">// Just SMS</span><br>
+                                INotifier smsOnly = new SMSDecorator(new Notifier());<br>
+                                <br>
+                                <span class="text-gray-500">// Email and Push</span><br>
+                                INotifier emailAndPush = new PushDecorator(new EmailDecorator(new Notifier()));<br>
+                                emailAndPush.Send("New feature released!");
+                             </div>
+                             <p class="mt-4">This design is extensible. Adding a `SlackDecorator` requires creating only one new class that implements the same pattern. The existing code remains untouched, perfectly demonstrating the Open/Closed Principle.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="quiz" class="scroll-mt-24">
+                    <div class="p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800">✅ Knowledge Check Quiz</h3>
+                        <p class="mt-4 text-slate-600">Test your understanding of the Decorator pattern with these questions.</p>
+                        <div id="quiz-container" class="mt-6 border-t border-slate-200 pt-6 space-y-8">
+                            
+                            <div class="quiz-question">
+                                <p class="font-semibold text-slate-700">1. What is the primary intent of the Decorator pattern?</p>
+                                <div class="mt-2 space-y-2">
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">A) To create a family of related objects without specifying their concrete classes.</button>
+                                    <button data-correct="true" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">B) To attach additional responsibilities to an object dynamically.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">C) To provide a simplified interface to a complex subsystem.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">D) To ensure a class only has one instance and provide a global point of access to it.</button>
+                                </div>
+                                <p class="quiz-feedback mt-2 text-sm hidden"></p>
+                            </div>
+
+                            <div class="quiz-question">
+                                <p class="font-semibold text-slate-700">2. The Decorator pattern is a flexible alternative to which object-oriented principle for extending functionality?</p>
+                                <div class="mt-2 space-y-2">
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">A) Encapsulation</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">B) Polymorphism</button>
+                                    <button data-correct="true" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">C) Subclassing (Inheritance)</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">D) Abstraction</button>
+                                </div>
+                                <p class="quiz-feedback mt-2 text-sm hidden"></p>
+                            </div>
+
+                            <div class="quiz-question">
+                                <p class="font-semibold text-slate-700">3. In the Decorator pattern, both the Concrete Component and the Decorators must...</p>
+                                <div class="mt-2 space-y-2">
+                                    <button data-correct="true" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">A) Implement the same interface or extend the same base class.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">B) Have a reference to the client object.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">C) Be abstract classes.</button>
+                                    <button data-correct="false" class="quiz-option text-left w-full p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-colors">D) Be final or sealed classes to prevent further subclassing.</button>
+                                </div>
+                                <p class="quiz-feedback mt-2 text-sm hidden"></p>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="challenge" class="scroll-mt-24">
+                    <div class="p-6 bg-white rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-2xl font-bold text-slate-800">✅ Self-Assessment Challenge</h3>
+                        <div class="mt-4 p-4 bg-indigo-50 border-l-4 border-indigo-500 text-indigo-800 rounded-r-lg">
+                            <h4 class="font-bold">Challenge: Data Exporter with Formatting</h4>
+                            <p class="mt-2">You are building a data exporting tool. The core component takes a simple string of data. You need to create decorators to add the following functionalities:</p>
+                            <ul class="list-disc list-inside mt-2">
+                                <li><strong>JSON Decorator:</strong> Wraps the data in a simple JSON structure like `{ "data": "your_data_here" }`.</li>
+                                <li><strong>Base64 Decorator:</strong> Encodes the output of the wrapped component into a Base64 string.</li>
+                                <li><strong>Timestamp Decorator:</strong> Prepends a timestamp to the final output (e.g., `[2025-09-20 22:21:00] ...output...`).</li>
+                            </ul>
+                            <p class="mt-2">Your task is to implement the component, the decorators, and show how a client would export data that is first formatted as JSON, then encoded in Base64, and finally prepended with a timestamp.</p>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <button id="reveal-solution-btn" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">Reveal Solution</button>
+                        </div>
+                        <div id="solution" class="hidden mt-6 border-t border-slate-200 pt-6">
+                            <h4 class="text-xl font-semibold text-slate-700">Challenge Solution (C#)</h4>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn" onclick="copyCode('code-challenge')">Copy</button>
+                                <pre class="p-4 overflow-x-auto text-sm"><code id="code-challenge"><span class="comment">// C# Solution</span>
+<span class="keyword">using</span> System;
+<span class="keyword">using</span> System.Text;
+
+<span class="comment">// 1. Component Interface</span>
+<span class="keyword">public</span> <span class="keyword">interface</span> <span class="type">IDataExporter</span> {
+    <span class="type">string</span> <span class="method">Export</span>();
+}
+
+<span class="comment">// 2. Concrete Component</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">SimpleDataExporter</span> : <span class="type">IDataExporter</span> {
+    <span class="keyword">private</span> <span class="type">string</span> _data;
+    <span class="keyword">public</span> <span class="method">SimpleDataExporter</span>(<span class="type">string</span> data) => _data = data;
+    <span class="keyword">public</span> <span class="type">string</span> <span class="method">Export</span>() => _data;
+}
+
+<span class="comment">// 3. Base Decorator</span>
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="type">DataDecorator</span> : <span class="type">IDataExporter</span> {
+    <span class="keyword">protected</span> <span class="type">IDataExporter</span> _exporter;
+    <span class="keyword">public</span> <span class="method">DataDecorator</span>(<span class="type">IDataExporter</span> exporter) => _exporter = exporter;
+    <span class="keyword">public</span> <span class="keyword">virtual</span> <span class="type">string</span> <span class="method">Export</span>() => _exporter.<span class="method">Export</span>();
+}
+
+<span class="comment">// 4. Concrete Decorators</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">JsonDecorator</span> : <span class="type">DataDecorator</span> {
+    <span class="keyword">public</span> <span class="method">JsonDecorator</span>(<span class="type">IDataExporter</span> e) : <span class="keyword">base</span>(e) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="method">Export</span>() {
+        <span class="type">string</span> content = base.<span class="method">Export</span>();
+        <span class="keyword">return</span> <span class="string">$"{{ \"data\": \"{content}\" }}"</span>;
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Base64Decorator</span> : <span class="type">DataDecorator</span> {
+    <span class="keyword">public</span> <span class="method">Base64Decorator</span>(<span class="type">IDataExporter</span> e) : <span class="keyword">base</span>(e) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="method">Export</span>() {
+        <span class="type">byte</span>[] bytes = Encoding.UTF8.<span class="method">GetBytes</span>(base.<span class="method">Export</span>());
+        <span class="keyword">return</span> Convert.<span class="method">ToBase64String</span>(bytes);
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">TimestampDecorator</span> : <span class="type">DataDecorator</span> {
+    <span class="keyword">public</span> <span class="method">TimestampDecorator</span>(<span class="type">IDataExporter</span> e) : <span class="keyword">base</span>(e) { }
+    <span class="keyword">public</span> <span class="keyword">override</span> <span class="type">string</span> <span class="method">Export</span>() {
+        <span class="type">string</span> timestamp = DateTime.Now.<span class="method">ToString</span>(<span class="string">"yyyy-MM-dd HH:mm:ss"</span>);
+        <span class="keyword">return</span> <span class="string">$"[{timestamp}] {base.Export()}"</span>;
+    }
+}
+
+<span class="comment">// 5. Client Usage</span>
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">Program</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">Main</span>() {
+        <span class="type">IDataExporter</span> exporter = <span class="keyword">new</span> <span class="type">SimpleDataExporter</span>(<span class="string">"secret_data"</span>);
+        
+        <span class="comment">// Wrap it up! Order matters.</span>
+        exporter = <span class="keyword">new</span> <span class="type">JsonDecorator</span>(exporter);
+        exporter = <span class="keyword">new</span> <span class="type">Base64Decorator</span>(exporter);
+        exporter = <span class="keyword">new</span> <span class="type">TimestampDecorator</span>(exporter);
+        
+        <span class="type">string</span> finalOutput = exporter.<span class="method">Export</span>();
+        Console.<span class="method">WriteLine</span>(finalOutput);
+        <span class="comment">// Example output: [2025-09-20 22:21:00] eyAiZGF0YSI6ICJzZWNyZXRfZGF0YSIgfQ==</span>
+    }
+}
+</code></pre>
+                             </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="hidden lg:block lg:col-span-3">
+                <nav id="table-of-contents" class="sticky top-24">
+                    <h3 class="font-semibold text-slate-800 mb-4">On this page</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">Theory</a></li>
+                        <li><a href="#uml" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">UML Diagram</a></li>
+                        <li><a href="#practice" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">Coding Practice</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">Case Study</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </main>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- Table of Contents Logic ---
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc-link');
+        
+        const observerOptions = {
+            rootMargin: '-50px 0px -50% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    if (tocLink) {
+                       tocLink.classList.add('active');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+
+        // --- Copy to Clipboard Logic ---
+        window.copyCode = function(elementId) {
+            const codeEl = document.getElementById(elementId);
+            const buttonEl = codeEl.closest('.code-block').querySelector('.copy-btn');
+            navigator.clipboard.writeText(codeEl.innerText).then(() => {
+                buttonEl.textContent = 'Copied!';
+                buttonEl.classList.add('copied');
+                setTimeout(() => {
+                    buttonEl.textContent = 'Copy';
+                    buttonEl.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // --- Challenge Solution Toggle ---
+        const revealBtn = document.getElementById('reveal-solution-btn');
+        const solutionDiv = document.getElementById('solution');
+        revealBtn.addEventListener('click', () => {
+            solutionDiv.classList.toggle('hidden');
+            revealBtn.textContent = solutionDiv.classList.contains('hidden') ? 'Reveal Solution' : 'Hide Solution';
+        });
+
+        // --- Quiz Logic ---
+        const quizContainer = document.getElementById('quiz-container');
+        quizContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quiz-option')) {
+                const questionDiv = e.target.closest('.quiz-question');
+                const options = questionDiv.querySelectorAll('.quiz-option');
+                const feedbackEl = questionDiv.querySelector('.quiz-feedback');
+                const isCorrect = e.target.dataset.correct === 'true';
+
+                options.forEach(opt => {
+                    opt.disabled = true;
+                    if (opt.dataset.correct === 'true') {
+                        opt.classList.remove('bg-slate-50', 'hover:bg-slate-100');
+                        opt.classList.add('bg-green-100', 'border-green-400', 'text-green-800', 'font-semibold');
+                    }
+                });
+
+                if (!isCorrect) {
+                    e.target.classList.remove('bg-slate-50', 'hover:bg-slate-100');
+                    e.target.classList.add('bg-red-100', 'border-red-400', 'text-red-800');
+                }
+                
+                feedbackEl.classList.remove('hidden');
+                feedbackEl.textContent = isCorrect ? 'Correct! Well done.' : 'Not quite. The correct answer is highlighted in green.';
+                feedbackEl.style.color = isCorrect ? '#059669' : '#b91c1c';
+            }
+        });
+
+        // --- Interactive Coffee Chart Logic ---
+        const ctx = document.getElementById('coffee-chart').getContext('2d');
+        const addons = {
+            'add-milk': { name: 'Milk', cost: 0.50, color: 'rgba(255, 240, 210, 0.7)' },
+            'add-sugar': { name: 'Sugar', cost: 0.25, color: 'rgba(230, 230, 230, 0.7)' },
+            'add-whip': { name: 'Whip', cost: 0.75, color: 'rgba(245, 245, 245, 0.9)' }
+        };
+        const baseCoffee = { name: 'Espresso', cost: 2.00, color: 'rgba(100, 60, 20, 0.7)' };
+
+        let chartData = {
+            labels: [baseCoffee.name],
+            datasets: [{
+                label: 'Cost',
+                data: [baseCoffee.cost],
+                backgroundColor: [baseCoffee.color],
+                borderColor: 'rgba(70, 40, 10, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const coffeeChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Coffee Cost Breakdown' }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return '$' + value.toFixed(2); }
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateCoffeeOrder() {
+            let totalCost = baseCoffee.cost;
+            let currentLabels = [baseCoffee.name];
+            let currentData = [baseCoffee.cost];
+            let currentColors = [baseCoffee.color];
+
+            document.querySelectorAll('input[name="coffee-decorator"]:checked').forEach(checkbox => {
+                const addon = addons[checkbox.id];
+                totalCost += addon.cost;
+                currentLabels.push(addon.name);
+                currentData.push(addon.cost);
+                currentColors.push(addon.color);
+            });
+
+            document.getElementById('coffee-total').textContent = `$${totalCost.toFixed(2)}`;
+            
+            coffeeChart.data.labels = currentLabels;
+            coffeeChart.data.datasets[0].data = currentData;
+            coffeeChart.data.datasets[0].backgroundColor = currentColors;
+            coffeeChart.update();
+        }
+
+        document.querySelectorAll('input[name="coffee-decorator"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateCoffeeOrder);
+        });
+
+    });
+    </script>
+</body>
+</html>
+

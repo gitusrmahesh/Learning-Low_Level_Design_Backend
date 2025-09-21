@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 45: TLS/SSL | Low-Level Design Bootcamp</title>
+    <!-- Chosen Palette: Calm Harmony Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page, sequential learning module. A two-column layout is used on larger screens, with the main content on the left and a sticky table of contents on the right. This structure provides a clear, linear path through the lesson, which is ideal for educational content, while the sticky navigation allows users to easily jump between complex topics without losing context. This is more effective than a multi-page approach for a self-contained daily lesson. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: TLS Handshake Diagram -> Goal: Organize & Explain Process -> Viz/Method: Interactive step-by-step diagram built with HTML/CSS/JS -> Interaction: Clickable 'Next/Previous' buttons to reveal stages of the handshake with explanations. Justification: A complex process is made digestible by breaking it into interactive, user-controlled steps. Library: Vanilla JS.
+        - Report Info: Coding Practice -> Goal: Organize & Instruct -> Viz/Method: Tabbed interface for Easy/Medium/Hard sections. -> Interaction: Clicking tabs reveals relevant content. Justification: Organizes dense code examples cleanly, preventing overwhelming scroll. Library: Vanilla JS.
+        - Report Info: Knowledge Check -> Goal: Assess & Reinforce -> Viz/Method: Interactive multiple-choice quiz. -> Interaction: User selection with instant feedback. Justification: Active recall is a powerful learning tool. Library: Vanilla JS.
+        - CONFIRMING NO SVG/Mermaid. All visuals are built with HTML/CSS/JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .section-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 1rem 1.5rem;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section-content {
+            padding: 1.5rem;
+        }
+        .toc-link.active {
+            color: #2563eb;
+            font-weight: 600;
+            border-left-color: #2563eb;
+        }
+        .handshake-step {
+            transition: all 0.3s ease-in-out;
+            border-color: transparent;
+        }
+        .handshake-step.active {
+            background-color: #eff6ff;
+            border-color: #93c5fd;
+        }
+        .quiz-option.selected {
+            background-color: #dbeafe;
+            border-color: #60a5fa;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #4ade80;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #f87171;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #4b5563;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .copy-btn:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-6">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-slate-800">Day 45: Securing the Channel with TLS/SSL</h2>
+            <p class="text-slate-500 mt-2 max-w-2xl mx-auto">Understanding Transport Layer Security is non-negotiable for backend developers. Today, we'll demystify how data is protected in transit, from the underlying theory to practical .NET implementation.</p>
+        </div>
+
+        <div class="lg:grid lg:grid-cols-4 lg:gap-12">
+            <div class="lg:col-span-3">
+
+                <!-- Theory Topics -->
+                <section id="theory" class="section-card">
+                    <div class="section-header">
+                        <h3 class="text-xl font-bold text-slate-800">✅ Theory Topics</h3>
+                    </div>
+                    <div class="section-content space-y-8">
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-2">About TLS/SSL</h4>
+                            <p class="text-slate-600 leading-relaxed">
+                                Transport Layer Security (TLS) and its predecessor, Secure Sockets Layer (SSL), are cryptographic protocols designed to provide secure communication over a computer network. Think of it as a secure, armored tunnel for your internet traffic. When you see a padlock icon in your browser's address bar, TLS is at work.
+                            </p>
+                            <div class="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded-r-lg">
+                                <p><strong class="font-semibold">Analogy: The Secure Handshake.</strong> Imagine two diplomats meeting to exchange secret documents. They first need a secure way to talk. They might use a special, pre-arranged code (asymmetric encryption) to agree on a secret language (symmetric key) that only they will use for the rest of their conversation. TLS works in a very similar way.</p>
+                            </div>
+                            <p class="text-slate-600 leading-relaxed mt-4">
+                                The primary goals of TLS are:
+                                <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+                                    <li><strong>Confidentiality:</strong> Preventing eavesdroppers from understanding the communication. This is achieved through encryption.</li>
+                                    <li><strong>Integrity:</strong> Ensuring that messages have not been tampered with or altered during transit. This is done using a Message Authentication Code (MAC).</li>
+                                    <li><strong>Authentication:</strong> Verifying that the party you are communicating with is who they claim to be. This is typically done using digital certificates.</li>
+                                </ul>
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-2">The TLS Handshake</h4>
+                            <p class="text-slate-600 leading-relaxed">
+                                Before any secure data can be exchanged, the client (e.g., your browser) and the server must negotiate the parameters of their secure channel. This negotiation process is called the TLS Handshake. It's a complex sequence of messages that establishes the cryptographic keys and algorithms they will use. We'll explore this visually in the interactive diagram section below.
+                            </p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-2">HTTPS</h4>
+                            <p class="text-slate-600 leading-relaxed">
+                                HTTPS stands for HyperText Transfer Protocol Secure. It's not a separate protocol, but rather the standard HTTP protocol layered on top of TLS. Essentially, HTTPS = HTTP + TLS. When a browser uses HTTPS, all the HTTP request and response data (headers, body, etc.) is encrypted by the TLS layer before being sent over the network. This protects sensitive information like login credentials, credit card numbers, and personal data from being intercepted.
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-semibold text-slate-700 mb-2">Certificates</h4>
+                            <p class="text-slate-600 leading-relaxed">
+                                A digital certificate is like an online passport. It's a data file that cryptographically links an owner (like a website domain) to a public key. During the TLS handshake, the server presents its certificate to the client. The client verifies this certificate to ensure it's authentic and trustworthy.
+                            </p>
+                            <p class="text-slate-600 leading-relaxed mt-2">
+                                Certificates are issued by trusted third parties called Certificate Authorities (CAs), such as Let's Encrypt, DigiCert, or GlobalSign. Your browser and operating system have a pre-installed list of trusted CAs. If a server's certificate was signed by one of these CAs, the client trusts it, and the secure connection proceeds. This is known as the "Chain of Trust."
+                            </p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- UML/Schema Task -->
+                <section id="uml" class="section-card">
+                    <div class="section-header">
+                        <h3 class="text-xl font-bold text-slate-800">✅ UML/Schema Task: TLS Handshake Diagram</h4>
+                    </div>
+                    <div class="section-content">
+                        <p class="text-slate-600 leading-relaxed mb-6">
+                            The TLS 1.2 Handshake is a multi-step process. Use the buttons below to walk through the simplified sequence and understand how the client and server establish a secure session key for communication.
+                        </p>
+                        <div class="lg:flex lg:space-x-8">
+                            <div class="flex-1">
+                                <div id="handshake-step-1" class="handshake-step border-2 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-slate-700">1. Client Hello</h5>
+                                    <p class="text-sm text-slate-500">Client sends its TLS version, a random number, and a list of supported cipher suites.</p>
+                                </div>
+                                <div id="handshake-step-2" class="handshake-step border-2 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-slate-700">2. Server Hello</h5>
+                                    <p class="text-sm text-slate-500">Server responds with its chosen TLS version, its own random number, and the selected cipher suite.</p>
+                                </div>
+                                <div id="handshake-step-3" class="handshake-step border-2 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-slate-700">3. Server Certificate</h5>
+                                    <p class="text-sm text-slate-500">Server sends its SSL certificate, which contains its public key.</p>
+                                </div>
+                                <div id="handshake-step-4" class="handshake-step border-2 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-slate-700">4. Server Key Exchange / Server Hello Done</h5>
+                                    <p class="text-sm text-slate-500">Server sends key exchange parameters and signals it's done with its initial messages.</p>
+                                </div>
+                                <div id="handshake-step-5" class="handshake-step border-2 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-slate-700">5. Client Key Exchange</h5>
+                                    <p class="text-sm text-slate-500">Client generates a "pre-master secret", encrypts it with the server's public key, and sends it.</p>
+                                </div>
+                                <div id="handshake-step-6" class="handshake-step border-2 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-slate-700">6. Change Cipher Spec / Finished</h5>
+                                    <p class="text-sm text-slate-500">Both parties use the pre-master secret and random numbers to generate the session keys. They send "Finished" messages, encrypted with the new session key.</p>
+                                </div>
+                                <div id="handshake-step-7" class="handshake-step border-2 rounded-lg p-4 bg-green-50 border-green-300">
+                                    <h5 class="font-bold text-green-800">7. Secure Communication</h5>
+                                    <p class="text-sm text-green-700">Handshake complete. Client and Server now communicate using the symmetric session keys.</p>
+                                </div>
+                            </div>
+                            <div class="flex-1 mt-6 lg:mt-0 p-6 bg-slate-50 rounded-lg">
+                               <div class="flex justify-between items-center text-center mb-4">
+                                    <div class="w-1/3">
+                                        <div class="text-3xl">💻</div>
+                                        <div class="font-bold text-slate-800">Client</div>
+                                    </div>
+                                    <div class="w-1/3 text-slate-400 font-mono text-2xl" id="handshake-arrow">...</div>
+                                    <div class="w-1/3">
+                                        <div class="text-3xl">🗄️</div>
+                                        <div class="font-bold text-slate-800">Server</div>
+                                    </div>
+                               </div>
+                               <div id="handshake-explanation" class="text-center text-slate-600 p-4 min-h-[100px] bg-white rounded-md border">
+                                    Click 'Next Step' to begin the handshake visualization.
+                               </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-center space-x-4">
+                            <button id="handshake-prev" class="bg-slate-200 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">Previous Step</button>
+                            <button id="handshake-next" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Next Step</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Coding Practice -->
+                <section id="coding" class="section-card">
+                    <div class="section-header">
+                        <h3 class="text-xl font-bold text-slate-800">✅ Coding Practice: .NET Core</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="border-b border-slate-200 mb-6">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button class="coding-tab active-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600" data-target="easy">
+                                    [Easy] Self-signed Cert
+                                </button>
+                                <button class="coding-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300" data-target="medium">
+                                    [Medium] Secure API
+                                </button>
+                                <button class="coding-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300" data-target="hard">
+                                    [Hard] Mutual TLS
+                                </button>
+                            </nav>
+                        </div>
+
+                        <div id="easy" class="coding-content">
+                            <h4 class="text-lg font-semibold text-slate-700 mb-2">Enable HTTPS in .NET Core with a Self-Signed Certificate</h4>
+                            <p class="text-slate-600 leading-relaxed mb-4">For local development, you don't need a CA-signed certificate. .NET provides a built-in tool to generate a self-signed certificate for testing HTTPS endpoints.</p>
+                            <p class="text-slate-600 leading-relaxed font-semibold mb-2">Step 1: Trust the development certificate.</p>
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-shell">dotnet dev-certs https --trust</code></pre>
+                            </div>
+                            <p class="text-slate-600 leading-relaxed font-semibold mb-2 mt-4">Step 2: Configure `launchSettings.json`.</p>
+                             <p class="text-slate-600 leading-relaxed mb-4">.NET templates automatically configure this for you. The `applicationUrl` in `launchSettings.json` will typically include both an `http` and an `https` endpoint.</p>
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-json">
+"profiles": {
+  "YourProjectName": {
+    "commandName": "Project",
+    "dotnetRunMessages": true,
+    "launchBrowser": true,
+    "launchUrl": "swagger",
+    "applicationUrl": "https://localhost:7001;http://localhost:5001",
+    "environmentVariables": {
+      "ASPNETCORE_ENVIRONMENT": "Development"
+    }
+  }
+}
+                                </code></pre>
+                            </div>
+                            <p class="text-slate-600 leading-relaxed mt-4">When you run your application, it will now be accessible over `https://localhost:7001`, and your browser will trust the certificate because you ran the `--trust` command.</p>
+                        </div>
+                        
+                        <div id="medium" class="coding-content hidden">
+                             <h4 class="text-lg font-semibold text-slate-700 mb-2">Secure an API with Authentication and Authorization</h4>
+                             <p class="text-slate-600 leading-relaxed mb-4">Beyond just encrypting traffic with HTTPS, a secure API needs to know *who* is making the request and *what* they are allowed to do. We use JWT (JSON Web Tokens) for this.</p>
+                             <p class="text-slate-600 leading-relaxed font-semibold mb-2">Step 1: Configure JWT Authentication in `Program.cs`.</p>
+                             <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+var key = Encoding.ASCII.GetBytes("YourSuperSecretKeyHere_MustBeLongEnough");
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = true; // Always true in production
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false, // For demo, set to true in prod
+        ValidateAudience = false // For demo, set to true in prod
+    };
+});
+
+builder.Services.AddControllers();
+// ... other services
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseAuthentication(); // This must come before UseAuthorization
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+                                </code></pre>
+                            </div>
+                             <p class="text-slate-600 leading-relaxed font-semibold mb-2 mt-4">Step 2: Protect an endpoint with the `[Authorize]` attribute.</p>
+                             <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("[controller]")]
+public class SecretDataController : ControllerBase
+{
+    [HttpGet]
+    [Authorize] // This endpoint now requires a valid JWT
+    public IActionResult Get()
+    {
+        var currentUser = HttpContext.User;
+        var username = currentUser.Identity.Name;
+        return Ok($"Hello {username}! This is top secret data.");
+    }
+}
+                                </code></pre>
+                            </div>
+                        </div>
+
+                        <div id="hard" class="coding-content hidden">
+                             <h4 class="text-lg font-semibold text-slate-700 mb-2">Mutual TLS (mTLS) Demonstration</h4>
+                             <p class="text-slate-600 leading-relaxed mb-4">In standard TLS, only the client verifies the server. In Mutual TLS, the server also verifies the client by requesting a certificate from it. This is common in service-to-service communication where trust must be established in both directions.</p>
+                             <p class="text-slate-600 leading-relaxed font-semibold mb-2">Step 1: Configure Kestrel to require a client certificate.</p>
+                              <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+// In Program.cs
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ConfigureHttpsDefaults(listenOptions =>
+    {
+        // Require client certificate
+        listenOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+    });
+});
+                                </code></pre>
+                            </div>
+                             <p class="text-slate-600 leading-relaxed font-semibold mb-2 mt-4">Step 2: Add an authentication handler for certificates.</p>
+                              <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">
+// In Program.cs
+using Microsoft.AspNetCore.Authentication.Certificate;
+
+builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
+    .AddCertificate(options =>
+    {
+        // Optional: validation events
+        options.Events = new CertificateAuthenticationEvents
+        {
+            OnCertificateValidated = context =>
+            {
+                // Custom validation logic here. For example, check the certificate thumbprint
+                // against a list of allowed clients.
+                var claims = new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, context.ClientCertificate.Subject, ClaimValueTypes.String, context.Options.ClaimsIssuer),
+                    new Claim(ClaimTypes.Name, context.ClientCertificate.Subject, ClaimValueTypes.String, context.Options.ClaimsIssuer)
+                };
+                context.Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, context.Scheme.Name));
+                context.Success();
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+// Make sure to add app.UseAuthentication() and app.UseAuthorization()
+                                </code></pre>
+                            </div>
+                            <p class="text-slate-600 leading-relaxed font-semibold mb-2 mt-4">Step 3: Call the API with a client certificate.</p>
+                             <p class="text-slate-600 leading-relaxed mb-4">This is done from a client application (like another .NET service or using a tool like `curl`).</p>
+                            <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-shell">
+# Using curl to present a client certificate and key
+curl --cert client.crt --key client.key https://localhost:7001/SecretData
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                 <!-- Case Study -->
+                <section id="case-study" class="section-card">
+                    <div class="section-header">
+                        <h3 class="text-xl font-bold text-slate-800">✅ Case Study: Secure Payment API</h4>
+                    </div>
+                    <div class="section-content">
+                        <p class="text-slate-600 leading-relaxed mb-4">
+                            Let's analyze how TLS is the cornerstone of security for a payment processing API, like one provided by Stripe or PayPal.
+                        </p>
+                        <div class="mt-4 space-y-4">
+                           <div class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">1</div>
+                                <div class="ml-4">
+                                    <h5 class="font-semibold text-slate-700">User Initiates Payment</h5>
+                                    <p class="text-slate-600">A user on an e-commerce website clicks "Pay". The browser is on `https://e-commerce-site.com`. The connection is already secured by TLS, protecting the user's interaction with the frontend.</p>
+                                </div>
+                           </div>
+                           <div class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">2</div>
+                                <div class="ml-4">
+                                    <h5 class="font-semibold text-slate-700">Frontend to Backend Communication</h5>
+                                    <p class="text-slate-600">The browser sends the payment details (e.g., a tokenized card number) to the e-commerce backend API at `https://api.e-commerce-site.com`. This API-to-browser channel is secured with its own TLS certificate, ensuring confidentiality and integrity.</p>
+                                </div>
+                           </div>
+                           <div class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">3</div>
+                                <div class="ml-4">
+                                    <h5 class="font-semibold text-slate-700">Backend to Payment Gateway</h5>
+                                    <p class="text-slate-600">The e-commerce backend now needs to communicate with the payment provider's API (e.g., `https://api.stripe.com`). This is a critical service-to-service call. A new TLS handshake occurs. The e-commerce server acts as the client and Stripe's server is the server. The e-commerce server verifies Stripe's certificate to ensure it's talking to the legitimate payment gateway and not a fraudulent endpoint.</p>
+                                </div>
+                           </div>
+                           <div class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm">4</div>
+                                <div class="ml-4">
+                                    <h5 class="font-semibold text-slate-700">Mutual TLS (Optional but Recommended)</h5>
+                                    <p class="text-slate-600">For enhanced security, the payment gateway might require mTLS. In this scenario, the e-commerce server would present its own client certificate to the payment gateway. The gateway would verify this certificate to ensure the request is coming from a registered and trusted merchant, adding a powerful layer of authentication.</p>
+                                </div>
+                           </div>
+                           <div class="flex items-start">
+                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm">✓</div>
+                                <div class="ml-4">
+                                    <h5 class="font-semibold text-slate-700">Result</h5>
+                                    <p class="text-slate-600">At every step of the journey, the sensitive payment data is encrypted. TLS ensures that even if an attacker could monitor the network traffic at any point, the data would be unintelligible. It provides the foundation of trust for online commerce.</p>
+                                </div>
+                           </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Knowledge Check -->
+                <section id="quiz" class="section-card">
+                    <div class="section-header">
+                         <h3 class="text-xl font-bold text-slate-800">🧠 Knowledge Check Quiz</h3>
+                    </div>
+                    <div class="section-content">
+                        <div id="quiz-container" class="space-y-6"></div>
+                        <div class="mt-6 flex space-x-4">
+                            <button id="submit-quiz" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Check Answers</button>
+                            <button id="reset-quiz" class="bg-slate-200 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">Try Again</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Self Assessment -->
+                <section id="assessment" class="section-card">
+                    <div class="section-header">
+                         <h3 class="text-xl font-bold text-slate-800">✅ Self-Assessment Challenge</h3>
+                    </div>
+                    <div class="section-content">
+                        <p class="text-slate-600 leading-relaxed mb-4">
+                            You are tasked with designing the security for a new internal microservice architecture for a financial company. The services handle sensitive customer data and must communicate with each other over the internal network. The Chief Security Officer is concerned about potential "insider threats" where an attacker might gain access to the internal network.
+                        </p>
+                        <p class="font-semibold text-slate-700 mb-4">
+                            Which security protocol/configuration would you mandate for all service-to-service communication, and why?
+                        </p>
+                        
+                        <div id="assessment-solution" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                             <h4 class="font-bold text-green-800 mb-2">Recommended Solution</h4>
+                             <p class="text-green-900 leading-relaxed">
+                                The best choice is **Mutual TLS (mTLS)** for all service-to-service communication.
+                             </p>
+                             <ul class="list-disc list-inside mt-2 space-y-1 text-green-900">
+                                <li><strong>Zero Trust Principle:</strong> Standard TLS would only allow services to verify the identity of the service they are calling. It doesn't verify the caller. In a zero-trust model, no service should be trusted by default. mTLS enforces that both the caller and the callee must present and validate certificates, proving their identities.</li>
+                                <li><strong>Insider Threat Mitigation:</strong> If an attacker compromises the network, they cannot simply send requests to a sensitive service. Without a valid, trusted client certificate, the service will reject the connection during the TLS handshake. This prevents spoofing and unauthorized access.</li>
+                                <li><strong>Strong Authentication:</strong> mTLS provides strong, cryptographic authentication between services, which is far more secure than relying on network-level controls (like IP whitelisting) or even API keys, which can be stolen.</li>
+                             </ul>
+                             <p class="text-green-900 leading-relaxed mt-2">
+                                Implementing mTLS would require setting up an internal Certificate Authority (CA) to issue and manage certificates for each microservice, a setup often managed by a service mesh like Istio or Linkerd.
+                             </p>
+                        </div>
+                        <button id="reveal-solution" class="mt-4 bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-slate-700 transition-colors shadow-sm">Reveal Solution</button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sticky TOC -->
+            <aside class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-8">
+                    <h4 class="font-semibold text-slate-800 mb-3">On this page</h4>
+                    <nav id="toc" class="flex flex-col space-y-2 border-l-2 border-slate-200">
+                        <a href="#theory" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 border-l-2 border-transparent">Theory Topics</a>
+                        <a href="#uml" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 border-l-2 border-transparent">TLS Handshake Diagram</a>
+                        <a href="#coding" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 border-l-2 border-transparent">Coding Practice</a>
+                        <a href="#case-study" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 border-l-2 border-transparent">Case Study</a>
+                        <a href="#quiz" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 border-l-2 border-transparent">Knowledge Check</a>
+                        <a href="#assessment" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 border-l-2 border-transparent">Self-Assessment</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // TOC Scroll Spy
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('#toc a');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`#toc a[href="#${id}"]`);
+                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    tocLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-50% 0px -50% 0px', threshold: 0.5 });
+
+        sections.forEach(section => observer.observe(section));
+
+        // Coding Practice Tabs
+        const tabs = document.querySelectorAll('.coding-tab');
+        const contents = document.querySelectorAll('.coding-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(item => {
+                    item.classList.remove('active-tab', 'text-blue-600', 'border-blue-600');
+                    item.classList.add('text-slate-500', 'border-transparent', 'hover:text-slate-700', 'hover:border-slate-300');
+                });
+                tab.classList.add('active-tab', 'text-blue-600', 'border-blue-600');
+                tab.classList.remove('text-slate-500', 'border-transparent', 'hover:text-slate-700', 'hover:border-slate-300');
+
+                contents.forEach(content => content.classList.add('hidden'));
+                document.getElementById(tab.dataset.target).classList.remove('hidden');
+            });
+        });
+        
+        // Copy to Clipboard
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const pre = button.nextElementSibling;
+                const code = pre.querySelector('code');
+                const text = code.innerText;
+
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.innerText = 'Copied!';
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    button.innerText = 'Failed!';
+                }
+                document.body.removeChild(textArea);
+
+                setTimeout(() => {
+                    button.innerText = 'Copy';
+                }, 2000);
+            });
+        });
+
+        // Interactive Handshake Diagram
+        const handshakeSteps = [
+            { arrow: '→', explanation: 'Client sends its capabilities and a random number.' },
+            { arrow: '←', explanation: 'Server chooses parameters, sends its random number.' },
+            { arrow: '←', explanation: 'Server proves its identity with its certificate.' },
+            { arrow: '←', explanation: 'Server sends final parameters and signals it is done.' },
+            { arrow: '→', explanation: 'Client creates a shared secret, encrypts it with server\'s public key, and sends it.' },
+            { arrow: '↔', explanation: 'Both sides calculate the same session key and confirm by sending encrypted "finished" messages.' },
+            { arrow: '↔', explanation: 'Secure channel established. Application data can now be sent encrypted.' }
+        ];
+        
+        let currentHandshakeStep = -1;
+        const handshakeStepElements = document.querySelectorAll('.handshake-step');
+        const explanationEl = document.getElementById('handshake-explanation');
+        const arrowEl = document.getElementById('handshake-arrow');
+        const nextBtn = document.getElementById('handshake-next');
+        const prevBtn = document.getElementById('handshake-prev');
+
+        function updateHandshakeView() {
+            handshakeStepElements.forEach((el, index) => {
+                if (index === currentHandshakeStep) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+
+            if(currentHandshakeStep >= 0) {
+                explanationEl.innerText = handshakeSteps[currentHandshakeStep].explanation;
+                arrowEl.innerText = handshakeSteps[currentHandshakeStep].arrow;
+            } else {
+                explanationEl.innerText = "Click 'Next Step' to begin the handshake visualization.";
+                arrowEl.innerText = '...';
+            }
+
+            prevBtn.disabled = currentHandshakeStep < 0;
+            if (currentHandshakeStep >= handshakeSteps.length -1) {
+                nextBtn.innerText = 'Reset';
+            } else {
+                nextBtn.innerText = 'Next Step';
+            }
+        }
+        
+        nextBtn.addEventListener('click', () => {
+             if (currentHandshakeStep >= handshakeSteps.length -1) {
+                currentHandshakeStep = -1;
+            } else {
+                currentHandshakeStep++;
+            }
+            updateHandshakeView();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentHandshakeStep > -1) {
+                currentHandshakeStep--;
+                updateHandshakeView();
+            }
+        });
+
+        updateHandshakeView();
+        
+        // Quiz Logic
+        const quizData = [
+            {
+                question: "What is the primary purpose of the TLS Handshake?",
+                options: ["To encrypt the application data directly.", "To securely negotiate a shared symmetric key for the session.", "To check if the server is online.", "To transfer the user's password securely."],
+                answer: "To securely negotiate a shared symmetric key for the session."
+            },
+            {
+                question: "In standard TLS (not mTLS), which party's identity is authenticated using a certificate?",
+                options: ["The Client", "The Server", "Both Client and Server", "Neither"],
+                answer: "The Server"
+            },
+            {
+                question: "What does 'HTTPS' stand for?",
+                options: ["HyperText Transfer Protocol Standard", "HyperText Transfer Protocol Secure", "High-level Text Transfer Protocol Service", "HyperText Transfer Protocol Stateful"],
+                answer: "HyperText Transfer Protocol Secure"
+            },
+            {
+                question: "Which type of encryption is used to encrypt the actual application data after the TLS handshake is complete?",
+                options: ["Asymmetric Encryption", "Symmetric Encryption", "Hashing", "No encryption is used"],
+                answer: "Symmetric Encryption"
+            },
+            {
+                question: "A Certificate Authority (CA) is responsible for...",
+                options: ["Generating symmetric keys for sessions.", "Issuing and signing digital certificates to verify identity.", "Routing internet traffic.", "Developing the TLS protocol standard."],
+                answer: "Issuing and signing digital certificates to verify identity."
+            }
+        ];
+        const quizContainer = document.getElementById('quiz-container');
+        const submitQuizBtn = document.getElementById('submit-quiz');
+        const resetQuizBtn = document.getElementById('reset-quiz');
+
+        function buildQuiz() {
+            quizContainer.innerHTML = '';
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'quiz-question';
+                let optionsHTML = '';
+                q.options.forEach(option => {
+                    optionsHTML += `
+                        <div class="quiz-option mt-2 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors" data-question="${index}">
+                            ${option}
+                        </div>
+                    `;
+                });
+                questionEl.innerHTML = `
+                    <p class="font-semibold text-slate-700">${index + 1}. ${q.question}</p>
+                    <div class="mt-2">${optionsHTML}</div>
+                    <div id="feedback-${index}" class="mt-2 text-sm font-semibold"></div>
+                `;
+                quizContainer.appendChild(questionEl);
+            });
+        }
+
+        quizContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quiz-option')) {
+                const qIndex = e.target.dataset.question;
+                const optionsForQuestion = quizContainer.querySelectorAll(`.quiz-option[data-question="${qIndex}"]`);
+                optionsForQuestion.forEach(opt => opt.classList.remove('selected'));
+                e.target.classList.add('selected');
+            }
+        });
+        
+        submitQuizBtn.addEventListener('click', function() {
+            quizData.forEach((q, index) => {
+                const feedbackEl = document.getElementById(`feedback-${index}`);
+                const selectedOption = quizContainer.querySelector(`.quiz-option[data-question="${index}"].selected`);
+                const allOptions = quizContainer.querySelectorAll(`.quiz-option[data-question="${index}"]`);
+                
+                allOptions.forEach(opt => {
+                    if (opt.innerText === q.answer) {
+                        opt.classList.add('correct');
+                    } else {
+                        opt.classList.remove('correct');
+                    }
+                });
+
+                if (selectedOption) {
+                    if (selectedOption.innerText === q.answer) {
+                        selectedOption.classList.add('correct');
+                        selectedOption.classList.remove('incorrect');
+                        feedbackEl.innerText = 'Correct!';
+                        feedbackEl.className = 'mt-2 text-sm font-semibold text-green-600';
+                    } else {
+                        selectedOption.classList.add('incorrect');
+                        selectedOption.classList.remove('correct');
+                        feedbackEl.innerText = `Incorrect. The correct answer is highlighted in green.`;
+                        feedbackEl.className = 'mt-2 text-sm font-semibold text-red-600';
+                    }
+                } else {
+                     feedbackEl.innerText = 'You did not select an answer. The correct answer is highlighted.';
+                     feedbackEl.className = 'mt-2 text-sm font-semibold text-yellow-600';
+                }
+            });
+        });
+
+        resetQuizBtn.addEventListener('click', buildQuiz);
+        buildQuiz();
+        
+        // Self-Assessment Reveal
+        const revealBtn = document.getElementById('reveal-solution');
+        const solutionDiv = document.getElementById('assessment-solution');
+
+        revealBtn.addEventListener('click', () => {
+            solutionDiv.classList.toggle('hidden');
+            if (solutionDiv.classList.contains('hidden')) {
+                revealBtn.innerText = 'Reveal Solution';
+            } else {
+                revealBtn.innerText = 'Hide Solution';
+            }
+        });
+
+    });
+    </script>
+</body>
+</html>
