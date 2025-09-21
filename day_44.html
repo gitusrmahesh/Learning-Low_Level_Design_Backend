@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 44: HTTP Deep Dive - Low-Level Design Bootcamp</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A single-page, dual-column layout. The left column provides a linear, in-depth lesson flow from theory to practice, including interactive examples and quizzes. The right column features a sticky table of contents for seamless navigation, allowing users to jump between sections. This structure was chosen to combine the benefits of a guided, step-by-step lesson with the flexibility of a reference document, enhancing usability for both first-time learners and those revisiting the material. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: HTTP Request Lifecycle. Goal: Organize/Inform. Method: Interactive diagram using HTML/CSS. Interaction: Clicking on a stage reveals a detailed explanation. Justification: Breaks down a complex process into digestible, self-paced steps without overwhelming the user. Library: Vanilla JS.
+        - Report Info: HTTP Methods. Goal: Compare/Inform. Method: Tabbed interface. Interaction: Clicking a method button dynamically displays its details, properties, and code examples. Justification: Allows for easy comparison and focused learning on one method at a time. Library: Vanilla JS.
+        - Report Info: Coding Practice & Case Study. Goal: Inform/Practice. Method: Styled code blocks. Interaction: Copy-to-clipboard functionality. Justification: Improves user experience by making it easy to use the provided code examples. Library: Vanilla JS.
+        - Report Info: Knowledge Check. Goal: Assess. Method: Multiple-choice quiz. Interaction: Instant feedback on answer selection. Justification: Reinforces learning through immediate validation. Library: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0284c7;
+            border-left-color: #0284c7;
+            font-weight: 600;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .diagram-step {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .diagram-step.active {
+            background-color: #0ea5e9;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 14px 0 rgb(0 119 255 / 39%);
+        }
+        .diagram-content {
+            display: none;
+        }
+        .diagram-content.active {
+            display: block;
+        }
+        .method-tab.active {
+            background-color: #0ea5e9;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <main class="lg:col-span-9 space-y-16">
+                
+                <section id="intro">
+                    <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight">Day 44: HTTP Deep Dive</h2>
+                    <p class="mt-4 text-lg text-slate-600">Welcome to Day 44. Today, we peel back the layers of the protocol that powers the web: HTTP. Understanding HTTP is not just about knowing what GET and POST do; it's about grasping how clients and servers communicate, manage state, and exchange information. This foundational knowledge is crucial for designing robust, scalable, and efficient APIs.</p>
+                </section>
+
+                <section id="theory" class="space-y-12">
+                    <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight border-b pb-2">✅ Theory Topics</h2>
+                    
+                    <div id="http-deep-dive">
+                        <h3 class="text-2xl font-semibold font-lexend text-slate-700">HTTP: The Web's Communication Protocol</h3>
+                        <p class="mt-3 text-slate-600">HTTP, or HyperText Transfer Protocol, is the foundation of data communication for the World Wide Web. It's an application-layer protocol designed for distributed, collaborative, hypermedia information systems. Think of it as the postal service of the internet: it defines a set of rules and methods for how messages (requests and responses) are formatted and transmitted between clients (like your browser) and servers (where websites are hosted).</p>
+                        <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+                            <p class="font-semibold text-sky-800">Analogy: The Postal Service</p>
+                            <p class="text-sky-700 mt-1">A client sending an HTTP request is like you sending a letter. You write the address (URL), specify what you want (the method, like "GET information"), include extra details (headers), and send it off. The server is the recipient who reads your letter, prepares a package in response (the HTTP response), and sends it back to you.</p>
+                        </div>
+                    </div>
+
+                    <div id="http-lifecycle">
+                        <h3 class="text-2xl font-semibold font-lexend text-slate-700">The HTTP Request Lifecycle (Interactive)</h3>
+                        <p class="mt-3 text-slate-600">An HTTP request isn't instantaneous. It's a multi-step process from the moment you type a URL to when you see the content. Click on each step below to understand its role in the journey.</p>
+                        <div class="mt-6">
+                            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-2">
+                                <div id="step-1" class="diagram-step active flex-1 text-center p-3 bg-white border rounded-lg shadow-sm">1. Client Sends Request</div>
+                                <div class="text-sky-500 font-bold">→</div>
+                                <div id="step-2" class="diagram-step flex-1 text-center p-3 bg-white border rounded-lg shadow-sm">2. DNS Resolution</div>
+                                <div class="text-sky-500 font-bold">→</div>
+                                <div id="step-3" class="diagram-step flex-1 text-center p-3 bg-white border rounded-lg shadow-sm">3. TCP Handshake</div>
+                                <div class="text-sky-500 font-bold">→</div>
+                                <div id="step-4" class="diagram-step flex-1 text-center p-3 bg-white border rounded-lg shadow-sm">4. Server Processes</div>
+                                <div class="text-sky-500 font-bold">→</div>
+                                <div id="step-5" class="diagram-step flex-1 text-center p-3 bg-white border rounded-lg shadow-sm">5. Server Sends Response</div>
+                            </div>
+                            <div class="mt-6 p-6 bg-white border rounded-lg shadow-inner min-h-[150px]">
+                                <div id="content-step-1" class="diagram-content active">
+                                    <h4 class="font-bold text-lg text-slate-800">Step 1: Client Sends Request</h4>
+                                    <p class="mt-2 text-slate-600">The process begins in your browser (the client). When you enter a URL or click a link, the client constructs an HTTP request. This request is a formatted text message containing a method (e.g., GET), the target path (e.g., `/index.html`), the HTTP version, headers (e.g., `Host`, `User-Agent`), and an optional body (for methods like POST).</p>
+                                </div>
+                                <div id="content-step-2" class="diagram-content">
+                                    <h4 class="font-bold text-lg text-slate-800">Step 2: DNS Resolution</h4>
+                                    <p class="mt-2 text-slate-600">Computers communicate using IP addresses, not domain names. The client sends the domain name (e.g., `www.google.com`) to a Domain Name System (DNS) server. The DNS server acts like a phonebook, looking up the domain name and returning its corresponding IP address (e.g., `142.250.196.196`).</p>
+                                </div>
+                                <div id="content-step-3" class="diagram-content">
+                                    <h4 class="font-bold text-lg text-slate-800">Step 3: TCP Handshake</h4>
+                                    <p class="mt-2 text-slate-600">With the server's IP address, the client establishes a reliable connection using the Transmission Control Protocol (TCP). This involves a three-way handshake (SYN, SYN-ACK, ACK) to ensure both client and server are ready to exchange data. For HTTPS, an additional TLS/SSL handshake occurs here to encrypt the connection.</p>
+                                </div>
+                                <div id="content-step-4" class="diagram-content">
+                                    <h4 class="font-bold text-lg text-slate-800">Step 4: Server Processes the Request</h4>
+                                    <p class="mt-2 text-slate-600">Once the connection is established, the HTTP request is sent. The web server (e.g., Nginx, Apache) receives the request, parses it, and takes action. This might involve fetching a static file, running a script, querying a database, or calling other services. The server then prepares an HTTP response.</p>
+                                </div>
+                                <div id="content-step-5" class="diagram-content">
+                                    <h4 class="font-bold text-lg text-slate-800">Step 5: Server Sends Response & Client Renders</h4>
+                                    <p class="mt-2 text-slate-600">The server sends the HTTP response back to the client. This response includes a status code (e.g., `200 OK`), headers (e.g., `Content-Type`), and a body (the actual content like HTML, JSON). The client receives this response, closes the TCP connection (unless keep-alive is used), and renders the content for you to see.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="http-methods">
+                        <h3 class="text-2xl font-semibold font-lexend text-slate-700">HTTP Methods</h3>
+                        <p class="mt-3 text-slate-600">HTTP methods, often called "verbs," indicate the desired action to be performed on a resource. A resource is any piece of information that can be identified by a URL. Select a method to learn more.</p>
+                        <div class="mt-4 flex flex-wrap gap-2 border-b">
+                            <button class="method-tab active p-2 px-4 rounded-t-md text-sm font-semibold" data-target="get">GET</button>
+                            <button class="method-tab p-2 px-4 rounded-t-md text-sm font-semibold" data-target="post">POST</button>
+                            <button class="method-tab p-2 px-4 rounded-t-md text-sm font-semibold" data-target="put">PUT</button>
+                            <button class="method-tab p-2 px-4 rounded-t-md text-sm font-semibold" data-target="delete">DELETE</button>
+                            <button class="method-tab p-2 px-4 rounded-t-md text-sm font-semibold" data-target="patch">PATCH</button>
+                            <button class="method-tab p-2 px-4 rounded-t-md text-sm font-semibold" data-target="options">OPTIONS</button>
+                        </div>
+                        <div class="p-4 bg-white border border-t-0 rounded-b-md">
+                            <div class="method-content" id="get">
+                                <h4 class="text-lg font-bold text-slate-800">GET</h4>
+                                <p class="mt-2 text-slate-600">Requests a representation of the specified resource. Requests using GET should only retrieve data.</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-slate-600">
+                                    <li><b>Safe:</b> Yes (does not alter server state).</li>
+                                    <li><b>Idempotent:</b> Yes (multiple identical requests have the same effect as one).</li>
+                                    <li><b>Use Case:</b> Fetching a web page, reading a blog post, getting a list of users.</li>
+                                </ul>
+                            </div>
+                             <div class="method-content hidden" id="post">
+                                <h4 class="text-lg font-bold text-slate-800">POST</h4>
+                                <p class="mt-2 text-slate-600">Submits an entity to the specified resource, often causing a change in state or side effects on the server.</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-slate-600">
+                                    <li><b>Safe:</b> No.</li>
+                                    <li><b>Idempotent:</b> No (two identical POST requests will create two separate resources).</li>
+                                    <li><b>Use Case:</b> Creating a new user, submitting a form, posting a message.</li>
+                                </ul>
+                            </div>
+                             <div class="method-content hidden" id="put">
+                                <h4 class="text-lg font-bold text-slate-800">PUT</h4>
+                                <p class="mt-2 text-slate-600">Replaces all current representations of the target resource with the request payload.</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-slate-600">
+                                    <li><b>Safe:</b> No.</li>
+                                    <li><b>Idempotent:</b> Yes (multiple requests to update a resource to the same state will have the same final result).</li>
+                                    <li><b>Use Case:</b> Updating a user's entire profile.</li>
+                                </ul>
+                            </div>
+                             <div class="method-content hidden" id="delete">
+                                <h4 class="text-lg font-bold text-slate-800">DELETE</h4>
+                                <p class="mt-2 text-slate-600">Deletes the specified resource.</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-slate-600">
+                                    <li><b>Safe:</b> No.</li>
+                                    <li><b>Idempotent:</b> Yes (deleting a resource multiple times has the same result as deleting it once - it's gone).</li>
+                                    <li><b>Use Case:</b> Deleting a user's account.</li>
+                                </ul>
+                            </div>
+                             <div class="method-content hidden" id="patch">
+                                <h4 class="text-lg font-bold text-slate-800">PATCH</h4>
+                                <p class="mt-2 text-slate-600">Applies partial modifications to a resource. Unlike PUT, it only updates the fields provided.</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-slate-600">
+                                    <li><b>Safe:</b> No.</li>
+                                    <li><b>Idempotent:</b> No (applying the same patch twice might have different results, e.g., incrementing a value).</li>
+                                    <li><b>Use Case:</b> Updating a user's email address without affecting their other details.</li>
+                                </ul>
+                            </div>
+                             <div class="method-content hidden" id="options">
+                                <h4 class="text-lg font-bold text-slate-800">OPTIONS</h4>
+                                <p class="mt-2 text-slate-600">Describes the communication options (e.g., allowed HTTP methods) for the target resource.</p>
+                                <ul class="mt-2 space-y-1 list-disc list-inside text-slate-600">
+                                    <li><b>Safe:</b> Yes.</li>
+                                    <li><b>Idempotent:</b> Yes.</li>
+                                    <li><b>Use Case:</b> Used in CORS (Cross-Origin Resource Sharing) pre-flight requests to check if a cross-origin request is safe to send.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="headers-cookies">
+                        <h3 class="text-2xl font-semibold font-lexend text-slate-700">Headers & Cookies</h3>
+                        <p class="mt-3 text-slate-600">Headers are key-value pairs in requests and responses that provide essential metadata. Cookies are a specific type of header used to maintain state.</p>
+                        <h4 class="text-lg font-semibold mt-4">Common Request Headers</h4>
+                        <ul class="mt-2 list-disc list-inside text-slate-600">
+                            <li><code class="bg-slate-200 p-1 rounded">Host</code>: The domain name of the server.</li>
+                            <li><code class="bg-slate-200 p-1 rounded">User-Agent</code>: Information about the client (browser, OS).</li>
+                            <li><code class="bg-slate-200 p-1 rounded">Accept</code>: The media types the client can understand (e.g., `application/json`).</li>
+                            <li><code class="bg-slate-200 p-1 rounded">Authorization</code>: Authentication credentials for the client.</li>
+                        </ul>
+                        <h4 class="text-lg font-semibold mt-4">Common Response Headers</h4>
+                        <ul class="mt-2 list-disc list-inside text-slate-600">
+                            <li><code class="bg-slate-200 p-1 rounded">Content-Type</code>: The media type of the response body (e.g., `text/html`).</li>
+                            <li><code class="bg-slate-200 p-1 rounded">Content-Length</code>: The size of the response body in bytes.</li>
+                            <li><code class="bg-slate-200 p-1 rounded">Set-Cookie</code>: A cookie for the browser to store and send back on subsequent requests.</li>
+                            <li><code class="bg-slate-200 p-1 rounded">Cache-Control</code>: Directives for caching mechanisms.</li>
+                        </ul>
+                    </div>
+
+                    <div id="statelessness">
+                        <h3 class="text-2xl font-semibold font-lexend text-slate-700">Statelessness</h3>
+                        <p class="mt-3 text-slate-600">HTTP is a stateless protocol. This means each request from a client to a server is treated as an independent transaction. The server does not store any information about previous requests from that client. It has no memory of past interactions.</p>
+                        <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+                            <p class="font-semibold text-sky-800">Why is it stateless?</p>
+                            <p class="text-sky-700 mt-1">This design simplifies server architecture. The server doesn't need to allocate memory to store session information for every client, which makes scaling much easier. If you need to handle many thousands of simultaneous connections, not having to remember context for each one is a huge advantage.</p>
+                            <p class="font-semibold text-sky-800 mt-3">How do we manage state then?</p>
+                            <p class="text-sky-700 mt-1">State is managed on the client-side, typically using cookies or tokens. When a user logs in, the server sends a cookie or token back in the response. The client stores this and includes it in every subsequent request. The server can then use this token to identify the user, effectively "remembering" who they are without storing session data itself.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="coding" class="space-y-12">
+                    <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight border-b pb-2">✅ Coding Practice</h2>
+
+                    <div>
+                        <h3 class="text-xl font-semibold font-lexend text-slate-700">[Easy] API Call with HttpClient</h3>
+                        <p class="mt-2 text-slate-600">Write a simple C# console application that makes a GET request to a public API (like <a href="https://jsonplaceholder.typicode.com/todos/1" class="text-sky-600 hover:underline">JSONPlaceholder</a>) and prints the response body to the console.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+public class ApiClient
+{
+    private static readonly HttpClient client = new HttpClient();
+
+    public static async Task Main(string[] args)
+    {
+        Console.WriteLine("Fetching data from API...");
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync("https://jsonplaceholder.typicode.com/todos/1");
+            response.EnsureSuccessStatusCode();
+            string responseBody = await response.Content.ReadAsStringAsync();
+            
+            Console.WriteLine("\nResponse Body:");
+            Console.WriteLine(responseBody);
+        }
+        catch (HttpRequestException e)
+        {
+            Console.WriteLine("\nException Caught!");
+            Console.WriteLine("Message :{0} ", e.Message);
+        }
+    }
+}
+</code></pre>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-semibold font-lexend text-slate-700">[Medium] REST Client for GET/POST</h3>
+                        <p class="mt-2 text-slate-600">Create a C# class that can perform both GET and POST requests. The POST request should send a simple JSON object.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-csharp">using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
+
+public class RestClient
+{
+    private static readonly HttpClient client = new HttpClient();
+
+    public static async Task Main(string[] args)
+    {
+        // GET Request
+        Console.WriteLine("--- Performing GET Request ---");
+        string getResponse = await GetAsync("https://jsonplaceholder.typicode.com/posts/1");
+        Console.WriteLine(getResponse);
+
+        // POST Request
+        Console.WriteLine("\n--- Performing POST Request ---");
+        string postData = @"{ ""title"": ""foo"", ""body"": ""bar"", ""userId"": 1 }";
+        string postResponse = await PostAsync("https://jsonplaceholder.typicode.com/posts", postData);
+        Console.WriteLine(postResponse);
+    }
+
+    public static async Task<string> GetAsync(string uri)
+    {
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(uri);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (HttpRequestException e)
+        {
+            return $"Error: {e.Message}";
+        }
+    }
+    
+    public static async Task<string> PostAsync(string uri, string jsonData)
+    {
+        try
+        {
+            var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await client.PostAsync(uri, content);
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (HttpRequestException e)
+        {
+            return $"Error: {e.Message}";
+        }
+    }
+}
+</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="case-study">
+                    <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight border-b pb-2">✅ Case Study: REST Client-Service App</h2>
+                    <p class="mt-4 text-slate-600">Let's consider a simple blog application. It has a backend service (the API) and a frontend client (a web or mobile app). They communicate using HTTP according to REST principles.</p>
+                    <div class="mt-6 grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 border rounded-lg">
+                            <h3 class="text-xl font-semibold font-lexend text-sky-700">The Backend Service (API)</h3>
+                            <p class="mt-2 text-slate-600">The service exposes several endpoints (URLs) to manage blog posts. It doesn't have a UI; it just handles data.</p>
+                            <ul class="mt-4 space-y-2 text-sm">
+                                <li><code class="bg-slate-200 p-1 rounded font-mono">GET /posts</code>: Returns a list of all blog posts.</li>
+                                <li><code class="bg-slate-200 p-1 rounded font-mono">GET /posts/{id}</code>: Returns a single blog post by its ID.</li>
+                                <li><code class="bg-slate-200 p-1 rounded font-mono">POST /posts</code>: Creates a new blog post from the JSON data in the request body.</li>
+                                <li><code class="bg-slate-200 p-1 rounded font-mono">PUT /posts/{id}</code>: Updates an existing post with the data in the body.</li>
+                                <li><code class="bg-slate-200 p-1 rounded font-mono">DELETE /posts/{id}</code>: Deletes a specific post.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 border rounded-lg">
+                            <h3 class="text-xl font-semibold font-lexend text-emerald-700">The Frontend Client</h3>
+                            <p class="mt-2 text-slate-600">The client is what the user interacts with. It makes HTTP requests to the backend service to display and manage data.</p>
+                            <ul class="mt-4 space-y-2 text-sm">
+                                <li><b>Viewing all posts:</b> Makes a `GET` request to `/posts` and renders the list.</li>
+                                <li><b>Submitting a new post:</b> The user fills a form. The client packages this data into a JSON object and sends a `POST` request to `/posts`.</li>
+                                <li><b>Editing a post:</b> Sends a `PUT` or `PATCH` request to `/posts/{id}` with the updated data.</li>
+                                <li><b>Deleting a post:</b> Sends a `DELETE` request to `/posts/{id}` when the user clicks a delete button.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="mt-6 text-slate-600">This separation is powerful. The backend manages the data logic, while the frontend focuses on presentation. You could have a web app, a mobile app, and a desktop app all talking to the same backend service, all using the common language of HTTP.</p>
+                </section>
+
+                 <section id="quiz">
+                    <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight border-b pb-2">✅ Knowledge Check</h2>
+                    <div id="quiz-container" class="mt-6 space-y-6"></div>
+                    <button id="submit-quiz" class="mt-6 bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors">Submit Answers</button>
+                    <div id="quiz-results" class="mt-4 text-lg font-semibold"></div>
+                </section>
+            </main>
+
+            <aside class="lg:col-span-3 lg:sticky lg:top-8 self-start hidden lg:block">
+                <nav id="toc" class="space-y-2">
+                    <h3 class="font-semibold text-slate-800 font-lexend">On This Page</h3>
+                    <a href="#intro" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-slate-800 py-1">Introduction</a>
+                    <a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-slate-800 py-1">Theory Topics</a>
+                    <a href="#http-deep-dive" class="toc-link block border-l-2 border-slate-200 pl-8 text-slate-500 hover:text-slate-800 text-sm py-1">HTTP Deep Dive</a>
+                    <a href="#http-lifecycle" class="toc-link block border-l-2 border-slate-200 pl-8 text-slate-500 hover:text-slate-800 text-sm py-1">Request Lifecycle</a>
+                    <a href="#http-methods" class="toc-link block border-l-2 border-slate-200 pl-8 text-slate-500 hover:text-slate-800 text-sm py-1">HTTP Methods</a>
+                    <a href="#headers-cookies" class="toc-link block border-l-2 border-slate-200 pl-8 text-slate-500 hover:text-slate-800 text-sm py-1">Headers & Cookies</a>
+                    <a href="#statelessness" class="toc-link block border-l-2 border-slate-200 pl-8 text-slate-500 hover:text-slate-800 text-sm py-1">Statelessness</a>
+                    <a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-slate-800 py-1">Coding Practice</a>
+                    <a href="#case-study" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-slate-800 py-1">Case Study</a>
+                    <a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-slate-800 py-1">Knowledge Check</a>
+                </nav>
+            </aside>
+        </div>
+    </div>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Copy to clipboard functionality
+    const allCodeBlocks = document.querySelectorAll('.code-block');
+    allCodeBlocks.forEach(block => {
+        const copyButton = block.querySelector('.copy-button');
+        const code = block.querySelector('code').innerText;
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(code).then(() => {
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+    });
+
+    // TOC scrolling active state
+    const sections = document.querySelectorAll('main section');
+    const tocLinks = document.querySelectorAll('#toc a');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                tocLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href.substring(1) === entry.target.id || href.substring(1) === entry.target.parentElement.id || href.substring(1) === entry.target.parentElement.parentElement.id) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(sec => observer.observe(sec));
+    document.querySelectorAll('main section div[id]').forEach(div => observer.observe(div));
+
+
+    // Interactive HTTP Lifecycle Diagram
+    const diagramSteps = document.querySelectorAll('.diagram-step');
+    const diagramContents = document.querySelectorAll('.diagram-content');
+
+    diagramSteps.forEach(step => {
+        step.addEventListener('click', () => {
+            const targetId = 'content-' + step.id;
+            
+            diagramSteps.forEach(s => s.classList.remove('active'));
+            step.classList.add('active');
+
+            diagramContents.forEach(content => {
+                if (content.id === targetId) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // HTTP Methods Tabs
+    const methodTabs = document.querySelectorAll('.method-tab');
+    const methodContents = document.querySelectorAll('.method-content');
+
+    methodTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.dataset.target;
+            
+            methodTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            methodContents.forEach(content => {
+                if (content.id === targetId) {
+                    content.classList.remove('hidden');
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
+        });
+    });
+
+    // Quiz Functionality
+    const quizData = [
+        {
+            question: "Which HTTP method is both safe and idempotent?",
+            options: ["POST", "PUT", "GET", "PATCH"],
+            answer: "GET"
+        },
+        {
+            question: "What does 'stateless' mean in the context of HTTP?",
+            options: ["The server stores client session data in memory.", "Each request is independent and the server holds no context from prior requests.", "The client is responsible for closing the connection.", "The server cannot handle multiple requests at once."],
+            answer: "Each request is independent and the server holds no context from prior requests."
+        },
+        {
+            question: "A client wants to update only the email address of a user profile without sending the entire profile object. Which HTTP method is most appropriate?",
+            options: ["POST", "PUT", "PATCH", "UPDATE"],
+            answer: "PATCH"
+        },
+        {
+            question: "Which header does a server use to send a cookie to a client?",
+            options: ["Cookie", "Set-Cookie", "Authorization", "X-Session-ID"],
+            answer: "Set-Cookie"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    const submitButton = document.getElementById('submit-quiz');
+    const resultsContainer = document.getElementById('quiz-results');
+
+    function buildQuiz() {
+        quizData.forEach((item, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('p-4', 'border', 'rounded-lg', 'bg-white');
+            
+            const questionText = document.createElement('p');
+            questionText.classList.add('font-semibold', 'text-slate-700');
+            questionText.textContent = `${index + 1}. ${item.question}`;
+            questionDiv.appendChild(questionText);
+            
+            const optionsDiv = document.createElement('div');
+            optionsDiv.classList.add('mt-3', 'space-y-2');
+            
+            item.options.forEach(option => {
+                const label = document.createElement('label');
+                label.classList.add('flex', 'items-center', 'p-2', 'rounded-md', 'hover:bg-slate-100', 'cursor-pointer');
+                
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `question${index}`;
+                input.value = option;
+                input.classList.add('mr-3');
+                
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(option));
+                optionsDiv.appendChild(label);
+            });
+            
+            questionDiv.appendChild(optionsDiv);
+            quizContainer.appendChild(questionDiv);
+        });
+    }
+
+    function showResults() {
+        let score = 0;
+        const questionDivs = quizContainer.querySelectorAll('.p-4');
+        
+        quizData.forEach((item, index) => {
+            const selectedOption = quizContainer.querySelector(`input[name="question${index}"]:checked`);
+            const questionDiv = questionDivs[index];
+            const optionLabels = questionDiv.querySelectorAll('label');
+
+            optionLabels.forEach(label => {
+                const input = label.querySelector('input');
+                if (input.value === item.answer) {
+                    label.classList.add('bg-green-100', 'border-green-400', 'border');
+                }
+            });
+            
+            if (selectedOption) {
+                if (selectedOption.value === item.answer) {
+                    score++;
+                } else {
+                    const selectedLabel = selectedOption.parentElement;
+                    selectedLabel.classList.add('bg-red-100', 'border-red-400', 'border');
+                }
+            }
+        });
+
+        resultsContainer.textContent = `You scored ${score} out of ${quizData.length}.`;
+        submitButton.disabled = true;
+    }
+
+    buildQuiz();
+    submitButton.addEventListener('click', showResults);
+
+});
+</script>
+
+</body>
+</html>

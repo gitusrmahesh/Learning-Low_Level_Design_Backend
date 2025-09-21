@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 23: Open/Closed Principle (OCP) - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Calm Slate & Amber -->
+    <!-- Application Structure Plan: A two-column responsive layout is used to present the learning module. The left, wider column contains the main educational content, flowing from theory to practical application. This includes interactive code examples, a UML diagram built with HTML/CSS, a tabbed coding practice area, and a quiz. This structure supports a progressive learning path. The right, narrower column features a sticky Table of Contents that tracks scroll position, allowing users to easily navigate the lesson and see their progress. This architecture was chosen for its user-friendliness, separating navigation from content and providing a clear, guided learning experience. -->
+    <!-- Visualization & Content Choices: Report Info: OCP concepts -> Goal: Inform/Compare -> Viz: Interactive "Before & After" code blocks using HTML/JS toggles to contrast non-OCP vs. OCP designs. Justification: Clearly illustrates the refactoring process. Report Info: UML Class Diagram -> Goal: Organize -> Viz: HTML/CSS diagram. Justification: Avoids static images and allows for potential future interactivity without SVG/Mermaid. Report Info: Coding Problems -> Goal: Engage/Practice -> Viz: Tabbed interface with JS-powered "show solution" toggles. Justification: Encourages active problem-solving before revealing answers. Report Info: Knowledge Check -> Goal: Assess -> Viz: Interactive quiz with immediate JS feedback. Justification: Reinforces learning through self-assessment. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #f59e0b; /* amber-500 */
+            font-weight: 600;
+            border-left-color: #f59e0b; /* amber-500 */
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .quiz-option.selected {
+            border-color: #3b82f6; /* blue-500 */
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .quiz-option.correct {
+            border-color: #22c55e; /* green-500 */
+            background-color: #f0fdf4; /* green-50 */
+        }
+        .quiz-option.incorrect {
+            border-color: #ef4444; /* red-500 */
+            background-color: #fef2f2; /* red-50 */
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body x-data>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-12">
+                <article id="introduction" class="scroll-mt-24">
+                    <div class="mb-4">
+                        <p class="text-base font-semibold text-amber-600">Day 23: SOLID Principles</p>
+                        <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight">The Open/Closed Principle (OCP)</h2>
+                        <p class="mt-3 text-lg text-slate-600">Building software that welcomes change without breaking.</p>
+                    </div>
+                    <p class="text-slate-700">The Open/Closed Principle is the second pillar of SOLID, and it addresses one of the most common challenges in software development: how to add new features without introducing new bugs into existing, working code. It dictates that our code modules, classes, and functions should be designed in a way that allows their behavior to be extended without needing to modify their source code. This principle is a cornerstone of building maintainable, scalable, and robust systems.</p>
+                    <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="font-bold text-amber-800">Core Definition</p>
+                        <blockquote class="mt-2 text-amber-700 italic">"Software entities (classes, modules, functions, etc.) should be open for extension, but closed for modification."</blockquote>
+                    </div>
+                    <p class="mt-4 text-slate-700">In simple terms, you should be able to add new functionality by adding new code, not by changing old code that already works. This minimizes the risk of regression bugs and keeps the core logic stable and reliable.</p>
+                </article>
+
+                <hr class="border-slate-200">
+
+                <article id="theory" class="scroll-mt-24 space-y-6">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-800">Deep Dive: Theory and Motivation</h3>
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-700">The Problem: The Fragile `if-else` Ladder</h4>
+                        <p class="mt-2 text-slate-700">Imagine a payment processing system. Initially, it only handles credit cards. Later, you need to add PayPal. Then bank transfers. Each new payment method requires you to go back into the main `PaymentProcessor` class and add another `if` or `case` statement. This is a direct violation of OCP.</p>
+                        <ul class="mt-3 list-disc list-inside text-slate-600 space-y-1">
+                            <li><span class="font-semibold">It's Risky:</span> Every change to the core `PaymentProcessor` class risks breaking the logic for all existing payment types.</li>
+                            <li><span class="font-semibold">It's Inefficient:</span> The class grows larger and more complex with each addition, becoming harder to read, test, and maintain.</li>
+                            <li><span class="font-semibold">It's a Bottleneck:</span> Multiple developers might need to modify the same file to add different features, leading to merge conflicts.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-700">The Solution: Abstraction is Key</h4>
+                        <p class="mt-2 text-slate-700">OCP is primarily achieved through abstraction, using interfaces or abstract base classes. By programming against an abstraction rather than a concrete implementation, we decouple our high-level logic from the low-level details.</p>
+                        <ol class="mt-3 list-decimal list-inside text-slate-600 space-y-2">
+                            <li><span class="font-semibold">Define an Abstraction:</span> Create an interface (e.g., `IPaymentMethod`) or an abstract class that defines a common contract (e.g., a `ProcessPayment` method).</li>
+                            <li><span class="font-semibold">Implement the Abstraction:</span> Create concrete classes for each new feature (e.g., `CreditCardPayment`, `PayPalPayment`) that implement this interface.</li>
+                            <li><span class="font-semibold">Depend on the Abstraction:</span> The high-level module (the `PaymentProcessor`) now only knows about the `IPaymentMethod` interface. It doesn't care about the specific type of payment. It just calls the `ProcessPayment` method on whatever object it receives.</li>
+                        </ol>
+                        <p class="mt-3 text-slate-700">Now, to add a new payment method like Stripe, we simply create a new `StripePayment` class. The original `PaymentProcessor` remains completely untouched. It's <span class="font-semibold text-green-600">open</span> to a new Stripe payment extension, but its own code is <span class="font-semibold text-red-600">closed</span> for modification.</p>
+                    </div>
+                </article>
+
+                <hr class="border-slate-200">
+                
+                <article id="refactoring-example" class="scroll-mt-24" x-data="{ view: 'before' }">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-800">Interactive Example: Refactoring to OCP</h3>
+                    <p class="mt-2 text-slate-600">Let's see this in action. We'll refactor a shape area calculator from a rigid, modification-prone design to one that adheres to the Open/Closed Principle.</p>
+                    <div class="mt-4 flex justify-center border-b border-slate-300">
+                        <button @click="view = 'before'" :class="{ 'border-amber-500 text-amber-600 bg-amber-50': view === 'before', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': view !== 'before' }" class="py-3 px-6 font-semibold border-b-2 transition-colors">Before OCP (Violation)</button>
+                        <button @click="view = 'after'" :class="{ 'border-amber-500 text-amber-600 bg-amber-50': view === 'after', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': view !== 'after' }" class="py-3 px-6 font-semibold border-b-2 transition-colors">After OCP (Compliant)</button>
+                    </div>
+
+                    <div x-show="view === 'before'" x-cloak class="mt-4 animate-fade-in">
+                        <p class="text-slate-700">This `AreaCalculator` class must be modified every time we want to support a new shape. Adding a Triangle would require another `else if` block, changing the core logic.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-before').textContent)">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-before" class="language-csharp">
+// Shape definitions
+public class Rectangle { public double Width { get; set; } public double Height { get; set; } }
+public class Circle { public double Radius { get; set; } }
+
+// The calculator class that VIOLATES OCP
+public class AreaCalculator
+{
+    public double CalculateTotalArea(object[] shapes)
+    {
+        double totalArea = 0;
+        foreach (var shape in shapes)
+        {
+            if (shape is Rectangle rectangle)
+            {
+                totalArea += rectangle.Width * rectangle.Height;
+            }
+            else if (shape is Circle circle)
+            {
+                totalArea += circle.Radius * circle.Radius * Math.PI;
+            }
+            // To add a Triangle, we must MODIFY this class!
+        }
+        return totalArea;
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+
+                    <div x-show="view === 'after'" x-cloak class="mt-4 animate-fade-in">
+                        <p class="text-slate-700">Here, we introduce an `IShape` interface. The `AreaCalculator` now works with any object that is an `IShape`, and it never needs to change again. To add a Triangle, we just create a new `Triangle` class that implements `IShape`.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-after').textContent)">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-after" class="language-csharp">
+// Abstraction: Open for extension
+public interface IShape
+{
+    double CalculateArea();
+}
+
+// Concrete implementations
+public class Rectangle : IShape
+{
+    public double Width { get; set; }
+    public double Height { get; set; }
+    public double CalculateArea() => Width * Height;
+}
+
+public class Circle : IShape
+{
+    public double Radius { get; set; }
+    public double CalculateArea() => Radius * Radius * Math.PI;
+}
+
+// New shape added without modifying the calculator
+public class Triangle : IShape
+{
+    public double Base { get; set; }
+    public double Height { get; set; }
+    public double CalculateArea() => 0.5 * Base * Height;
+}
+
+// The calculator class is now CLOSED for modification
+public class AreaCalculator
+{
+    public double CalculateTotalArea(IShape[] shapes)
+    {
+        double totalArea = 0;
+        foreach (var shape in shapes)
+        {
+            totalArea += shape.CalculateArea();
+        }
+        return totalArea;
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                </article>
+
+                <hr class="border-slate-200">
+                
+                <article id="uml-diagram" class="scroll-mt-24">
+                     <h3 class="text-2xl font-bold font-lexend text-slate-800">UML Class Diagram: The OCP Structure</h3>
+                     <p class="mt-2 text-slate-600">This diagram visualizes the OCP-compliant design. The client (`AreaCalculator`) depends on the `IShape` abstraction, not the concrete implementations. This decouples the components and allows new shapes to be added without affecting the client.</p>
+                     <div class="mt-6 bg-white p-6 border border-slate-200 rounded-lg flex flex-col items-center justify-center font-mono text-sm">
+                        
+                        <div class="text-center p-3 border-2 border-slate-700 bg-slate-100 rounded-md shadow-md w-48">
+                            <div class="font-bold">AreaCalculator</div>
+                            <hr class="my-1 border-slate-400">
+                            <div>+ CalculateTotalArea(IShape[])</div>
+                        </div>
+
+                        <div class="h-12 w-0.5 bg-slate-400 relative">
+                           <div class="absolute -top-2 -right-3 text-2xl text-slate-500 transform -rotate-45">▶</div>
+                           <div class="absolute bottom-2 -left-14 text-slate-600 font-sans italic">depends on</div>
+                        </div>
+
+                        <div class="text-center p-3 border-2 border-dashed border-sky-500 bg-sky-50 rounded-md shadow-md w-48">
+                            <div class="font-bold text-sky-700">&lt;&lt;interface&gt;&gt;</div>
+                            <div class="font-bold text-sky-700">IShape</div>
+                            <hr class="my-1 border-sky-400">
+                            <div class="italic text-sky-600">+ CalculateArea(): double</div>
+                        </div>
+
+                        <div class="flex justify-center w-full mt-4 relative">
+                            <div class="h-8 w-0.5 bg-slate-400 absolute top-0"></div>
+                            <div class="w-2/3 h-0.5 bg-slate-400 absolute top-8"></div>
+                        </div>
+                        
+                        <div class="flex justify-around w-full mt-16 text-center">
+                            <div class="relative w-40">
+                                <div class="h-8 w-0.5 bg-slate-400 absolute -top-8 left-1/2 -ml-px"></div>
+                                <div class="absolute -top-10 left-1/2 -ml-2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-white" style="stroke: #94a3b8; stroke-width: 1px;"></div>
+
+                                <div class="p-3 border-2 border-slate-700 bg-slate-100 rounded-md shadow-md">
+                                    <div class="font-bold">Rectangle</div>
+                                    <hr class="my-1 border-slate-400">
+                                    <div class="italic">+ CalculateArea()</div>
+                                </div>
+                            </div>
+                             <div class="relative w-40">
+                                <div class="h-8 w-0.5 bg-slate-400 absolute -top-8 left-1/2 -ml-px"></div>
+                                <div class="absolute -top-10 left-1/2 -ml-2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-white" style="stroke: #94a3b8; stroke-width: 1px;"></div>
+
+                                <div class="p-3 border-2 border-slate-700 bg-slate-100 rounded-md shadow-md">
+                                    <div class="font-bold">Circle</div>
+                                    <hr class="my-1 border-slate-400">
+                                    <div class="italic">+ CalculateArea()</div>
+                                </div>
+                            </div>
+                             <div class="relative w-40">
+                                <div class="h-8 w-0.5 bg-slate-400 absolute -top-8 left-1/2 -ml-px"></div>
+                                <div class="absolute -top-10 left-1/2 -ml-2 w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-white" style="stroke: #94a3b8; stroke-width: 1px;"></div>
+
+                                <div class="p-3 border-2 border-slate-700 bg-slate-100 rounded-md shadow-md">
+                                    <div class="font-bold">Triangle</div>
+                                    <hr class="my-1 border-slate-400">
+                                    <div class="italic">+ CalculateArea()</div>
+                                </div>
+                            </div>
+                        </div>
+                     </div>
+                </article>
+
+                <hr class="border-slate-200">
+
+                <article id="coding-practice" class="scroll-mt-24" x-data="{ tab: 'easy' }">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-800">Coding Practice</h3>
+                    <p class="mt-2 text-slate-600">Apply your knowledge. Each problem presents code that violates OCP. Your task is to refactor it.</p>
+                    <div class="mt-4 border-b border-slate-200">
+                        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                            <button @click="tab = 'easy'" :class="{ 'border-amber-500 text-amber-600': tab === 'easy', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': tab !== 'easy' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                [Easy] Notification Service
+                            </button>
+                             <button @click="tab = 'medium'" :class="{ 'border-amber-500 text-amber-600': tab === 'medium', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': tab !== 'medium' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                [Medium] Document Exporter
+                            </button>
+                             <button @click="tab = 'hard'" :class="{ 'border-amber-500 text-amber-600': tab === 'hard', 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300': tab !== 'hard' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                [Hard] Discount Calculator
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="mt-6">
+                        <!-- Easy Problem -->
+                        <div x-show="tab === 'easy'" x-cloak x-data="{ solutionVisible: false }">
+                            <h4 class="text-lg font-semibold">Problem: Add a new Push Notification type</h4>
+                            <p class="mt-1 text-slate-600">The current `NotificationService` has to be modified to add a new notification type. Refactor it so you can add new notification types without changing existing code.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-easy-problem').textContent)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-easy-problem" class="language-csharp">
+public class NotificationService
+{
+    public void SendNotification(string type, string message)
+    {
+        if (type == "email")
+        {
+            Console.WriteLine($"Sending Email: {message}");
+        }
+        else if (type == "sms")
+        {
+            Console.WriteLine($"Sending SMS: {message}");
+        }
+    }
+}
+                                </code></pre>
+                            </div>
+                            <button @click="solutionVisible = !solutionVisible" class="mt-4 bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors shadow-sm" x-text="solutionVisible ? 'Hide Solution' : 'Show Solution'"></button>
+                            <div x-show="solutionVisible" x-cloak class="mt-4 animate-fade-in">
+                                <div class="code-block">
+                                    <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-easy-solution').textContent)">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-easy-solution" class="language-csharp">
+public interface INotification
+{
+    void Send(string message);
+}
+
+public class EmailNotification : INotification
+{
+    public void Send(string message) => Console.WriteLine($"Sending Email: {message}");
+}
+
+public class SmsNotification : INotification
+{
+    public void Send(string message) => Console.WriteLine($"Sending SMS: {message}");
+}
+
+// New type added without changing the service
+public class PushNotification : INotification
+{
+    public void Send(string message) => Console.WriteLine($"Sending Push Notification: {message}");
+}
+
+// The service is now closed for modification
+public class NotificationService
+{
+    public void Send(INotification notification, string message)
+    {
+        notification.Send(message);
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Medium Problem -->
+                        <div x-show="tab === 'medium'" x-cloak x-data="{ solutionVisible: false }">
+                            <h4 class="text-lg font-semibold">Problem: Add a new XML export format</h4>
+                            <p class="mt-1 text-slate-600">This `DocumentExporter` must be modified to support exporting to XML. Refactor it to allow adding new export formats without touching the existing `Exporter` class.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-medium-problem').textContent)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-medium-problem" class="language-csharp">
+public class Document { public string Content { get; set; } }
+
+public class DocumentExporter
+{
+    public void Export(Document doc, string format)
+    {
+        if (format == "pdf")
+        {
+            Console.WriteLine($"Exporting '{doc.Content}' to PDF.");
+        }
+        else if (format == "json")
+        {
+            Console.WriteLine($"Exporting '{doc.Content}' to JSON.");
+        }
+    }
+}
+                                </code></pre>
+                            </div>
+                            <button @click="solutionVisible = !solutionVisible" class="mt-4 bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors shadow-sm" x-text="solutionVisible ? 'Hide Solution' : 'Show Solution'"></button>
+                            <div x-show="solutionVisible" x-cloak class="mt-4 animate-fade-in">
+                                <div class="code-block">
+                                    <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-medium-solution').textContent)">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-medium-solution" class="language-csharp">
+public class Document { public string Content { get; set; } }
+
+public interface IDocumentExporter
+{
+    void Export(Document doc);
+}
+
+public class PdfExporter : IDocumentExporter
+{
+    public void Export(Document doc) => Console.WriteLine($"Exporting '{doc.Content}' to PDF.");
+}
+
+public class JsonExporter : IDocumentExporter
+{
+    public void Export(Document doc) => Console.WriteLine($"Exporting '{doc.Content}' to JSON.");
+}
+
+// New format added easily
+public class XmlExporter : IDocumentExporter
+{
+    public void Export(Document doc) => Console.WriteLine($"Exporting '{doc.Content}' to XML.");
+}
+
+// The main class is simplified and closed for modification
+public class DocumentExporterService
+{
+    public void ExportDocument(IDocumentExporter exporter, Document doc)
+    {
+        exporter.Export(doc);
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hard Problem -->
+                         <div x-show="tab === 'hard'" x-cloak x-data="{ solutionVisible: false }">
+                            <h4 class="text-lg font-semibold">Problem: Add a "Premium Customer" discount rule</h4>
+                            <p class="mt-1 text-slate-600">The `DiscountCalculator` needs to be modified for every new discount rule. Refactor it to support a flexible system where new discount rules can be added without changing the calculator itself.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-hard-problem').textContent)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-hard-problem" class="language-csharp">
+public class Customer { public string Type { get; set; } }
+
+public class DiscountCalculator
+{
+    public double CalculateDiscount(double purchaseAmount, Customer customer)
+    {
+        double discount = 0;
+        if (customer.Type == "Standard")
+        {
+            discount = purchaseAmount * 0.05;
+        }
+        else if (customer.Type == "Loyalty")
+        {
+            discount = purchaseAmount * 0.1;
+        }
+        return discount;
+    }
+}
+                                </code></pre>
+                            </div>
+                            <button @click="solutionVisible = !solutionVisible" class="mt-4 bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 transition-colors shadow-sm" x-text="solutionVisible ? 'Hide Solution' : 'Show Solution'"></button>
+                            <div x-show="solutionVisible" x-cloak class="mt-4 animate-fade-in">
+                                <div class="code-block">
+                                    <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-hard-solution').textContent)">Copy</button>
+                                    <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-hard-solution" class="language-csharp">
+public interface IDiscountStrategy
+{
+    double ApplyDiscount(double purchaseAmount);
+}
+
+public class StandardDiscount : IDiscountStrategy
+{
+    public double ApplyDiscount(double purchaseAmount) => purchaseAmount * 0.05;
+}
+
+public class LoyaltyDiscount : IDiscountStrategy
+{
+    public double ApplyDiscount(double purchaseAmount) => purchaseAmount * 0.1;
+}
+
+// New discount rule added without modification to the calculator
+public class PremiumDiscount : IDiscountStrategy
+{
+    public double ApplyDiscount(double purchaseAmount) => purchaseAmount * 0.2;
+}
+
+// The calculator now depends on the abstraction
+public class DiscountCalculator
+{
+    public double Calculate(IDiscountStrategy strategy, double purchaseAmount)
+    {
+        return strategy.ApplyDiscount(purchaseAmount);
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <hr class="border-slate-200">
+                
+                <article id="case-study" class="scroll-mt-24">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-800">Case Study: Extensible Payment Gateway</h3>
+                    <p class="mt-2 text-slate-600">Let's design a payment gateway system. The core requirement is to process payments, but we must be able to easily add new payment providers like PayPal, Stripe, and Razorpay in the future without modifying the core processing logic.</p>
+                    <div class="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-lg space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-slate-800">1. Define the Abstraction (`IPaymentGateway`)</h4>
+                            <p class="text-slate-600 text-sm">This is our contract. Any payment gateway we support must adhere to this interface. It defines a single `MakePayment` method.</p>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold text-slate-800">2. Create Concrete Implementations</h4>
+                            <p class="text-slate-600 text-sm">We create separate classes for each payment provider (`StripeGateway`, `PayPalGateway`). Each class implements the `IPaymentGateway` interface, containing the specific logic for that provider.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-800">3. Design the Client (`PaymentProcessor`)</h4>
+                            <p class="text-slate-600 text-sm">The `PaymentProcessor` is our high-level module. It is constructed with an `IPaymentGateway` and its `ProcessOrderPayment` method simply calls the `MakePayment` method on the provided gateway. It has no knowledge of Stripe or PayPal; it only knows about the abstraction.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="text-lg font-semibold mt-6">Complete C# Solution</h4>
+                    <div class="code-block mt-2">
+                        <button class="copy-btn" x-on:click="$clipboard(document.getElementById('code-case-study').textContent)">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code id="code-case-study" class="language-csharp">
+// 1. The Abstraction (Open for Extension)
+public interface IPaymentGateway
+{
+    void MakePayment(double amount);
+}
+
+// 2. Concrete Implementations
+public class StripeGateway : IPaymentGateway
+{
+    public void MakePayment(double amount)
+    {
+        Console.WriteLine($"Processing payment of ${amount} through Stripe.");
+        // Logic to call Stripe API
+    }
+}
+
+public class PayPalGateway : IPaymentGateway
+{
+    public void MakePayment(double amount)
+    {
+        Console.WriteLine($"Processing payment of ${amount} through PayPal.");
+        // Logic to call PayPal API
+    }
+}
+
+// We can add Razorpay without touching any existing code
+public class RazorpayGateway : IPaymentGateway
+{
+    public void MakePayment(double amount)
+    {
+        Console.WriteLine($"Processing payment of ${amount} through Razorpay.");
+        // Logic to call Razorpay API
+    }
+}
+
+// 3. The Client (Closed for Modification)
+public class PaymentProcessor
+{
+    private readonly IPaymentGateway _gateway;
+
+    // The processor depends on the abstraction, not a concrete class
+    public PaymentProcessor(IPaymentGateway gateway)
+    {
+        _gateway = gateway;
+    }
+
+    public void ProcessOrderPayment(double amount)
+    {
+        _gateway.MakePayment(amount);
+    }
+}
+
+// --- Usage ---
+// var processorForStripe = new PaymentProcessor(new StripeGateway());
+// processorForStripe.ProcessOrderPayment(100.00);
+
+// var processorForPayPal = new PaymentProcessor(new PayPalGateway());
+// processorForPayPal.ProcessOrderPayment(50.00);
+
+// var processorForRazorpay = new PaymentProcessor(new RazorpayGateway());
+// processorForRazorpay.ProcessOrderPayment(75.00);
+                        </code></pre>
+                    </div>
+                </article>
+                
+                <hr class="border-slate-200">
+
+                <article id="knowledge-check" class="scroll-mt-24" x-data="quiz()">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-800">Knowledge Check</h3>
+                    <p class="mt-2 text-slate-600">Test your understanding of the Open/Closed Principle.</p>
+                    <div class="mt-6 space-y-6">
+                        <template x-for="(question, index) in questions" :key="index">
+                            <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                                <p class="font-semibold text-slate-800" x-text="`${index + 1}. ${question.text}`"></p>
+                                <div class="mt-4 space-y-3">
+                                    <template x-for="(option, optionIndex) in question.options" :key="optionIndex">
+                                        <label @click="selectOption(index, optionIndex)"
+                                            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all quiz-option"
+                                            :class="{
+                                                'selected': question.selected === optionIndex,
+                                                'correct': submitted && optionIndex === question.correct && question.selected === optionIndex,
+                                                'incorrect': submitted && question.selected === optionIndex && optionIndex !== question.correct
+                                            }">
+                                            <input type="radio" :name="`q${index}`" class="hidden">
+                                            <span class="ml-3 text-slate-700" x-text="option"></span>
+                                            <template x-if="submitted && optionIndex === question.correct">
+                                                <span class="ml-auto text-green-600 font-bold">✓ Correct</span>
+                                            </template>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="mt-6">
+                        <button @click="submitQuiz" class="bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors shadow-sm" x-show="!submitted">Check Answers</button>
+                        <div x-show="submitted" x-cloak class="p-4 rounded-lg" :class="score === questions.length ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'">
+                            <p class="font-bold">Quiz Complete! You scored <span x-text="score"></span> out of <span x-text="questions.length"></span>.</p>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+
+            <!-- Sticky TOC -->
+            <aside class="hidden lg:block">
+                <div class="sticky top-24">
+                    <h4 class="font-semibold text-slate-800 mb-3">On this page</h4>
+                    <nav id="toc" class="flex flex-col space-y-2 border-l-2 border-slate-200">
+                        <a href="#introduction" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">Introduction</a>
+                        <a href="#theory" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">Core Theory</a>
+                        <a href="#refactoring-example" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">Interactive Example</a>
+                        <a href="#uml-diagram" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">UML Diagram</a>
+                        <a href="#coding-practice" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">Coding Practice</a>
+                        <a href="#case-study" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">Case Study</a>
+                        <a href="#knowledge-check" class="toc-link pl-4 py-1 text-sm text-slate-500 hover:text-slate-800 transition-colors border-l-2 border-transparent">Knowledge Check</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('quiz', () => ({
+                submitted: false,
+                score: 0,
+                questions: [
+                    {
+                        text: 'What is the primary goal of the Open/Closed Principle?',
+                        options: [
+                            'To make code shorter and more concise.',
+                            'To allow adding new functionality without changing existing code.',
+                            'To ensure every class has only one responsibility.',
+                            'To use interfaces instead of concrete classes everywhere.'
+                        ],
+                        correct: 1,
+                        selected: null
+                    },
+                    {
+                        text: 'Which programming construct is most commonly used to achieve OCP?',
+                        options: [
+                            'Conditional if-else statements.',
+                            'Static methods and variables.',
+                            'Abstraction (Interfaces and Abstract Classes).',
+                            'Private constructors and singleton patterns.'
+                        ],
+                        correct: 2,
+                        selected: null
+                    },
+                    {
+                        text: 'A class that uses a large switch statement to handle different object types is likely violating which principle?',
+                        options: [
+                            'Single Responsibility Principle (SRP)',
+                            'Open/Closed Principle (OCP)',
+                            'Both SRP and OCP',
+                            'Liskov Substitution Principle (LSP)'
+                        ],
+                        correct: 2,
+                        selected: null
+                    },
+                    {
+                        text: 'If you adhere to OCP, what is the main benefit when a new business requirement comes in?',
+                        options: [
+                            'The entire application needs to be recompiled.',
+                            'The risk of introducing bugs into existing, stable code is minimized.',
+                            'The performance of the application will always increase.',
+                            'You will write less code overall.'
+                        ],
+                        correct: 1,
+                        selected: null
+                    }
+                ],
+                selectOption(qIndex, oIndex) {
+                    if (this.submitted) return;
+                    this.questions[qIndex].selected = oIndex;
+                },
+                submitQuiz() {
+                    this.submitted = true;
+                    this.score = this.questions.filter(q => q.selected === q.correct).length;
+                }
+            }));
+
+            Alpine.magic('clipboard', () => {
+                return subject => {
+                    navigator.clipboard.writeText(subject).then(
+                        () => alert('Copied to clipboard!'),
+                        () => alert('Failed to copy!')
+                    );
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('article[id]');
+            const tocLinks = document.querySelectorAll('#toc a');
+            
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const tocLink = document.querySelector(`#toc a[href="#${id}"]`);
+
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                        tocLinks.forEach(link => link.classList.remove('active'));
+                        if(tocLink) {
+                           tocLink.classList.add('active');
+                        }
+                    }
+                });
+            }, { rootMargin: '0px 0px -50% 0px', threshold: 0.5 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+
+</body>
+</html>

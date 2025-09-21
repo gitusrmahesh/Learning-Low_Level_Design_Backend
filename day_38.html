@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 38: State Pattern - LLD Bootcamp</title>
+    <!-- Chosen Palette: Warm Neutrals & Slate -->
+    <!-- Application Structure Plan: A two-column layout is used for optimal learning. The main content area on the left provides a linear, top-to-bottom educational flow, starting from theory and progressing to practical application. This structure is intuitive for a lesson. The right column features a sticky Table of Contents (TOC) for non-linear navigation, allowing users to jump to specific sections of interest at any time. Interactivity is introduced through a state transition visualization (Chart.js), coding practice with copyable snippets, a quiz for knowledge reinforcement, and a final challenge. This combination of guided learning and free exploration is chosen to cater to different learning styles and enhance user engagement with the complex topic. -->
+    <!-- Visualization & Content Choices: 
+    - Report Info: Order Lifecycle States. Goal: Visualize state transitions. Viz Method: Interactive Doughnut Chart (Chart.js). Interaction: Buttons trigger state changes, updating the chart and descriptive text. Justification: Visually demonstrates the core concept of an object changing its behavior based on its internal state, making an abstract idea concrete. Library: Chart.js.
+    - Report Info: UML for State Pattern. Goal: Organize and show class relationships. Viz Method: Diagram built with HTML/CSS. Interaction: Static visualization. Justification: A clear, standard representation of the pattern's structure is essential for understanding its components. Method: Tailwind CSS for layout.
+    - Report Info: Coding problems. Goal: Provide practical application. Viz Method: Code blocks. Interaction: Copy-to-clipboard button. Justification: Facilitates easy use of the provided solutions for study and practice. Method: Vanilla JS.
+    - Report Info: Knowledge check. Goal: Assess understanding. Viz Method: Interactive quiz. Interaction: User selects answers and gets immediate feedback. Justification: Reinforces learning through active recall. Method: Vanilla JS.
+    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Warm Neutral Background */
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #0F766E; /* Teal-700 */
+            font-weight: 600;
+            border-left-color: #0F766E;
+        }
+        .code-block {
+            background-color: #1E293B;
+            color: #E2E8F0;
+            border-radius: 0.5rem;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #334155;
+            color: #94A3B8;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid #475569;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #475569;
+            color: #E2E8F0;
+        }
+        .quiz-option.correct { background-color: #D1FAE5 !important; border-color: #10B981 !important; color: #065F46 !important; }
+        .quiz-option.incorrect { background-color: #FEE2E2 !important; border-color: #EF4444 !important; color: #991B1B !important; }
+        .quiz-option:disabled { cursor: not-allowed; }
+        .uml-box {
+            border: 2px solid #64748B;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            background-color: #F1F5F9;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .connector {
+            position: absolute;
+            background-color: #64748B;
+            z-index: -1;
+        }
+        .arrow-up::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: -10px;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 10px solid #64748B;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            
+            <div class="lg:w-3/4">
+                <div class="prose prose-slate max-w-none">
+                    <header id="header" class="mb-12">
+                        <p class="text-sm font-semibold text-teal-600">BEHAVIORAL PATTERNS & UML (DAYS 36-42)</p>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 font-lexend tracking-tight">Day 38: State Pattern</h2>
+                        <p class="mt-4 text-lg text-slate-600">Learn to create objects that can alter their behavior when their internal state changes, appearing to change their class.</p>
+                    </header>
+                    
+                    <section id="theory" class="space-y-8">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">✅ Theory Deep Dive</h3>
+                        
+                        <div class="p-6 bg-teal-50 border-l-4 border-teal-500 rounded-r-lg">
+                            <h4 class="font-bold text-lg text-teal-800">What is the State Pattern?</h4>
+                            <p class="mt-2 text-teal-700">The State pattern is a behavioral design pattern that allows an object to change its behavior when its internal state changes. The object will appear to change its class. Instead of having large conditional statements (if/else or switch-case) in one class to handle state-dependent behavior, we encapsulate the behavior associated with a particular state into separate objects.</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">Analogy: The Chameleon Employee</h4>
+                            <p>Imagine a software developer, Alex. Alex's behavior changes dramatically based on his current "state":</p>
+                            <ul class="list-disc list-outside space-y-2 mt-2 pl-5">
+                                <li><strong>When in the "Coding" state:</strong> Alex is focused, writes code, listens to music, and prefers not to be disturbed.</li>
+                                <li><strong>When in the "Meeting" state:</strong> Alex is collaborative, speaks professionally, takes notes, and discusses ideas.</li>
+                                <li><strong>When in the "Debugging" state:</strong> Alex is analytical, frustrated, talks to himself, and drinks a lot of coffee.</li>
+                            </ul>
+                            <p class="mt-2">Instead of Alex having a giant `if/else` block in his brain (`if I'm coding, do this; if I'm in a meeting, do that...`), his entire persona and behavior set switches. The State pattern does the same for objects. The main object (the `Context`, or Alex) holds a reference to a `State` object, and delegates all state-specific work to it. To change state, the context simply replaces its current state object with a new one.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">Core Concept: Encapsulating Object States</h4>
+                            <p>The key idea is to create a common interface for all states and then implement a concrete class for each possible state. The main object, called the `Context`, maintains a reference to an instance of one of these state classes. When a method is called on the `Context`, it delegates the execution to its current state object. The transition to a new state can be handled by either the `Context` or the state objects themselves.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">// State Interface
+public interface IOrderState
+{
+    void ProcessOrder(Order context);
+    void ShipOrder(Order context);
+    void CancelOrder(Order context);
+}
+
+// Context Class
+public class Order
+{
+    public IOrderState CurrentState { get; set; }
+
+    public Order()
+    {
+        CurrentState = new NewOrderState(); // Initial state
+    }
+
+    public void Process() => CurrentState.ProcessOrder(this);
+    public void Ship() => CurrentState.ShipOrder(this);
+    public void Cancel() => CurrentState.CancelOrder(this);
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">Replacing Cumbersome Switch-Case Logic</h4>
+                            <p>A common sign that the State pattern might be a good fit is a large `switch` or `if/else` statement that checks the current state of an object and performs different actions accordingly. This leads to monolithic, hard-to-maintain classes.</p>
+                            <div class="grid md:grid-cols-2 gap-6 mt-4">
+                                <div class="p-4 border border-red-300 bg-red-50 rounded-lg">
+                                    <h5 class="font-bold text-red-800">❌ Without State Pattern (Switch-Case)</h5>
+                                    <p class="text-sm text-red-700">All logic is cluttered in one method, violating the Single Responsibility Principle. Adding a new state requires modifying this large method.</p>
+                                    <div class="code-block mt-2 text-sm">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre class="p-4 overflow-x-auto"><code class="language-csharp">public enum OrderStatus { New, Processing, Shipped, Cancelled }
+
+public class Order
+{
+    public OrderStatus Status { get; set; }
+    
+    public void ProcessNextStep()
+    {
+        switch (Status)
+        {
+            case OrderStatus.New:
+                // Logic to start processing
+                Status = OrderStatus.Processing;
+                break;
+            case OrderStatus.Processing:
+                // Logic to ship
+                Status = OrderStatus.Shipped;
+                break;
+            case OrderStatus.Shipped:
+                // Can't do anything more
+                break;
+            // ... and so on
+        }
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                                <div class="p-4 border border-green-300 bg-green-50 rounded-lg">
+                                    <h5 class="font-bold text-green-800">✅ With State Pattern</h5>
+                                    <p class="text-sm text-green-700">Each state's logic is encapsulated in its own class. The `Order` class is clean and simple. Adding a new state means adding a new class, not modifying existing ones.</p>
+                                    <div class="code-block mt-2 text-sm">
+                                        <button class="copy-btn">Copy</button>
+                                        <pre class="p-4 overflow-x-auto"><code class="language-csharp">public class NewOrderState : IOrderState
+{
+    public void ProcessOrder(Order context)
+    {
+        Console.WriteLine("Processing the new order.");
+        context.CurrentState = new ProcessingOrderState();
+    }
+    // other methods throw exceptions or do nothing
+}
+
+public class ProcessingOrderState : IOrderState
+{
+    public void ShipOrder(Order context)
+    {
+        Console.WriteLine("Shipping the order.");
+        context.CurrentState = new ShippedOrderState();
+    }
+    // other methods...
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml" class="mt-12 space-y-6">
+                         <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">✅ UML Diagram: State Pattern</h3>
+                        <p>The UML diagram for the State pattern shows the relationship between the Context, the State interface, and the Concrete State classes. The Context has a "has-a" relationship with the State interface, meaning it contains an instance of a class that implements the State interface.</p>
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 w-full overflow-x-auto">
+                            <div class="relative min-w-[600px] h-96">
+                                <!-- Boxes -->
+                                <div class="uml-box absolute top-4 left-1/2 -translate-x-1/2 w-48">
+                                    <p class="font-bold">Context</p>
+                                    <p class="text-sm text-slate-500">- state: State</p>
+                                    <hr class="my-1 border-slate-300">
+                                    <p class="text-sm text-slate-600">+ Request()</p>
+                                </div>
+
+                                <div class="uml-box absolute top-40 left-1/2 -translate-x-1/2 w-48">
+                                    <p class="font-bold italic">«interface» State</p>
+                                     <hr class="my-1 border-slate-300">
+                                    <p class="text-sm text-slate-600 italic">+ Handle()</p>
+                                </div>
+                                
+                                <div class="uml-box absolute bottom-0 left-8 w-48">
+                                    <p class="font-bold">ConcreteStateA</p>
+                                    <hr class="my-1 border-slate-300">
+                                    <p class="text-sm text-slate-600">+ Handle()</p>
+                                </div>
+
+                                <div class="uml-box absolute bottom-0 right-8 w-48">
+                                    <p class="font-bold">ConcreteStateB</p>
+                                    <hr class="my-1 border-slate-300">
+                                    <p class="text-sm text-slate-600">+ Handle()</p>
+                                </div>
+
+                                <!-- Connectors -->
+                                <!-- Context to State -->
+                                <div class="connector" style="width: 2px; height: 60px; top: 96px; left: 50%; transform: translateX(-50%);"></div>
+                                <!-- State to Concrete States -->
+                                <div class="connector arrow-up" style="width: 2px; height: 60px; top: 252px; left: 50%; transform: translateX(-50%);"></div>
+                                <div class="connector" style="width: 250px; height: 2px; top: 252px; left: 50%; transform: translateX(-50%);"></div>
+                                <div class="connector" style="width: 2px; height: 34px; top: 254px; left: calc(50% - 125px);"></div>
+                                <div class="connector" style="width: 2px; height: 34px; top: 254px; left: calc(50% + 125px);"></div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="interactive-viz" class="mt-12 space-y-6">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">⚙️ Interactive Demo: Order Lifecycle</h3>
+                        <p>This interactive visualization demonstrates the State pattern in action. The `Order` object transitions through different states. Its behavior (which actions are allowed) changes based on its current state. Click the buttons to see how the order's state and available actions change.</p>
+                         <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <div class="flex flex-col md:flex-row gap-6 items-center">
+                                <div class="chart-container w-full md:w-1/2 h-64 md:h-auto">
+                                    <canvas id="orderStateChart"></canvas>
+                                </div>
+                                <div class="w-full md:w-1/2 space-y-4">
+                                    <div>
+                                        <h4 class="font-bold text-lg text-slate-800">Current State: <span id="currentStateText" class="text-teal-600">New</span></h4>
+                                        <p id="stateDescription" class="text-sm text-slate-500 mt-1">The order has been created but not yet processed. You can process or cancel it.</p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <button id="btnProcess" class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed">Process Order</button>
+                                        <button id="btnShip" class="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed">Ship Order</button>
+                                        <button id="btnCancel" class="w-full bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors shadow-sm disabled:bg-slate-300 disabled:cursor-not-allowed">Cancel Order</button>
+                                        <button id="btnReset" class="w-full bg-slate-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-600 transition-colors shadow-sm">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="coding-practice" class="mt-12 space-y-12">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">⌨️ Coding Practice</h3>
+                        
+                        <div>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">[Easy] Traffic Light</h4>
+                            <p>Implement a simple traffic light system where the light changes from Red to Green, Green to Yellow, and Yellow to Red. The `TrafficLight` context class should have a `Change()` method that delegates to the current state.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+using System.Threading;
+
+// State Interface
+public interface ITrafficLightState
+{
+    void Change(TrafficLight light);
+}
+
+// Concrete States
+public class RedLightState : ITrafficLightState
+{
+    public void Change(TrafficLight light)
+    {
+        Console.WriteLine("Red -> Green");
+        light.SetState(new GreenLightState());
+    }
+}
+
+public class GreenLightState : ITrafficLightState
+{
+    public void Change(TrafficLight light)
+    {
+        Console.WriteLine("Green -> Yellow");
+        light.SetState(new YellowLightState());
+    }
+}
+
+public class YellowLightState : ITrafficLightState
+{
+    public void Change(TrafficLight light)
+    {
+        Console.WriteLine("Yellow -> Red");
+        light.SetState(new RedLightState());
+    }
+}
+
+// Context
+public class TrafficLight
+{
+    private ITrafficLightState _currentState;
+
+    public TrafficLight()
+    {
+        _currentState = new RedLightState(); // Initial state
+    }
+
+    public void SetState(ITrafficLightState state)
+    {
+        _currentState = state;
+    }
+
+    public void Change()
+    {
+        _currentState.Change(this);
+    }
+}
+
+// Client Code
+public class TrafficLightSimulator
+{
+    public static void Main(string[] args)
+    {
+        TrafficLight light = new TrafficLight();
+        for (int i = 0; i < 6; i++)
+        {
+            light.Change();
+            Thread.Sleep(1000);
+        }
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">[Medium] Order Status</h4>
+                            <p>Expand on the simple order example. An order can be New, Processing, Shipped, Delivered, or Cancelled. Implement the state transitions. For example, you can only ship an order that is in the 'Processing' state. Attempting an invalid action (like shipping a 'New' order) should result in an error message.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+
+// State Interface
+public interface IOrderState
+{
+    void Process(OrderContext order);
+    void Ship(OrderContext order);
+    void Deliver(OrderContext order);
+    void Cancel(OrderContext order);
+}
+
+// Base State for default behavior (throwing exceptions)
+public abstract class OrderStateBase : IOrderState
+{
+    protected void ShowError() => Console.WriteLine("Invalid action for the current state.");
+    public virtual void Process(OrderContext order) => ShowError();
+    public virtual void Ship(OrderContext order) => ShowError();
+    public virtual void Deliver(OrderContext order) => ShowError();
+    public virtual void Cancel(OrderContext order) => ShowError();
+}
+
+// Concrete States
+public class NewState : OrderStateBase
+{
+    public override void Process(OrderContext order)
+    {
+        Console.WriteLine("Order is now PROCESSING.");
+        order.State = new ProcessingState();
+    }
+    public override void Cancel(OrderContext order)
+    {
+        Console.WriteLine("Order is CANCELLED.");
+        order.State = new CancelledState();
+    }
+}
+
+public class ProcessingState : OrderStateBase
+{
+    public override void Ship(OrderContext order)
+    {
+        Console.WriteLine("Order is now SHIPPED.");
+        order.State = new ShippedState();
+    }
+    public override void Cancel(OrderContext order)
+    {
+        Console.WriteLine("Order is CANCELLED.");
+        order.State = new CancelledState();
+    }
+}
+
+public class ShippedState : OrderStateBase
+{
+    public override void Deliver(OrderContext order)
+    {
+        Console.WriteLine("Order is now DELIVERED.");
+        order.State = new DeliveredState();
+    }
+}
+
+public class DeliveredState : OrderStateBase {}
+public class CancelledState : OrderStateBase {}
+
+
+// Context
+public class OrderContext
+{
+    public IOrderState State { get; set; }
+
+    public OrderContext()
+    {
+        State = new NewState();
+        Console.WriteLine("Order created in NEW state.");
+    }
+
+    public void Process() => State.Process(this);
+    public void Ship() => State.Ship(this);
+    public void Deliver() => State.Deliver(this);
+    public void Cancel() => State.Cancel(this);
+}
+
+// Client Code
+public class ECommercePlatform
+{
+    public static void Main(string[] args)
+    {
+        var order = new OrderContext();
+        order.Ship(); // Invalid action
+        order.Process();
+        order.Deliver(); // Invalid action
+        order.Ship();
+        order.Deliver();
+        order.Cancel(); // Invalid action
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xl font-semibold font-lexend text-slate-800">[Hard] Simple Workflow Engine</h4>
+                            <p>Design a workflow engine for a document. A document has states: `Draft`, `Moderation`, `Published`.
+                            - In `Draft`, a user can `Write()` and `Review()`. `Review()` moves it to `Moderation`.
+                            - In `Moderation`, a moderator can `Approve()` or `Reject()`. `Approve()` moves it to `Published`, `Reject()` moves it back to `Draft`.
+                            - In `Published`, no more changes are allowed.
+                            Implement this system, paying attention to which roles can trigger which transitions.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+
+// State Interface
+public interface IDocumentState
+{
+    void Write(DocumentContext doc, string content);
+    void Review(DocumentContext doc);
+    void Approve(DocumentContext doc);
+    void Reject(DocumentContext doc);
+}
+
+// Concrete States
+public class DraftState : IDocumentState
+{
+    public void Write(DocumentContext doc, string content)
+    {
+        doc.Content += content;
+        Console.WriteLine("Content added to draft.");
+    }
+
+    public void Review(DocumentContext doc)
+    {
+        Console.WriteLine("Document submitted for moderation.");
+        doc.SetState(new ModerationState());
+    }
+
+    public void Approve(DocumentContext doc) => Console.WriteLine("Cannot approve a draft.");
+    public void Reject(DocumentContext doc) => Console.WriteLine("Cannot reject a draft.");
+}
+
+public class ModerationState : IDocumentState
+{
+    public void Write(DocumentContext doc, string content) => Console.WriteLine("Cannot write during moderation.");
+
+    public void Review(DocumentContext doc) => Console.WriteLine("Document is already under review.");
+    
+    public void Approve(DocumentContext doc)
+    {
+        Console.WriteLine("Document approved and published.");
+        doc.SetState(new PublishedState());
+    }
+
+    public void Reject(DocumentContext doc)
+    {
+        Console.WriteLine("Document rejected. Returned to draft.");
+        doc.SetState(new DraftState());
+    }
+}
+
+public class PublishedState : IDocumentState
+{
+    public void Write(DocumentContext doc, string content) => Console.WriteLine("Cannot write to a published document.");
+    public void Review(DocumentContext doc) => Console.WriteLine("Cannot review a published document.");
+    public void Approve(DocumentContext doc) => Console.WriteLine("Document is already published.");
+    public void Reject(DocumentContext doc) => Console.WriteLine("Cannot reject a published document.");
+}
+
+// Context
+public class DocumentContext
+{
+    private IDocumentState _state;
+    public string Content { get; set; }
+
+    public DocumentContext()
+    {
+        _state = new DraftState();
+        Content = "";
+    }
+
+    public void SetState(IDocumentState state) => _state = state;
+
+    public void Write(string text) => _state.Write(this, text);
+    public void Review() => _state.Review(this);
+    public void Approve() => _state.Approve(this);
+    public void Reject() => _state.Reject(this);
+}
+
+// Client
+public class ContentManagementSystem
+{
+    public static void Main(string[] args)
+    {
+        var doc = new DocumentContext();
+        
+        doc.Write("Hello World!");
+        doc.Approve(); // Invalid
+        doc.Review();
+
+        doc.Write(" This is a change."); // Invalid
+        doc.Reject();
+        
+        doc.Write(" Adding more content.");
+        doc.Review();
+        doc.Approve();
+        
+        doc.Write(" Final change."); // Invalid
+    }
+}
+</code></pre>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="case-study" class="mt-12 space-y-6">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">✅ Case Study: E-commerce Order Lifecycle System</h3>
+                        <p>Let's break down the design of a robust order lifecycle system using the State pattern. This is a classic use case where an object (`Order`) moves through a well-defined set of states, and its capabilities change at each stage.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-lg">1. The Problem</h4>
+                                <p>An e-commerce system needs to manage orders. An order begins as 'Pending Payment', then can become 'Processing' after payment, 'Shipped' after fulfillment, and finally 'Delivered'. At any point before shipping, it can be 'Cancelled'. A naive implementation would use a status field and large switch statements, making the code brittle and hard to extend (e.g., adding a 'Returned' state would be painful).</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg">2. The State Pattern Solution</h4>
+                                <p>We define a `IOrderState` interface and a series of concrete state classes. The `Order` class (our context) will hold a reference to the current state object and delegate actions to it.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg">3. Components</h4>
+                                <ul class="list-disc list-outside space-y-2 mt-2 pl-5">
+                                    <li><strong>Context (`Order`):</strong> The main class that clients interact with. It contains the order details (ID, items, etc.) and a private field `_state` of type `IOrderState`. It exposes methods like `Pay()`, `Ship()`, `Cancel()`, which internally call `_state.Pay(this)`, `_state.Ship(this)`, etc.</li>
+                                    <li><strong>State Interface (`IOrderState`):</strong> Defines the common methods that all concrete states must implement, such as `Pay()`, `Ship()`, `Deliver()`, `Cancel()`.</li>
+                                    <li><strong>Concrete States:</strong>
+                                        <ul class="list-['–'] list-outside space-y-1 mt-1 pl-5">
+                                            <li>`PendingPaymentState`: Implements `Pay()` to transition to `ProcessingState` and `Cancel()` to transition to `CancelledState`. Other methods throw exceptions.</li>
+                                            <li>`ProcessingState`: Implements `Ship()` to transition to `ShippedState` and `Cancel()` to transition to `CancelledState`.</li>
+                                            <li>`ShippedState`: Implements `Deliver()` to transition to `DeliveredState`.</li>
+                                            <li>`DeliveredState`: The final successful state. All actions are invalid.</li>
+                                            <li>`CancelledState`: A final terminal state. All actions are invalid.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                             <div>
+                                <h4 class="font-semibold text-lg">4. Benefits of this Design</h4>
+                                 <ul class="list-disc list-outside space-y-2 mt-2 pl-5">
+                                     <li><strong>Open/Closed Principle:</strong> To add a new state (e.g., `ReturnedState`), we just add a new class. We don't need to modify the existing, tested state classes or the `Order` class.</li>
+                                     <li><strong>Single Responsibility Principle:</strong> Each state class has one job: to define the behavior for that specific state. The `Order` class's job is just to manage the current state, not to know the details of the transition logic.</li>
+                                     <li><strong>Cleaner Code:</strong> The `Order` class is free of complex conditional logic. Its methods are simple, one-line delegations to the state object. This drastically improves readability and maintainability.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <section id="quiz" class="mt-12">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">🧠 Knowledge Check Quiz</h3>
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 mt-6">
+                            <div id="quiz-container">
+                                <!-- Quiz content will be injected here by JS -->
+                            </div>
+                            <div id="quiz-result" class="hidden text-center">
+                                <h4 class="text-xl font-bold font-lexend text-slate-800">Quiz Complete!</h4>
+                                <p class="text-lg mt-2">Your score: <span id="quiz-score" class="font-bold"></span></p>
+                                <button id="quiz-restart-btn" class="mt-4 bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors">Try Again</button>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="self-assessment" class="mt-12">
+                         <h3 class="text-2xl font-bold font-lexend text-slate-800 border-b-2 border-teal-500 pb-2">🏆 Self-Assessment Challenge</h3>
+                         <div class="mt-6 p-6 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                            <h4 class="font-bold text-lg text-amber-800">Your Challenge: Vending Machine</h4>
+                            <p class="mt-2 text-amber-700">Model a vending machine using the State pattern. The machine has the following states:</p>
+                             <ul class="list-disc list-outside space-y-1 mt-2 pl-5 text-amber-700">
+                                <li><strong>NoCoinState:</strong> The initial state. The only valid action is `InsertCoin()`.</li>
+                                <li><strong>HasCoinState:</strong> Occurs after a coin is inserted. Valid actions are `PressButton()` to dispense an item or `EjectCoin()` to return to `NoCoinState`.</li>
+                                <li><strong>SoldState:</strong> After a button is pressed. It should dispense the item and automatically transition back to `NoCoinState`.</li>
+                                 <li><strong>EmptyState:</strong> If there are no items left, it should stay in this state, rejecting coins and button presses.</li>
+                            </ul>
+                            <p class="mt-2 text-amber-700">Create the context (`VendingMachine`), the state interface, and the concrete state classes. The `VendingMachine` should have methods like `InsertCoin()`, `EjectCoin()`, and `PressButton()`, and it should track the number of items available.</p>
+                         </div>
+                         <div class="mt-4">
+                            <button id="toggle-solution-btn" class="font-semibold text-teal-600 hover:text-teal-700">Show Solution ▼</button>
+                            <div id="solution-content" class="hidden mt-4">
+                                <div class="code-block">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="p-4 overflow-x-auto"><code class="language-csharp">using System;
+
+// State Interface
+public interface IVendingMachineState
+{
+    void InsertCoin(VendingMachine machine);
+    void EjectCoin(VendingMachine machine);
+    void PressButton(VendingMachine machine);
+    void Dispense(VendingMachine machine);
+}
+
+// Context
+public class VendingMachine
+{
+    public IVendingMachineState NoCoinState { get; }
+    public IVendingMachineState HasCoinState { get; }
+    public IVendingMachineState SoldState { get; }
+    public IVendingMachineState EmptyState { get; }
+
+    private IVendingMachineState _currentState;
+    public int ItemCount { get; set; }
+
+    public VendingMachine(int itemCount)
+    {
+        NoCoinState = new NoCoinState(this);
+        HasCoinState = new HasCoinState(this);
+        SoldState = new SoldState(this);
+        EmptyState = new EmptyState(this);
+
+        ItemCount = itemCount;
+        _currentState = ItemCount > 0 ? NoCoinState : EmptyState;
+    }
+
+    public void SetState(IVendingMachineState state) => _currentState = state;
+    public void InsertCoin() => _currentState.InsertCoin(this);
+    public void EjectCoin() => _currentState.EjectCoin(this);
+    public void PressButton() 
+    {
+        _currentState.PressButton(this);
+        _currentState.Dispense(this);
+    }
+    public void ReleaseItem()
+    {
+        Console.WriteLine("Dispensing item...");
+        if (ItemCount > 0)
+        {
+            ItemCount--;
+        }
+    }
+}
+
+// Concrete States
+public class NoCoinState : IVendingMachineState
+{
+    private readonly VendingMachine _machine;
+    public NoCoinState(VendingMachine machine) => _machine = machine;
+    public void InsertCoin(VendingMachine m)
+    {
+        Console.WriteLine("Coin inserted.");
+        m.SetState(m.HasCoinState);
+    }
+    public void EjectCoin(VendingMachine m) => Console.WriteLine("No coin to eject.");
+    public void PressButton(VendingMachine m) => Console.WriteLine("Please insert a coin first.");
+    public void Dispense(VendingMachine m) => Console.WriteLine("Please insert a coin first.");
+}
+
+public class HasCoinState : IVendingMachineState
+{
+    private readonly VendingMachine _machine;
+    public HasCoinState(VendingMachine machine) => _machine = machine;
+    public void InsertCoin(VendingMachine m) => Console.WriteLine("Coin already inserted.");
+    public void EjectCoin(VendingMachine m)
+    {
+        Console.WriteLine("Coin ejected.");
+        m.SetState(m.NoCoinState);
+    }
+    public void PressButton(VendingMachine m)
+    {
+        Console.WriteLine("Button pressed...");
+        m.SetState(m.SoldState);
+    }
+    public void Dispense(VendingMachine m) => Console.WriteLine("No item dispensed yet.");
+}
+
+public class SoldState : IVendingMachineState
+{
+    private readonly VendingMachine _machine;
+    public SoldState(VendingMachine machine) => _machine = machine;
+    public void InsertCoin(VendingMachine m) => Console.WriteLine("Please wait, dispensing item.");
+    public void EjectCoin(VendingMachine m) => Console.WriteLine("Cannot eject coin while dispensing.");
+    public void PressButton(VendingMachine m) => Console.WriteLine("Please wait, dispensing item.");
+    public void Dispense(VendingMachine m)
+    {
+        m.ReleaseItem();
+        if (m.ItemCount > 0)
+        {
+            m.SetState(m.NoCoinState);
+        }
+        else
+        {
+            Console.WriteLine("Oops, out of items!");
+            m.SetState(m.EmptyState);
+        }
+    }
+}
+
+public class EmptyState : IVendingMachineState
+{
+    private readonly VendingMachine _machine;
+    public EmptyState(VendingMachine machine) => _machine = machine;
+    public void InsertCoin(VendingMachine m) => Console.WriteLine("Machine is empty. Cannot insert coin.");
+    public void EjectCoin(VendingMachine m) => Console.WriteLine("No coin to eject.");
+    public void PressButton(VendingMachine m) => Console.WriteLine("Machine is empty.");
+    public void Dispense(VendingMachine m) => Console.WriteLine("Machine is empty.");
+}
+
+// Client
+public class VendingSimulator
+{
+    public static void Main(string[] args)
+    {
+        var machine = new VendingMachine(2); // Start with 2 items
+
+        machine.PressButton(); // Fail
+        machine.InsertCoin();
+        machine.PressButton();
+        
+        machine.InsertCoin();
+        machine.EjectCoin();
+        
+        machine.InsertCoin();
+        machine.PressButton();
+
+        // Machine is now empty
+        machine.InsertCoin(); // Fail
+    }
+}
+</code></pre>
+                                </div>
+                            </div>
+                         </div>
+                    </section>
+                </div>
+            </div>
+
+            <aside class="lg:w-1/4 mt-12 lg:mt-0">
+                <div class="sticky top-8">
+                    <h3 class="font-lexend font-bold text-lg text-slate-800">On This Page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2">
+                            <li><a href="#theory" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Theory Deep Dive</a></li>
+                            <li><a href="#uml" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">UML Diagram</a></li>
+                            <li><a href="#interactive-viz" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Interactive Demo</a></li>
+                            <li><a href="#coding-practice" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Coding Practice</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="toc-link block text-slate-500 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // --- Copy to Clipboard functionality ---
+        const allCopyButtons = document.querySelectorAll('.copy-btn');
+        allCopyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const codeBlock = button.nextElementSibling;
+                const code = codeBlock.querySelector('code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    button.innerText = 'Copied!';
+                    setTimeout(() => {
+                        button.innerText = 'Copy';
+                    }, 2000);
+                });
+            });
+        });
+
+        // --- Sticky Table of Contents active state ---
+        const tocLinks = document.querySelectorAll('.toc-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        const observerOptions = {
+            rootMargin: '-50px 0px -50% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    tocLink.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // --- Interactive State Chart ---
+        const ctx = document.getElementById('orderStateChart').getContext('2d');
+        let orderStateChart;
+        const stateText = document.getElementById('currentStateText');
+        const stateDesc = document.getElementById('stateDescription');
+        const btnProcess = document.getElementById('btnProcess');
+        const btnShip = document.getElementById('btnShip');
+        const btnCancel = document.getElementById('btnCancel');
+        const btnReset = document.getElementById('btnReset');
+        
+        const states = {
+            'new': {
+                label: 'New',
+                desc: 'The order has been created. You can process or cancel it.',
+                actions: { process: true, ship: false, cancel: true },
+                chartData: [1, 0, 0, 0]
+            },
+            'processing': {
+                label: 'Processing',
+                desc: 'The order is being prepared for shipment. You can ship it or cancel.',
+                actions: { process: false, ship: true, cancel: true },
+                chartData: [0, 1, 0, 0]
+            },
+            'shipped': {
+                label: 'Shipped',
+                desc: 'The order has been shipped and is on its way. No further actions possible.',
+                actions: { process: false, ship: false, cancel: false },
+                chartData: [0, 0, 1, 0]
+            },
+            'cancelled': {
+                label: 'Cancelled',
+                desc: 'The order has been cancelled. No further actions possible.',
+                actions: { process: false, ship: false, cancel: false },
+                chartData: [0, 0, 0, 1]
+            }
+        };
+
+        let currentState = 'new';
+        
+        function updateUI() {
+            const state = states[currentState];
+            stateText.textContent = state.label;
+            stateDesc.textContent = state.desc;
+
+            btnProcess.disabled = !state.actions.process;
+            btnShip.disabled = !state.actions.ship;
+            btnCancel.disabled = !state.actions.cancel;
+
+            orderStateChart.data.datasets[0].data = state.chartData;
+            orderStateChart.update();
+        }
+
+        function initializeChart() {
+             orderStateChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New', 'Processing', 'Shipped', 'Cancelled'],
+                    datasets: [{
+                        label: 'Order State',
+                        data: states.new.chartData,
+                        backgroundColor: [
+                            '#3B82F6', // blue-500
+                            '#F97316', // orange-500
+                            '#16A34A', // green-600
+                            '#EF4444', // red-500
+                        ],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            updateUI();
+        }
+        
+        btnProcess.addEventListener('click', () => { if (currentState === 'new') { currentState = 'processing'; updateUI(); }});
+        btnShip.addEventListener('click', () => { if (currentState === 'processing') { currentState = 'shipped'; updateUI(); }});
+        btnCancel.addEventListener('click', () => { if (currentState === 'new' || currentState === 'processing') { currentState = 'cancelled'; updateUI(); }});
+        btnReset.addEventListener('click', () => { currentState = 'new'; updateUI(); });
+        
+        initializeChart();
+
+        // --- Quiz Functionality ---
+        const quizData = [
+            {
+                question: "What is the primary purpose of the State pattern?",
+                options: ["To create objects from a template of an existing object.", "To allow an object to alter its behavior when its internal state changes.", "To ensure a class only has one instance.", "To provide a simplified interface to a complex subsystem."],
+                answer: "To allow an object to alter its behavior when its internal state changes."
+            },
+            {
+                question: "In the State pattern, the main object that holds a reference to a state object is called the:",
+                options: ["Context", "Handler", "State", "Client"],
+                answer: "Context"
+            },
+            {
+                question: "The State pattern helps to avoid what common coding anti-pattern?",
+                options: ["Magic numbers", "Large, complex switch-case or if-else statements", "Global variables", "Deeply nested loops"],
+                answer: "Large, complex switch-case or if-else statements"
+            },
+            {
+                question: "Which SOLID principle is most directly supported by using the State pattern?",
+                options: ["Liskov Substitution Principle", "Interface Segregation Principle", "Dependency Inversion Principle", "Open/Closed Principle"],
+                answer: "Open/Closed Principle"
+            },
+            {
+                question: "In a typical State pattern implementation, where is the logic for a specific state encapsulated?",
+                options: ["In a private method within the Context class.", "In a separate utility class.", "In a Concrete State class that implements a State interface.", "In the client code that uses the Context."],
+                answer: "In a Concrete State class that implements a State interface."
+            }
+        ];
+        
+        const quizContainer = document.getElementById('quiz-container');
+        const quizResultContainer = document.getElementById('quiz-result');
+        const quizScoreEl = document.getElementById('quiz-score');
+        const restartBtn = document.getElementById('quiz-restart-btn');
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showResults();
+                return;
+            }
+            const currentQuestion = quizData[currentQuestionIndex];
+            quizContainer.innerHTML = `
+                <div class="mb-4">
+                    <p class="text-sm font-semibold text-slate-500">Question ${currentQuestionIndex + 1} of ${quizData.length}</p>
+                    <p class="text-lg font-semibold text-slate-800 mt-1">${currentQuestion.question}</p>
+                </div>
+                <div class="space-y-3" id="quiz-options">
+                    ${currentQuestion.options.map(option => `
+                        <button class="quiz-option block w-full text-left p-3 bg-white border-2 border-slate-300 rounded-lg hover:border-teal-500 hover:bg-teal-50 transition-colors">
+                            ${option}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="feedback" class="mt-4"></div>
+            `;
+            
+            document.querySelectorAll('.quiz-option').forEach(button => {
+                button.addEventListener('click', handleAnswer);
+            });
+        }
+
+        function handleAnswer(e) {
+            const selectedOption = e.target;
+            const selectedAnswer = selectedOption.innerText;
+            const correctAnswer = quizData[currentQuestionIndex].answer;
+            
+            const allOptions = document.querySelectorAll('.quiz-option');
+            allOptions.forEach(btn => btn.disabled = true);
+            
+            if (selectedAnswer === correctAnswer) {
+                score++;
+                selectedOption.classList.add('correct');
+                document.getElementById('feedback').innerHTML = `
+                    <p class="font-semibold text-green-700">Correct!</p>
+                `;
+            } else {
+                selectedOption.classList.add('incorrect');
+                allOptions.forEach(btn => {
+                    if (btn.innerText === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                document.getElementById('feedback').innerHTML = `
+                    <p class="font-semibold text-red-700">Incorrect.</p>
+                    <p class="text-sm text-slate-600 mt-1">The correct answer is: <strong>${correctAnswer}</strong></p>
+                `;
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 2500);
+        }
+
+        function showResults() {
+            quizContainer.innerHTML = '';
+            quizScoreEl.textContent = `${score} / ${quizData.length}`;
+            quizResultContainer.classList.remove('hidden');
+        }
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            quizResultContainer.classList.add('hidden');
+            loadQuestion();
+        });
+
+        loadQuestion();
+
+        // --- Toggle Solution ---
+        const toggleBtn = document.getElementById('toggle-solution-btn');
+        const solutionContent = document.getElementById('solution-content');
+        toggleBtn.addEventListener('click', () => {
+            const isHidden = solutionContent.classList.toggle('hidden');
+            toggleBtn.textContent = isHidden ? 'Show Solution ▼' : 'Hide Solution ▲';
+        });
+
+    });
+    </script>
+</body>
+</html>

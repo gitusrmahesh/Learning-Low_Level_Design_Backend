@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 31: Builder Pattern - LLD Bootcamp</title>
+    <!-- Chosen Palette: Warm Focus -->
+    <!-- Application Structure Plan: A two-column layout with main content on the left and a sticky Table of Contents on the right for intuitive navigation. The content flows logically from foundational theory to practical application, using interactive code builders, tabbed exercises, and an expanded quiz to create an active learning environment. This structure allows users to easily reference the document's sections while engaging with the material. -->
+    <!-- Visualization & Content Choices: Problem (Telescoping Constructor) -> Goal: Visualize code complexity -> Viz: Bar Chart (Chart.js) -> Interaction: Static, shows exponential growth -> Justification: Clearly illustrates the unscalability of the anti-pattern. UML Diagram -> Goal: Clarify roles & relationships -> Viz: HTML/CSS Diagram -> Interaction: Hover to highlight component roles -> Justification: Provides a clear, interactive visual map without external libraries or SVG. Coding Practice -> Goal: Apply knowledge -> Presentation: Tabbed interface with collapsible solutions -> Interaction: Click to switch problems and reveal commented solutions -> Justification: Organizes multiple examples cleanly and encourages self-paced learning. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #4f46e5;
+            font-weight: 600;
+            border-left-color: #4f46e5;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .copy-btn:hover {
+            background-color: #cbd5e1;
+        }
+        .copy-btn.copied {
+            background-color: #16a34a;
+            color: white;
+        }
+        .solution-toggle {
+            transition: all 0.3s ease-in-out;
+        }
+        .solution-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.7s ease-in-out;
+        }
+        .solution-content.show {
+            max-height: 2500px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <main class="lg:col-span-9 space-y-16">
+                <article id="introduction" class="scroll-mt-24">
+                    <div class="mb-4">
+                        <p class="text-indigo-600 font-semibold">Day 31: Creational Design Patterns</p>
+                        <h2 class="text-4xl font-lexend font-extrabold text-slate-900 mt-2">The Builder Pattern</h2>
+                    </div>
+                    <p class="text-lg text-slate-600">The Builder pattern is a creational design pattern that lets you construct complex objects step by step. It separates the construction of an object from its actual representation, allowing the same construction process to create different variations of the object. Think of it like a high-end car configurator: you start with a base model and then add a specific engine, choose the interior trim, select a paint color, and add optional packages one by one. You aren't overwhelmed with a giant form of every possible option at once; you make decisions sequentially to build your perfect car.</p>
+                    <div class="mt-6 p-6 bg-indigo-50 border border-indigo-200 rounded-lg">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-indigo-900">Core Idea</h3>
+                                <p class="mt-1 text-indigo-800">Decouple the construction of a complex object from its representation so that the same construction process can create different representations. This provides granular control over the object creation process and enhances readability.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="theory" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">Core Theory</h2>
+                    
+                    <div class="mt-8 space-y-12">
+                        <div>
+                            <h3 class="text-2xl font-lexend font-semibold text-slate-800">The "Telescoping Constructor" Problem</h3>
+                            <p class="mt-2 text-slate-600">A common anti-pattern arises when an object can be created with many optional parameters. To accommodate all possibilities, developers create a "telescope" of constructors: one with only required parameters, another with one optional parameter, a third with two, and so on. This quickly becomes unmanageable.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// Anti-pattern: Telescoping Constructors
+public class User
+{
+    // A nightmare to read and use
+    public User(string email) { /* ... */ }
+    public User(string email, string username) { /* ... */ }
+    public User(string email, string username, string firstName) { /* ... */ }
+    public User(string email, string username, string firstName, string lastName) { /* ... */ }
+    public User(string email, string username, string firstName, string lastName, int age) { /* ... */ }
+    // How do you set just email and age? You can't without passing nulls.
+    // var user = new User("test@test.com", null, null, null, 30); // Ugly and error-prone
+}
+                                </code></pre>
+                            </div>
+                            <div class="mt-4 p-6 bg-rose-50 border border-rose-200 rounded-lg">
+                                <h4 class="font-bold text-rose-800">Why it's a critical problem:</h4>
+                                <ul class="list-disc list-inside mt-2 text-rose-700 space-y-1">
+                                    <li><strong>Poor Readability:</strong> It's difficult to know which constructor to use, and `null` parameters obscure the intent.</li>
+                                    <li><strong>High Risk of Errors:</strong> Transposing two parameters of the same type (e.g., `firstName` and `lastName`) is a common bug that the compiler won't catch.</li>
+                                    <li><strong>Scalability Issues:</strong> Adding a new optional parameter forces you to add a whole new set of constructors, leading to exponential code bloat.</li>
+                                </ul>
+                            </div>
+                            <div class="mt-6">
+                                <h4 class="text-lg font-semibold text-slate-800 text-center mb-2">Visualizing Constructor Overload Hell</h4>
+                                <div class="chart-container bg-white p-4 rounded-lg shadow-sm border border-slate-200 h-80 max-h-[400px] w-full max-w-2xl mx-auto">
+                                    <canvas id="telescopingChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-lexend font-semibold text-slate-800">Solution: The Builder Pattern</h3>
+                            <p class="mt-2 text-slate-600">The Builder pattern elegantly solves this by delegating the object's construction to a dedicated `Builder` class. This builder exposes self-descriptive methods for setting each parameter (e.g., `WithName()`, `WithAge()`) and a final `Build()` method that assembles and returns the fully configured object. This makes the client code clean, readable, and less prone to errors.</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-2xl font-lexend font-semibold text-slate-800">Fluent APIs and Method Chaining</h3>
+                            <p class="mt-2 text-slate-600">Builders are almost always implemented with a "fluent interface". This is a design pattern where each configuration method returns the builder instance itself (`return this;`). This simple technique enables "method chaining," where multiple configuration calls can be strung together into a single, highly readable statement.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// A fluent API makes object construction self-documenting.
+var request = new HttpRequestBuilder() // Start building
+    .WithUrl("https://api.example.com/data")  // Set the URL
+    .WithMethod("POST")                      // Set the method
+    .WithHeader("Content-Type", "application/json") // Add a header
+    .WithBody("{ \"key\": \"value\" }")      // Add a body
+    .Build();                                // Get the final object
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="uml" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">UML Diagram & Components</h2>
+                    <p class="mt-4 text-slate-600">The Builder pattern has four key participants. The Director is optional but useful for orchestrating complex constructions. Hover over each component below to understand its specific role and responsibility in the process.</p>
+                    <div class="mt-6 p-6 bg-white border border-slate-200 rounded-lg flex flex-col items-center justify-center space-y-4 font-sans text-sm">
+                        <div class="uml-component p-4 border-2 border-slate-400 rounded-lg bg-slate-50 text-center w-64 shadow-md" data-info="The Director class is responsible for executing the building steps in a particular sequence. It's useful for creating common configurations of a product. The client can either use a director or control the builder directly.">
+                            <div class="font-bold text-slate-800">Director (Optional)</div>
+                            <div class="text-xs text-slate-500">Construct(builder)</div>
+                        </div>
+                        <div class="text-slate-500 text-2xl h-8">↓</div>
+                        <div class="flex space-x-8 items-start">
+                            <div class="uml-component p-4 border-2 border-blue-500 rounded-lg bg-blue-50 text-center w-64 shadow-md" data-info="The Builder interface defines all possible steps for configuring the product. All concrete builders will implement this interface, providing a common contract for the Director and Client.">
+                                <div class="font-bold text-blue-800">&lt;&lt;interface&gt;&gt;<br>Builder</div>
+                                <div class="text-left text-xs text-blue-700 mt-2 pl-2">
+                                    + BuildPartA()<br>
+                                    + BuildPartB()<br>
+                                    + GetResult()
+                                </div>
+                            </div>
+                            <div class="text-slate-500 text-2xl mt-8">→</div>
+                            <div class="uml-component p-4 border-2 border-green-500 rounded-lg bg-green-50 text-center w-64 shadow-md" data-info="A Concrete Builder provides specific implementations for the steps defined in the Builder interface. There can be multiple concrete builders, each capable of producing a different representation of the product.">
+                                <div class="font-bold text-green-800">ConcreteBuilder</div>
+                                <div class="text-left text-xs text-green-700 mt-2 pl-2">
+                                    + BuildPartA()<br>
+                                    + BuildPartB()<br>
+                                    + GetResult() : Product
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-slate-500 text-2xl h-8 transform -rotate-90 relative left-40 bottom-24">↑</div>
+                        <div class="uml-component p-4 border-2 border-purple-500 rounded-lg bg-purple-50 text-center w-64 shadow-md relative left-40 bottom-24" data-info="The Product is the final, complex object being built. The result of the builder is an instance of the Product class. It's important that the product's constructor is often made private or internal to force its creation exclusively through the builder.">
+                            <div class="font-bold text-purple-800">Product</div>
+                            <div class="text-xs text-purple-700 mt-2">The complex object.</div>
+                        </div>
+                        <div id="uml-info-box" class="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg text-center text-indigo-800 min-h-[60px] w-full max-w-2xl">
+                            Hover over a UML component to see its description.
+                        </div>
+                    </div>
+                </article>
+                
+                <article id="interactive-example" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">Interactive Example: HTTP Request Builder</h2>
+                    <p class="mt-4 text-slate-600">Use the form below to construct an HTTP request. As you add details, the code on the right will update in real-time, showing how the fluent Builder API creates a clean and readable construction process.</p>
+                    <div class="mt-6 grid md:grid-cols-2 gap-8 p-6 bg-white border border-slate-200 rounded-lg">
+                        <div class="space-y-4">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">Request Configuration</h3>
+                            <div>
+                                <label for="req-url" class="block text-sm font-medium text-slate-700">URL</label>
+                                <input type="text" id="req-url" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="https://api.example.com/users">
+                            </div>
+                            <div>
+                                <label for="req-method" class="block text-sm font-medium text-slate-700">Method</label>
+                                <select id="req-method" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    <option>GET</option>
+                                    <option>POST</option>
+                                    <option>PUT</option>
+                                    <option>DELETE</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="req-header" class="block text-sm font-medium text-slate-700">Header (e.g., Content-Type: application/json)</label>
+                                <input type="text" id="req-header" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Authorization: Bearer ...">
+                            </div>
+                             <div>
+                                <label for="req-body" class="block text-sm font-medium text-slate-700">Body</label>
+                                <textarea id="req-body" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="{ 'name': 'John Doe' }"></textarea>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 rounded-lg p-4 flex flex-col">
+                            <h3 class="text-lg font-lexend font-semibold text-slate-200">Generated C# Code</h3>
+                            <div class="code-block flex-grow mt-2">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="h-full bg-slate-800 text-white rounded-lg text-sm overflow-x-auto"><code id="builder-output" class="language-csharp">
+var request = new HttpRequestBuilder()
+    .Build();
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="coding-practice" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">Coding Practice</h2>
+                    <p class="mt-4 text-slate-600">Apply what you've learned with these hands-on exercises. Implement the Builder pattern for each problem, focusing on creating a clean, fluent API. Click "View Solution" to see a fully commented implementation.</p>
+                    <div class="mt-6">
+                        <div class="border-b border-slate-200">
+                            <nav id="practice-tabs" class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button class="practice-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-indigo-600 border-indigo-500" data-target="pizza-builder">Pizza Builder [Easy]</button>
+                                <button class="practice-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300" data-target="student-builder">Student Builder [Easy]</button>
+                                <button class="practice-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300" data-target="report-builder">Report Builder [Hard]</button>
+                            </nav>
+                        </div>
+                        <div class="mt-6">
+                            <div id="pizza-builder" class="practice-content">
+                                <h3 class="text-xl font-lexend font-semibold text-slate-800">Problem: Pizza Builder</h3>
+                                <p class="mt-2 text-slate-600">Create a `Pizza` class and a `PizzaBuilder`. A pizza can have a size (Small, Medium, Large), a crust (Thin, Thick), and various toppings (Cheese, Pepperoni, Mushrooms, Onions). The builder should allow for a fluent way to construct a custom pizza.</p>
+                                <div class="mt-4">
+                                    <button class="solution-toggle font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                                        View Solution 
+                                        <svg class="ml-1 h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div class="solution-content mt-4">
+                                        <div class="code-block">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// The Product: Represents the complex object being built.
+public class Pizza
+{
+    // Properties are often read-only to ensure the object is immutable after creation.
+    public string Size { get; }
+    public string Crust { get; }
+    public List&lt;string&gt; Toppings { get; }
+
+    // The constructor is internal to force creation via the builder.
+    internal Pizza(string size, string crust, List&lt;string&gt; toppings)
+    {
+        Size = size;
+        Crust = crust;
+        Toppings = toppings;
+    }
+    
+    public void Display()
+    {
+        Console.WriteLine($"A {Size}, {Crust} crust pizza with:");
+        Console.WriteLine("- " + string.Join("\n- ", Toppings));
+    }
+}
+
+// The Builder: Provides a fluent API to construct the Pizza.
+public class PizzaBuilder
+{
+    // Fields to hold the state of the pizza being built, with sensible defaults.
+    private string _size = "Medium";
+    private string _crust = "Thin";
+    private List&lt;string&gt; _toppings = new List&lt;string&gt;();
+
+    // Each method modifies the state and returns 'this' to allow chaining.
+    public PizzaBuilder WithSize(string size)
+    {
+        _size = size;
+        return this;
+    }
+
+    public PizzaBuilder WithCrust(string crust)
+    {
+        _crust = crust;
+        return this;
+    }
+
+    public PizzaBuilder AddTopping(string topping)
+    {
+        _toppings.Add(topping);
+        return this;
+    }
+
+    // The final step that creates and returns the Product.
+    public Pizza Build()
+    {
+        // Add a default topping if none were specified.
+        if (_toppings.Count == 0) {
+            _toppings.Add("Cheese");
+        }
+        return new Pizza(_size, _crust, _toppings);
+    }
+}
+
+// Client Code: Shows how readable the construction process becomes.
+var myPizza = new PizzaBuilder()
+    .WithSize("Large")
+    .WithCrust("Thick")
+    .AddTopping("Pepperoni")
+    .AddTopping("Mushrooms")
+    .Build();
+
+myPizza.Display();
+                                            </code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="student-builder" class="practice-content hidden">
+                                <h3 class="text-xl font-lexend font-semibold text-slate-800">Problem: Student Builder</h3>
+                                <p class="mt-2 text-slate-600">Design a `Student` object builder. A `Student` must have an ID and a name. Optionally, they can have an email, an address, and a list of enrolled courses. Use the Builder pattern to simplify student creation.</p>
+                                <div class="mt-4">
+                                    <button class="solution-toggle font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                                        View Solution
+                                        <svg class="ml-1 h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div class="solution-content mt-4">
+                                        <div class="code-block">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// Product
+public class Student
+{
+    public int Id { get; }
+    public string Name { get; }
+    public string? Email { get; }
+    public string? Address { get; }
+    public List&lt;string&gt; EnrolledCourses { get; }
+
+    internal Student(int id, string name, string? email, string? address, List&lt;string&gt; courses)
+    {
+        Id = id;
+        Name = name;
+        Email = email;
+        Address = address;
+        EnrolledCourses = courses;
+    }
+}
+
+// Builder
+public class StudentBuilder
+{
+    // Required fields are passed into the constructor.
+    private readonly int _id;
+    private readonly string _name;
+
+    // Optional fields are configured via methods.
+    private string? _email;
+    private string? _address;
+    private List&lt;string&gt; _courses = new List&lt;string&gt;();
+
+    public StudentBuilder(int id, string name)
+    {
+        _id = id;
+        _name = name;
+    }
+
+    public StudentBuilder WithEmail(string email)
+    {
+        _email = email;
+        return this;
+    }
+
+    public StudentBuilder WithAddress(string address)
+    {
+        _address = address;
+        return this;
+    }
+
+    public StudentBuilder AddCourse(string course)
+    {
+        _courses.Add(course);
+        return this;
+    }
+
+    public Student Build()
+    {
+        return new Student(_id, _name, _email, _address, _courses);
+    }
+}
+
+// Client Code
+var student = new StudentBuilder(101, "Jane Doe")
+    .WithEmail("jane.doe@example.com")
+    .AddCourse("Design Patterns")
+    .AddCourse("Advanced C#")
+    .Build();
+                                            </code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="report-builder" class="practice-content hidden">
+                                <h3 class="text-xl font-lexend font-semibold text-slate-800">Problem: Report Builder [Hard]</h3>
+                                <p class="mt-2 text-slate-600">You need to generate complex reports in different formats (e.g., PlainText, HTML). A report has a title, a header, a content body, and a footer. Create a `Report` class and a builder interface `IReportBuilder`. Then, implement `HtmlReportBuilder` and `PlainTextReportBuilder`. Finally, create a `ReportDirector` class that takes a builder and constructs a standard "Sales Report", demonstrating the separation of construction algorithm from representation.</p>
+                                <div class="mt-4">
+                                    <button class="solution-toggle font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                                        View Solution
+                                        <svg class="ml-1 h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div class="solution-content mt-4">
+                                        <div class="code-block">
+                                            <button class="copy-btn">Copy</button>
+                                            <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// Product
+public class Report
+{
+    public List&lt;string&gt; Parts { get; } = new List&lt;string&gt;();
+    public string ReportType { get; set; }
+
+    public void Add(string part) => Parts.Add(part);
+    public void DisplayReport()
+    {
+        Console.WriteLine($"--- {ReportType} Report ---");
+        foreach(var part in Parts) {
+            Console.WriteLine(part);
+        }
+    }
+}
+
+// Builder Interface
+public interface IReportBuilder
+{
+    void BuildTitle();
+    void BuildHeader();
+    void BuildContent();
+    void BuildFooter();
+    Report GetReport();
+}
+
+// Concrete Builder 1: HTML
+public class HtmlReportBuilder : IReportBuilder
+{
+    private Report _report = new Report { ReportType = "HTML" };
+    public HtmlReportBuilder() { this.Reset(); }
+    public void Reset() { _report = new Report { ReportType = "HTML" }; }
+    public void BuildTitle() => _report.Add("&lt;h1&gt;Sales Report&lt;/h1&gt;");
+    public void BuildHeader() => _report.Add("&lt;header&gt;Monthly Sales Data&lt;/header&gt;");
+    public void BuildContent() => _report.Add("&lt;body&gt;Report content goes here...&lt;/body&gt;");
+    public void BuildFooter() => _report.Add("&lt;footer&gt;Copyright 2025&lt;/footer&gt;");
+    public Report GetReport() {
+        Report result = _report;
+        this.Reset();
+        return result;
+    }
+}
+
+// Concrete Builder 2: Plain Text
+public class PlainTextReportBuilder : IReportBuilder
+{
+    private Report _report = new Report { ReportType = "Plain Text" };
+    public PlainTextReportBuilder() { this.Reset(); }
+    public void Reset() { _report = new Report { ReportType = "Plain Text" }; }
+    public void BuildTitle() => _report.Add("SALES REPORT");
+    public void BuildHeader() => _report.Add("== Monthly Sales Data ==");
+    public void BuildContent() => _report.Add("Report content goes here...");
+    public void BuildFooter() => _report.Add("Copyright 2025");
+    public Report GetReport() {
+        Report result = _report;
+        this.Reset();
+        return result;
+    }
+}
+
+// Director: Encapsulates a common construction algorithm.
+public class ReportDirector
+{
+    public void ConstructSalesReport(IReportBuilder builder)
+    {
+        builder.BuildTitle();
+        builder.BuildHeader();
+        builder.BuildContent();
+        builder.BuildFooter();
+    }
+}
+
+// Client Code
+var director = new ReportDirector();
+
+var htmlBuilder = new HtmlReportBuilder();
+director.ConstructSalesReport(htmlBuilder);
+Report htmlReport = htmlBuilder.GetReport();
+htmlReport.DisplayReport();
+
+Console.WriteLine();
+
+var textBuilder = new PlainTextReportBuilder();
+director.ConstructSalesReport(textBuilder);
+Report textReport = textBuilder.GetReport();
+textReport.DisplayReport();
+                                            </code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="case-study" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">In-Depth Case Study: PDF Report Generator</h2>
+                    <p class="mt-4 text-slate-600">Consider a real-world enterprise system that needs to generate various complex PDF documents like invoices, financial reports, and marketing newsletters. Each document shares components (headers, footers, content blocks) but differs in layout, style, and content. Using the Builder pattern is ideal for managing this complexity.</p>
+                    <div class="mt-6 space-y-6">
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">1. The Problem</h3>
+                            <p class="mt-2 text-slate-600">A single `GeneratePdf` function with dozens of parameters for header text, footer style, page numbers, watermark images, table data, etc., would be a maintenance nightmare. A telescoping constructor is not an option.</p>
+                        </div>
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">2. The Product: `PdfDocument`</h3>
+                            <p class="mt-2 text-slate-600">This class encapsulates all the parts of the PDF. Its constructor would be `internal` to ensure it can only be created by a builder.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+public class PdfDocument
+{
+    public string Header { get; internal set; }
+    public string Footer { get; internal set; }
+    public string Watermark { get; internal set; }
+    public List&lt;object&gt; ContentBlocks { get; } = new List&lt;object&gt;();
+    // ... other properties like PageSize, Orientation, etc.
+}
+                                </code></pre>
+                            </div>
+                        </div>
+                         <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">3. The Builder: `PdfDocumentBuilder`</h3>
+                            <p class="mt-2 text-slate-600">This builder provides the fluent API for step-by-step document construction. The internal logic of each method might involve complex interactions with a PDF library like iTextSharp or PDFsharp, but the client is shielded from that complexity.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+public class PdfDocumentBuilder
+{
+    private readonly PdfDocument _document = new PdfDocument();
+
+    public PdfDocumentBuilder WithHeader(string text) { _document.Header = text; return this; }
+    public PdfDocumentBuilder WithFooter(string format) { _document.Footer = format; return this; }
+    public PdfDocumentBuilder WithWatermark(string imagePath) { _document.Watermark = imagePath; return this; }
+    public PdfDocumentBuilder AddTextParagraph(string text) { _document.ContentBlocks.Add(text); return this; }
+    public PdfDocumentBuilder AddTable(DataTable data) { _document.ContentBlocks.Add(data); return this; }
+    
+    public PdfDocument Build() => _document;
+}
+                                </code></pre>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">4. The Director (Optional but Powerful)</h3>
+                            <p class="mt-2 text-slate-600">To create standardized documents, we can use Directors. A director encapsulates the specific sequence of building steps for a common document type.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+public class InvoiceDirector
+{
+    public PdfDocument Construct(PdfDocumentBuilder builder, InvoiceData data)
+    {
+        return builder
+            .WithHeader($"Invoice #{data.InvoiceNumber}")
+            .AddTextParagraph($"Bill To: {data.CustomerName}")
+            .AddTable(data.LineItems)
+            .AddTextParagraph($"Total: {data.Total:C}")
+            .WithFooter("Thank you for your business!")
+            .Build();
+    }
+}
+// Client code is now incredibly simple:
+var director = new InvoiceDirector();
+var builder = new PdfDocumentBuilder();
+var invoicePdf = director.Construct(builder, myInvoiceData);
+                                </code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="real-world-scenarios" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">Real-Time Scenarios & Use Cases</h2>
+                    <p class="mt-4 text-slate-600">The Builder pattern is not just a theoretical concept; it's actively used in many popular frameworks and libraries you likely use every day. Its ability to simplify complex object creation makes it invaluable. Here are some prevalent real-world examples:</p>
+                    <div class="mt-6 space-y-6">
+
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">1. Database Query Builders (LINQ, Eloquent, SQLAlchemy)</h3>
+                            <p class="mt-2 text-slate-600">This is one of the most common uses of the Builder pattern. Frameworks for database interaction use it to construct complex SQL queries programmatically. Each method call (`Select`, `Where`, `OrderBy`, `Join`) adds a clause to the query. The final execution method (`ToList()`, `Get()`, `Execute()`) acts as the `Build()` method, assembling and running the final SQL statement.</p>
+                            <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// Using Entity Framework's LINQ in C#
+var query = context.Users                // Start with the base query object
+    .Where(u => u.IsActive)              // Add a WHERE clause
+    .OrderByDescending(u => u.CreatedAt) // Add an ORDER BY clause
+    .Select(u => new { u.Name, u.Email })// Add a SELECT clause
+    .Take(10);                           // Add a LIMIT clause
+
+// .ToList() is the "Build" step that executes the constructed query.
+var activeUsers = query.ToList(); 
+                                </code></pre>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">2. `StringBuilder` in Java and C#</h3>
+                            <p class="mt-2 text-slate-600">In many languages, strings are immutable. This means that concatenating strings in a loop (`myString += "more text";`) is highly inefficient because it creates a new string object in memory with every iteration. `StringBuilder` solves this by acting as a builder for the final string. The `Append()` or `AppendLine()` methods add parts to an internal buffer, and the final `ToString()` method is the `Build()` step that assembles the complete string just once.</p>
+                        </div>
+
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">3. Configuring UI Components (e.g., Android `AlertDialog.Builder`)</h3>
+                            <p class="mt-2 text-slate-600">Building UI elements like dialog boxes often involves many optional settings: a title, a message, icons, multiple buttons with different actions, and custom layouts. The Builder pattern is a perfect fit. In Android development, for example, `AlertDialog.Builder` provides a fluent API to configure a dialog before showing it.</p>
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-java">
+// Building an Android Alert Dialog
+new AlertDialog.Builder(context)
+    .setTitle("Confirm Deletion")
+    .setMessage("Are you sure you want to delete this item?")
+    .setIcon(R.drawable.ic_warning)
+    .setPositiveButton("Delete", (dialog, which) -> {
+        // Perform delete action
+    })
+    .setNegativeButton("Cancel", null)
+    .create() // The "Build" step
+    .show();  // Final action
+                                </code></pre>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-white border border-slate-200 rounded-lg">
+                            <h3 class="text-xl font-lexend font-semibold text-slate-800">4. Test Data Builders for Unit Testing</h3>
+                            <p class="mt-2 text-slate-600">In automated testing, you often need to create complex domain objects (like `Customer` or `Order`) for your tests. A test might only care about one specific property of the object (e.g., `Order.Status`). The Test Data Builder pattern uses a builder to construct these objects with sensible defaults, allowing the test to only specify the values that are relevant to that specific test case. This makes tests dramatically cleaner and more maintainable.</p>
+                        </div>
+
+                    </div>
+                </article>
+                
+                <article id="quiz" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">Knowledge Check</h2>
+                    <p class="mt-4 text-slate-600">Test your understanding of the Builder pattern with these questions.</p>
+                    <form id="quiz-form" class="mt-6 space-y-8">
+                        <div class="quiz-question">
+                            <p class="font-semibold text-slate-800">1. What is the primary problem that the Builder pattern aims to solve?</p>
+                            <div class="mt-4 space-y-2">
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q1" value="a" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">Reducing the number of subclasses.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q1" value="b" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">The "telescoping constructor" anti-pattern for complex objects.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q1" value="c" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">Ensuring that a class has only one instance.</span>
+                                </label>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+
+                        <div class="quiz-question">
+                            <p class="font-semibold text-slate-800">2. In the Builder pattern, which component is responsible for returning the final, complex object?</p>
+                             <div class="mt-4 space-y-2">
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q2" value="a" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">The Director</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q2" value="b" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">The Concrete Builder's `Build()` or `GetResult()` method.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q2" value="c" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">The Product's constructor.</span>
+                                </label>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+                        
+                        <div class="quiz-question">
+                            <p class="font-semibold text-slate-800">3. What is a "fluent API" in the context of the Builder pattern?</p>
+                             <div class="mt-4 space-y-2">
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q3" value="a" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">An API that can be used in multiple programming languages.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q3" value="b" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">An API where methods return the builder object itself to allow for method chaining.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q3" value="c" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">An API that has no side effects and always returns the same output for the same input.</span>
+                                </label>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+
+                         <div class="quiz-question">
+                            <p class="font-semibold text-slate-800">4. What is the main purpose of the (optional) Director class?</p>
+                             <div class="mt-4 space-y-2">
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q4" value="a" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">To create the Builder object itself.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q4" value="b" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">To enforce a specific construction sequence for creating common product variations.</span>
+                                </label>
+                                <label class="flex items-center p-3 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-slate-50">
+                                    <input type="radio" name="q4" value="c" class="h-4 w-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-3 text-sm text-slate-700">To validate the parameters passed to the builder.</span>
+                                </label>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+
+                        <button type="submit" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Submit Answers</button>
+                    </form>
+                </article>
+
+                <article id="challenge" class="scroll-mt-24">
+                    <h2 class="text-3xl font-lexend font-bold text-slate-900 border-b border-slate-200 pb-4">Self-Assessment Challenge</h2>
+                    <div class="mt-6 p-6 bg-yellow-50 border border-yellow-300 rounded-lg">
+                        <h3 class="text-xl font-lexend font-semibold text-yellow-900">Your Challenge: Computer System Builder</h3>
+                        <p class="mt-2 text-yellow-800">Design a system to configure a custom `Computer`. A computer has a required `CPU` and `RAM`. It can optionally have a `StorageDevice` (e.g., "1TB SSD"), a `GraphicsCard` (e.g., "NVIDIA RTX 4090"), and a `PowerSupply` (e.g., "750W Gold").</p>
+                        <p class="mt-2 text-yellow-800"><strong>Requirements:</strong></p>
+                        <ul class="list-disc list-inside mt-2 text-yellow-800 space-y-1">
+                            <li>Create a `Computer` product class.</li>
+                            <li>Create a `ComputerBuilder` class with a fluent API.</li>
+                            <li>The builder's constructor should take the required components (`CPU` and `RAM`).</li>
+                            <li>Provide methods to add the optional components.</li>
+                            <li>Implement the `Build()` method.</li>
+                        </ul>
+                         <div class="mt-6">
+                            <button class="solution-toggle font-semibold text-indigo-600 hover:text-indigo-800 flex items-center">
+                                Reveal Detailed Solution
+                                <svg class="ml-1 h-5 w-5 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div class="solution-content mt-4">
+                                <div class="code-block">
+                                    <button class="copy-btn">Copy</button>
+                                    <pre class="bg-slate-100 rounded-lg p-4 text-sm overflow-x-auto"><code class="language-csharp">
+// Product
+public class Computer
+{
+    public string CPU { get; }
+    public string RAM { get; }
+    public string? StorageDevice { get; }
+    public string? GraphicsCard { get; }
+    public string? PowerSupply { get; }
+
+    internal Computer(string cpu, string ram, string? storage, string? gpu, string? psu)
+    {
+        CPU = cpu;
+        RAM = ram;
+        StorageDevice = storage;
+        GraphicsCard = gpu;
+        PowerSupply = psu;
+    }
+
+    public void PrintSpec()
+    {
+        Console.WriteLine("--- Computer Specification ---");
+        Console.WriteLine($"CPU: {CPU}");
+        Console.WriteLine($"RAM: {RAM}");
+        if(StorageDevice != null) Console.WriteLine($"Storage: {StorageDevice}");
+        if(GraphicsCard != null) Console.WriteLine($"Graphics Card: {GraphicsCard}");
+        if(PowerSupply != null) Console.WriteLine($"Power Supply: {PowerSupply}");
+    }
+}
+
+// Builder
+public class ComputerBuilder
+{
+    // Required parameters are readonly fields set in the constructor.
+    private readonly string _cpu;
+    private readonly string _ram;
+    
+    // Optional parameters are mutable fields.
+    private string? _storage;
+    private string? _gpu;
+    private string? _psu;
+
+    public ComputerBuilder(string cpu, string ram)
+    {
+        _cpu = cpu;
+        _ram = ram;
+    }
+
+    public ComputerBuilder AddStorage(string storage)
+    {
+        _storage = storage;
+        return this;
+    }
+
+    public ComputerBuilder AddGraphicsCard(string gpu)
+    {
+        _gpu = gpu;
+        return this;
+    }
+
+    public ComputerBuilder AddPowerSupply(string psu)
+    {
+        _psu = psu;
+        return this;
+    }
+
+    public Computer Build()
+    {
+        return new Computer(_cpu, _ram, _storage, _gpu, _psu);
+    }
+}
+
+// Client Code
+// Build a high-end gaming PC
+var gamingPC = new ComputerBuilder("Intel i9-13900K", "32GB DDR5")
+    .AddStorage("2TB NVMe SSD")
+    .AddGraphicsCard("NVIDIA RTX 4090")
+    .AddPowerSupply("1000W Platinum")
+    .Build();
+
+gamingPC.PrintSpec();
+
+Console.WriteLine();
+
+// Build a standard office PC with no optional GPU or PSU specified
+var officePC = new ComputerBuilder("AMD Ryzen 5 5600G", "16GB DDR4")
+    .AddStorage("512GB SATA SSD")
+    .Build();
+
+officePC.PrintSpec();
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </main>
+
+            <aside class="hidden lg:block lg:col-span-3">
+                <nav id="toc" class="sticky top-8">
+                    <h3 class="font-lexend text-slate-800 font-bold text-lg">On this page</h3>
+                    <ul class="mt-4 space-y-2 text-sm">
+                        <li><a href="#introduction" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Introduction</a></li>
+                        <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Core Theory</a></li>
+                        <li><a href="#uml" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">UML Diagram</a></li>
+                        <li><a href="#interactive-example" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Interactive Example</a></li>
+                        <li><a href="#coding-practice" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Coding Practice</a></li>
+                        <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Case Study</a></li>
+                        <li><a href="#real-world-scenarios" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Real-Time Scenarios</a></li>
+                        <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Knowledge Check</a></li>
+                        <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 py-1 text-slate-600 hover:text-indigo-600 hover:border-indigo-500 transition-colors">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Copy to Clipboard
+    const allCodeBlocks = document.querySelectorAll('.code-block');
+    allCodeBlocks.forEach(block => {
+        const copyBtn = block.querySelector('.copy-btn');
+        const code = block.querySelector('code').innerText;
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(code).then(() => {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+    });
+
+    // TOC Scrollspy
+    const sections = document.querySelectorAll('main article');
+    const tocLinks = document.querySelectorAll('#toc .toc-link');
+
+    const observer = new IntersectionObserver(entries => {
+        let visibleSections = [];
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                visibleSections.push(entry.target.id);
+            }
+        });
+
+        if (visibleSections.length > 0) {
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === visibleSections[0]) {
+                    link.classList.add('active');
+                }
+            });
+        }
+    }, { rootMargin: '-20% 0px -70% 0px', threshold: 0.1 });
+
+    sections.forEach(section => observer.observe(section));
+
+    // Telescoping Constructor Chart
+    const ctx = document.getElementById('telescopingChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['1 Param', '2 Params', '3 Params', '4 Params', '5 Params', '6 Params'],
+            datasets: [{
+                label: 'Number of Constructors Needed',
+                data: [1, 2, 4, 8, 16, 32],
+                backgroundColor: 'rgba(190, 24, 93, 0.6)',
+                borderColor: 'rgba(190, 24, 93, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Exponential Growth of Constructors with Optional Parameters',
+                    font: { size: 14, family: 'Inter' },
+                    color: '#334155'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Constructor Count'
+                    }
+                },
+                x: {
+                   title: {
+                        display: true,
+                        text: 'Number of Optional Parameters'
+                    }
+                }
+            }
+        }
+    });
+
+    // UML Interaction
+    const umlComponents = document.querySelectorAll('.uml-component');
+    const umlInfoBox = document.getElementById('uml-info-box');
+    const defaultInfo = umlInfoBox.innerHTML;
+    umlComponents.forEach(comp => {
+        comp.addEventListener('mouseenter', () => {
+            umlInfoBox.textContent = comp.dataset.info;
+        });
+        comp.addEventListener('mouseleave', () => {
+            umlInfoBox.innerHTML = defaultInfo;
+        });
+    });
+
+    // Interactive HTTP Builder
+    const builderInputs = ['req-url', 'req-method', 'req-header', 'req-body'];
+    const builderOutput = document.getElementById('builder-output');
+    
+    function updateBuilderCode() {
+        const url = document.getElementById('req-url').value;
+        const method = document.getElementById('req-method').value;
+        const header = document.getElementById('req-header').value;
+        const body = document.getElementById('req-body').value;
+
+        let code = `var request = new HttpRequestBuilder()\n`;
+        if (url) code += `    .WithUrl("${url}")\n`;
+        if (method) code += `    .WithMethod("${method}")\n`;
+        if (header) {
+            const parts = header.split(':');
+            const key = parts[0]?.trim();
+            const value = parts[1]?.trim();
+            if (key && value) {
+                code += `    .WithHeader("${key}", "${value}")\n`;
+            }
+        }
+        if (body) {
+             const escapedBody = body.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+             code += `    .WithBody("${escapedBody}")\n`;
+        }
+        code += `    .Build();`;
+        builderOutput.textContent = code;
+    }
+
+    builderInputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', updateBuilderCode);
+    });
+
+    // Coding Practice Tabs
+    const practiceTabs = document.querySelectorAll('.practice-tab');
+    const practiceContents = document.querySelectorAll('.practice-content');
+
+    practiceTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            practiceTabs.forEach(t => {
+                t.classList.remove('text-indigo-600', 'border-indigo-500');
+                t.classList.add('text-slate-500', 'border-transparent', 'hover:text-slate-700', 'hover:border-slate-300');
+            });
+            tab.classList.add('text-indigo-600', 'border-indigo-500');
+            tab.classList.remove('text-slate-500', 'border-transparent', 'hover:text-slate-700', 'hover:border-slate-300');
+
+            practiceContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(tab.dataset.target).classList.remove('hidden');
+        });
+    });
+    
+    // Solution Toggles
+    const solutionToggles = document.querySelectorAll('.solution-toggle');
+    solutionToggles.forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const content = toggle.nextElementSibling;
+            const icon = toggle.querySelector('svg');
+            content.classList.toggle('show');
+            icon.classList.toggle('rotate-180');
+        });
+    });
+
+    // Quiz Logic
+    const quizForm = document.getElementById('quiz-form');
+    const correctAnswers = { q1: 'b', q2: 'b', q3: 'b', q4: 'b' };
+    const answerExplanations = {
+        q1: 'Correct! The Builder pattern directly addresses the complexity and unreadability of having numerous constructors for an object with many optional parameters.',
+        q2: 'Correct! The Concrete Builder implements the building steps and has a method (often called `Build()` or `GetResult()`) to return the final object.',
+        q3: 'Correct! Method chaining is the hallmark of a fluent API, making code resemble natural language and improving readability.',
+        q4: 'Correct! The Director encapsulates common, step-by-step construction processes, promoting reuse of assembly logic.'
+    };
+
+    quizForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const formData = new FormData(quizForm);
+        const userAnswers = Object.fromEntries(formData.entries());
+        
+        Object.keys(correctAnswers).forEach(key => {
+            const questionDiv = document.querySelector(`input[name="${key}"]`).closest('.quiz-question');
+            const feedbackDiv = questionDiv.querySelector('.quiz-feedback');
+            const allLabels = questionDiv.querySelectorAll('label');
+
+            allLabels.forEach(label => {
+                label.classList.remove('bg-green-100', 'border-green-400', 'bg-red-100', 'border-red-400');
+            });
+            
+            const selectedLabel = document.querySelector(`input[name="${key}"]:checked`)?.closest('label');
+            
+            feedbackDiv.classList.add('hidden');
+
+            if (selectedLabel) {
+                if (userAnswers[key] === correctAnswers[key]) {
+                    selectedLabel.classList.add('bg-green-100', 'border-green-400');
+                    feedbackDiv.textContent = answerExplanations[key];
+                    feedbackDiv.classList.remove('hidden');
+                    feedbackDiv.classList.add('text-green-700');
+                    feedbackDiv.classList.remove('text-red-700');
+                } else {
+                    selectedLabel.classList.add('bg-red-100', 'border-red-400');
+                    feedbackDiv.textContent = `Not quite. The correct answer was '${correctAnswers[key].toUpperCase()}'. ` + answerExplanations[key];
+                    feedbackDiv.classList.remove('hidden');
+                    feedbackDiv.classList.add('text-red-700');
+                    feedbackDiv.classList.remove('text-green-700');
+                }
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

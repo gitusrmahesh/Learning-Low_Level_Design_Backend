@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 25: Interface Segregation Principle (ISP)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Slate -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertical scrolling lesson. This linear structure is optimal for educational content, guiding the user through a logical progression from theory to practice. A sticky table of contents on the right provides constant, easy navigation, allowing users to jump between sections or track their progress. Interactivity is focused on reinforcing learning: code snippets can be copied, UML diagrams visually demonstrate the principle, and a quiz and challenge provide active self-assessment. This design prioritizes clarity, user flow, and knowledge retention over a more complex, non-linear dashboard structure. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: UML Diagram (fat -> segregated). Goal: Organize/Compare. Viz: HTML/CSS diagram. Interaction: Visual comparison of 'before' and 'after' states. Justification: A clear, static visual is most effective for demonstrating structural change, avoiding the complexity of an interactive chart for a simple concept. Method: HTML divs with Tailwind CSS for styling.
+        - Report Info: Coding examples. Goal: Inform/Illustrate. Viz: Syntax-highlighted code blocks. Interaction: Copy-to-clipboard button. Justification: Facilitates practical use and learning by allowing users to easily grab and experiment with the code. Method: Vanilla JS.
+        - Report Info: Knowledge Check. Goal: Assess Understanding. Viz: Multiple-choice quiz. Interaction: User selection with instant feedback (color change). Justification: Active recall is a powerful learning tool; immediate feedback reinforces correct concepts. Method: Vanilla JS.
+        - Report Info: Self-Assessment Challenge. Goal: Apply Knowledge. Viz: Problem statement with a hidden solution. Interaction: Button to toggle solution visibility. Justification: Encourages users to solve the problem independently before viewing the answer, promoting deeper learning. Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        h1, h2, h3 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0891b2;
+            font-weight: 600;
+            border-left-color: #0891b2;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #334155;
+        }
+        .quiz-option:hover {
+            background-color: #f1f5f9;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .uml-box {
+            border: 2px solid #64748b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f1f5f9;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .uml-interface {
+            font-style: italic;
+        }
+        .uml-arrow {
+            position: relative;
+            height: 60px;
+            width: 2px;
+            background-color: #64748b;
+            margin: 0 auto;
+        }
+        .uml-arrow::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 12px solid #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+            <div class="text-center mb-12">
+                <p class="text-sky-600 font-semibold">SOLID Principles (Days 22–28)</p>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight mt-2">Day 25: Interface Segregation Principle (ISP)</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+                <div class="lg:col-span-3">
+                    <div id="theory" class="space-y-8 scroll-mt-24">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Theory: Breaking Down the 'I' in SOLID</h3>
+                        <div class="p-6 bg-white rounded-lg shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-700">Definition</h4>
+                            <p class="mt-2 text-slate-600">The Interface Segregation Principle (ISP) states that <strong class="text-slate-800">“Clients should not be forced to depend on interfaces they don’t use.”</strong></p>
+                            <div class="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-lg">
+                                <p class="text-sky-800"><strong class="font-semibold">In Simple Terms:</strong> It's better to have many small, specialized interfaces than one large, general-purpose one. Clients (classes) should only need to know about the methods that are relevant to them.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-white rounded-lg shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-700">The Problem of "Fat" Interfaces</h4>
+                            <p class="mt-2 text-slate-600">A "fat" or "polluted" interface is an interface with too many methods, covering a wide range of functionalities. When a class implements a fat interface, it's forced to provide implementations for all its methods, even those it doesn't need. This leads to several problems:</p>
+                            <ul class="mt-4 space-y-3 list-disc list-inside text-slate-600">
+                                <li><strong class="text-slate-700">Unnecessary Implementation:</strong> Classes have to implement methods with empty bodies or by throwing exceptions like <code class="text-sm bg-slate-200 rounded p-1">NotImplementedException</code>, which is a code smell.</li>
+                                <li><strong class="text-slate-700">High Coupling:</strong> A change to one part of the interface (e.g., adding a new method) can force changes in all implementing classes, even those that don't use the new method.</li>
+                                <li><strong class="text-slate-700">Lower Cohesion:</strong> The interface bundles unrelated responsibilities, making the system harder to understand and maintain.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-6 bg-white rounded-lg shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-700">Real-World Analogy: The All-in-One Gadget</h4>
+                            <p class="mt-2 text-slate-600">Imagine buying an all-in-one gadget that's a printer, scanner, fax machine, and coffee maker. This is a "fat interface."</p>
+                            <p class="mt-2 text-slate-600">Now, what if you only need a printer? You're still stuck with the complexity and cost of the other features. If the coffee maker part breaks, you might have to send the whole unit for repair, leaving you without a printer.</p>
+                            <p class="mt-2 text-slate-600">ISP suggests it's better to have separate, dedicated devices (a printer, a scanner, etc.). You only buy what you need, and a problem with one doesn't affect the others. This is the essence of splitting large interfaces into smaller, role-specific ones.</p>
+                        </div>
+                    </div>
+
+                    <div id="uml" class="mt-16 scroll-mt-24">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ UML Diagram: From Fat to Segregated</h3>
+                        <p class="mt-4 text-slate-600">This visualization shows the refactoring process from a single, monolithic interface to smaller, more focused interfaces, following the Interface Segregation Principle.</p>
+                        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                            <div class="p-6 bg-white rounded-lg shadow-sm border border-red-200">
+                                <h4 class="text-xl font-semibold text-center text-red-700">Before ISP (Fat Interface)</h4>
+                                <div class="mt-6 flex flex-col items-center">
+                                    <div class="uml-box w-4/5">
+                                        <p class="font-semibold text-slate-700"><span class="uml-interface">&lt;&lt;interface&gt;&gt;</span><br>IMachine</p>
+                                        <hr class="my-2 border-slate-400">
+                                        <p>+ Print()</p>
+                                        <p>+ Scan()</p>
+                                        <p>+ Fax()</p>
+                                    </div>
+                                    <div class="uml-arrow"></div>
+                                    <div class="uml-box w-4/5 bg-red-50">
+                                        <p class="font-semibold text-slate-700">SimplePrinter</p>
+                                        <hr class="my-2 border-slate-400">
+                                        <p>+ Print()</p>
+                                        <p class="text-red-500">- Scan() <span class="italic text-xs">{throws exception}</span></p>
+                                        <p class="text-red-500">- Fax() <span class="italic text-xs">{throws exception}</span></p>
+                                    </div>
+                                    <p class="mt-4 text-sm text-red-600 text-center">Problem: <code class="text-xs">SimplePrinter</code> is forced to implement methods it cannot perform.</p>
+                                </div>
+                            </div>
+                            <div class="p-6 bg-white rounded-lg shadow-sm border border-green-200">
+                                <h4 class="text-xl font-semibold text-center text-green-700">After ISP (Segregated Interfaces)</h4>
+                                <div class="mt-6 flex flex-col items-center">
+                                    <div class="grid grid-cols-3 gap-2 w-full text-xs mb-4">
+                                        <div class="uml-box"><p class="font-semibold text-slate-700"><span class="uml-interface">&lt;&lt;I&gt;&gt;</span><br>IPrinter</p><hr class="my-1"><p>+ Print()</p></div>
+                                        <div class="uml-box"><p class="font-semibold text-slate-700"><span class="uml-interface">&lt;&lt;I&gt;&gt;</span><br>IScanner</p><hr class="my-1"><p>+ Scan()</p></div>
+                                        <div class="uml-box"><p class="font-semibold text-slate-700"><span class="uml-interface">&lt;&lt;I&gt;&gt;</span><br>IFaxer</p><hr class="my-1"><p>+ Fax()</p></div>
+                                    </div>
+                                    <div class="uml-arrow"></div>
+                                    <div class="uml-box w-4/5 bg-green-50">
+                                        <p class="font-semibold text-slate-700">SimplePrinter</p>
+                                        <hr class="my-2 border-slate-400">
+                                        <p>+ Print()</p>
+                                    </div>
+                                    <p class="mt-4 text-sm text-green-600 text-center">Solution: <code class="text-xs">SimplePrinter</code> now only implements the <code class="text-xs">IPrinter</code> interface, which is all it needs.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="coding" class="mt-16 scroll-mt-24">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Coding Practice</h3>
+                        <p class="mt-4 text-slate-600">Let's refactor code to adhere to ISP using C#. These examples demonstrate how to break down large interfaces for different levels of complexity.</p>
+                        
+                        <div class="mt-8">
+                            <h4 class="text-xl font-semibold text-slate-700">[Easy] The Multi-Function Machine</h4>
+                            <p class="mt-2 text-slate-600">We start with the "fat" <code class="text-sm bg-slate-200 rounded p-1">IMachine</code> interface and refactor it into smaller, role-specific interfaces.</p>
+                            
+                            <h5 class="mt-4 font-semibold text-slate-600">Before Refactoring (Problem)</h5>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+// A "fat" interface
+public interface IMachine
+{
+    void Print(string document);
+    void Scan(string document);
+    void Fax(string document);
+}
+
+public class SimplePrinter : IMachine
+{
+    public void Print(string document)
+    {
+        Console.WriteLine($"Printing {document}");
+    }
+
+    // Forced to implement methods it doesn't use
+    public void Scan(string document)
+    {
+        throw new NotImplementedException("This machine cannot scan.");
+    }
+
+    public void Fax(string document)
+    {
+        throw new NotImplementedException("This machine cannot fax.");
+    }
+}
+</code></pre>
+
+                            <h5 class="mt-6 font-semibold text-slate-600">After Refactoring (Solution)</h5>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+// Segregated interfaces
+public interface IPrinter
+{
+    void Print(string document);
+}
+
+public interface IScanner
+{
+    void Scan(string document);
+}
+
+public interface IFaxer
+{
+    void Fax(string document);
+}
+
+// A class that can do all three
+public class MultiFunctionPrinter : IPrinter, IScanner, IFaxer
+{
+    public void Print(string document) { /* ... */ }
+    public void Scan(string document) { /* ... */ }
+    public void Fax(string document) { /* ... */ }
+}
+
+// A simple printer only needs to implement IPrinter
+public class EconomicPrinter : IPrinter
+{
+    public void Print(string document)
+    {
+        Console.WriteLine($"Printing {document} economically.");
+    }
+}
+</code></pre>
+                        </div>
+
+                        <div class="mt-12">
+                            <h4 class="text-xl font-semibold text-slate-700">[Medium] Notification System</h4>
+                            <p class="mt-2 text-slate-600">Consider a notification service. Not all notifications are sent via all channels. ISP helps us design this cleanly.</p>
+                            <h5 class="mt-4 font-semibold text-slate-600">Problem: A Single Notification Interface</h5>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+public interface INotifier
+{
+    void SendEmail(string to, string message);
+    void SendSms(string phoneNumber, string message);
+    void SendPushNotification(string deviceId, string message);
+}
+
+// This client only needs to send emails, but is forced to know about SMS and Push.
+public class EmailNotifierClient : INotifier
+{
+    public void SendEmail(string to, string message) { /* ... */ }
+    public void SendSms(string phoneNumber, string message) => throw new NotImplementedException();
+    public void SendPushNotification(string deviceId, string message) => throw new NotImplementedException();
+}
+</code></pre>
+                             <h5 class="mt-6 font-semibold text-slate-600">Solution: Segregated Sender Interfaces</h5>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+public interface IEmailSender
+{
+    void SendEmail(string to, string message);
+}
+
+public interface ISmsSender
+{
+    void SendSms(string phoneNumber, string message);
+}
+
+// A notification service might depend on both
+public class NotificationService
+{
+    private readonly IEmailSender _emailSender;
+    private readonly ISmsSender _smsSender;
+
+    public NotificationService(IEmailSender emailSender, ISmsSender smsSender)
+    {
+        _emailSender = emailSender;
+        _smsSender = smsSender;
+    }
+    // ...
+}
+
+// A specific client only needs one
+public class PasswordResetService
+{
+    private readonly IEmailSender _emailSender;
+
+    public PasswordResetService(IEmailSender emailSender)
+    {
+        _emailSender = emailSender;
+    }
+
+    public void ResetPassword(string email)
+    {
+        _emailSender.SendEmail(email, "Your password reset link...");
+    }
+}
+</code></pre>
+                        </div>
+                    </div>
+
+                    <div id="casestudy" class="mt-16 scroll-mt-24">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Case Study: Printer System Design</h3>
+                        <p class="mt-4 text-slate-600">Let's expand on the printer example to design a system with different types of devices. By applying ISP from the start, we create a flexible and maintainable system.</p>
+                        
+                        <h4 class="mt-6 text-lg font-semibold text-slate-700">Step 1: Define Role-Specific Interfaces</h4>
+                        <p class="mt-2 text-slate-600">Instead of one giant <code class="text-sm bg-slate-200 rounded p-1">IDevice</code> interface, we identify the core, independent functionalities.</p>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+public interface IPrinter { void Print(string content); }
+public interface IScanner { void Scan(string content); }
+public interface IFaxer { void Fax(string content); }
+public interface IStapler { void Staple(int pages); }
+</code></pre>
+                        
+                        <h4 class="mt-6 text-lg font-semibold text-slate-700">Step 2: Implement Classes Based on Roles</h4>
+                        <p class="mt-2 text-slate-600">Each class now implements only the interfaces for the features it actually provides. This leads to lean, focused classes.</p>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+// A high-end machine that does everything
+public class AllInOneBeast : IPrinter, IScanner, IFaxer, IStapler
+{
+    public void Print(string content) => Console.WriteLine("Printing...");
+    public void Scan(string content) => Console.WriteLine("Scanning...");
+    public void Fax(string content) => Console.WriteLine("Faxing...");
+    public void Staple(int pages) => Console.WriteLine("Stapling...");
+}
+
+// A simple home printer
+public class BasicHomePrinter : IPrinter
+{
+    public void Print(string content) => Console.WriteLine("Printing from home...");
+}
+
+// A standalone scanner
+public class PhotoScanner : IScanner
+{
+    public void Scan(string content) => Console.WriteLine("Scanning photo with high resolution...");
+}
+</code></pre>
+
+                        <h4 class="mt-6 text-lg font-semibold text-slate-700">Step 3: Write Client Code That Depends on Abstractions</h4>
+                        <p class="mt-2 text-slate-600">Our client code can now depend on the smallest possible interface it needs to do its job. For example, a "Print Service" only needs to know about <code class="text-sm bg-slate-200 rounded p-1">IPrinter</code>.</p>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+public class DocumentPrintService
+{
+    // This service only cares about printing. It doesn't know or care if the
+    // machine can also scan, fax, or staple.
+    public void PrintDocument(IPrinter printer, string document)
+    {
+        Console.WriteLine("--- Sending document to print service ---");
+        printer.Print(document);
+        Console.WriteLine("--- Print job complete ---");
+    }
+}
+
+public static class Program
+{
+    public static void Main()
+    {
+        var printService = new DocumentPrintService();
+        
+        var allInOne = new AllInOneBeast();
+        var homePrinter = new BasicHomePrinter();
+        // var scanner = new PhotoScanner(); // Can't be used by PrintService!
+
+        printService.PrintDocument(allInOne, "Annual Report");
+        printService.PrintDocument(homePrinter, "Vacation Photos");
+    }
+}
+</code></pre>
+                        <div class="mt-4 p-4 bg-teal-50 border border-teal-200 rounded-lg">
+                            <p class="text-teal-800"><strong class="font-semibold">Key Takeaway:</strong> The <code class="text-sm">DocumentPrintService</code> is decoupled from the specific type of printer. It can work with any object that implements <code class="text-sm">IPrinter</code>, making the system highly flexible and testable. This is the power of ISP combined with the Dependency Inversion Principle.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="quiz" class="mt-16 scroll-mt-24">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Knowledge Check Quiz</h3>
+                        <p class="mt-4 text-slate-600">Test your understanding of the Interface Segregation Principle.</p>
+                        <div id="quiz-container" class="mt-6 space-y-6">
+                        </div>
+                    </div>
+
+                    <div id="challenge" class="mt-16 scroll-mt-24">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b pb-2">✅ Self-Assessment Challenge</h3>
+                        <p class="mt-4 text-slate-600">Apply what you've learned to a new problem.</p>
+                        <div class="mt-6 p-6 bg-white rounded-lg shadow-sm">
+                            <h4 class="text-lg font-semibold text-slate-700">Scenario: A Role-Based API System</h4>
+                            <p class="mt-2 text-slate-600">You are designing a backend system for a content platform. There are different user roles: <code class="text-sm">User</code>, <code class="text-sm">Moderator</code>, and <code class="text-sm">Admin</code>. You start with a single "fat" interface for all possible actions:</p>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+// The problematic "fat" interface
+public interface IApiActions
+{
+    void ReadArticle(int articleId);     // For all roles
+    void WriteComment(int articleId);    // For Users
+    void DeleteComment(int commentId);   // For Moderators
+    void BanUser(int userId);            // For Admins
+}
+</code></pre>
+                            <p class="mt-4 text-slate-600"><strong class="font-semibold">Your Task:</strong> Refactor the <code class="text-sm">IApiActions</code> interface into smaller, segregated interfaces that better represent the different roles. Then, show how a class representing a controller for a simple <code class="text-sm">User</code> would implement the new interface(s).</p>
+                            <button id="toggle-solution-btn" class="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
+                                Show Solution
+                            </button>
+                            <div id="solution" class="hidden mt-6 border-t pt-6">
+                                <h4 class="text-lg font-semibold text-slate-700">Challenge Solution</h4>
+                                <p class="mt-2 text-slate-600">The key is to create interfaces based on capabilities or roles. An action might even be shared across roles.</p>
+<pre class="code-block bg-slate-800 text-white p-4 rounded-lg mt-2 text-sm overflow-x-auto"><button class="copy-button">Copy</button><code class="language-csharp">
+// Step 1: Segregate interfaces by role/capability
+
+// Common action for anyone who can view content
+public interface IArticleReader
+{
+    void ReadArticle(int articleId);
+}
+
+// Actions specific to a standard User
+public interface IUserActions
+{
+    void WriteComment(int articleId);
+}
+
+// Actions specific to a Moderator
+public interface IModeratorActions
+{
+    void DeleteComment(int commentId);
+}
+
+// Actions specific to an Admin
+public interface IAdminActions
+{
+    void BanUser(int userId);
+}
+
+
+// Step 2: Implement a controller for a specific role
+
+// The UserApiController only needs to handle reading and commenting.
+// It implements only the interfaces relevant to its role.
+public class UserApiController : IArticleReader, IUserActions
+{
+    public void ReadArticle(int articleId)
+    {
+        Console.WriteLine($"User is reading article {articleId}.");
+    }
+
+    public void WriteComment(int articleId)
+    {
+        Console.WriteLine($"User is writing a comment on article {articleId}.");
+    }
+}
+
+// For comparison, an Admin controller would implement more interfaces
+public class AdminApiController : IArticleReader, IUserActions, IModeratorActions, IAdminActions
+{
+    public void ReadArticle(int articleId) { /* ... */ }
+    public void WriteComment(int articleId) { /* Admin can also be a user ... */ }
+    public void DeleteComment(int commentId) { /* ... */ }
+    public void BanUser(int userId) { /* ... */ }
+}
+</code></pre>
+                                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <p class="text-green-800"><strong class="font-semibold">Benefit:</strong> The <code class="text-sm">UserApiController</code> is now completely decoupled from moderator or admin actions. We can change admin capabilities (e.g., add <code class="text-sm">DeleteArticle</code>) without forcing any changes on the <code class="text-sm">UserApiController</code>, leading to a much more robust and maintainable system.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <aside class="lg:col-span-1">
+                    <nav id="toc" class="sticky top-24">
+                        <h3 class="text-lg font-semibold text-slate-800">On This Page</h3>
+                        <ul class="mt-4 space-y-2 text-slate-600">
+                            <li><a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 hover:text-slate-900 hover:border-slate-400 transition-colors">Theory</a></li>
+                            <li><a href="#uml" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 hover:text-slate-900 hover:border-slate-400 transition-colors">UML Diagram</a></li>
+                            <li><a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 hover:text-slate-900 hover:border-slate-400 transition-colors">Coding Practice</a></li>
+                            <li><a href="#casestudy" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 hover:text-slate-900 hover:border-slate-400 transition-colors">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 hover:text-slate-900 hover:border-slate-400 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 hover:text-slate-900 hover:border-slate-400 transition-colors">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+            </div>
+        </main>
+
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // TOC Scroll Spy
+            const sections = document.querySelectorAll('div[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-20% 0px -70% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Copy to Clipboard
+            const allCopyButtons = document.querySelectorAll('.copy-button');
+            allCopyButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const codeBlock = button.nextElementSibling;
+                    const code = codeBlock.innerText;
+                    
+                    const tempTextArea = document.createElement('textarea');
+                    tempTextArea.value = code;
+                    document.body.appendChild(tempTextArea);
+                    tempTextArea.select();
+                    try {
+                        document.execCommand('copy');
+                        button.innerText = 'Copied!';
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                        button.innerText = 'Error';
+                    }
+                    document.body.removeChild(tempTextArea);
+                });
+            });
+
+            // Quiz Logic
+            const quizData = [
+                {
+                    question: "What is the primary goal of the Interface Segregation Principle?",
+                    options: [
+                        "To make interfaces as large as possible to cover all functionalities.",
+                        "To ensure classes implement interfaces they don't fully use.",
+                        "To create many small, client-specific interfaces rather than one large one.",
+                        "To force all classes to inherit from a single base interface."
+                    ],
+                    correctAnswer: "To create many small, client-specific interfaces rather than one large one."
+                },
+                {
+                    question: "A class implementing a 'fat' interface is often forced to do which of the following?",
+                    options: [
+                        "Provide useful implementations for every single method.",
+                        "Throw a 'NotImplementedException' for methods it doesn't need.",
+                        "Automatically gain the functionality of all interface methods.",
+                        "Inherit from multiple classes."
+                    ],
+                    correctAnswer: "Throw a 'NotImplementedException' for methods it doesn't need."
+                },
+                {
+                    question: "Which of these is NOT a direct benefit of applying ISP?",
+                    options: [
+                        "Reduced coupling between components.",
+                        "Increased code cohesion.",
+                        "Faster program execution speed.",
+                        "Improved maintainability and flexibility."
+                    ],
+                    correctAnswer: "Faster program execution speed."
+                },
+                {
+                    question: "You have an interface `IWorker` with methods `Work()` and `TakeBreak()`. If you have a `RobotWorker` class that works continuously and never takes breaks, what is the ISP-compliant solution?",
+                    options: [
+                        "Make the `RobotWorker` implement `TakeBreak()` with an empty method body.",
+                        "Split `IWorker` into `IWorkable` (with `Work()`) and `IBreakable` (with `TakeBreak()`). The robot implements only `IWorkable`.",
+                        "Change the `IWorker` interface to have a default implementation for `TakeBreak()`.",
+                        "Force the robot to take a break anyway to satisfy the interface."
+                    ],
+                    correctAnswer: "Split `IWorker` into `IWorkable` (with `Work()`) and `IBreakable` (with `TakeBreak()`). The robot implements only `IWorkable`."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'p-6 bg-white rounded-lg shadow-sm';
+                let optionsHtml = '';
+                q.options.forEach(option => {
+                    optionsHtml += `<div class="quiz-option mt-2 p-3 border rounded-md cursor-pointer transition-colors" data-question="${index}" data-answer="${option}">${option}</div>`;
+                });
+
+                questionEl.innerHTML = `
+                    <p class="font-semibold text-slate-700">${index + 1}. ${q.question}</p>
+                    <div class="mt-2 space-y-2">${optionsHtml}</div>
+                    <div class="feedback mt-2 text-sm font-medium"></div>
+                `;
+                quizContainer.appendChild(questionEl);
+            });
+
+            quizContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quiz-option')) {
+                    const questionIndex = e.target.dataset.question;
+                    const selectedAnswer = e.target.dataset.answer;
+                    const questionData = quizData[questionIndex];
+                    const feedbackEl = e.target.parentElement.nextElementSibling;
+                    const allOptions = e.target.parentElement.querySelectorAll('.quiz-option');
+
+                    allOptions.forEach(opt => {
+                        opt.classList.remove('correct', 'incorrect');
+                        opt.style.pointerEvents = 'none'; // Disable further clicks
+                    });
+
+                    if (selectedAnswer === questionData.correctAnswer) {
+                        e.target.classList.add('correct');
+                        feedbackEl.textContent = 'Correct! Well done.';
+                        feedbackEl.className = 'feedback mt-3 text-sm font-semibold text-green-600';
+                    } else {
+                        e.target.classList.add('incorrect');
+                        feedbackEl.textContent = `Incorrect. The correct answer is: "${questionData.correctAnswer}"`;
+                        feedbackEl.className = 'feedback mt-3 text-sm font-semibold text-red-600';
+                        // Highlight the correct answer as well
+                        allOptions.forEach(opt => {
+                            if (opt.dataset.answer === questionData.correctAnswer) {
+                                opt.classList.add('correct');
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Challenge Solution Toggle
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionDiv = document.getElementById('solution');
+            toggleBtn.addEventListener('click', () => {
+                const isHidden = solutionDiv.classList.contains('hidden');
+                if (isHidden) {
+                    solutionDiv.classList.remove('hidden');
+                    toggleBtn.textContent = 'Hide Solution';
+                } else {
+                    solutionDiv.classList.add('hidden');
+                    toggleBtn.textContent = 'Show Solution';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

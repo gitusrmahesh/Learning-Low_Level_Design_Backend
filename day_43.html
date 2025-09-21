@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 43: TCP vs UDP - Low-Level Design Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Slate, Sky, Amber) -->
+    <!-- Application Structure Plan: The application is designed as a single-page, dual-column layout to create an immersive learning environment. The main content resides in a wide left column, flowing logically from foundational theory (OSI model, protocol deep dives) to practical application (coding examples, case studies) and finally to assessment (quiz, challenge). This linear progression supports structured learning. A sticky table of contents (TOC) occupies the narrow right column, providing persistent navigation. This allows users to jump between sections freely without losing context, which is crucial for a dense topic. Interactions like tabbed code blocks, a self-grading quiz, and a revealable challenge solution are integrated to keep the user engaged and facilitate active learning. -->
+    <!-- Visualization & Content Choices: Report Info: TCP Handshake -> Goal: Explain process -> Viz/Presentation Method: HTML/CSS Diagram -> Interaction: Static visual -> Justification: A clear, non-interactive diagram is best for explaining a fixed, sequential process, avoiding user confusion. | Report Info: TCP vs UDP Features -> Goal: Compare protocols -> Viz/Presentation Method: Detailed HTML Table -> Interaction: Reading/Comparison -> Justification: A table provides a direct, feature-by-feature comparison, which is ideal for highlighting differences. | Report Info: Client-Server Communication -> Goal: Illustrate message flow -> Viz/Presentation Method: HTML/CSS Sequence Diagram -> Interaction: Static visual -> Justification: A sequence diagram visually maps the flow of messages over time, which is more intuitive than text alone for this concept. It's built with HTML to adhere to the no-SVG constraint. All code is presented in C# within copyable blocks to provide direct, practical value. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0284c7; /* sky-600 */
+            border-left-color: #0284c7; /* sky-600 */
+            font-weight: 600;
+        }
+        .prose-headings\:text-slate-800 h2 { color: #1e293b; }
+        .prose-headings\:text-slate-800 h3 { color: #334155; }
+        .prose code {
+            background-color: #e2e8f0;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-family: 'Menlo', 'Consolas', monospace;
+            font-size: 0.9em;
+            color: #1e293b;
+        }
+        .quiz-option.selected {
+            border-color: #0ea5e9;
+            background-color: #f0f9ff;
+        }
+        .quiz-option.correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .code-tab.active {
+            border-color: #0ea5e9;
+            color: #0ea5e9;
+            background-color: white;
+        }
+        .code-editor {
+            background-color: #0f172a; /* slate-900 */
+            color: #e2e8f0; /* slate-200 */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.25rem;
+            position: relative;
+            font-family: 'Menlo', 'Consolas', monospace;
+            font-size: 0.875em;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        .code-editor .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #334155; /* slate-700 */
+            color: #f1f5f9; /* slate-100 */
+            border: 1px solid #475569; /* slate-600 */
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .code-editor .copy-btn:hover {
+            background-color: #475569; /* slate-600 */
+        }
+        .code-editor code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+        .code-editor .string { color: #f59e0b; } /* amber-500 */
+        .code-editor .keyword { color: #7dd3fc; } /* lightBlue-300 */
+        .code-editor .type { color: #86efac; } /* green-300 */
+        .code-editor .comment { color: #64748b; font-style: italic; } /* slate-500 */
+        .code-editor .method { color: #c4b5fd; } /* violet-300 */
+        .code-editor .number { color: #f9a8d4; } /* pink-300 */
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="flex flex-col lg:flex-row lg:space-x-12">
+                <!-- Main Content -->
+                <div class="lg:w-3/4 prose prose-slate max-w-none prose-headings:font-lexend prose-headings:text-slate-800">
+                    <section id="intro" class="scroll-mt-24">
+                        <div class="flex items-center justify-between">
+                             <p class="text-sm font-semibold text-sky-600">DAY 43: NETWORKING & API DESIGN</p>
+                        </div>
+                        <h2 class="text-4xl font-extrabold tracking-tight">TCP vs. UDP: The Protocols of the Internet</h2>
+                        <p class="text-lg text-slate-600">Welcome to a deep dive into the fundamental protocols that power the internet. This lesson will provide you with a comprehensive understanding of TCP and UDP, from their theoretical underpinnings to practical coding implementations. By the end, you'll be able to choose the right protocol for any networking task and build robust client-server applications.</p>
+                    </section>
+                    
+                    <section id="theory" class="scroll-mt-24">
+                        <h2 class="!mt-16">TCP & UDP Deep Dive</h2>
+                        <p>At the heart of computer networking lies the Transport Layer (Layer 4) of the OSI model. This layer is responsible for end-to-end communication between applications on different hosts. The two most prominent protocols at this layer are the Transmission Control Protocol (TCP) and the User Datagram Protocol (UDP). They offer different trade-offs between reliability, speed, and overhead.</p>
+
+                        <h3 class="!mt-10">TCP (Transmission Control Protocol): The Reliable Phone Call</h3>
+                        <p>Think of TCP as a formal phone call. Before you start speaking, you establish a connection ("Hello?"), you ensure the other person is ready ("Yes, I can hear you."), and during the conversation, you get acknowledgements ("uh-huh," "right") that ensure your message is being received. If you don't get an acknowledgement, you repeat yourself. This is the essence of TCP: reliable, ordered, and error-checked delivery of a stream of bytes.</p>
+                        
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 my-8">
+                            <h4 class="font-lexend text-lg font-semibold text-slate-800">Key Features of TCP:</h4>
+                            <ul class="mt-4 !mb-0 list-disc list-inside space-y-2">
+                                <li><strong>Connection-Oriented:</strong> A connection must be established via a three-way handshake before data transfer begins.</li>
+                                <li><strong>Reliability:</strong> Guarantees that data sent will be received, and in the correct order. It achieves this through sequence numbers and acknowledgements (ACKs). Lost packets are retransmitted.</li>
+                                <li><strong>Flow Control:</strong> Prevents the sender from overwhelming the receiver by managing the amount of data sent.</li>
+                                <li><strong>Congestion Control:</strong> Helps prevent network congestion by moderating the transmission rate.</li>
+                                <li><strong>Stream-Based:</strong> Data is treated as a continuous stream of bytes, not individual messages.</li>
+                            </ul>
+                        </div>
+                        
+                        <h4 class="font-lexend font-semibold !mt-8">The TCP Three-Way Handshake</h4>
+                        <p>This is the process of establishing a TCP connection. It's a foundational concept for understanding how TCP ensures reliability from the very beginning.</p>
+                        <div class="bg-slate-100 border border-slate-200 rounded-lg p-6 my-6 text-sm">
+                            <div class="flex items-center space-x-4">
+                                <div class="font-bold w-1/4 text-center">Client</div>
+                                <div class="w-2/4 text-center"></div>
+                                <div class="font-bold w-1/4 text-center">Server</div>
+                            </div>
+                            <div class="mt-4 flex items-center space-x-4">
+                                <div class="w-1/4 text-center"></div>
+                                <div class="w-2/4 text-center relative">
+                                    <div class="absolute w-full top-1/2 border-t border-dashed border-sky-500"></div>
+                                    <div class="relative bg-slate-100 px-2 text-sky-700 font-semibold">[SYN] →</div>
+                                </div>
+                                <div class="w-1/4 text-center"></div>
+                            </div>
+                            <p class="text-center text-xs text-slate-600 mt-1">1. The client sends a SYN (synchronize) packet to the server to initiate a connection.</p>
+                            
+                            <div class="mt-4 flex items-center space-x-4">
+                                <div class="w-1/4 text-center"></div>
+                                <div class="w-2/4 text-center relative">
+                                    <div class="absolute w-full top-1/2 border-t border-dashed border-amber-500"></div>
+                                    <div class="relative bg-slate-100 px-2 text-amber-700 font-semibold">← [SYN/ACK]</div>
+                                </div>
+                                <div class="w-1/4 text-center"></div>
+                            </div>
+                             <p class="text-center text-xs text-slate-600 mt-1">2. The server replies with a SYN/ACK (synchronize/acknowledgement) packet.</p>
+
+                            <div class="mt-4 flex items-center space-x-4">
+                                <div class="w-1/4 text-center"></div>
+                                <div class="w-2/4 text-center relative">
+                                    <div class="absolute w-full top-1/2 border-t border-dashed border-sky-500"></div>
+                                    <div class="relative bg-slate-100 px-2 text-sky-700 font-semibold">[ACK] →</div>
+                                </div>
+                                <div class="w-1/4 text-center"></div>
+                            </div>
+                             <p class="text-center text-xs text-slate-600 mt-1">3. The client responds with an ACK (acknowledgement) packet. Connection is established.</p>
+                        </div>
+
+                        <h3 class="!mt-12">UDP (User Datagram Protocol): The Fast Postcard</h3>
+                        <p>Think of UDP as sending a postcard. You write a message, put an address on it, and drop it in the mailbox. You don't know for sure if it will arrive, when it will arrive, or if multiple postcards will arrive in the order you sent them. UDP is "fire and forget." It's simple, fast, and has low overhead because it doesn't bother with the guarantees that TCP provides.</p>
+
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 my-8">
+                            <h4 class="font-lexend text-lg font-semibold text-slate-800">Key Features of UDP:</h4>
+                            <ul class="mt-4 !mb-0 list-disc list-inside space-y-2">
+                                <li><strong>Connectionless:</strong> No handshake is required. You can send data immediately.</li>
+                                <li><strong>Unreliable:</strong> No guarantee of delivery, ordering, or duplicate protection.</li>
+                                <li><strong>Low Overhead:</strong> The UDP header is much smaller than TCP's, resulting in less data per packet and faster processing.</li>
+                                <li><strong>Datagram-Based:</strong> Data is sent in discrete packets (datagrams). Each datagram is an independent unit.</li>
+                                <li><strong>No Flow/Congestion Control:</strong> UDP sends data as fast as it can, leaving it up to the application to handle any potential issues.</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section id="comparison" class="scroll-mt-24">
+                        <h2 class="!mt-16">TCP vs. UDP: Head-to-Head Comparison</h2>
+                        <p>Choosing the right protocol is critical in application design. A web server needs the reliability of TCP to ensure web pages load correctly, while a live video stream can tolerate a few dropped frames in exchange for the low latency of UDP. This table breaks down the core differences.</p>
+                        <div class="overflow-x-auto my-8">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3 font-lexend">Feature</th>
+                                        <th class="px-6 py-3 font-lexend">TCP (Transmission Control Protocol)</th>
+                                        <th class="px-6 py-3 font-lexend">UDP (User Datagram Protocol)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b">
+                                        <td class="px-6 py-4 font-semibold">Reliability</td>
+                                        <td class="px-6 py-4">High (guaranteed delivery via ACKs and retransmissions)</td>
+                                        <td class="px-6 py-4">Low (no guaranteed delivery; "best effort")</td>
+                                    </tr>
+                                    <tr class="bg-slate-50 border-b">
+                                        <td class="px-6 py-4 font-semibold">Connection</td>
+                                        <td class="px-6 py-4">Connection-oriented (requires three-way handshake)</td>
+                                        <td class="px-6 py-4">Connectionless (no handshake; just send)</td>
+                                    </tr>
+                                    <tr class="bg-white border-b">
+                                        <td class="px-6 py-4 font-semibold">Ordering</td>
+                                        <td class="px-6 py-4">Ordered (packets are reassembled in the correct sequence)</td>
+                                        <td class="px-6 py-4">Unordered (packets may arrive out of sequence)</td>
+                                    </tr>
+                                    <tr class="bg-slate-50 border-b">
+                                        <td class="px-6 py-4 font-semibold">Speed</td>
+                                        <td class="px-6 py-4">Slower due to overhead of reliability features</td>
+                                        <td class="px-6 py-4">Faster due to minimal overhead</td>
+                                    </tr>
+                                    <tr class="bg-white border-b">
+                                        <td class="px-6 py-4 font-semibold">Header Size</td>
+                                        <td class="px-6 py-4">20 bytes (plus options)</td>
+                                        <td class="px-6 py-4">8 bytes</td>
+                                    </tr>
+                                     <tr class="bg-slate-50 border-b">
+                                        <td class="px-6 py-4 font-semibold">Flow Control</td>
+                                        <td class="px-6 py-4">Yes (prevents sender from overwhelming receiver)</td>
+                                        <td class="px-6 py-4">No</td>
+                                    </tr>
+                                    <tr class="bg-white">
+                                        <td class="px-6 py-4 font-semibold">Use Cases</td>
+                                        <td class="px-6 py-4">Web (HTTP/S), Email (SMTP), File Transfer (FTP), SSH</td>
+                                        <td class="px-6 py-4">Video/Voice Streaming (VoIP), Online Gaming, DNS, DHCP</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    
+                    <section id="sockets" class="scroll-mt-24">
+                        <h2 class="!mt-16">Socket Programming Basics</h2>
+                        <p>A socket is one endpoint of a two-way communication link between two programs running on the network. It's an abstraction provided by the operating system that allows your application to send and receive data over the network. A socket is bound to a specific IP address and a port number.</p>
+                        <ul class="!my-6 list-disc list-inside space-y-2">
+                            <li><strong>IP Address:</strong> Uniquely identifies a device (host) on a network. (e.g., <code>192.168.1.10</code>)</li>
+                            <li><strong>Port Number:</strong> Identifies a specific application or process on a host. (e.g., Port 80 for HTTP). Ports range from 0 to 65535.</li>
+                        </ul>
+                        <p>In C#, socket programming is primarily handled by classes within the <code>System.Net.Sockets</code> namespace. The key class is <code>Socket</code> itself, which can be configured for either TCP or UDP communication.</p>
+                        
+                        <h4 class="font-lexend font-semibold !mt-8">Syntax Snippets (C#)</h4>
+                        <p>Here’s how you would typically initialize sockets for TCP and UDP in C#.</p>
+                        
+                        <h5 class="font-lexend text-base font-semibold text-slate-700 !mt-6 !mb-2">TCP Socket Initialization</h5>
+                        <div class="not-prose my-4">
+                            <pre class="code-editor"><code><span class="keyword">using</span> System.Net;
+<span class="keyword">using</span> System.Net.Sockets;
+
+<span class="comment">// TCP Server Socket</span>
+<span class="type">Socket</span> tcpListener = <span class="keyword">new</span> <span class="type">Socket</span>(<span class="type">AddressFamily</span>.InterNetwork, <span class="type">SocketType</span>.Stream, <span class="type">ProtocolType</span>.Tcp);
+<span class="type">IPEndPoint</span> localEndPoint = <span class="keyword">new</span> <span class="type">IPEndPoint</span>(<span class="type">IPAddress</span>.Any, <span class="number">8080</span>);
+tcpListener.<span class="method">Bind</span>(localEndPoint);
+tcpListener.<span class="method">Listen</span>(<span class="number">10</span>); <span class="comment">// Listen for incoming connections</span>
+
+<span class="comment">// TCP Client Socket</span>
+<span class="type">Socket</span> tcpClient = <span class="keyword">new</span> <span class="type">Socket</span>(<span class="type">AddressFamily</span>.InterNetwork, <span class="type">SocketType</span>.Stream, <span class="type">ProtocolType</span>.Tcp);
+tcpClient.<span class="method">Connect</span>(<span class="string">"127.0.0.1"</span>, <span class="number">8080</span>);</code></pre>
+                        </div>
+                        
+                        <h5 class="font-lexend text-base font-semibold text-slate-700 !mt-6 !mb-2">UDP Socket Initialization</h5>
+                        <div class="not-prose my-4">
+                            <pre class="code-editor"><code><span class="keyword">using</span> System.Net;
+<span class="keyword">using</span> System.Net.Sockets;
+<span class="keyword">using</span> System.Text;
+
+<span class="comment">// UDP Socket (can act as client or server)</span>
+<span class="type">Socket</span> udpSocket = <span class="keyword">new</span> <span class="type">Socket</span>(<span class="type">AddressFamily</span>.InterNetwork, <span class="type">SocketType</span>.Dgram, <span class="type">ProtocolType</span>.Udp);
+<span class="type">IPEndPoint</span> localEndPoint = <span class="keyword">new</span> <span class="type">IPEndPoint</span>(<span class="type">IPAddress</span>.Any, <span class="number">8081</span>);
+udpSocket.<span class="method">Bind</span>(localEndPoint);
+
+<span class="comment">// To send data:</span>
+<span class="type">IPEndPoint</span> remoteEndPoint = <span class="keyword">new</span> <span class="type">IPEndPoint</span>(<span class="type">IPAddress</span>.<span class="method">Parse</span>(<span class="string">"127.0.0.1"</span>), <span class="number">8081</span>);
+<span class="type">byte</span>[] data = <span class="type">Encoding</span>.ASCII.<span class="method">GetBytes</span>(<span class="string">"Hello UDP"</span>);
+udpSocket.<span class="method">SendTo</span>(data, remoteEndPoint);</code></pre>
+                        </div>
+
+                    </section>
+
+                    <section id="coding" class="scroll-mt-24">
+                        <h2 class="!mt-16">Coding Practice (C#)</h2>
+                        <p>Let's put theory into practice. Here are three fully-coded examples in C#, ranging from a simple echo server to a more complex file transfer application. These examples demonstrate the core logic of client-server communication using both TCP and UDP.</p>
+
+                        <div id="coding-tabs" class="my-8">
+                            <div class="border-b border-slate-200">
+                                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                    <button class="code-tab active whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm" data-tab="easy">
+                                        [Easy] TCP Echo Server
+                                    </button>
+                                    <button class="code-tab text-slate-500 hover:text-slate-700 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent" data-tab="medium">
+                                        [Medium] UDP Chat
+                                    </button>
+                                    <button class="code-tab text-slate-500 hover:text-slate-700 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent" data-tab="hard">
+                                        [Hard] TCP File Transfer
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <div id="easy-content" class="tab-content mt-6">
+                                <h3 class="!mt-0">TCP Echo Server</h3>
+                                <p>This classic example demonstrates a TCP server that listens for a connection, receives a message from a client, and sends the exact same message back ("echoes" it).</p>
+                                <h4 class="font-lexend font-semibold !mt-6">Server Code (EchoServer.cs)</h4>
+                                <div class="not-prose">
+                                    <pre class="code-editor"><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">EchoServer</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">async</span> <span class="type">Task</span> <span class="method">StartServer</span>() {
+        <span class="type">IPHostEntry</span> ipHostInfo = <span class="keyword">await</span> <span class="type">Dns</span>.<span class="method">GetHostEntryAsync</span>(<span class="type">Dns</span>.<span class="method">GetHostName</span>());
+        <span class="type">IPAddress</span> ipAddress = ipHostInfo.AddressList[<span class="number">0</span>];
+        <span class="type">IPEndPoint</span> localEndPoint = <span class="keyword">new</span> <span class="type">IPEndPoint</span>(ipAddress, <span class="number">11000</span>);
+
+        <span class="keyword">using</span> <span class="type">Socket</span> listener = <span class="keyword">new</span>(ipAddress.AddressFamily, <span class="type">SocketType</span>.Stream, <span class="type">ProtocolType</span>.Tcp);
+        <span class="keyword">try</span> {
+            listener.<span class="method">Bind</span>(localEndPoint);
+            listener.<span class="method">Listen</span>(<span class="number">10</span>);
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Waiting for a connection..."</span>);
+            <span class="keyword">using</span> <span class="type">Socket</span> handler = <span class="keyword">await</span> listener.<span class="method">AcceptAsync</span>();
+            <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Connected to {handler.RemoteEndPoint}"</span>);
+            
+            <span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="type">byte</span>[<span class="number">1024</span>];
+            <span class="keyword">while</span> (<span class="keyword">true</span>) {
+                <span class="type">int</span> bytesRec = <span class="keyword">await</span> handler.<span class="method">ReceiveAsync</span>(<span class="keyword">new</span> <span class="type">ArraySegment</span>&lt;<span class="type">byte</span>&gt;(buffer), <span class="type">SocketFlags</span>.None);
+                <span class="type">string</span> data = <span class="type">Encoding</span>.ASCII.<span class="method">GetString</span>(buffer, <span class="number">0</span>, bytesRec);
+                <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Text received: {data}"</span>);
+                
+                <span class="keyword">if</span> (data.<span class="method">IndexOf</span>(<span class="string">"&lt;EOF&gt;"</span>) > -<span class="number">1</span>) <span class="keyword">break</span>;
+
+                <span class="type">byte</span>[] msg = <span class="type">Encoding</span>.ASCII.<span class="method">GetBytes</span>(data);
+                <span class="keyword">await</span> handler.<span class="method">SendAsync</span>(<span class="keyword">new</span> <span class="type">ArraySegment</span>&lt;<span class="type">byte</span>&gt;(msg), <span class="type">SocketFlags</span>.None);
+                <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Echoed back."</span>);
+            }
+        } <span class="keyword">catch</span> (<span class="type">Exception</span> e) {
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(e.<span class="method">ToString</span>());
+        }
+    }
+}</code></pre>
+                                </div>
+                                <h4 class="font-lexend font-semibold !mt-6">Client Code (EchoClient.cs)</h4>
+                                <div class="not-prose">
+                                    <pre class="code-editor"><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">EchoClient</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">async</span> <span class="type">Task</span> <span class="method">StartClient</span>() {
+        <span class="keyword">try</span> {
+            <span class="type">IPHostEntry</span> ipHostInfo = <span class="keyword">await</span> <span class="type">Dns</span>.<span class="method">GetHostEntryAsync</span>(<span class="type">Dns</span>.<span class="method">GetHostName</span>());
+            <span class="type">IPAddress</span> ipAddress = ipHostInfo.AddressList[<span class="number">0</span>];
+            <span class="type">IPEndPoint</span> remoteEP = <span class="keyword">new</span> <span class="type">IPEndPoint</span>(ipAddress, <span class="number">11000</span>);
+
+            <span class="keyword">using</span> <span class="type">Socket</span> sender = <span class="keyword">new</span>(ipAddress.AddressFamily, <span class="type">SocketType</span>.Stream, <span class="type">ProtocolType</span>.Tcp);
+            <span class="keyword">await</span> sender.<span class="method">ConnectAsync</span>(remoteEP);
+            <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Socket connected to {sender.RemoteEndPoint}"</span>);
+
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Enter message to send (type 'exit' to quit):"</span>);
+            <span class="keyword">while</span>(<span class="keyword">true</span>) {
+                <span class="type">string</span> message = <span class="type">Console</span>.<span class="method">ReadLine</span>();
+                <span class="keyword">if</span> (message?.<span class="method">ToLower</span>() == <span class="string">"exit"</span>) <span class="keyword">break</span>;
+                
+                <span class="type">byte</span>[] msg = <span class="type">Encoding</span>.ASCII.<span class="method">GetBytes</span>(message + <span class="string">"&lt;EOF&gt;"</span>);
+                <span class="keyword">await</span> sender.<span class="method">SendAsync</span>(<span class="keyword">new</span> <span class="type">ArraySegment</span>&lt;<span class="type">byte</span>&gt;(msg), <span class="type">SocketFlags</span>.None);
+
+                <span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="type">byte</span>[<span class="number">1024</span>];
+                <span class="type">int</span> bytesRec = <span class="keyword">await</span> sender.<span class="method">ReceiveAsync</span>(<span class="keyword">new</span> <span class="type">ArraySegment</span>&lt;<span class="type">byte</span>&gt;(buffer), <span class="type">SocketFlags</span>.None);
+                <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Echo from server: {<span class="type">Encoding</span>.ASCII.<span class="method">GetString</span>(buffer, <span class="number">0</span>, bytesRec)}"</span>);
+            }
+        } <span class="keyword">catch</span> (<span class="type">Exception</span> e) {
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(e.<span class="method">ToString</span>());
+        }
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                            <div id="medium-content" class="tab-content mt-6 hidden">
+                                <h3 class="!mt-0">UDP Chat Application</h3>
+                                <p>This example shows a simple, connectionless chat application. Two instances can send messages to each other over UDP. Note the lack of connection setup and the use of <code>SendTo</code> and <code>ReceiveFrom</code>.</p>
+                                <h4 class="font-lexend font-semibold !mt-6">Chat App Code (UdpChat.cs)</h4>
+                                <div class="not-prose">
+                                    <pre class="code-editor"><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">UdpChat</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">void</span> <span class="method">StartChat</span>() {
+        <span class="type">Console</span>.<span class="method">Write</span>(<span class="string">"Enter local port (e.g., 8001): "</span>);
+        <span class="type">int</span> localPort = <span class="type">int</span>.<span class="method">Parse</span>(<span class="type">Console</span>.<span class="method">ReadLine</span>());
+        <span class="type">Console</span>.<span class="method">Write</span>(<span class="string">"Enter remote port (e.g., 8002): "</span>);
+        <span class="type">int</span> remotePort = <span class="type">int</span>.<span class="method">Parse</span>(<span class="type">Console</span>.<span class="method">ReadLine</span>());
+        
+        <span class="type">Thread</span> receiveThread = <span class="keyword">new</span> <span class="type">Thread</span>(() => <span class="method">ReceiveMessage</span>(localPort));
+        receiveThread.<span class="method">Start</span>();
+        <span class="method">SendMessage</span>(remotePort);
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">void</span> <span class="method">SendMessage</span>(<span class="type">int</span> port) {
+        <span class="keyword">using</span> <span class="type">UdpClient</span> sender = <span class="keyword">new</span>();
+        <span class="type">IPEndPoint</span> remoteEndPoint = <span class="keyword">new</span> <span class="type">IPEndPoint</span>(<span class="type">IPAddress</span>.Loopback, port);
+        <span class="keyword">while</span> (<span class="keyword">true</span>) {
+            <span class="type">string</span> message = <span class="type">Console</span>.<span class="method">ReadLine</span>();
+            <span class="type">byte</span>[] data = <span class="type">Encoding</span>.Unicode.<span class="method">GetBytes</span>(message);
+            sender.<span class="method">Send</span>(data, data.Length, remoteEndPoint);
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">void</span> <span class="method">ReceiveMessage</span>(<span class="type">int</span> port) {
+        <span class="keyword">using</span> <span class="type">UdpClient</span> receiver = <span class="keyword">new</span>(port);
+        <span class="type">IPEndPoint</span> remoteIp = <span class="keyword">null</span>;
+        <span class="keyword">while</span> (<span class="keyword">true</span>) {
+            <span class="type">byte</span>[] data = receiver.<span class="method">Receive</span>(<span class="keyword">ref</span> remoteIp);
+            <span class="type">string</span> message = <span class="type">Encoding</span>.Unicode.<span class="method">GetString</span>(data);
+            <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Received: {message}"</span>);
+        }
+    }
+}</code></pre>
+                                </div>
+                            </div>
+                            <div id="hard-content" class="tab-content mt-6 hidden">
+                                <h3 class="!mt-0">TCP File Transfer</h3>
+                                <p>This demonstrates sending a file from a client to a server over TCP. It highlights how to handle data as a stream, reading the file in chunks and sending it across the reliable connection.</p>
+                                <h4 class="font-lexend font-semibold !mt-6">Server Code (FileReceiver.cs)</h4>
+                                <div class="not-prose">
+                                    <pre class="code-editor"><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">FileReceiver</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">void</span> <span class="method">Start</span>() {
+        <span class="type">TcpListener</span> listener = <span class="keyword">new</span>(<span class="type">IPAddress</span>.Any, <span class="number">12000</span>);
+        listener.<span class="method">Start</span>();
+        <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"File server started. Waiting for connection..."</span>);
+
+        <span class="keyword">using</span> <span class="type">TcpClient</span> client = listener.<span class="method">AcceptTcpClient</span>();
+        <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Client connected."</span>);
+        <span class="keyword">using</span> <span class="type">NetworkStream</span> stream = client.<span class="method">GetStream</span>();
+        
+        <span class="keyword">using</span> (<span class="type">FileStream</span> fs = <span class="keyword">new</span>(<span class="string">"received_file.dat"</span>, <span class="type">FileMode</span>.Create, <span class="type">FileAccess</span>.Write)) {
+            stream.<span class="method">CopyTo</span>(fs);
+        }
+
+        <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"File received and saved."</span>);
+        listener.<span class="method">Stop</span>();
+    }
+}</code></pre>
+                                </div>
+                                 <h4 class="font-lexend font-semibold !mt-6">Client Code (FileSender.cs)</h4>
+                                 <div class="not-prose">
+                                    <pre class="code-editor"><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">FileSender</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">void</span> <span class="method">Start</span>(<span class="type">string</span> filePath) {
+        <span class="keyword">if</span> (!<span class="type">File</span>.<span class="method">Exists</span>(filePath)) {
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"File does not exist."</span>);
+            <span class="keyword">return</span>;
+        }
+
+        <span class="keyword">try</span> {
+            <span class="keyword">using</span> <span class="type">TcpClient</span> client = <span class="keyword">new</span>(<span class="string">"127.0.0.1"</span>, <span class="number">12000</span>);
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Connected to server."</span>);
+            <span class="keyword">using</span> <span class="type">NetworkStream</span> stream = client.<span class="method">GetStream</span>();
+
+            <span class="keyword">using</span> (<span class="type">FileStream</span> fs = <span class="keyword">new</span>(filePath, <span class="type">FileMode</span>.Open, <span class="type">FileAccess</span>.Read)) {
+                fs.<span class="method">CopyTo</span>(stream);
+            }
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"File sent successfully."</span>);
+        } <span class="keyword">catch</span> (<span class="type">Exception</span> ex) {
+            <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Error: {ex.Message}"</span>);
+        }
+    }
+}
+<span class="comment">// To use: Create a dummy file (e.g., test.txt) and call FileSender.Start("test.txt");</span></code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml" class="scroll-mt-24">
+                        <h2 class="!mt-16">UML Task: Client-Server Sequence Diagram</h2>
+                        <p>This sequence diagram illustrates the typical flow of a TCP client-server interaction for a simple request-response cycle. It visually represents the three-way handshake, data transfer, and connection termination, showing how messages are passed between the client and server lifelines over time.</p>
+                        <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 my-8 font-mono text-xs sm:text-sm">
+                            <div class="flex justify-between text-center font-bold font-lexend text-slate-800 text-base mb-4">
+                                <div class="w-1/2">👤 Client</div>
+                                <div class="w-1/2">🌐 Server</div>
+                            </div>
+                            <div class="relative">
+                                <div class="flex justify-between h-96">
+                                    <div class="w-1/2 flex justify-center"><div class="w-0.5 h-full bg-slate-300"></div></div>
+                                    <div class="w-1/2 flex justify-center"><div class="w-0.5 h-full bg-slate-300"></div></div>
+                                </div>
+                                <div class="absolute inset-0">
+                                    <div class="h-full flex flex-col justify-around text-slate-700">
+                                        <div>
+                                            <div class="text-center text-xs text-slate-500 mb-2">--- Handshake ---</div>
+                                            <div class="flex items-center"><div class="w-1/2 text-left pl-2 sm:pl-4">SYN</div><div class="w-1/2 text-left text-sky-600 font-bold text-lg">→</div></div>
+                                            <div class="flex items-center mt-2"><div class="w-1/2 text-right pr-2 sm:pr-4 text-amber-600 font-bold text-lg">←</div><div class="w-1/2 text-right pr-2 sm:pr-4">SYN/ACK</div></div>
+                                            <div class="flex items-center mt-2"><div class="w-1/2 text-left pl-2 sm:pl-4">ACK</div><div class="w-1/2 text-left text-sky-600 font-bold text-lg">→</div></div>
+                                        </div>
+                                        <div>
+                                            <div class="text-center text-xs text-slate-500 mb-2">--- Data Transfer ---</div>
+                                            <div class="flex items-center"><div class="w-1/2 text-left pl-2 sm:pl-4">Request Data</div><div class="w-1/2 text-left text-sky-600 font-bold text-lg">→</div></div>
+                                            <div class="flex items-center mt-2"><div class="w-1/2 text-right pr-2 sm:pr-4 text-amber-600 font-bold text-lg">←</div><div class="w-1/2 text-right pr-2 sm:pr-4">Response Data</div></div>
+                                        </div>
+                                        <div>
+                                            <div class="text-center text-xs text-slate-500 mb-2">--- Termination ---</div>
+                                            <div class="flex items-center"><div class="w-1/2 text-left pl-2 sm:pl-4">FIN</div><div class="w-1/2 text-left text-sky-600 font-bold text-lg">→</div></div>
+                                            <div class="flex items-center mt-2"><div class="w-1/2 text-right pr-2 sm:pr-4 text-amber-600 font-bold text-lg">←</div><div class="w-1/2 text-right pr-2 sm:pr-4">ACK</div></div>
+                                            <div class="flex items-center mt-2"><div class="w-1/2 text-right pr-2 sm:pr-4 text-amber-600 font-bold text-lg">←</div><div class="w-1/2 text-right pr-2 sm:pr-4">FIN</div></div>
+                                            <div class="flex items-center mt-2"><div class="w-1/2 text-left pl-2 sm:pl-4">ACK</div><div class="w-1/2 text-left text-sky-600 font-bold text-lg">→</div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="case-study" class="scroll-mt-24">
+                        <h2 class="!mt-16">Case Study: Designing a Chat Service</h2>
+                        <p>Imagine you're tasked with building a modern chat application like Discord or Slack. It needs to support text messaging, voice calls, and video streaming. This requires a hybrid approach, using both TCP and UDP to leverage their respective strengths.</p>
+                        
+                        <div class="mt-8 grid md:grid-cols-2 gap-8">
+                            <div class="bg-sky-50 border border-sky-200 p-6 rounded-lg">
+                                <h4 class="font-lexend text-lg font-semibold text-sky-800">Text Messaging: Use TCP</h4>
+                                <p class="mt-2 text-sky-900">For text chats, message integrity and order are paramount. A scrambled message or a missing one can completely change the meaning of a conversation. TCP is the perfect choice here. Its connection-oriented nature and reliability guarantees ensure that every message is delivered exactly once and in the correct sequence.</p>
+                                <ul class="mt-4 text-sm list-disc list-inside space-y-1">
+                                    <li><strong>Why TCP?</strong> Reliability, ordered delivery.</li>
+                                    <li><strong>What it prevents:</strong> Lost messages, jumbled conversations.</li>
+                                    <li><strong>Trade-off:</strong> Slightly higher latency, which is acceptable for text.</li>
+                                </ul>
+                            </div>
+                             <div class="bg-amber-50 border border-amber-200 p-6 rounded-lg">
+                                <h4 class="font-lexend text-lg font-semibold text-amber-800">Voice/Video Calls: Use UDP</h4>
+                                <p class="mt-2 text-amber-900">For real-time voice and video, speed is more important than perfect reliability. If a single video frame or a tiny packet of audio data is lost, it's better to just skip it and move on to the next one to maintain a smooth, low-latency stream. Retransmitting a lost packet (like TCP would) would cause stuttering and lag. UDP's "fire and forget" nature is ideal.</p>
+                                <ul class="mt-4 text-sm list-disc list-inside space-y-1">
+                                    <li><strong>Why UDP?</strong> Low latency, high speed.</li>
+                                    <li><strong>What it prevents:</strong> Lag, jitter, and buffering in real-time streams.</li>
+                                    <li><strong>Trade-off:</strong> Occasional packet loss (e.g., a momentary glitch or pixelation).</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p class="mt-6">This hybrid design is common in many real-world applications. The control signals (like starting or ending a call) might still be sent over TCP for reliability, while the actual media stream flows over UDP.</p>
+                    </section>
+
+                    <section id="quiz" class="scroll-mt-24">
+                        <h2 class="!mt-16">Knowledge Check Quiz</h2>
+                        <p>Test your understanding of the key concepts covered in this lesson. Select an answer for each question and see if you're right!</p>
+                        <div id="quiz-container" class="mt-8 space-y-8">
+                            <!-- Question 1 -->
+                            <div class="bg-white p-6 rounded-lg border border-slate-200 quiz-question">
+                                <p class="font-semibold">1. Which protocol is best suited for streaming a live sports event where speed is critical and minor packet loss is acceptable?</p>
+                                <div class="mt-4 space-y-3">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">A) TCP</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">B) UDP</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">C) HTTP</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">D) FTP</button>
+                                </div>
+                                <p class="quiz-feedback mt-3 text-sm font-medium hidden"></p>
+                            </div>
+                            <!-- Question 2 -->
+                            <div class="bg-white p-6 rounded-lg border border-slate-200 quiz-question">
+                                <p class="font-semibold">2. What is the primary purpose of the three-way handshake in TCP?</p>
+                                <div class="mt-4 space-y-3">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">A) To transfer the data securely</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">B) To determine the fastest route for packets</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">C) To establish a reliable connection before data transfer</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">D) To compress the data before sending</button>
+                                </div>
+                                <p class="quiz-feedback mt-3 text-sm font-medium hidden"></p>
+                            </div>
+                            <!-- Question 3 -->
+                            <div class="bg-white p-6 rounded-lg border border-slate-200 quiz-question">
+                                <p class="font-semibold">3. Which of the following is NOT a feature of UDP?</p>
+                                <div class="mt-4 space-y-3">
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">A) Connectionless</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">B) Low overhead</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">C) Ordered delivery</button>
+                                    <button class="quiz-option block w-full text-left p-3 border rounded-lg hover:bg-slate-50 transition">D) Datagram-based</button>
+                                </div>
+                                <p class="quiz-feedback mt-3 text-sm font-medium hidden"></p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <section id="challenge" class="scroll-mt-24">
+                        <h2 class="!mt-16">Self-Assessment Challenge</h2>
+                        <p>Ready to apply your skills? Here's a challenge to build a simple application that reinforces the concepts from this lesson.</p>
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 my-8">
+                            <h4 class="font-lexend font-semibold text-lg">Challenge: Build a TCP-based Key-Value Store</h4>
+                            <p class="mt-2">Your task is to create a simple client-server application that acts as a remote dictionary or key-value store. </p>
+                            <ul class="mt-4 list-disc list-inside space-y-2">
+                                <li>The server should listen for TCP connections.</li>
+                                <li>The client should be able to send commands to the server like:
+                                    <ul class="ml-6 mt-2 list-['-_'] list-inside">
+                                        <li><code>SET key value</code> (e.g., <code>SET name John</code>)</li>
+                                        <li><code>GET key</code> (e.g., <code>GET name</code>)</li>
+                                    </ul>
+                                </li>
+                                <li>The server should store the key-value pairs in memory (a <code>Dictionary&lt;string, string&gt;</code> is perfect).</li>
+                                <li>When the server receives a <code>SET</code> command, it should store the data and reply with "OK".</li>
+                                <li>When it receives a <code>GET</code> command, it should reply with the corresponding value, or "NOT FOUND" if the key doesn't exist.</li>
+                            </ul>
+                            <button id="show-solution-btn" class="mt-6 bg-sky-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">Show Solution</button>
+                            <div id="solution-content" class="hidden mt-6">
+                                <h4 class="font-lexend font-semibold">Challenge Solution (C#)</h4>
+                                <p>Here is one possible implementation for the key-value store server.</p>
+                                <div class="not-prose">
+                                <pre class="code-editor"><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="type">KeyValueStoreServer</span> {
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="type">Dictionary</span>&lt;<span class="type">string</span>, <span class="type">string</span>&gt; store = <span class="keyword">new</span>();
+
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">async</span> <span class="type">Task</span> <span class="method">StartServer</span>() {
+        <span class="type">TcpListener</span> listener = <span class="keyword">new</span>(<span class="type">IPAddress</span>.Any, <span class="number">13000</span>);
+        listener.<span class="method">Start</span>();
+        <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Key-Value store server started on port 13000."</span>);
+
+        <span class="keyword">while</span> (<span class="keyword">true</span>) {
+            <span class="type">TcpClient</span> client = <span class="keyword">await</span> listener.<span class="method">AcceptTcpClientAsync</span>();
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Client connected."</span>);
+            _ = <span class="method">HandleClient</span>(client); <span class="comment">// Handle client in a non-blocking way</span>
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">async</span> <span class="type">Task</span> <span class="method">HandleClient</span>(<span class="type">TcpClient</span> client) {
+        <span class="keyword">await</span> <span class="keyword">using</span> <span class="type">NetworkStream</span> stream = client.<span class="method">GetStream</span>();
+        <span class="type">byte</span>[] buffer = <span class="keyword">new</span> <span class="type">byte</span>[<span class="number">1024</span>];
+        <span class="keyword">try</span> {
+            <span class="keyword">while</span> (<span class="keyword">true</span>) {
+                <span class="type">int</span> bytesRead = <span class="keyword">await</span> stream.<span class="method">ReadAsync</span>(buffer, <span class="number">0</span>, buffer.Length);
+                <span class="keyword">if</span> (bytesRead == <span class="number">0</span>) <span class="keyword">break</span>; <span class="comment">// Client disconnected</span>
+
+                <span class="type">string</span> command = <span class="type">Encoding</span>.ASCII.<span class="method">GetString</span>(buffer, <span class="number">0</span>, bytesRead).<span class="method">Trim</span>();
+                <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Received: {command}"</span>);
+                <span class="type">string</span> response = <span class="method">ProcessCommand</span>(command);
+
+                <span class="type">byte</span>[] responseBytes = <span class="type">Encoding</span>.ASCII.<span class="method">GetBytes</span>(response + <span class="string">"\n"</span>);
+                <span class="keyword">await</span> stream.<span class="method">WriteAsync</span>(responseBytes, <span class="number">0</span>, responseBytes.Length);
+            }
+        } <span class="keyword">catch</span> (<span class="type">Exception</span> ex) {
+            <span class="type">Console</span>.<span class="method">WriteLine</span>($<span class="string">"Error: {ex.Message}"</span>);
+        } <span class="keyword">finally</span> {
+            client.<span class="method">Close</span>();
+            <span class="type">Console</span>.<span class="method">WriteLine</span>(<span class="string">"Client disconnected."</span>);
+        }
+    }
+
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="type">string</span> <span class="method">ProcessCommand</span>(<span class="type">string</span> command) {
+        <span class="type">string</span>[] parts = command.<span class="method">Split</span>(<span class="string">' '</span>, <span class="number">3</span>);
+        <span class="type">string</span> action = parts[<span class="number">0</span>].<span class="method">ToUpper</span>();
+
+        <span class="keyword">return</span> action <span class="keyword">switch</span> {
+            <span class="string">"SET"</span> <span class="keyword">when</span> parts.Length == <span class="number">3</span> => <span class="method">Set</span>(parts[<span class="number">1</span>], parts[<span class="number">2</span>]),
+            <span class="string">"GET"</span> <span class="keyword">when</span> parts.Length == <span class="number">2</span> => <span class="method">Get</span>(parts[<span class="number">1</span>]),
+            _ => <span class="string">"ERROR: Unknown or invalid command."</span>
+        };
+    }
+    <span class="keyword">private static</span> <span class="type">string</span> <span class="method">Set</span>(<span class="type">string</span> key, <span class="type">string</span> value) { store[key] = value; <span class="keyword">return</span> <span class="string">"OK"</span>; }
+    <span class="keyword">private static</span> <span class="type">string</span> <span class="method">Get</span>(<span class="type">string</span> key) => store.<span class="method">TryGetValue</span>(key, <span class="keyword">out</span> <span class="type">string</span> val) ? val : <span class="string">"NOT FOUND"</span>;
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Sticky Table of Contents -->
+                <div class="hidden lg:block lg:w-1/4">
+                    <div class="sticky top-24">
+                        <h3 class="font-lexend font-semibold text-slate-800">On this page</h3>
+                        <nav id="toc" class="mt-4">
+                            <ul class="space-y-2">
+                                <li><a href="#intro" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Introduction</a></li>
+                                <li><a href="#theory" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Theory Deep Dive</a></li>
+                                <li><a href="#comparison" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">TCP vs. UDP Comparison</a></li>
+                                <li><a href="#sockets" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Socket Programming</a></li>
+                                <li><a href="#coding" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Coding Practice</a></li>
+                                <li><a href="#uml" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">UML Sequence Diagram</a></li>
+                                <li><a href="#case-study" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Case Study</a></li>
+                                <li><a href="#quiz" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Knowledge Check</a></li>
+                                <li><a href="#challenge" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-slate-900">Challenge</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // TOC Logic
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('#toc a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const tocLink = document.querySelector(`#toc a[href="#${id}"]`);
+                    
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                        tocLinks.forEach(link => link.classList.remove('active'));
+                        if (tocLink) {
+                            tocLink.classList.add('active');
+                        }
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
+
+            sections.forEach(section => observer.observe(section));
+            
+            // Copy to Clipboard
+            document.querySelectorAll('.code-editor').forEach(codeEditor => {
+                const button = document.createElement('button');
+                button.innerText = 'Copy';
+                button.className = 'copy-btn';
+                
+                const codeBlock = codeEditor.querySelector('code');
+                if (codeBlock) {
+                    codeEditor.insertBefore(button, codeBlock);
+
+                    button.addEventListener('click', () => {
+                        const code = codeBlock.innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                            button.innerText = 'Copied!';
+                            setTimeout(() => {
+                                button.innerText = 'Copy';
+                            }, 2000);
+                        });
+                    });
+                } else {
+                     // For PRE tags that don't have a nested CODE
+                    codeEditor.appendChild(button);
+                     button.addEventListener('click', () => {
+                        const code = codeEditor.innerText.replace('Copy',''); // brittle
+                        navigator.clipboard.writeText(code).then(() => {
+                            button.innerText = 'Copied!';
+                            setTimeout(() => {
+                                button.innerText = 'Copy';
+                            }, 2000);
+                        });
+                    });
+                }
+            });
+
+            // Coding Practice Tabs
+            const tabs = document.querySelectorAll('.code-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active', 'text-sky-600'));
+                    tab.classList.add('active', 'text-sky-600');
+                    const target = tab.getAttribute('data-tab');
+                    tabContents.forEach(content => {
+                        if (content.id === `${target}-content`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+            
+            // Quiz Logic
+            const quizData = [
+                { answer: 'B) UDP', feedback: "Correct! UDP is ideal for real-time streaming due to its low latency. It prioritizes speed over the guaranteed delivery that TCP offers." },
+                { answer: 'C) To establish a reliable connection before data transfer', feedback: "That's right! The handshake ensures both client and server are ready to communicate, establishing sequence numbers for reliable, ordered data transfer." },
+                { answer: 'C) Ordered delivery', feedback: "Correct! UDP does not guarantee that packets will arrive in the order they were sent. This is a key feature of TCP." }
+            ];
+
+            const quizQuestions = document.querySelectorAll('.quiz-question');
+            quizQuestions.forEach((question, index) => {
+                const options = question.querySelectorAll('.quiz-option');
+                const feedbackEl = question.querySelector('.quiz-feedback');
+                let answered = false;
+                
+                options.forEach(option => {
+                    option.addEventListener('click', () => {
+                        if (answered) return;
+                        answered = true;
+                        
+                        options.forEach(opt => opt.classList.add('cursor-not-allowed'));
+                        option.classList.add('selected');
+
+                        if (option.innerText.trim() === quizData[index].answer) {
+                            option.classList.add('correct');
+                            feedbackEl.classList.add('text-green-600');
+                            feedbackEl.innerText = quizData[index].feedback;
+                        } else {
+                            option.classList.add('incorrect');
+                            feedbackEl.classList.add('text-red-600');
+                            feedbackEl.innerText = "Not quite. " + quizData[index].feedback;
+                            // Highlight the correct answer
+                            options.forEach(opt => {
+                                if(opt.innerText.trim() === quizData[index].answer) {
+                                    opt.classList.add('correct');
+                                }
+                            });
+                        }
+                        feedbackEl.classList.remove('hidden');
+                    });
+                });
+            });
+
+            // Challenge Solution Toggle
+            const showSolutionBtn = document.getElementById('show-solution-btn');
+            const solutionContent = document.getElementById('solution-content');
+            showSolutionBtn.addEventListener('click', () => {
+                solutionContent.classList.toggle('hidden');
+                if (solutionContent.classList.contains('hidden')) {
+                    showSolutionBtn.innerText = 'Show Solution';
+                } else {
+                    showSolutionBtn.innerText = 'Hide Solution';
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
+

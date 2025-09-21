@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 52: Deep Dive into ASP.NET Core Filters | LLD Bootcamp</title>
+    <!-- Chosen Palette: Slate & Warm Neutrals -->
+    <!-- Application Structure Plan: This single-page lesson uses a two-column layout to present detailed educational content. The main column provides in-depth theory, code examples, and interactive elements. A sticky Table of Contents (TOC) on the right allows for quick navigation through the dense material, which is crucial for a topic with many sub-components like Filters. The user flow is primarily vertical scrolling, supported by the TOC for non-linear access. Interactivity is key: a custom animated diagram explains the complex filter pipeline, code blocks have copy functionality, and a quiz and a coding challenge reinforce learning. This structure is chosen to function as a comprehensive, self-contained reference guide that is both easy to read sequentially and efficient to navigate for specific information. -->
+    <!-- Visualization & Content Choices: The core visualization is an animated diagram of the MVC Action Invocation Pipeline, built with HTML/CSS/JS. Goal: To clearly illustrate the nested, onion-like execution order of different filter types around an action method. Method: A series of concentric divs represent the filters. A JS animation moves an indicator through each layer for the request ("in") and response ("out"), with text descriptions updating at each stage. Justification: This dynamic approach is far more intuitive for explaining the "before" and "after" nature of filters than a static UML diagram. It visually clarifies a concept that is often confusing for developers. The rest of the content uses detailed explanations and practical C# code examples to demonstrate real-world application of each filter type. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #4f46e5; /* indigo-600 */
+            border-left-color: #4f46e5; /* indigo-600 */
+            font-weight: 600;
+        }
+        .prose h2 {
+            font-family: 'Lexend', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            scroll-margin-top: 4rem;
+        }
+        .prose h3 {
+            font-family: 'Lexend', sans-serif;
+            font-weight: 600;
+            scroll-margin-top: 4rem;
+        }
+        pre {
+            position: relative;
+            background-color: #1e293b; /* slate-800 */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: #e2e8f0; /* slate-200 */
+            overflow-x: auto;
+            font-size: 0.875rem;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #334155; /* slate-700 */
+            color: #cbd5e1; /* slate-300 */
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #475569; /* slate-600 */
+        }
+        #filter-pipeline-viz .filter-layer {
+            transition: all 0.3s ease-in-out;
+            border: 2px solid;
+        }
+        #filter-pipeline-viz .filter-layer.active {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        #pipeline-indicator {
+            transition: all 0.5s ease-in-out;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold font-lexend text-slate-900 tracking-tight">Day 52: Deep Dive into ASP.NET Core Filters</h2>
+                <p class="mt-2 text-lg text-slate-600">Mastering cross-cutting concerns within the MVC framework.</p>
+            </div>
+
+            <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+                <div class="lg:col-span-3 prose prose-slate max-w-none prose-a:text-indigo-600 hover:prose-a:text-indigo-700 prose-code:text-fuchsia-600 prose-code:font-semibold prose-code:before:content-[''] prose-code:after:content-['']">
+                    
+                    <section id="theory-topics">
+                        <h2>✅ Theory Topics</h2>
+                        
+                        <div id="what-are-filters">
+                            <h3>What are Filters? Middleware vs. Filters</h3>
+                            <p>Yesterday, we learned about middleware as components that form the request/response pipeline. Filters provide a similar mechanism for handling cross-cutting concerns, but they operate within a different context: the <strong>MVC action invocation pipeline</strong>. They execute during specific stages of request processing *after* ASP.NET Core has selected the controller action to execute.</p>
+                            <p>This gives filters a crucial advantage over middleware: <strong>context awareness</strong>. A filter knows about the controller, the action method, the arguments being passed, and the result being returned. Middleware, in contrast, only knows about the `HttpContext`.</p>
+                            
+                            <h4>Analogy: Building Security</h4>
+                            <ul>
+                                <li><strong>Middleware</strong> is like the security guard at the main entrance of a corporate building. They check everyone's general ID, handle deliveries (static files), and manage major incidents (exception handling) for the entire building. They don't know or care if you're going to the 3rd floor for an accounting meeting or the 10th for a marketing pitch.</li>
+                                <li><strong>Filters</strong> are like the specialized security measures on a specific floor or at a particular office door. A keycard scanner on the executive floor (Authorization Filter) knows who is allowed on that floor. An assistant checking your meeting agenda before you enter a conference room (Action Filter) knows the context of the specific meeting (action) you're attending.</li>
+                            </ul>
+                            
+                            <h4>Key Differences Summarized:</h4>
+                            <table class="w-full text-left border-collapse">
+                                <thead class="border-b bg-slate-50">
+                                    <tr>
+                                        <th class="p-3 font-semibold">Aspect</th>
+                                        <th class="p-3 font-semibold">Middleware</th>
+                                        <th class="p-3 font-semibold">Filters</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b">
+                                        <td class="p-3"><strong>Scope</strong></td>
+                                        <td class="p-3">Global to the application. Operates on all requests.</td>
+                                        <td class="p-3">Scoped to the MVC/API pipeline. Can be applied globally, per-controller, or per-action.</td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3"><strong>Context</strong></td>
+                                        <td class="p-3">Access to `HttpContext` (request, response, user).</td>
+                                        <td class="p-3">Access to `HttpContext` AND MVC-specific context (action arguments, method info, result object).</td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3"><strong>Use Case</strong></td>
+                                        <td class="p-3">Broad concerns: static files, routing, authentication, global exception logging.</td>
+                                        <td class="p-3">Action-specific concerns: input validation, response formatting, action-specific authorization, caching.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="filter-pipeline">
+                            <h3>The Filter Pipeline (Action Execution Pipeline)</h3>
+                            <p>Just like middleware, filters run in a specific, predictable order. This pipeline is often described as an onion, with the action method at the core. A request travels "in" through the layers, the action executes, and the result travels "out" through the same layers in reverse order. </p>
+                            
+                            <h4>Interactive Visualization: The Filter Pipeline in Action</h4>
+                            <p>Click the button below to see how a request flows through the different filter stages to execute an action and generate a result.</p>
+                            <div class="bg-slate-100 p-6 rounded-lg border border-slate-200 not-prose">
+                                <div id="filter-pipeline-viz" class="relative flex items-center justify-center h-80">
+                                    <div id="pipeline-indicator" class="absolute w-8 h-8 bg-rose-500 rounded-full text-white flex items-center justify-center font-bold shadow-lg z-20">▶</div>
+                                    <div id="f1" class="filter-layer border-sky-500 w-full h-full rounded-lg p-4 flex items-center justify-center">
+                                        <div id="f2" class="filter-layer border-teal-500 w-[85%] h-[85%] rounded-lg p-4 flex items-center justify-center bg-slate-100">
+                                            <div id="f3" class="filter-layer border-emerald-500 w-[85%] h-[85%] rounded-lg p-4 flex items-center justify-center bg-slate-100">
+                                                <div id="f4" class="filter-layer border-amber-500 w-[85%] h-[85%] rounded-lg p-4 flex items-center justify-center bg-slate-100">
+                                                    <div class="bg-slate-800 text-white w-[85%] h-[85%] rounded-lg flex items-center justify-center text-center font-semibold p-2" id="action-method">
+                                                        Action Method Execution
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="absolute top-2 left-1/2 -translate-x-1/2 text-sm font-semibold text-sky-600">Authorization Filter</div>
+                                    <div class="absolute top-10 left-1/2 -translate-x-1/2 text-sm font-semibold text-teal-600">Resource Filter</div>
+                                    <div class="absolute top-[72px] left-1/2 -translate-x-1/2 text-sm font-semibold text-emerald-600">Action Filter</div>
+                                    <div class="absolute top-28 left-1/2 -translate-x-1/2 text-sm font-semibold text-amber-600">Result Filter</div>
+                                </div>
+                                 <div id="pipeline-status" class="h-10 text-center font-medium text-slate-600 bg-slate-200 rounded-md p-2 mt-4">
+                                    Click "Run Animation" to start.
+                                </div>
+                                <div class="text-center mt-4">
+                                    <button id="run-animation-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">Run Animation</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="types-of-filters">
+                            <h3>Types of Filters</h3>
+                            <p>ASP.NET Core provides five types of filters, each corresponding to a stage in the pipeline.</p>
+                            <ol class="list-decimal pl-5 space-y-4">
+                                <li>
+                                    <strong>Authorization Filters (`IAuthorizationFilter`, `IAsyncAuthorizationFilter`):</strong>
+                                    <ul>
+                                        <li><strong>When:</strong> Run first.</li>
+                                        <li><strong>Purpose:</strong> To determine if a user is authorized for the request. They are the primary way to secure your actions.</li>
+                                        <li><strong>Short-circuits?</strong> Yes. If authorization fails, it can short-circuit the entire pipeline by setting a result (e.g., `401 Unauthorized` or `403 Forbidden`).</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>Resource Filters (`IResourceFilter`, `IAsyncResourceFilter`):</strong>
+                                    <ul>
+                                        <li><strong>When:</strong> Run after authorization. They surround model binding.</li>
+                                        <li><strong>Purpose:</strong> Ideal for caching or any logic that needs to run before model binding and after the rest of the pipeline completes.</li>
+                                        <li><strong>Short-circuits?</strong> Yes. A resource filter can serve a response from a cache and bypass the rest of the pipeline entirely.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>Action Filters (`IActionFilter`, `IAsyncActionFilter`):</strong>
+                                    <ul>
+                                        <li><strong>When:</strong> Run immediately before and after an action method is called.</li>
+                                        <li><strong>Purpose:</strong> The most common type of filter. Used to manipulate action arguments, inspect `ModelState`, or modify the action's result.</li>
+                                        <li><strong>Short-circuits?</strong> Yes, in the "before" phase (`OnActionExecuting`).</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>Exception Filters (`IExceptionFilter`, `IAsyncExceptionFilter`):</strong>
+                                    <ul>
+                                        <li><strong>When:</strong> Run only when an unhandled exception is thrown by an action method or a previous filter.</li>
+                                        <li><strong>Purpose:</strong> To apply a global policy for handling exceptions, like logging them or formatting a custom error response.</li>
+                                        <li><strong>Short-circuits?</strong> No, they don't have a "next" delegate. They handle an error and produce a response.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong>Result Filters (`IResultFilter`, `IAsyncResultFilter`):</strong>
+                                    <ul>
+                                        <li><strong>When:</strong> Run immediately before and after the execution of an action result.</li>
+                                        <li><strong>Purpose:</strong> To modify the `IActionResult` before it's processed by the framework. Useful for adding headers or formatting all responses consistently.</li>
+                                        <li><strong>Short-circuits?</strong> Yes. Can completely replace the action result.</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div id="filter-scopes">
+                            <h3>Filter Scopes and Registration</h3>
+                            <p>You can apply filters at three different levels, giving you granular control over their execution.</p>
+                            <h4>Syntax Snippet: Filter Scopes</h4>
+<pre><code class="language-csharp">
+// 1. Global Scope: Applied to all actions in the application.
+// In Program.cs
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new MyGlobalActionFilter());
+});
+
+// 2. Controller Scope: Applied to all actions within a specific controller.
+[ServiceFilter(typeof(MyControllerLevelFilter))]
+public class MyController : ControllerBase
+{
+    // ...
+}
+
+// 3. Action Scope: Applied to a single action method.
+public class MyController : ControllerBase
+{
+    [TypeFilter(typeof(MyActionSpecificFilter))]
+    public IActionResult Get()
+    {
+        return Ok();
+    }
+}
+</code></pre>
+                             <p><strong>Note on `ServiceFilter` vs. `TypeFilter`:</strong> Use `ServiceFilter` when your filter needs to be resolved from the Dependency Injection container (i.e., it has its own dependencies). Use `TypeFilter` when the filter can be instantiated directly but might have dependencies itself that need to be resolved by DI.</p>
+                        </div>
+                    </section>
+
+                    <section id="coding-practice">
+                        <h2 class="mt-12">✅ Coding Practice</h2>
+                        <p>Let's implement different filter types to solve common problems.</p>
+                        
+                        <div id="practice-easy">
+                            <h3>[Easy] Logging Action Execution Time</h3>
+                            <p><strong>Task:</strong> Create an action filter that logs the time it takes for an action method to execute.</p>
+                            <h4>Solution (`ActionFilterAttribute`)</h4>
+<pre><code class="language-csharp">
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Diagnostics;
+
+public class LogExecutionTimeFilter : ActionFilterAttribute
+{
+    private readonly ILogger&lt;LogExecutionTimeFilter&gt; _logger;
+    private Stopwatch _stopwatch;
+
+    public LogExecutionTimeFilter(ILogger&lt;LogExecutionTimeFilter&gt; logger)
+    {
+        _logger = logger;
+        _stopwatch = new Stopwatch();
+    }
+
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        _stopwatch.Start();
+        base.OnActionExecuting(context);
+    }
+
+    public override void OnActionExecuted(ActionExecutedContext context)
+    {
+        _stopwatch.Stop();
+        var controller = context.Controller.GetType().Name;
+        var action = context.ActionDescriptor.DisplayName;
+        _logger.LogInformation(
+            "{Controller}.{Action} executed in {ElapsedMilliseconds}ms",
+            controller,
+            action,
+            _stopwatch.ElapsedMilliseconds);
+        base.OnActionExecuted(context);
+    }
+}
+
+// In Program.cs:
+// 1. Register the filter for DI
+builder.Services.AddScoped&lt;LogExecutionTimeFilter&gt;();
+// 2. Apply it globally
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(LogExecutionTimeFilter));
+});
+</code></pre>
+                        </div>
+                        
+                        <div id="practice-medium">
+                            <h3>[Medium] Custom Exception Filter</h3>
+                            <p><strong>Task:</strong> Create an exception filter that specifically catches a custom `NotFoundException`, logs it, and returns a standard `404 Not Found` response.</p>
+                            <h4>Solution (`IExceptionFilter`)</h4>
+<pre><code class="language-csharp">
+// A custom exception class
+public class NotFoundException : Exception
+{
+    public NotFoundException(string message) : base(message) { }
+}
+
+// The filter
+public class NotFoundExceptionFilter : IExceptionFilter
+{
+    private readonly ILogger&lt;NotFoundExceptionFilter&gt; _logger;
+
+    public NotFoundExceptionFilter(ILogger&lt;NotFoundExceptionFilter&gt; logger)
+    {
+        _logger = logger;
+    }
+
+    public void OnException(ExceptionContext context)
+    {
+        if (context.Exception is NotFoundException notFoundException)
+        {
+            _logger.LogWarning(notFoundException, "Resource not found.");
+            
+            context.Result = new NotFoundObjectResult(new { error = notFoundException.Message });
+            context.ExceptionHandled = true; // Mark as handled
+        }
+    }
+}
+
+// In Program.cs:
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(NotFoundExceptionFilter));
+});
+
+// Example usage in a controller:
+[ApiController]
+[Route("[controller]")]
+public class ProductsController : ControllerBase
+{
+    [HttpGet("{id}")]
+    public IActionResult GetProduct(int id)
+    {
+        if (id > 100)
+        {
+            throw new NotFoundException($"Product with ID {id} not found.");
+        }
+        return Ok(new { ProductId = id, Name = "Sample Product" });
+    }
+}
+</code></pre>
+                        </div>
+
+                        <div id="practice-hard">
+                           <h3>[Hard] Standard API Response Wrapper</h3>
+                           <p><strong>Task:</strong> Implement an `IAsyncResultFilter` that intercepts all successful `OkObjectResult` responses and wraps them in a standardized JSON structure: `{ "success": true, "data": { ... } }`.</p>
+                            <h4>Solution (`IAsyncResultFilter`)</h4>
+<pre><code class="language-csharp">
+// The standard response object
+public class ApiResponse
+{
+    public bool Success { get; set; }
+    public object Data { get; set; }
+
+    public ApiResponse(object data)
+    {
+        Success = true;
+        Data = data;
+    }
+}
+
+// The filter
+public class ApiResponseWrapperFilter : IAsyncResultFilter
+{
+    public async Task OnResultExecutionAsync(
+        ResultExecutingContext context, 
+        ResultExecutionDelegate next)
+    {
+        // Execute the action result to get the actual response
+        await next();
+
+        // Check if the result is a successful object result from our API
+        if (context.Result is ObjectResult objectResult && 
+            objectResult.StatusCode >= 200 && objectResult.StatusCode < 300)
+        {
+            var originalValue = objectResult.Value;
+            var wrappedResponse = new ApiResponse(originalValue);
+            context.Result = new ObjectResult(wrappedResponse)
+            {
+                StatusCode = objectResult.StatusCode
+            };
+        }
+    }
+}
+
+
+// In Program.cs:
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(ApiResponseWrapperFilter));
+});
+
+// Now, when a controller returns Ok(new { Name = "Test" }),
+// the client will receive:
+// { "success": true, "data": { "name": "Test" } }
+</code></pre>
+                        </div>
+                    </section>
+                    
+                     <section id="uml-task">
+                        <h2 class="mt-12">✅ UML/Schema Task</h2>
+                        <h3>Sequence Diagram: Filter Execution Lifecycle</h3>
+                        <p>This diagram shows the detailed flow of a request that successfully passes through all filters, executes an action, and returns a result.</p>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li><strong>Client → MVC Pipeline:</strong> Request arrives.</li>
+                            <li><strong>MVC Pipeline → Authorization Filter:</strong> `OnAuthorization` is called. Logic passes.</li>
+                            <li><strong>Authorization Filter → Resource Filter:</strong> `OnResourceExecuting` is called. Logic passes.</li>
+                             <li><strong>Resource Filter → Model Binding:</strong> Framework binds request data to action parameters.</li>
+                             <li><strong>Model Binding → Action Filter:</strong> `OnActionExecuting` is called. Logic passes.</li>
+                             <li><strong>Action Filter → Action Method:</strong> The controller's action method code is executed. It returns an `IActionResult`.</li>
+                             <li><strong>Action Method → Action Filter:</strong> `OnActionExecuted` is called.</li>
+                             <li><strong>Action Filter → Result Filter:</strong> `OnResultExecuting` is called.</li>
+                             <li><strong>Result Filter → Result Executor:</strong> The `IActionResult` is executed (e.g., serializing a C# object to JSON).</li>
+                             <li><strong>Result Executor → Result Filter:</strong> `OnResultExecuted` is called.</li>
+                             <li><strong>Result Filter → Resource Filter:</strong> `OnResourceExecuted` is called.</li>
+                            <li><strong>Resource Filter → MVC Pipeline:</strong> Control returns to the framework.</li>
+                             <li><strong>MVC Pipeline → Client:</strong> The final response is sent.</li>
+                        </ol>
+                        <p><strong>Note:</strong> If an exception occurred in the Action Method, the flow would divert to the Exception Filter after step 6, and steps 7-10 would be skipped.</p>
+                    </section>
+
+                    <section id="case-study">
+                        <h2 class="mt-12">✅ Case Study</h2>
+                        <h3>Automating Validation with an Action Filter</h3>
+                        <p><strong>Problem:</strong> In many API actions, you write the same boilerplate code repeatedly to check if the incoming model is valid.</p>
+                        <h4>Before (Repetitive Code):</h4>
+<pre><code class="language-csharp">
+[HttpPost]
+public IActionResult CreateProduct([FromBody] CreateProductDto productDto)
+{
+    if (!ModelState.IsValid)
+    {
+        return BadRequest(ModelState);
+    }
+
+    // ... actual logic to create the product ...
+
+    return CreatedAtAction(nameof(GetProduct), new { id = 1 }, productDto);
+}
+</code></pre>
+                         <p><strong>Solution:</strong> We can create a reusable action filter to perform this check automatically, cleaning up our controllers significantly.</p>
+<h4>After (Clean Code with a Filter):</h4>
+<pre><code class="language-csharp">
+// --- ValidationFilterAttribute.cs ---
+public class ValidationFilterAttribute : IActionFilter
+{
+    public void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (!context.ModelState.IsValid)
+        {
+            context.Result = new UnprocessableEntityObjectResult(context.ModelState);
+        }
+    }
+
+    public void OnActionExecuted(ActionExecutedContext context) { } // Do nothing after
+}
+
+// --- Program.cs ---
+builder.Services.AddControllers(options =>
+{
+    // Apply the validation filter globally
+    options.Filters.Add(new ValidationFilterAttribute());
+});
+
+// --- Controller Action ---
+[HttpPost]
+public IActionResult CreateProduct([FromBody] CreateProductDto productDto)
+{
+    // No more validation boilerplate!
+    // The filter handles it. If the code reaches here, ModelState is valid.
+    
+    // ... actual logic to create the product ...
+
+    return CreatedAtAction(nameof(GetProduct), new { id = 1 }, productDto);
+}
+</code></pre>
+                        <p>This approach adheres to the Don't Repeat Yourself (DRY) principle. The validation logic is centralized, consistent, and automatically applied to every action, making the controller code cleaner and more focused on its core responsibility.</p>
+                    </section>
+                    
+                    <section id="knowledge-check">
+                        <h2 class="mt-12">🧠 Knowledge Check Quiz</h2>
+                        <p>Test your understanding of filters. Select an answer to see immediate feedback.</p>
+                        <div id="quiz-container" class="space-y-6"></div>
+                    </section>
+                    
+                    <section id="self-assessment">
+                        <h2 class="mt-12">🚀 Self-Assessment Challenge</h2>
+                        <p><strong>Task:</strong> Create a caching filter using `IAsyncResourceFilter` and `IMemoryCache`. The filter should check if a result for a specific request path is in the cache. If it is, return the cached result immediately, short-circuiting the pipeline. If not, execute the action, and before sending the response, add the result to the cache for 30 seconds.</p>
+                        <button id="toggle-solution-btn" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-slate-800 text-slate-50 hover:bg-slate-800/90 h-10 py-2 px-4">
+                            Reveal Solution
+                        </button>
+                        <div id="solution-container" class="hidden mt-4">
+<pre><code class="language-csharp">
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Caching.Memory;
+
+public class CachingResourceFilter : IAsyncResourceFilter
+{
+    private readonly IMemoryCache _cache;
+
+    public CachingResourceFilter(IMemoryCache cache)
+    {
+        _cache = cache;
+    }
+
+    public async Task OnResourceExecutionAsync(
+        ResourceExecutingContext context,
+        ResourceExecutionDelegate next)
+    {
+        var cacheKey = context.HttpContext.Request.Path.ToString();
+
+        // Try to get the result from the cache
+        if (_cache.TryGetValue(cacheKey, out IActionResult cachedResult))
+        {
+            context.Result = cachedResult; // Short-circuit!
+            return;
+        }
+
+        // Cache miss, so execute the rest of the pipeline
+        var executedContext = await next();
+
+        // After execution, if the result is successful, cache it.
+        if (executedContext.Result is OkObjectResult resultToCache)
+        {
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromSeconds(30));
+
+            _cache.Set(cacheKey, resultToCache, cacheEntryOptions);
+        }
+    }
+}
+
+// In Program.cs:
+// 1. Add memory cache service
+builder.Services.AddMemoryCache();
+// 2. Register the filter
+builder.Services.AddScoped&lt;CachingResourceFilter&gt;();
+
+// Apply to a controller or action:
+[ServiceFilter(typeof(CachingResourceFilter))]
+[HttpGet("data")]
+public IActionResult GetExpensiveData()
+{
+    // Simulate an expensive operation
+    Thread.Sleep(1000);
+    return Ok(new { Data = "This is slow data", Timestamp = DateTime.UtcNow });
+}
+</code></pre>
+                        </div>
+                    </section>
+                    
+                </div>
+                <aside class="hidden lg:block lg:col-span-1">
+                    <nav id="toc" class="sticky top-24">
+                        <h3 class="font-lexend font-semibold text-slate-800 mb-3">On this page</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#theory-topics" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">✅ Theory Topics</a>
+                                <ul class="pl-4 mt-2 space-y-2">
+                                    <li><a href="#what-are-filters" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-800 hover:border-slate-400 transition-colors">Middleware vs. Filters</a></li>
+                                    <li><a href="#filter-pipeline" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-800 hover:border-slate-400 transition-colors">Filter Pipeline</a></li>
+                                    <li><a href="#types-of-filters" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-800 hover:border-slate-400 transition-colors">Types of Filters</a></li>
+                                    <li><a href="#filter-scopes" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-800 hover:border-slate-400 transition-colors">Filter Scopes</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#coding-practice" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">✅ Coding Practice</a></li>
+                            <li><a href="#uml-task" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">✅ UML/Schema Task</a></li>
+                            <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">✅ Case Study</a></li>
+                            <li><a href="#knowledge-check" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">🧠 Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-800 hover:border-slate-400 transition-colors">🚀 Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+            </div>
+        </main>
+
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Copy to Clipboard functionality ---
+            document.querySelectorAll('pre').forEach(block => {
+                const btn = document.createElement('button');
+                btn.classList.add('copy-btn');
+                btn.innerText = 'Copy';
+                block.appendChild(btn);
+                btn.addEventListener('click', () => {
+                    const code = block.querySelector('code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        btn.innerText = 'Copied!';
+                        setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+                    });
+                });
+            });
+
+            // --- Sticky TOC active state ---
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px' });
+            sections.forEach(section => observer.observe(section));
+
+            // --- Filter Pipeline Animation ---
+            const runBtn = document.getElementById('run-animation-btn');
+            const indicator = document.getElementById('pipeline-indicator');
+            const statusEl = document.getElementById('pipeline-status');
+            const layers = ['f1', 'f2', 'f3']; // Auth, Resource, Action
+            const resultLayer = 'f4';
+            const actionMethodEl = document.getElementById('action-method');
+            const layerMap = {
+                f1: { el: document.getElementById('f1'), name: "Authorization Filter" },
+                f2: { el: document.getElementById('f2'), name: "Resource Filter" },
+                f3: { el: document.getElementById('f3'), name: "Action Filter" },
+                f4: { el: document.getElementById('f4'), name: "Result Filter" }
+            };
+
+            const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+            runBtn.addEventListener('click', async () => {
+                runBtn.disabled = true;
+                runBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                
+                Object.values(layerMap).forEach(l => l.el.classList.remove('active', 'border-rose-500'));
+                actionMethodEl.classList.remove('bg-rose-500');
+
+                // Phase 1: Request In
+                indicator.style.opacity = '1';
+                indicator.style.top = '10px';
+                indicator.style.left = '50%';
+                indicator.style.transform = 'translateX(-50%)';
+
+                for (const layerId of layers) {
+                    const layer = layerMap[layerId];
+                    layer.el.classList.add('active');
+                    statusEl.innerText = `Entering: ${layer.name} (Before logic)`;
+                    const targetY = layer.el.offsetTop + 10;
+                    indicator.style.top = `${targetY}px`;
+                    await sleep(800);
+                    layer.el.classList.remove('active');
+                }
+
+                // Phase 2: Action Execution
+                actionMethodEl.classList.add('bg-rose-500');
+                statusEl.innerText = `Executing the Action Method...`;
+                const actionY = actionMethodEl.offsetTop + (actionMethodEl.offsetHeight / 2) - (indicator.offsetHeight / 2);
+                indicator.style.top = `${actionY}px`;
+                await sleep(1200);
+
+                // Phase 3: Result Out
+                indicator.innerHTML = '◀';
+                const resultLayerEl = layerMap[resultLayer];
+                resultLayerEl.el.classList.add('active');
+                statusEl.innerText = `Entering: ${resultLayer.name} (Before result execution)`;
+                const resultY = resultLayerEl.el.offsetTop + (resultLayerEl.el.offsetHeight / 2) - (indicator.offsetHeight/2);
+                indicator.style.top = `${resultY}px`;
+                await sleep(800);
+                resultLayerEl.el.classList.remove('active');
+                actionMethodEl.classList.remove('bg-rose-500');
+                
+                for (const layerId of [...layers].reverse()) {
+                    const layer = layerMap[layerId];
+                    layer.el.classList.add('active');
+                    statusEl.innerText = `Exiting: ${layer.name} (After logic)`;
+                    const targetY = layer.el.offsetTop + 10;
+                    indicator.style.top = `${targetY}px`;
+                    await sleep(800);
+                    layer.el.classList.remove('active');
+                }
+                
+                // Finish
+                statusEl.innerText = 'Response sent to client. Animation complete!';
+                indicator.style.opacity = '0';
+                indicator.innerHTML = '▶';
+                runBtn.disabled = false;
+                runBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+            
+            // --- Knowledge Check Quiz ---
+            const quizData = [
+                { question: "Which filter type runs first in the pipeline and is primarily used for security?", options: ["Action Filter", "Resource Filter", "Authorization Filter", "Exception Filter"], answer: "Authorization Filter" },
+                { question: "What is the key advantage of a filter over middleware?", options: ["They are faster.", "They have access to MVC-specific context like action arguments.", "They can be applied only globally.", "They handle exceptions better."], answer: "They have access to MVC-specific context like action arguments." },
+                { question: "If you want to implement caching and potentially short-circuit a request before model binding, which filter is most appropriate?", options: ["Result Filter", "Resource Filter", "Exception Filter", "Action Filter"], answer: "Resource Filter" },
+                { question: "Which filter type runs only when an unhandled exception occurs in an action?", options: ["Authorization Filter", "Result Filter", "Action Filter", "Exception Filter"], answer: "Exception Filter" },
+                { question: "To apply a filter that depends on a service from DI, which attribute should you use on a controller or action?", options: ["`TypeFilter`", "`Filter`", "`ServiceFilter`", "`InjectFilter`"], answer: "`ServiceFilter`" }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'p-4 border border-slate-200 rounded-lg bg-white';
+                questionEl.innerHTML = `<p class="font-semibold">${index + 1}. ${q.question}</p><div class="mt-3 space-y-2 options-container">${q.options.map(opt => `<label class="block cursor-pointer p-3 rounded-md border border-slate-200 hover:bg-slate-50 transition-colors"><input type="radio" name="question${index}" value="${opt}" class="mr-2">${opt}</label>`).join('')}</div><div class="feedback mt-2 text-sm font-medium"></div>`;
+                quizContainer.appendChild(questionEl);
+            });
+            quizContainer.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') {
+                    const questionEl = e.target.closest('div.p-4');
+                    const feedbackEl = questionEl.querySelector('.feedback');
+                    const selectedValue = e.target.value;
+                    const questionIndex = parseInt(e.target.name.replace('question', ''));
+                    const correctAnswer = quizData[questionIndex].answer;
+                    questionEl.querySelectorAll('label').forEach(l => l.classList.remove('bg-red-100', 'border-red-300', 'bg-green-100', 'border-green-300'));
+                    if (selectedValue === correctAnswer) {
+                        feedbackEl.textContent = 'Correct!';
+                        feedbackEl.className = 'feedback mt-2 text-sm font-medium text-green-700';
+                        e.target.parentElement.classList.add('bg-green-100', 'border-green-300');
+                    } else {
+                        feedbackEl.textContent = `Incorrect. The correct answer is: "${correctAnswer}"`;
+                        feedbackEl.className = 'feedback mt-2 text-sm font-medium text-red-700';
+                        e.target.parentElement.classList.add('bg-red-100', 'border-red-300');
+                    }
+                }
+            });
+
+            // --- Self-Assessment Solution Toggle ---
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionDiv = document.getElementById('solution-container');
+            toggleBtn.addEventListener('click', () => {
+                solutionDiv.classList.toggle('hidden');
+                toggleBtn.textContent = solutionDiv.classList.contains('hidden') ? 'Reveal Solution' : 'Hide Solution';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 22: Single Responsibility Principle (SRP) - LLD Bootcamp</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application structure has been enhanced to follow a more granular "Tell, Show, Practice, Apply, and Reinforce" model. It begins with foundational theory, adds an interactive diagnostic tool (Symptom Checker) for practical identification, presents a visual before/after (UML), offers tiered coding examples, walks through a complex case study step-by-step, and finishes with a comprehensive quiz and self-assessment. The sticky Table of Contents remains crucial for allowing users to either follow the pedagogical flow or jump directly to sections of interest, making it a flexible yet structured learning environment. This depth transforms it from a simple lesson into a comprehensive reference. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core SRP Concepts. Goal: Deepen theoretical understanding. Method: Expanded text sections, call-out boxes for emphasis, and a new "Benefits vs. Consequences" grid. Interaction: None. Justification: Foundational knowledge requires clear, well-structured explanatory text.
+        - Report Info: Identifying SRP Violations. Goal: Provide a practical tool for code analysis. Method: New "Interactive Symptom Checker" using HTML checkboxes and JS. Interaction: User checks common code smells, and a "violation score" is calculated and displayed. Justification: This gamified, interactive element makes learning active instead of passive, helping users internalize the signs of poor design.
+        - Report Info: "UML Class diagram: Before vs After". Goal: Visually contrast monolithic vs. refactored design. Method: A toggleable diagram using HTML/CSS. Interaction: Button switches views. Justification: Visual comparison is highly effective for abstract structural concepts. Retained from previous version for its clarity.
+        - Report Info: Case Study Refactoring. Goal: Demystify the process of refactoring a large class. Method: The case study is broken down into four explicit, numbered steps with individual code blocks and explanations. Interaction: "Copy Code" buttons. Justification: A step-by-step guide is more instructive than a simple before/after, showing the thought process behind a complex refactoring task.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+        .copy-btn:hover {
+            background-color: #64748b;
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .pro-tip {
+            background-color: #f0f9ff;
+            border-left-color: #0ea5e9;
+        }
+        .warning-callout {
+            background-color: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-12">
+            <div class="lg:col-span-3">
+                <main class="space-y-16">
+                    <article id="introduction" class="scroll-mt-24">
+                        <div class="mb-4">
+                            <p class="text-sm font-semibold text-sky-600">Day 22</p>
+                            <h2 class="text-3xl font-bold font-lexend text-slate-800 tracking-tight">The Single Responsibility Principle (SRP)</h2>
+                            <p class="mt-3 text-lg text-slate-600">The Cornerstone of Clean Architecture: Doing One Thing Well.</p>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed">
+                            Welcome to the first and most fundamental pillar of the SOLID principles, introduced by Robert C. Martin ("Uncle Bob"). The Single Responsibility Principle is the bedrock upon which maintainable, scalable, and understandable software is built. It’s a simple idea with profound implications for how we structure our code.
+                        </p>
+                        <p class="mt-4 text-slate-700 leading-relaxed">
+                            Think of a modern kitchen. A chef has a specific knife for chopping vegetables, a whisk for mixing batter, and a spatula for flipping. Each tool is optimized for a single task. Trying to chop an onion with a whisk would be absurd. Similarly, a class in our code that tries to handle database logic, business calculations, and email notifications becomes a "God Class"—a clumsy, brittle tool that is difficult and dangerous to change. SRP guides us to create a clean set of specialized, focused tools (classes) that are simple to understand, safe to modify, and easy to reuse.
+                        </p>
+                    </article>
+
+                    <article id="theory" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">Deep Dive: Theory & Motivation</h3>
+                        <div class="mt-6 space-y-8">
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-700">Defining Responsibility: "A Reason to Change"</h4>
+                                <p class="mt-2 text-slate-600 leading-relaxed">The formal definition is: <span class="font-semibold text-slate-800">"A class should have only one reason to change."</span></p>
+                                <p class="mt-2 text-slate-600 leading-relaxed">This is the most misunderstood part of SRP. A "reason to change" isn't arbitrary; it's tied to the <strong class="text-slate-700">actors</strong> (users or stakeholders) who require that change. A better way to phrase the principle is: <span class="font-semibold text-slate-800">"A module should be responsible to one, and only one, actor."</span></p>
+                                <div class="mt-4 p-4 pro-tip border-l-4 rounded-r-lg">
+                                    <h5 class="font-bold text-sky-800">Pro Tip: Think About Roles</h5>
+                                    <p class="text-sm text-sky-700 mt-1">When analyzing a class, ask: "Who would request a change to this logic?"</p>
+                                    <ul class="mt-2 list-disc list-inside text-sm text-sky-700">
+                                        <li>If a CFO requests a change in how invoices are calculated, that's one actor.</li>
+                                        <li>If a UX designer requests a change in how the invoice is displayed, that's a different actor.</li>
+                                    </ul>
+                                     <p class="text-sm text-sky-700 mt-2">If your class needs to change for both the CFO and the UX designer, it has two responsibilities and violates SRP.</p>
+                                </div>
+                            </div>
+                            
+                             <div>
+                                <h4 class="text-lg font-semibold text-slate-700">Benefits of SRP vs. Consequences of Violation</h4>
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                        <h5 class="font-bold text-green-800">✅ Benefits of Adherence</h5>
+                                        <ul class="mt-3 list-disc list-inside space-y-2 text-sm text-green-900">
+                                            <li><strong>Improved Readability:</strong> Smaller, focused classes are easier to understand.</li>
+                                            <li><strong>Easier Maintenance:</strong> Changes are localized. Fixing a bug in payment processing won't accidentally break notification logic.</li>
+                                            <li><strong>Enhanced Testability:</strong> Simple classes with few dependencies are easy to unit test thoroughly.</li>
+                                            <li><strong>Increased Reusability:</strong> A dedicated `Logger` class can be used anywhere, but a `UserService` with logging built-in cannot be easily reused.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <h5 class="font-bold text-red-800">❌ Consequences of Violation ("God Class")</h5>
+                                        <ul class="mt-3 list-disc list-inside space-y-2 text-sm text-red-900">
+                                             <li><strong>High Coupling:</strong> Multiple parts of the system depend on one massive class, creating a tangled mess.</li>
+                                            <li><strong>Low Cohesion:</strong> The methods inside the class have little in common, making its purpose unclear.</li>
+                                            <li><strong>Merge Conflicts:</strong> Multiple developers working on different features (e.g., payment vs. inventory) will constantly have merge conflicts in the same file.</li>
+                                            <li><strong>Fragility:</strong> A change in one area has a high risk of causing unintended side effects in another.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-700">Common Pitfalls and Misconceptions</h4>
+                                <div class="mt-4 p-4 warning-callout border-l-4 rounded-r-lg">
+                                     <h5 class="font-bold text-amber-800">Warning: Avoid These Traps</h5>
+                                     <ul class="mt-2 list-disc list-inside space-y-2 text-sm text-amber-900">
+                                        <li><strong>"One Method Per Class":</strong> SRP is not about the number of methods. A `Calculator` class can have `Add()`, `Subtract()`, etc. Its single responsibility is performing calculations.</li>
+                                        <li><strong>Over-Fragmentation:</strong> Don't split classes unnecessarily. If a set of private methods only supports one public method, they belong together. Creating too many tiny classes can make the system harder to navigate. The goal is cohesion, not just smallness.</li>
+                                        <li><strong>The Façade Pattern Exception:</strong> Sometimes, a class's single responsibility is to coordinate several other classes. This is known as the Façade pattern. The `OrderService` in our hard example becomes a façade—its job is not to *do* the work, but to *orchestrate* the workers. This is a valid application of SRP.</li>
+                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                     <article id="symptom-checker" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">Interactive: SRP Violation Symptom Checker</h3>
+                        <p class="mt-2 text-slate-600">Is your class suffering from responsibility overload? Go through this checklist. The more you check, the more likely it is that your class is violating SRP and needs refactoring.</p>
+                        <div class="mt-6 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                            <div id="symptom-checklist" class="space-y-4">
+                                <label class="flex items-start p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                    <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 mt-0.5">
+                                    <span class="ml-3 text-slate-700">The class name contains a vague, general term like "Manager", "Processor", or "Handler".</span>
+                                </label>
+                                <label class="flex items-start p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                    <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 mt-0.5">
+                                    <span class="ml-3 text-slate-700">The class imports modules or libraries for very different concerns (e.g., database, networking, AND UI formatting).</span>
+                                </label>
+                                <label class="flex items-start p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                    <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 mt-0.5">
+                                    <span class="ml-3 text-slate-700">You find yourself writing comments to explain what different "sections" of the class do.</span>
+                                </label>
+                                <label class="flex items-start p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                    <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 mt-0.5">
+                                    <span class="ml-3 text-slate-700">To unit test one method, you need to mock or set up objects that are completely unrelated to it.</span>
+                                </label>
+                                <label class="flex items-start p-3 border rounded-lg hover:bg-slate-50 transition-colors">
+                                    <input type="checkbox" class="h-5 w-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 mt-0.5">
+                                    <span class="ml-3 text-slate-700">You can describe what the class does using the word "and" multiple times (e.g., "It validates user input AND saves to the database AND sends an email.").</span>
+                                </label>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <p class="text-lg font-semibold text-slate-800">Violation Score: <span id="srp-score" class="font-bold text-sky-600">0 / 5</span></p>
+                                <p id="srp-feedback" class="mt-2 text-slate-600">Your class looks focused!</p>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article id="uml" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">UML Diagram: Before vs. After SRP</h3>
+                        <p class="mt-2 text-slate-600">This visual comparison clearly shows the transformation. On the left, a single, highly-coupled `UserService` handles responsibilities for authentication, notification, and logging. On the right, these responsibilities are cleanly separated into distinct, cohesive classes. The result is a system that is far more modular and manageable.</p>
+                        
+                        <div class="mt-6 border border-slate-300 rounded-lg p-6 bg-white shadow-sm">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 id="uml-title" class="text-lg font-semibold text-slate-700">Before: The "God Class"</h4>
+                                <button id="toggle-uml-btn" class="bg-sky-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors shadow-sm">Show After SRP</button>
+                            </div>
+
+                            <div id="uml-before" class="flex justify-center items-start p-4">
+                                <div class="bg-red-50 border-2 border-red-400 rounded-lg shadow-lg w-72">
+                                    <div class="font-bold text-center text-red-800 bg-red-200 p-2 rounded-t-md">UserService</div>
+                                    <ul class="p-3 text-sm text-red-900 divide-y divide-red-200">
+                                        <li class="py-1 font-semibold">- Properties: UserData</li>
+                                        <li class="py-1">+ RegisterUser()</li>
+                                        <li class="py-1">+ Authenticate()</li>
+                                        <li class="py-1">+ SendWelcomeEmail()</li>
+                                        <li class="py-1">+ LogError()</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div id="uml-after" class="hidden p-4">
+                               <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                                    <div class="bg-green-50 border-2 border-green-500 rounded-lg shadow-md">
+                                        <div class="font-bold text-green-800 bg-green-200 p-2 rounded-t-md">AuthService</div>
+                                        <ul class="p-3 text-sm text-green-900 divide-y divide-green-200">
+                                            <li class="py-1">+ Authenticate()</li>
+                                            <li class="py-1">+ RegisterUser()</li>
+                                        </ul>
+                                    </div>
+                                     <div class="bg-green-50 border-2 border-green-500 rounded-lg shadow-md">
+                                        <div class="font-bold text-green-800 bg-green-200 p-2 rounded-t-md">NotificationService</div>
+                                        <ul class="p-3 text-sm text-green-900 divide-y divide-green-200">
+                                            <li class="py-1">+ SendWelcomeEmail()</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-green-50 border-2 border-green-500 rounded-lg shadow-md">
+                                        <div class="font-bold text-green-800 bg-green-200 p-2 rounded-t-md">LoggerService</div>
+                                        <ul class="p-3 text-sm text-green-900 divide-y divide-green-200">
+                                            <li class="py-1">+ LogError()</li>
+                                        </ul>
+                                    </div>
+                               </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article id="practice" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">Coding Practice: Applying SRP</h3>
+                        <p class="mt-2 text-slate-600">Let's move from theory to practice. The following C# examples demonstrate how to identify and fix SRP violations in common scenarios.</p>
+
+                        <div class="mt-8 space-y-12">
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-700">[Easy] Invoice Generator & Printer</h4>
+                                <p class="mt-1 text-slate-600"><strong>The Problem:</strong> The `Invoice` class is responsible for both its data (`Amount`, `InvoiceDate`) and its presentation (`PrintInvoice`). A change in business logic (how invoices are added) and a change in presentation format are driven by different actors, so they belong in different classes.</p>
+                                <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div class="code-block bg-slate-800 rounded-lg overflow-hidden">
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <div class="p-4 text-sm font-semibold text-red-400 bg-slate-900">Before SRP</div>
+                                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class Invoice
+{
+    public long Amount { get; set; }
+    public DateTime InvoiceDate { get; set; }
+
+    public void AddInvoice()
+    {
+        // Add invoice to database
+        Console.WriteLine("Invoice added.");
+    }
+
+    public void PrintInvoice()
+    {
+        // Print the invoice
+        Console.WriteLine($"Printing invoice for amount {Amount}...");
+    }
+}</code></pre>
+                                    </div>
+                                    <div class="code-block bg-slate-800 rounded-lg overflow-hidden">
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <div class="p-4 text-sm font-semibold text-green-400 bg-slate-900">After SRP</div>
+                                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class InvoiceGenerator
+{
+    public void AddInvoice()
+    {
+        // Add invoice to database
+        Console.WriteLine("Invoice added.");
+    }
+}
+
+public class InvoicePrinter
+{
+    public void PrintInvoice(long Amount)
+    {
+        Console.WriteLine($"Printing invoice for amount {Amount}...");
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-700">[Medium] Separating Logging Logic</h4>
+                                <p class="mt-1 text-slate-600"><strong>The Problem:</strong> The `OrderService`'s primary responsibility is business logic. Error logging is a separate, cross-cutting concern. By mixing them, changing the logging framework (e.g., from `Console` to a file or a cloud service like Datadog) would require modifying the business logic class, which is a clear SRP violation.</p>
+                                <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div class="code-block bg-slate-800 rounded-lg overflow-hidden">
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <div class="p-4 text-sm font-semibold text-red-400 bg-slate-900">Before SRP</div>
+                                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class OrderService
+{
+    public void CreateOrder()
+    {
+        try 
+        {
+            // Business logic to create an order
+            Console.WriteLine("Order created.");
+        }
+        catch (Exception ex)
+        {
+            // Logging logic is tightly coupled
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+}</code></pre>
+                                    </div>
+                                    <div class="code-block bg-slate-800 rounded-lg overflow-hidden">
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <div class="p-4 text-sm font-semibold text-green-400 bg-slate-900">After SRP</div>
+                                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public interface ILogger
+{
+    void LogError(string message);
+}
+
+public class ConsoleLogger : ILogger
+{
+    public void LogError(string message)
+    {
+        Console.WriteLine(message);
+    }
+}
+
+public class OrderService
+{
+    private readonly ILogger _logger;
+    public OrderService(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    public void CreateOrder()
+    {
+        try { /* ... */ }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error: {ex.Message}");
+        }
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <article id="casestudy" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">Case Study: Step-by-Step Monolith Refactoring</h3>
+                         <p class="mt-2 text-slate-600">A monolithic `OrderService` is a classic, real-world example of an SRP violation. Let's break down the refactoring process into a clear, methodical sequence of steps.</p>
+
+                        <div class="mt-6 p-6 border rounded-lg bg-white shadow-sm space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-700">The Monolithic `OrderService` (Before SRP)</h4>
+                                <p class="text-sm text-slate-500 mt-1">This single class is trying to be a payment processor, an inventory manager, a database repository, and a notifier all at once.</p>
+                                <div class="code-block bg-slate-800 rounded-lg overflow-hidden mt-4">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class MonolithicOrderService
+{
+    public void ProcessOrder(Order order)
+    {
+        Console.WriteLine("Validating order...");
+        Console.WriteLine("Processing payment...");         // Responsibility 1
+        Console.WriteLine("Updating inventory...");        // Responsibility 2
+        Console.WriteLine("Saving order to DB...");        // Responsibility 3
+        Console.WriteLine("Sending order confirmation email..."); // Responsibility 4
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-slate-700">Step 1: Identify and Separate the Responsibilities</h4>
+                                <p class="text-sm text-slate-500 mt-1">First, we identify the distinct actors and their concerns:</p>
+                                 <ul class="mt-2 text-sm text-slate-600 list-disc list-inside">
+                                    <li><strong>Finance Dept (Actor):</strong> Cares about payment processing.</li>
+                                    <li><strong>Warehouse Dept (Actor):</strong> Cares about inventory levels.</li>
+                                    <li><strong>System Admin (Actor):</strong> Cares about data persistence.</li>
+                                    <li><strong>Marketing Dept (Actor):</strong> Cares about customer communication.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-slate-700">Step 2: Define Contracts (Interfaces) for Each Responsibility</h4>
+                                <p class="text-sm text-slate-500 mt-1">We create interfaces to define what each specialized service should do. This decouples the main workflow from the concrete implementations.</p>
+                                <div class="code-block bg-slate-800 rounded-lg overflow-hidden mt-4">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public interface IPaymentService { void ProcessPayment(Order order); }
+public interface IInventoryService { void UpdateInventory(Order order); }
+public interface IOrderRepository { void Save(Order order); }
+public interface INotificationService { void SendConfirmation(Order order); }
+                                    </code></pre>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-slate-700">Step 3: Create Concrete Implementations</h4>
+                                <p class="text-sm text-slate-500 mt-1">Now we create simple, focused classes that implement these interfaces. Each class does one thing well.</p>
+                                <div class="code-block bg-slate-800 rounded-lg overflow-hidden mt-4">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class StripePaymentService : IPaymentService { /* ... */ }
+public class WarehouseInventoryService : IInventoryService { /* ... */ }
+public class SqlOrderRepository : IOrderRepository { /* ... */ }
+public class EmailNotificationService : INotificationService { /* ... */ }
+                                    </code></pre>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-semibold text-slate-700">Step 4: Create the Orchestrator (The New SRP-Compliant `OrderService`)</h4>
+                                <p class="text-sm text-slate-500 mt-1">Finally, the new `OrderService` has only one responsibility: to coordinate the workflow by calling the specialized services in the correct order. It doesn't know *how* payment is processed, only that it needs to be done. This is an example of the Façade pattern.</p>
+                                <div class="code-block bg-slate-800 rounded-lg overflow-hidden mt-4">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class OrderService
+{
+    private readonly IPaymentService _paymentService;
+    private readonly IInventoryService _inventoryService;
+    private readonly IOrderRepository _orderRepository;
+    private readonly INotificationService _notificationService;
+
+    // Dependencies are injected via the constructor
+    public OrderService(IPaymentService ps, IInventoryService invs, IOrderRepository or, INotificationService ns)
+    {
+        _paymentService = ps;
+        _inventoryService = invs;
+        _orderRepository = or;
+        _notificationService = ns;
+    }
+
+    public void ProcessOrder(Order order)
+    {
+        _paymentService.ProcessPayment(order);
+        _inventoryService.UpdateInventory(order);
+        _orderRepository.Save(order);
+        _notificationService.SendConfirmation(order);
+        Console.WriteLine("Order processing complete.");
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article id="quiz" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">Knowledge Check</h3>
+                        <p class="mt-2 text-slate-600">Test your understanding with a few more advanced questions.</p>
+                        <div id="quiz-container" class="mt-6 space-y-6">
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold text-slate-800">1. What is the most precise definition of the Single Responsibility Principle?</p>
+                                <div class="mt-4 space-y-3" data-quiz-question="1" data-correct="c">
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q1" value="a" class="sr-only">
+                                        <span>A class should have only one public method.</span>
+                                    </label>
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q1" value="b" class="sr-only">
+                                        <span>A class should do only one thing.</span>
+                                    </label>
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q1" value="c" class="sr-only">
+                                        <span>A class should have only one reason to change, related to a single actor.</span>
+                                    </label>
+                                </div>
+                                <div id="feedback-1" class="mt-4 hidden">
+                                    <p class="text-sm p-3 rounded-lg"><strong class="font-bold">Answer:</strong> C. This is the most accurate definition, as it correctly ties the "reason to change" to the "actor" (stakeholder) who would request that change. It's more precise than simply saying "one thing".</p>
+                                </div>
+                            </div>
+                            
+                             <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold text-slate-800">2. Which of the following is NOT a direct benefit of applying SRP?</p>
+                                <div class="mt-4 space-y-3" data-quiz-question="2" data-correct="b">
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q2" value="a" class="sr-only">
+                                        <span>Improved testability.</span>
+                                    </label>
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q2" value="b" class="sr-only">
+                                        <span>Faster code execution.</span>
+                                    </label>
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q2" value="c" class="sr-only">
+                                        <span>Reduced merge conflicts in team environments.</span>
+                                    </label>
+                                </div>
+                                <div id="feedback-2" class="mt-4 hidden">
+                                    <p class="text-sm p-3 rounded-lg"><strong class="font-bold">Answer:</strong> B. SRP is a principle of software design and architecture. It primarily affects maintainability, testability, and scalability. It does not directly guarantee faster runtime performance.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold text-slate-800">3. A refactored `OrderService` coordinates calls to `IPaymentService` and `IInventoryService`. What is its single responsibility?</p>
+                                <div class="mt-4 space-y-3" data-quiz-question="3" data-correct="a">
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q3" value="a" class="sr-only">
+                                        <span>Orchestrating the business workflow for processing an order.</span>
+                                    </label>
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q3" value="b" class="sr-only">
+                                        <span>It still has two responsibilities: payments and inventory.</span>
+                                    </label>
+                                    <label class="quiz-option block p-4 border border-slate-300 rounded-lg hover:bg-slate-100 cursor-pointer has-[:checked]:bg-sky-50 has-[:checked]:border-sky-400">
+                                        <input type="radio" name="q3" value="c" class="sr-only">
+                                        <span>Managing dependencies for other services.</span>
+                                    </label>
+                                </div>
+                                <div id="feedback-3" class="mt-4 hidden">
+                                    <p class="text-sm p-3 rounded-lg"><strong class="font-bold">Answer:</strong> A. The class's single responsibility has become orchestration. It doesn't know the details of *how* payments or inventory are handled, only the sequence in which they must occur. This is a valid application of SRP, often seen in the Façade pattern.</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </article>
+
+                    <article id="challenge" class="scroll-mt-24">
+                        <h3 class="text-2xl font-bold font-lexend text-slate-800 tracking-tight">Self-Assessment Challenge</h3>
+                        <p class="mt-2 text-slate-600">You've been given a `FileManager` class that reads text from a file, encrypts the text, and then writes the encrypted text to a new file. Refactor this class to comply with SRP. Think about the different actors and reasons for change.</p>
+                        <div class="code-block bg-slate-800 rounded-lg overflow-hidden mt-4">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class FileManager
+{
+    public void HandleFile(string sourcePath, string destPath)
+    {
+        string text = System.IO.File.ReadAllText(sourcePath);
+        string encryptedText = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(text));
+        System.IO.File.WriteAllText(destPath, encryptedText);
+    }
+}
+                            </code></pre>
+                        </div>
+                        <div class="mt-6">
+                            <button id="toggle-solution-btn" class="bg-slate-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">Show Suggested Solution</button>
+                            <div id="solution" class="hidden mt-4 p-6 border rounded-lg bg-white shadow-sm">
+                                <h4 class="font-semibold text-slate-700">Suggested Solution Walkthrough</h4>
+                                <p class="text-sm text-slate-600 mt-2">The original class has three distinct responsibilities tied to different potential changes:
+                                <ul class="text-sm text-slate-600 mt-2 list-disc list-inside">
+                                  <li><strong>File I/O Logic:</strong> Might change if we need to read from a network stream instead of a local file.</li>
+                                  <li><strong>Encryption Algorithm:</strong> Might change if security requirements are updated (e.g., from Base64 to AES).</li>
+                                  <li><strong>Orchestration:</strong> The sequence of operations.</li>
+                                </ul>
+                                </p>
+                                <p class="text-sm text-slate-600 mt-2">A good solution isolates these concerns into separate classes and uses a coordinator, making the system flexible and maintainable.</p>
+                                <div class="code-block bg-slate-800 rounded-lg overflow-hidden mt-4">
+                                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                    <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp">
+public class FileReader
+{
+    public string ReadText(string path) => System.IO.File.ReadAllText(path);
+}
+
+public class TextEncryptor
+{
+    public string Encrypt(string text) => Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(text));
+}
+
+public class FileWriter
+{
+    public void WriteText(string path, string content) => System.IO.File.WriteAllText(path, content);
+}
+
+// Orchestrator class with a single responsibility: coordinating the secure file transfer workflow.
+public class SecureFileHandler
+{
+    private readonly FileReader _reader;
+    private readonly TextEncryptor _encryptor;
+    private readonly FileWriter _writer;
+
+    public SecureFileHandler(FileReader reader, TextEncryptor encryptor, FileWriter writer)
+    {
+        _reader = reader;
+        _encryptor = encryptor;
+        _writer = writer;
+    }
+
+    public void HandleFile(string sourcePath, string destPath)
+    {
+        string originalText = _reader.ReadText(sourcePath);
+        string encryptedText = _encryptor.Encrypt(originalText);
+        _writer.WriteText(destPath, encryptedText);
+        Console.WriteLine("Secure file handling complete.");
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </main>
+            </div>
+            
+            <aside class="hidden lg:block">
+                <div class="sticky top-24">
+                    <h3 class="font-lexend font-semibold text-slate-800">On this page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Introduction</a></li>
+                            <li><a href="#theory" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Theory & Motivation</a></li>
+                            <li><a href="#symptom-checker" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Symptom Checker</a></li>
+                            <li><a href="#uml" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">UML Diagram</a></li>
+                            <li><a href="#practice" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Coding Practice</a></li>
+                            <li><a href="#casestudy" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block text-sm text-slate-600 border-l-2 border-transparent pl-4 hover:text-sky-600 hover:border-sky-600 transition-colors">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Copy to Clipboard
+            window.copyCode = function(button) {
+                const pre = button.parentElement.querySelector('pre');
+                const code = pre.querySelector('code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    button.innerText = 'Copied!';
+                    setTimeout(() => {
+                        button.innerText = 'Copy';
+                    }, 2000);
+                });
+            }
+
+            // UML Toggle
+            const toggleUmlBtn = document.getElementById('toggle-uml-btn');
+            const umlTitle = document.getElementById('uml-title');
+            const umlBefore = document.getElementById('uml-before');
+            const umlAfter = document.getElementById('uml-after');
+            let isUmlBefore = true;
+            toggleUmlBtn.addEventListener('click', () => {
+                isUmlBefore = !isUmlBefore;
+                if (isUmlBefore) {
+                    umlTitle.innerText = 'Before: The "God Class"';
+                    toggleUmlBtn.innerText = 'Show After SRP';
+                    umlBefore.classList.remove('hidden');
+                    umlAfter.classList.add('hidden');
+                } else {
+                    umlTitle.innerText = 'After: Refactored with SRP';
+                    toggleUmlBtn.innerText = 'Show Before SRP';
+                    umlBefore.classList.add('hidden');
+                    umlAfter.classList.remove('hidden');
+                }
+            });
+
+            // Solution Toggle
+            const toggleSolutionBtn = document.getElementById('toggle-solution-btn');
+            const solutionDiv = document.getElementById('solution');
+            toggleSolutionBtn.addEventListener('click', () => {
+                const isHidden = solutionDiv.classList.contains('hidden');
+                solutionDiv.classList.toggle('hidden');
+                toggleSolutionBtn.innerText = isHidden ? 'Hide Solution' : 'Show Suggested Solution';
+            });
+            
+            // Quiz Logic
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.addEventListener('change', (event) => {
+                if (event.target.type === 'radio') {
+                    const questionDiv = event.target.closest('[data-quiz-question]');
+                    const questionId = questionDiv.dataset.quizQuestion;
+                    const correctAnswer = questionDiv.dataset.correct;
+                    const selectedAnswer = event.target.value;
+                    const feedbackDiv = document.getElementById(`feedback-${questionId}`);
+
+                    const options = questionDiv.querySelectorAll('.quiz-option');
+                    options.forEach(opt => {
+                        opt.classList.remove('correct', 'incorrect');
+                    });
+                    
+                    const selectedLabel = event.target.closest('label');
+                    if (selectedAnswer === correctAnswer) {
+                        selectedLabel.classList.add('correct');
+                        feedbackDiv.querySelector('p').className = 'text-sm p-3 rounded-lg bg-green-100 text-green-800';
+                    } else {
+                        selectedLabel.classList.add('incorrect');
+                         feedbackDiv.querySelector('p').className = 'text-sm p-3 rounded-lg bg-red-100 text-red-800';
+                    }
+                    feedbackDiv.classList.remove('hidden');
+                }
+            });
+
+            // Symptom Checker Logic
+            const checklist = document.getElementById('symptom-checklist');
+            const scoreEl = document.getElementById('srp-score');
+            const feedbackEl = document.getElementById('srp-feedback');
+            checklist.addEventListener('change', () => {
+                const checkedBoxes = checklist.querySelectorAll('input[type="checkbox"]:checked');
+                const score = checkedBoxes.length;
+                scoreEl.textContent = `${score} / 5`;
+                
+                if (score === 0) {
+                    feedbackEl.textContent = "Looks great! This class seems highly focused.";
+                    scoreEl.className = "font-bold text-green-600";
+                } else if (score <= 2) {
+                    feedbackEl.textContent = "A few potential issues. Might be worth a second look.";
+                    scoreEl.className = "font-bold text-yellow-600";
+                } else {
+                    feedbackEl.textContent = "High probability of SRP violation. Consider refactoring.";
+                    scoreEl.className = "font-bold text-red-600";
+                }
+            });
+
+            // TOC Scrollspy
+            const sections = document.querySelectorAll('article[id]');
+            const tocLinks = document.querySelectorAll('#toc a');
+            const toc = document.getElementById('toc');
+
+            if (toc) {
+                 const observer = new IntersectionObserver(entries => {
+                    let activeId = null;
+                    // Find the first visible section from the top
+                    for (let i = entries.length - 1; i >= 0; i--) {
+                        if (entries[i].isIntersecting && entries[i].intersectionRatio > 0) {
+                            activeId = entries[i].target.getAttribute('id');
+                            break;
+                        }
+                    }
+                    // If no section is intersecting, find the last one that was passed
+                    if(activeId === null){
+                       for(const section of sections){
+                            if(section.getBoundingClientRect().top < 100){
+                                activeId = section.getAttribute('id');
+                            }
+                       }
+                    }
+
+                    tocLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${activeId}`) {
+                            link.classList.add('active');
+                        }
+                    });
+
+                }, { rootMargin: '-20% 0px -70% 0px', threshold: [0, 0.25, 0.5, 0.75, 1]});
+
+                sections.forEach(section => {
+                    observer.observe(section);
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
