@@ -100,6 +100,10 @@
     </div>
 
     <script>
+               if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
         const fullRoadmapData = [
             { 
                 week: 1, 
@@ -285,8 +289,6 @@
             document.querySelectorAll('#view-switcher button').forEach(button => button.classList.toggle('active', button.dataset.view === viewName));
             
             if (viewName === 'interactive') {
-                const currentDayWeekIndex = fullRoadmapData.findIndex(week => week.days.some(day => day.day === currentDay));
-                activeWeekTab = currentDayWeekIndex !== -1 ? currentDayWeekIndex : 0;
                 renderInteractiveView();
                 renderTopicDistributionChart();
             } else {
@@ -473,16 +475,29 @@
             
             const urlParams = new URLSearchParams(window.location.search);
             const view = urlParams.get('view') || 'interactive';
+            const weekParam = urlParams.get('week');
             
-            if (view === 'curriculum') {
-                 switchView('curriculum');
+            if (weekParam) {
+                const weekIndex = parseInt(weekParam, 10) - 1;
+                if (weekIndex >= 0 && weekIndex < fullRoadmapData.length) {
+                    activeWeekTab = weekIndex;
+                }
             } else {
-                 const currentDayWeekIndex = fullRoadmapData.findIndex(week => week.days.some(day => day.day === currentDay));
+                const currentDayWeekIndex = fullRoadmapData.findIndex(week => week.days.some(day => day.day === currentDay));
                 activeWeekTab = currentDayWeekIndex !== -1 ? currentDayWeekIndex : 0;
-                switchView('interactive');
             }
+            switchView(view);
             
             updateFocusHeader();
+
+            if (weekParam) {
+                const weekTabsSection = document.getElementById('week-tabs');
+                if (weekTabsSection) {
+                    setTimeout(() => {
+                        weekTabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                }
+            }            
         }
 
         document.addEventListener('DOMContentLoaded', () => {
