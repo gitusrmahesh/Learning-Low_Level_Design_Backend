@@ -473,12 +473,20 @@
             
             const urlParams = new URLSearchParams(window.location.search);
             const view = urlParams.get('view') || 'interactive';
-            
+            const weekParam = urlParams.get('week');
+
             if (view === 'curriculum') {
                  switchView('curriculum');
             } else {
-                 const currentDayWeekIndex = fullRoadmapData.findIndex(week => week.days.some(day => day.day === currentDay));
-                activeWeekTab = currentDayWeekIndex !== -1 ? currentDayWeekIndex : 0;
+                if (weekParam) {
+                    const weekIndex = parseInt(weekParam, 10) - 1;
+                    if (weekIndex >= 0 && weekIndex < fullRoadmapData.length) {
+                        activeWeekTab = weekIndex;
+                    }
+                } else {
+                    const currentDayWeekIndex = fullRoadmapData.findIndex(week => week.days.some(day => day.day === currentDay));
+                    activeWeekTab = currentDayWeekIndex !== -1 ? currentDayWeekIndex : 0;
+                }
                 switchView('interactive');
             }
             
