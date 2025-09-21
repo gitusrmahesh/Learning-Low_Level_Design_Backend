@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 37: Command Pattern - LLD Bootcamp</title>
+    <!-- Chosen Palette: Slate & Teal -->
+    <!-- Application Structure Plan: A two-column layout with a sticky Table of Contents for easy navigation. The main content flows from theory (analogy, core concepts) to practical application (interactive visualizations, UML, coded examples), and finally to assessment (quiz, challenge). This structure is chosen to create a guided learning path, reinforcing concepts at each step, moving from abstract to concrete. -->
+    <!-- Visualization & Content Choices: 1. Command Queue: Goal: Explain queuing. Method: HTML/CSS flexbox visualization. Interaction: Buttons add/execute commands, JS updates UI. Justification: More dynamic than a static image. 2. UML Diagram: Goal: Show pattern structure. Method: Interactive HTML/CSS diagram. Interaction: Hovering over components reveals descriptions via JS. Justification: Deeper engagement than a static diagram. 3. Text Editor Demo: Goal: Demonstrate Undo/Redo. Method: Live simulation with textarea and buttons. Interaction: JS command objects manipulate textarea state and manage undo/redo stacks. Justification: Hands-on experience solidifies the core use case. All code examples in C# with copy functionality. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0d9488;
+            font-weight: 600;
+            border-left-color: #0d9488;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            background-color: #475569;
+            color: #f1f5f9;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        .copy-button.copied {
+            background-color: #10b981;
+        }
+        .quiz-option.selected {
+            background-color: #cffafe;
+            border-color: #06b6d4;
+        }
+        .quiz-option.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .solution-content {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .solution-content.show {
+            max-height: 2000px;
+            opacity: 1;
+        }
+        .command-queue-item {
+            transition: all 0.5s ease;
+            transform-origin: center;
+        }
+        .command-queue-item.processed {
+            background-color: #10b981;
+            color: white;
+            transform: scale(0.95);
+        }
+        .uml-el { position: relative; border: 2px solid #94a3b8; padding: 1rem; border-radius: 0.5rem; background-color: #f8fafc; text-align: center; }
+        .uml-line { position: absolute; background-color: #64748b; }
+        .uml-arrow { border: solid #64748b; border-width: 0 2px 2px 0; display: inline-block; padding: 3px; transform: rotate(45deg); -webkit-transform: rotate(45deg); position: absolute; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-6">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+                <div class="bg-teal-600 text-white font-bold text-2xl w-16 h-16 rounded-full flex items-center justify-center shadow-md">37</div>
+                <div>
+                    <p class="text-slate-500 text-sm font-medium">Behavioral Patterns & UML</p>
+                    <h2 class="text-3xl font-bold font-lexend text-slate-900 tracking-tight">Command Pattern</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div id="main-content" class="lg:col-span-9 space-y-16">
+                
+                <section id="theory" class="space-y-6">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-900 border-b-2 border-teal-500 pb-2">Theory: The Power of an Action Request</h3>
+                    <p class="text-slate-600">The Command Pattern is a behavioral design pattern that turns a request into a stand-alone object containing all information about the request. This transformation lets you parameterize methods with different requests, delay or queue a request's execution, and support undoable operations.</p>
+                    <div class="bg-teal-50 border border-teal-200 rounded-lg p-6">
+                        <h4 class="font-semibold text-lg text-teal-800 mb-2">Real-World Analogy: Ordering at a Restaurant</h4>
+                        <p class="text-teal-700">Imagine you're at a restaurant. You (the <b class="font-semibold">Client</b>) give your order for a burger to the waiter (the <b class="font-semibold">Invoker</b>). The waiter doesn't cook the burger; instead, they write it down on an order slip (the <b class="font-semibold">Command</b>). This order slip contains all the details: "one burger, medium-rare, no pickles."</p>
+                        <p class="text-teal-700 mt-2">The waiter then places this order slip on the kitchen's order queue. The chef (the <b class="font-semibold">Receiver</b>) picks up the slip and knows exactly what to do. The key is that the waiter (invoker) and the chef (receiver) are completely decoupled. The order slip is the object that connects them. The kitchen can queue up many orders, and if you change your mind quickly, the waiter might be able to "undo" the order by taking the slip back.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-xl font-semibold text-slate-700">Key Concept 1: Encapsulating Requests</h4>
+                        <p class="text-slate-600">The core idea is to encapsulate the request itself as an object. Instead of a method call like `chef.cookBurger()`, you create a `CookBurgerCommand` object. This object holds a reference to the `chef` (the receiver) and contains an `execute()` method that, when called, invokes the appropriate method on the receiver (`chef.cookBurger()`).</p>
+                        <div class="code-block">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">public interface ICommand
+{
+    void Execute();
+}
+
+public class CookBurgerCommand : ICommand
+{
+    private readonly Chef _chef;
+    public CookBurgerCommand(Chef chef) { _chef = chef; }
+    public void Execute() => _chef.CookBurger();
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-xl font-semibold text-slate-700">Key Concept 2: Undo/Redo Functionality</h4>
+                        <p class="text-slate-600">Because each action is an object, we can extend it to support reversal. We simply add an `unexecute()` or `undo()` method to our command interface. When an operation needs to be undone, we can call this method. To manage a history of operations, we use two stacks: one for undo and one for redo.</p>
+                        <div class="code-block">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">public interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+public class TextAppendCommand : ICommand
+{
+    private Editor _editor;
+    private string _textToAppend;
+    
+    public TextAppendCommand(Editor editor, string text)
+    {
+        _editor = editor;
+        _textToAppend = text;
+    }
+
+    public void Execute() => _editor.AppendText(_textToAppend);
+    public void Undo() => _editor.DeleteText(_textToAppend.Length);
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-xl font-semibold text-slate-700">Key Concept 3: The Command Queue</h4>
+                        <p class="text-slate-600">Commands can be stored in a queue for deferred execution. This is incredibly useful for logging requests, creating macros, or processing tasks in a different thread or even on a different machine. For example, a series of database operations can be queued up and executed as a single batch transaction.</p>
+                        <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                            <h5 class="font-semibold text-center mb-4">Interactive Command Queue</h5>
+                            <div class="flex gap-2 justify-center mb-4">
+                                <button id="add-command-btn" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 font-semibold">Add Command</button>
+                                <button id="exec-command-btn" class="bg-slate-600 text-white px-4 py-2 rounded-lg hover:bg-slate-700 font-semibold">Execute Next</button>
+                            </div>
+                            <div id="command-queue" class="bg-slate-100 p-4 rounded-lg min-h-[6rem] flex items-center gap-2 overflow-x-auto">
+                                <p class="text-slate-500">Queue is empty...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <section id="uml" class="space-y-6">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-900 border-b-2 border-teal-500 pb-2">UML Diagram</h3>
+                    <p class="text-slate-600">The UML diagram for the Command Pattern clearly shows the separation of concerns between the object that invokes the operation and the object that performs it.</p>
+                    <div class="bg-white p-8 rounded-lg border border-slate-200 shadow-sm overflow-x-auto">
+                        <div class="relative min-w-[700px] h-[350px]">
+                            <div class="uml-el uml-component absolute top-1/2 -translate-y-1/2 left-0 w-48" data-title="Client" data-desc="Creates a ConcreteCommand object and sets its receiver.">
+                                <p class="font-bold">Client</p>
+                            </div>
+                            <div class="uml-el uml-component absolute top-1/2 -translate-y-1/2 left-64 w-48" data-title="Invoker" data-desc="Holds a command and asks it to carry out the request by calling execute().">
+                                <p class="font-bold">Invoker</p>
+                                <hr class="my-2">
+                                <p class="text-sm">- command: ICommand</p>
+                                <p class="text-sm">+ setCommand()</p>
+                                <p class="text-sm">+ executeCommand()</p>
+                            </div>
+                            <div class="uml-el uml-component absolute top-0 left-[550px] w-48" data-title="ICommand (Interface)" data-desc="Declares an interface for executing an operation.">
+                                <p class="font-bold">&lt;&lt;interface&gt;&gt;<br>ICommand</p>
+                                <hr class="my-2">
+                                <p class="text-sm">+ Execute()</p>
+                            </div>
+                            <div class="uml-el uml-component absolute top-1/2 left-[550px] w-48" data-title="ConcreteCommand" data-desc="Implements ICommand. Defines a binding between a Receiver object and an action.">
+                                <p class="font-bold">ConcreteCommand</p>
+                                <hr class="my-2">
+                                <p class="text-sm">- receiver: Receiver</p>
+                                <p class="text-sm">+ Execute()</p>
+                            </div>
+                            <div class="uml-el uml-component absolute bottom-0 left-[550px] w-48" data-title="Receiver" data-desc="Knows how to perform the operations associated with carrying out a request.">
+                                <p class="font-bold">Receiver</p>
+                                <hr class="my-2">
+                                <p class="text-sm">+ Action()</p>
+                            </div>
+                            <div id="uml-tooltip" class="absolute hidden bg-slate-800 text-white text-sm rounded-lg p-3 shadow-lg z-10 w-64"></div>
+                            
+                            <div class="uml-line" style="left: 192px; top: 50%; width: 72px; height: 2px;"></div>
+                            <div class="uml-line" style="left: 480px; top: 18%; width: 2px; height: 60px;"></div>
+                            <div class="uml-line" style="left: 480px; top: 50%; width: 70px; height: 2px;"></div>
+                            <div class="uml-line" style="left: 480px; top: 50%; width: 2px; height: 60px;"></div>
+                            <div class="uml-arrow" style="left: 472px; top: 15%; transform: rotate(225deg);"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="coding-practice" class="space-y-6">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-900 border-b-2 border-teal-500 pb-2">Coding Practice (C#)</h3>
+                    <div id="tabs-container">
+                        <div class="border-b border-slate-200">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button class="tab-button active text-teal-600 border-teal-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Light Switch</button>
+                                <button class="tab-button text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Remote Control</button>
+                                <button class="tab-button text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Text Editor Undo</button>
+                                <button class="tab-button text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Batch Job</button>
+                            </nav>
+                        </div>
+                        <div id="tabs-content" class="mt-6">
+                            <div class="tab-panel active space-y-4">
+                                <h4 class="text-lg font-semibold">[Easy] Light Switch</h4>
+                                <p class="text-slate-600">Create a simple light switch system. You'll have a `Light` class (Receiver), `ICommand` interface, and `TurnOnCommand` and `TurnOffCommand` concrete classes. The `Switch` class (Invoker) will execute these commands.</p>
+                                <button class="solution-toggle bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Show Solution</button>
+                                <div class="solution-content">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// Receiver
+public class Light
+{
+    public void TurnOn() => Console.WriteLine("The light is ON");
+    public void TurnOff() => Console.WriteLine("The light is OFF");
+}
+
+// Command Interface
+public interface ICommand
+{
+    void Execute();
+}
+
+// Concrete Commands
+public class TurnOnCommand : ICommand
+{
+    private readonly Light _light;
+    public TurnOnCommand(Light light) => _light = light;
+    public void Execute() => _light.TurnOn();
+}
+
+public class TurnOffCommand : ICommand
+{
+    private readonly Light _light;
+    public TurnOffCommand(Light light) => _light = light;
+    public void Execute() => _light.TurnOff();
+}
+
+// Invoker
+public class Switch
+{
+    private ICommand _command;
+    public void SetCommand(ICommand command) => _command = command;
+    public void Press() => _command.Execute();
+}
+
+// Client
+public class Client
+{
+    public void Main()
+    {
+        Light livingRoomLight = new Light();
+        ICommand turnOn = new TurnOnCommand(livingRoomLight);
+        ICommand turnOff = new TurnOffCommand(livingRoomLight);
+
+        Switch lightSwitch = new Switch();
+        
+        lightSwitch.SetCommand(turnOn);
+        lightSwitch.Press(); // Output: The light is ON
+
+        lightSwitch.SetCommand(turnOff);
+        lightSwitch.Press(); // Output: The light is OFF
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-panel hidden space-y-4">
+                                <h4 class="text-lg font-semibold">[Medium] Remote Control</h4>
+                                <p class="text-slate-600">Design a remote control with multiple programmable slots. Each slot can hold a command for different devices (e.g., TV, Stereo). Implement commands for turning devices on and off.</p>
+                                <button class="solution-toggle bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Show Solution</button>
+                                <div class="solution-content">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System.Collections.Generic;
+
+// Receivers
+public class TV { public void TurnOn() => Console.WriteLine("TV is ON"); }
+public class Stereo { public void TurnOn() => Console.WriteLine("Stereo is ON"); }
+
+// Command Interface
+public interface ICommand { void Execute(); }
+
+// Concrete Commands
+public class TVOnCommand : ICommand { private TV _tv; public TVOnCommand(TV tv) => _tv = tv; public void Execute() => _tv.TurnOn(); }
+public class StereoOnCommand : ICommand { private Stereo _stereo; public StereoOnCommand(Stereo s) => _stereo = s; public void Execute() => _stereo.TurnOn(); }
+
+// Invoker
+public class RemoteControl
+{
+    private readonly Dictionary&lt;int, ICommand&gt; _commands = new Dictionary&lt;int, ICommand&gt;();
+    public void SetCommand(int slot, ICommand command) => _commands[slot] = command;
+    public void PressButton(int slot)
+    {
+        if (_commands.ContainsKey(slot)) _commands[slot].Execute();
+        else Console.WriteLine("No command programmed for this slot.");
+    }
+}
+
+// Client
+public class Client
+{
+    public void Main()
+    {
+        RemoteControl remote = new RemoteControl();
+        TV livingRoomTV = new TV();
+        Stereo mainStereo = new Stereo();
+
+        remote.SetCommand(0, new TVOnCommand(livingRoomTV));
+        remote.SetCommand(1, new StereoOnCommand(mainStereo));
+
+        remote.PressButton(0); // Output: TV is ON
+        remote.PressButton(1); // Output: Stereo is ON
+        remote.PressButton(2); // Output: No command programmed for this slot.
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-panel hidden space-y-4">
+                                <h4 class="text-lg font-semibold">[Medium] Text Editor Undo</h4>
+                                <p class="text-slate-600">Implement a simple text editor that supports appending text and undoing the last append operation. You'll need an `UndoableCommand` interface and a history stack to manage commands.</p>
+                                <button class="solution-toggle bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Show Solution</button>
+                                <div class="solution-content">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System.Collections.Generic;
+using System.Text;
+
+// Receiver
+public class TextEditor
+{
+    private readonly StringBuilder _content = new StringBuilder();
+    public void Append(string text) => _content.Append(text);
+    public void Delete(int length) => _content.Remove(_content.Length - length, length);
+    public string GetContent() => _content.ToString();
+}
+
+// Command Interface with Undo
+public interface IUndoableCommand { void Execute(); void Undo(); }
+
+// Concrete Command
+public class AppendTextCommand : IUndoableCommand
+{
+    private readonly TextEditor _editor;
+    private readonly string _text;
+    public AppendTextCommand(TextEditor editor, string text) { _editor = editor; _text = text; }
+    public void Execute() => _editor.Append(_text);
+    public void Undo() => _editor.Delete(_text.Length);
+}
+
+// Invoker with History
+public class EditorInvoker
+{
+    private readonly Stack&lt;IUndoableCommand&gt; _history = new Stack&lt;IUndoableCommand&gt;();
+    public void ExecuteCommand(IUndoableCommand command)
+    {
+        command.Execute();
+        _history.Push(command);
+    }
+    public void UndoLastCommand()
+    {
+        if (_history.Count > 0)
+        {
+            var lastCommand = _history.Pop();
+            lastCommand.Undo();
+        }
+    }
+}
+
+// Client
+public class Client
+{
+    public void Main()
+    {
+        TextEditor editor = new TextEditor();
+        EditorInvoker invoker = new EditorInvoker();
+
+        invoker.ExecuteCommand(new AppendTextCommand(editor, "Hello "));
+        Console.WriteLine(editor.GetContent()); // Output: Hello 
+
+        invoker.ExecuteCommand(new AppendTextCommand(editor, "World!"));
+        Console.WriteLine(editor.GetContent()); // Output: Hello World!
+        
+        invoker.UndoLastCommand();
+        Console.WriteLine(editor.GetContent()); // Output: Hello 
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-panel hidden space-y-4">
+                                <h4 class="text-lg font-semibold">[Hard] Batch Job Command</h4>
+                                <p class="text-slate-600">Create a system that can execute a batch of commands as a single unit. This "macro command" should hold a list of other commands. When the macro is executed, it iterates through its list and executes each command in order. This is useful for tasks like file processing (Open, Read, Close).</p>
+                                <button class="solution-toggle bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Show Solution</button>
+                                <div class="solution-content">
+                                    <div class="code-block">
+                                        <button class="copy-button">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System.Collections.Generic;
+
+// Receiver
+public class FileSystemReceiver
+{
+    public void OpenFile() => Console.WriteLine("File opened.");
+    public void ReadFile() => Console.WriteLine("File read.");
+    public void CloseFile() => Console.WriteLine("File closed.");
+}
+
+// Command Interface
+public interface ICommand { void Execute(); }
+
+// Concrete Commands
+public class OpenFileCommand : ICommand { private readonly FileSystemReceiver _fs; public OpenFileCommand(FileSystemReceiver fs) => _fs = fs; public void Execute() => _fs.OpenFile(); }
+public class ReadFileCommand : ICommand { private readonly FileSystemReceiver _fs; public ReadFileCommand(FileSystemReceiver fs) => _fs = fs; public void Execute() => _fs.ReadFile(); }
+public class CloseFileCommand : ICommand { private readonly FileSystemReceiver _fs; public CloseFileCommand(FileSystemReceiver fs) => _fs = fs; public void Execute() => _fs.CloseFile(); }
+
+// Macro Command (Composite Command)
+public class BatchCommand : ICommand
+{
+    private readonly List&lt;ICommand&gt; _commands = new List&lt;ICommand&gt;();
+    public void AddCommand(ICommand command) => _commands.Add(command);
+    public void Execute()
+    {
+        Console.WriteLine("--- Starting Batch Job ---");
+        foreach (var command in _commands)
+        {
+            command.Execute();
+        }
+        Console.WriteLine("--- Batch Job Finished ---");
+    }
+}
+
+// Client
+public class Client
+{
+    public void Main()
+    {
+        FileSystemReceiver fs = new FileSystemReceiver();
+        
+        BatchCommand batch = new BatchCommand();
+        batch.AddCommand(new OpenFileCommand(fs));
+        batch.AddCommand(new ReadFileCommand(fs));
+        batch.AddCommand(new CloseFileCommand(fs));
+
+        batch.Execute();
+        // Output:
+        // --- Starting Batch Job ---
+        // File opened.
+        // File read.
+        // File closed.
+        // --- Batch Job Finished ---
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="case-study" class="space-y-6">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-900 border-b-2 border-teal-500 pb-2">Case Study: Undo/Redo Text Editor</h3>
+                    <p class="text-slate-600">Let's build a more robust text editor simulation that supports both Undo and Redo. This is a classic use case for the Command Pattern. When the user performs an action, we execute a command and push it onto an `undoStack`. When they undo, we pop from the `undoStack`, call the command's `Undo()` method, and push it onto a `redoStack`. When they redo, we do the reverse.</p>
+                    <div class="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                        <h4 class="text-lg font-semibold text-center mb-4">Live Text Editor Demo</h4>
+                        <textarea id="text-editor-area" class="w-full h-32 p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Type here..."></textarea>
+                        <div class="flex gap-2 mt-4 justify-center">
+                            <button id="undo-btn" class="bg-slate-600 text-white px-4 py-2 rounded-lg hover:bg-slate-700 font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed" disabled>Undo</button>
+                            <button id="redo-btn" class="bg-slate-600 text-white px-4 py-2 rounded-lg hover:bg-slate-700 font-semibold disabled:bg-slate-400 disabled:cursor-not-allowed" disabled>Redo</button>
+                        </div>
+                        <p class="text-xs text-slate-500 text-center mt-2">Note: This demo triggers commands on blur (when you click away from the text box).</p>
+                    </div>
+                    <p class="text-slate-600">The C# implementation would expand on the medium difficulty example by adding a redo stack and more complex command types (e.g., Delete, Replace).</p>
+                </section>
+
+                <section id="knowledge-check" class="space-y-6">
+                    <h3 class="text-2xl font-bold font-lexend text-slate-900 border-b-2 border-teal-500 pb-2">Knowledge Check Quiz</h3>
+                    <div class="space-y-8">
+                        <div class="quiz-question" data-correct="b">
+                            <p class="font-semibold mb-2">1. What is the primary intent of the Command Pattern?</p>
+                            <div class="space-y-2">
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="a">a) To define a family of algorithms and make them interchangeable.</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="b">b) To encapsulate a request as an object, thereby letting you parameterize clients with different requests.</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="c">c) To provide a simplified interface to a complex subsystem.</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="d">d) To attach additional responsibilities to an object dynamically.</div>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+                        <div class="quiz-question" data-correct="c">
+                            <p class="font-semibold mb-2">2. In the Command Pattern, which participant is responsible for knowing how to perform the actual operation?</p>
+                            <div class="space-y-2">
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="a">a) Client</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="b">b) Invoker</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="c">c) Receiver</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="d">d) ConcreteCommand</div>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+                        <div class="quiz-question" data-correct="d">
+                            <p class="font-semibold mb-2">3. Which of the following is NOT a direct benefit of using the Command Pattern?</p>
+                            <div class="space-y-2">
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="a">a) Decoupling the object that invokes an operation from the one that knows how to perform it.</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="b">b) The ability to create sequences of commands (macros).</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="c">c) The ability to support undo and redo operations.</div>
+                                <div class="quiz-option border border-slate-300 p-3 rounded-lg cursor-pointer" data-value="d">d) Improving the performance of the operation itself.</div>
+                            </div>
+                            <div class="quiz-feedback hidden mt-2 text-sm"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="self-assessment" class="space-y-4">
+                     <h3 class="text-2xl font-bold font-lexend text-slate-900 border-b-2 border-teal-500 pb-2">Self-Assessment Challenge</h3>
+                    <p class="text-slate-600">Design a transactional system for a series of bank account operations (Deposit, Withdraw). A transaction should be a "macro command" that contains several individual operations. The entire transaction must be undoable. If any operation in the transaction fails, all previous operations within that same transaction should be rolled back (undone).</p>
+                    <button class="solution-toggle bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Reveal Detailed Solution</button>
+                    <div class="solution-content">
+                        <div class="code-block">
+                            <button class="copy-button">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using System;
+using System.Collections.Generic;
+
+// Receiver
+public class BankAccount
+{
+    public string AccountName { get; }
+    private int _balance;
+    public BankAccount(string name, int startingBalance)
+    {
+        AccountName = name;
+        _balance = startingBalance;
+    }
+
+    public void Deposit(int amount)
+    {
+        _balance += amount;
+        Console.WriteLine($"Deposited ${amount}. Current balance: ${_balance}");
+    }
+
+    public bool Withdraw(int amount)
+    {
+        if (_balance >= amount)
+        {
+            _balance -= amount;
+            Console.WriteLine($"Withdrew ${amount}. Current balance: ${_balance}");
+            return true;
+        }
+        Console.WriteLine("Withdrawal failed: Insufficient funds.");
+        return false;
+    }
+}
+
+// Command Interface
+public interface IUndoableCommand
+{
+    bool Execute();
+    void Undo();
+}
+
+// Concrete Commands
+public class DepositCommand : IUndoableCommand
+{
+    private readonly BankAccount _account;
+    private readonly int _amount;
+    public DepositCommand(BankAccount acc, int amount) { _account = acc; _amount = amount; }
+    public bool Execute() { _account.Deposit(_amount); return true; }
+    public void Undo() => _account.Withdraw(_amount); // Note: Simple undo logic here
+}
+
+public class WithdrawCommand : IUndoableCommand
+{
+    private readonly BankAccount _account;
+    private readonly int _amount;
+    public WithdrawCommand(BankAccount acc, int amount) { _account = acc; _amount = amount; }
+    public bool Execute() => _account.Withdraw(_amount);
+    public void Undo() => _account.Deposit(_amount);
+}
+
+// Macro Command for Transactions
+public class TransactionCommand : IUndoableCommand
+{
+    private readonly List&lt;IUndoableCommand&gt; _commands = new List&lt;IUndoableCommand&gt;();
+    private readonly List&lt;IUndoableCommand&gt; _executedCommands = new List&lt;IUndoableCommand&gt;();
+
+    public void AddCommand(IUndoableCommand cmd) => _commands.Add(cmd);
+
+    public bool Execute()
+    {
+        Console.WriteLine("--- Starting Transaction ---");
+        _executedCommands.Clear();
+        foreach (var cmd in _commands)
+        {
+            if (cmd.Execute())
+            {
+                _executedCommands.Add(cmd);
+            }
+            else
+            {
+                Console.WriteLine("Transaction failed. Rolling back...");
+                Undo(); // Rollback all executed commands in this transaction
+                Console.WriteLine("--- Transaction Rolled Back ---");
+                return false;
+            }
+        }
+        Console.WriteLine("--- Transaction Succeeded ---");
+        return true;
+    }
+
+    public void Undo()
+    {
+        // Undo in reverse order
+        for (int i = _executedCommands.Count - 1; i >= 0; i--)
+        {
+            _executedCommands[i].Undo();
+        }
+    }
+}
+
+// Client
+public class Client
+{
+    public void Main()
+    {
+        var account = new BankAccount("My Savings", 1000);
+
+        var transaction = new TransactionCommand();
+        transaction.AddCommand(new WithdrawCommand(account, 200));
+        transaction.AddCommand(new DepositCommand(account, 50));
+        transaction.AddCommand(new WithdrawCommand(account, 900)); // This will fail
+
+        transaction.Execute();
+        // Expected Output:
+        // --- Starting Transaction ---
+        // Withdrew $200. Current balance: $800
+        // Deposited $50. Current balance: $850
+        // Withdrawal failed: Insufficient funds.
+        // Transaction failed. Rolling back...
+        // Deposited $50. Current balance: $900
+        // Withdrew $200. Current balance: $1000
+        // --- Transaction Rolled Back ---
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+            <aside class="lg:col-span-3">
+                <nav id="table-of-contents" class="sticky top-8 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h4 class="font-bold text-lg mb-4 text-slate-800">On This Page</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#theory" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 transition-colors">Theory</a></li>
+                        <li><a href="#uml" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 transition-colors">UML Diagram</a></li>
+                        <li><a href="#coding-practice" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 transition-colors">Coding Practice</a></li>
+                        <li><a href="#case-study" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 transition-colors">Case Study</a></li>
+                        <li><a href="#knowledge-check" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 transition-colors">Knowledge Check</a></li>
+                        <li><a href="#self-assessment" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-slate-200 pl-4 transition-colors">Self-Assessment</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Table of Contents Active State
+            const sections = document.querySelectorAll('#main-content > section');
+            const tocLinks = document.querySelectorAll('#table-of-contents a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Copy to Clipboard
+            document.querySelectorAll('.copy-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const pre = button.parentElement;
+                    const code = pre.querySelector('code');
+                    const text = code.innerText;
+
+                    navigator.clipboard.writeText(text).then(() => {
+                        button.innerText = 'Copied!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.innerText = 'Copy';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    });
+                });
+            });
+
+            // Tabs for Coding Practice
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            tabButtons.forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'text-teal-600', 'border-teal-600');
+                        btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    });
+                    button.classList.add('active', 'text-teal-600', 'border-teal-600');
+                    button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    
+                    tabPanels.forEach(panel => panel.classList.add('hidden'));
+                    tabPanels[index].classList.remove('hidden');
+                });
+            });
+
+            // Solution Toggle
+            document.querySelectorAll('.solution-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    content.classList.toggle('show');
+                    button.textContent = content.classList.contains('show') ? 'Hide Solution' : 'Show Solution';
+                });
+            });
+
+            // Quiz Logic
+            document.querySelectorAll('.quiz-question').forEach(question => {
+                const options = question.querySelectorAll('.quiz-option');
+                options.forEach(option => {
+                    option.addEventListener('click', () => {
+                        if (question.dataset.answered) return;
+                        question.dataset.answered = 'true';
+                        
+                        const selectedValue = option.dataset.value;
+                        const correctAnswer = question.dataset.correct;
+                        const feedbackEl = question.querySelector('.quiz-feedback');
+                        
+                        options.forEach(opt => opt.classList.remove('selected'));
+                        option.classList.add('selected');
+
+                        if (selectedValue === correctAnswer) {
+                            option.classList.add('correct');
+                            feedbackEl.textContent = 'Correct! This pattern encapsulates a request into a standalone object.';
+                            feedbackEl.className = 'quiz-feedback mt-2 text-sm text-green-600 font-semibold';
+                        } else {
+                            option.classList.add('incorrect');
+                            feedbackEl.textContent = `Incorrect. The correct answer is ${correctAnswer.toUpperCase()}.`;
+                            feedbackEl.className = 'quiz-feedback mt-2 text-sm text-red-600 font-semibold';
+                            question.querySelector(`[data-value="${correctAnswer}"]`).classList.add('correct');
+                        }
+                        feedbackEl.classList.remove('hidden');
+                    });
+                });
+            });
+            
+            // Command Queue Interactive Demo
+            const addBtn = document.getElementById('add-command-btn');
+            const execBtn = document.getElementById('exec-command-btn');
+            const queueContainer = document.getElementById('command-queue');
+            let commandCounter = 0;
+            
+            addBtn.addEventListener('click', () => {
+                commandCounter++;
+                const commandEl = document.createElement('div');
+                commandEl.className = 'command-queue-item bg-slate-300 text-slate-800 font-mono text-sm px-3 py-1 rounded-md shadow-sm';
+                commandEl.textContent = `Cmd-${commandCounter}`;
+                if (queueContainer.querySelector('p')) {
+                    queueContainer.innerHTML = '';
+                }
+                queueContainer.appendChild(commandEl);
+            });
+            
+            execBtn.addEventListener('click', () => {
+                const firstCommand = queueContainer.querySelector('.command-queue-item:not(.processed)');
+                if (firstCommand) {
+                    firstCommand.classList.add('processed');
+                    setTimeout(() => {
+                        firstCommand.remove();
+                        if (queueContainer.children.length === 0) {
+                            queueContainer.innerHTML = '<p class="text-slate-500">Queue is empty...</p>';
+                        }
+                    }, 500);
+                }
+            });
+
+            // UML Tooltip
+            const umlComponents = document.querySelectorAll('.uml-component');
+            const tooltip = document.getElementById('uml-tooltip');
+            umlComponents.forEach(comp => {
+                comp.addEventListener('mousemove', (e) => {
+                    tooltip.classList.remove('hidden');
+                    tooltip.style.left = `${e.clientX - tooltip.offsetWidth / 2}px`;
+                    tooltip.style.top = `${e.clientY - tooltip.offsetHeight - 10}px`;
+                    tooltip.innerHTML = `<h5 class="font-bold mb-1">${comp.dataset.title}</h5><p>${comp.dataset.desc}</p>`;
+                });
+                comp.addEventListener('mouseleave', () => {
+                    tooltip.classList.add('hidden');
+                });
+            });
+
+            // Text Editor Demo
+            const editorArea = document.getElementById('text-editor-area');
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            let undoStack = [];
+            let redoStack = [];
+            let lastKnownValue = '';
+
+            const execute = (command) => {
+                command.execute();
+                undoStack.push(command);
+                redoStack = []; 
+                updateButtons();
+            }
+
+            const TextCommand = function(editor, previousValue, newValue) {
+                this.editor = editor;
+                this.previousValue = previousValue;
+                this.newValue = newValue;
+
+                this.execute = () => {
+                    this.editor.value = this.newValue;
+                };
+
+                this.undo = () => {
+                    this.editor.value = this.previousValue;
+                };
+            };
+            
+            editorArea.addEventListener('focus', () => {
+                lastKnownValue = editorArea.value;
+            });
+
+            editorArea.addEventListener('blur', () => {
+                if (editorArea.value !== lastKnownValue) {
+                    const command = new TextCommand(editorArea, lastKnownValue, editorArea.value);
+                    execute(command);
+                    lastKnownValue = editorArea.value;
+                }
+            });
+
+            undoBtn.addEventListener('click', () => {
+                if (undoStack.length > 0) {
+                    const command = undoStack.pop();
+                    command.undo();
+                    redoStack.push(command);
+                    lastKnownValue = editorArea.value;
+                    updateButtons();
+                }
+            });
+            
+            redoBtn.addEventListener('click', () => {
+                if (redoStack.length > 0) {
+                    const command = redoStack.pop();
+                    command.execute();
+                    undoStack.push(command);
+                    lastKnownValue = editorArea.value;
+                    updateButtons();
+                }
+            });
+
+            const updateButtons = () => {
+                undoBtn.disabled = undoStack.length === 0;
+                redoBtn.disabled = redoStack.length === 0;
+            };
+
+        });
+    </script>
+</body>
+</html>

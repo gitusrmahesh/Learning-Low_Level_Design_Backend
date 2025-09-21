@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 41: SQL Schema Design (The Complete Guide) - Low-Level Design Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .prose { max-width: 80ch; }
+        .prose h2, .prose h3, .prose h4 { font-family: 'Lexend', sans-serif, tracking-tight ; }
+        .prose p, .prose li, .prose table { color: #334155; }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            background-color: #475569;
+            color: #f1f5f9;
+            border: 1px solid #64748b;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #334155;
+        }
+        .quiz-option:hover {
+            background-color: #f1f5f9;
+        }
+        .quiz-option[data-selected="true"] {
+             background-color: #e0f2fe;
+             border-color: #38bdf8;
+        }
+        .correct {
+            background-color: #dcfce7 !important;
+            border-color: #22c55e !important;
+        }
+        .incorrect {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+        }
+        .er-diagram-entity {
+            background-color: #e0f2fe;
+            border: 2px solid #38bdf8;
+            border-radius: 0.5rem;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            color: #0c4a6e;
+        }
+        .er-diagram-line {
+            position: absolute;
+            background-color: #38bdf8;
+            z-index: -1;
+        }
+         .er-diagram-label {
+            position: absolute;
+            background-color: #f8fafc;
+            padding: 0 0.25rem;
+            color: #075985;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Chosen Palette: Cool Slate & Sky -->
+    <!-- Application Structure Plan: A two-column responsive layout. The main content on the left follows a logical learning progression: Theory -> Practice -> Application -> Assessment. This linear flow is ideal for a tutorial. The right column features a sticky table of contents (TOC) for persistent, easy navigation, enhancing user experience by allowing them to jump between sections without losing context. This structure was chosen for its proven effectiveness in educational content, promoting both guided learning and self-directed exploration. -->
+    <!-- Visualization & Content Choices: Report Info: Normalization -> Goal: Explain data transformation -> Viz/Method: HTML tables styled with Tailwind to show 'before' and 'after' states. Interaction: Static comparison. Justification: Tables are the most direct and universally understood way to represent database table structures, making the concept clear. | Report Info: E-commerce ER Diagram -> Goal: Illustrate entity relationships -> Viz/Method: Custom-styled HTML divs and CSS pseudo-elements for lines. Interaction: Static visual aid. Justification: This approach creates a clean, lightweight, and fully responsive diagram without relying on external libraries or static images, fulfilling the NO SVG/Mermaid requirement. | Report Info: Knowledge Check -> Goal: Test understanding -> Viz/Method: Interactive HTML form. Interaction: User selection, button click for feedback. Justification: Active recall through quizzes is a powerful learning tool; instant JS-driven feedback solidifies concepts. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            
+            <div class="lg:w-3/4">
+                <article class="prose max-w-none">
+                    <div id="introduction" class="mb-12">
+                        <p class="text-base font-semibold text-sky-600">Day 41 of 60</p>
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Schema Design (SQL): The Complete Guide</h2>
+                        <p class="mt-4 text-lg text-slate-700">Welcome to Day 41. Today, we construct the most critical part of any data-driven application: the database schema. A well-designed schema is not a mere technicality; it is the bedrock of application performance, data integrity, and long-term maintainability. A poor schema leads to slow queries, corrupted data, and complex code. A great schema leads to a fast, reliable, and scalable system. This guide will provide a deep, comprehensive understanding of schema design, from foundational principles to advanced optimization strategies.</p>
+                    </div>
+
+                    <section id="theory" class="space-y-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-sky-200 pb-2">In-Depth Theory</h3>
+                        
+                        <div id="schema-basics">
+                            <h4 class="text-xl font-semibold text-slate-800">Schema Design: The "Why"</h4>
+                            <p class="mt-2">In SQL, a schema is a logical collection of database objects like tables, views, and indexes. But its importance goes far beyond simple organization. The *design* of that collection—the schema design—dictates the rules, constraints, and relationships governing your data. It is the constitution for your database.</p>
+                            <div class="mt-4 grid md:grid-cols-2 gap-4">
+                                <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                                    <h5 class="font-semibold text-red-800">Consequences of Poor Schema Design</h5>
+                                    <ul class="list-disc list-inside mt-2 text-red-700 space-y-1 text-sm">
+                                        <li><strong>Data Redundancy:</strong> The same piece of information is stored in multiple places, wasting space and leading to inconsistencies.</li>
+                                        <li><strong>Data Anomalies:</strong> Errors during data insertion, updates, or deletion because of the flawed structure.</li>
+                                        <li><strong>Poor Performance:</strong> Queries become slow and inefficient as the database has to sift through poorly organized data or perform complex joins.</li>
+                                        <li><strong>Maintenance Nightmare:</strong> Simple business logic changes require complex and risky database modifications.</li>
+                                    </ul>
+                                </div>
+                                <div class="p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg">
+                                    <h5 class="font-semibold text-green-800">Benefits of Good Schema Design</h5>
+                                    <ul class="list-disc list-inside mt-2 text-green-700 space-y-1 text-sm">
+                                        <li><strong>Data Integrity:</strong> Data is reliable, consistent, and accurate due to constraints and relationships.</li>
+                                        <li><strong>Reduced Redundancy:</strong> Each piece of data has a single, authoritative source (Single Source of Truth).</li>
+                                        <li><strong>High Performance:</strong> Queries are fast and efficient because data is logically structured and properly indexed.</li>
+                                        <li><strong>Scalability & Maintainability:</strong> The schema is easy to understand, extend, and maintain as the application evolves.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="normalization">
+                            <h4 class="text-xl font-semibold text-slate-800">Masterclass: Database Normalization</h4>
+                            <p class="mt-2">Normalization is a formal, step-by-step process for organizing tables to eliminate data redundancy and prevent data anomalies. Think of it as refining crude oil into gasoline; we take raw, messy data structures and progressively refine them into a clean, efficient form. We will walk through the most critical stages: 1NF, 2NF, and 3NF, using a single, evolving example.</p>
+                            
+                            <div class="mt-6 space-y-12">
+                                <div class="p-6 rounded-lg bg-white shadow-md border border-slate-200">
+                                    <h5 class="font-bold text-slate-800 text-lg">The Starting Point: An Unnormalized Orders Table</h5>
+                                    <p class="mt-2">Imagine we have a flat file or a single spreadsheet to track customer orders. It's functional for a handful of records but is a minefield of design flaws.</p>
+                                    <div class="code-block mt-4">
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-sql">-- UNNORMALIZED DATA
+-- One giant table to hold everything. Notice the repeating groups (Product fields)
+-- and multi-valued data (Products column).
+CREATE TABLE Orders_Unnormalized (
+    OrderID INT,
+    OrderDate DATE,
+    CustomerID INT,
+    CustomerName VARCHAR(100),
+    CustomerEmail VARCHAR(100),
+    -- Repeating product information for each order
+    Products VARCHAR(255), -- e.g., "1:Laptop, 2:Mouse"
+    TotalAmount DECIMAL(10, 2)
+);</code></pre>
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <p class="mt-4 font-semibold text-red-600">Key Problems:</p>
+                                    <ul class="list-disc list-inside mt-2 text-slate-600 space-y-1">
+                                        <li>The `Products` column is not atomic; it holds multiple values. This makes it impossible to query for "all customers who bought a Mouse."</li>
+                                        <li>Customer information (`CustomerName`, `CustomerEmail`) is repeated for every order they place. If a customer changes their email, you must find and update every order they've ever made. Miss one, and your data is inconsistent (Update Anomaly).</li>
+                                        <li>You can't add a new product to your catalog until someone orders it (Insertion Anomaly).</li>
+                                    </ul>
+                                </div>
+
+                                <div class="p-6 rounded-lg bg-white shadow-md border border-slate-200">
+                                    <h5 class="font-bold text-slate-800 text-lg">Step 1: Achieving First Normal Form (1NF)</h5>
+                                    <p class="mt-2"><strong>The Rule:</strong> Ensure all columns contain atomic values and each row is unique.</p>
+                                    <p class="mt-1"><strong>In Plain English:</strong> No multi-value columns (like comma-separated lists) and no repeating groups of columns. Every cell should hold a single value.</p>
+                                    <p class="mt-2"><strong>Solution:</strong> We eliminate the multi-valued `Products` column by creating a separate row for each product within an order. We also add a primary key to ensure each row is unique.</p>
+                                    <div class="code-block mt-4">
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-sql">-- 1NF COMPLIANT
+-- We now have a unique row for each item in an order.
+CREATE TABLE Orders_1NF (
+    OrderID INT,
+    OrderDate DATE,
+    CustomerID INT,
+    CustomerName VARCHAR(100),
+    CustomerEmail VARCHAR(100),
+    -- Product info is now atomic per row
+    ProductID INT,
+    ProductName VARCHAR(100),
+    Quantity INT,
+    PricePerUnit DECIMAL(10, 2),
+    -- We've made the key (OrderID, ProductID) to identify each unique row
+    PRIMARY KEY (OrderID, ProductID)
+);</code></pre>
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <p class="mt-4 font-semibold text-green-600">Improvement:</p>
+                                    <p class="text-slate-600">We've solved the atomicity problem. We can now easily query products. However, massive redundancy remains. Customer details and product names are still repeated everywhere.</p>
+                                </div>
+
+                                <div class="p-6 rounded-lg bg-white shadow-md border border-slate-200">
+                                    <h5 class="font-bold text-slate-800 text-lg">Step 2: Achieving Second Normal Form (2NF)</h5>
+                                    <p class="mt-2"><strong>The Rule:</strong> Must be in 1NF, and all non-key attributes must be fully functionally dependent on the *entire* primary key.</p>
+                                    <p class="mt-1"><strong>In Plain English:</strong> This applies when you have a composite primary key (a key made of multiple columns). It means that every other column must depend on ALL parts of the key, not just one part of it.</p>
+                                    <p class="mt-2"><strong>Problem in our 1NF table:</strong> The primary key is `(OrderID, ProductID)`.
+                                        <ul class="list-disc list-inside mt-2 ml-4 text-slate-600">
+                                            <li>`CustomerName` depends only on `OrderID`.</li>
+                                            <li>`ProductName` depends only on `ProductID`.</li>
+                                        </ul>
+                                    These are called **partial dependencies**, and they are the source of our redundancy.</p>
+                                    <p class="mt-2"><strong>Solution:</strong> Split the data into separate tables for each logical entity. Information that depends on `OrderID` goes into an `Orders` table. Information that depends on `ProductID` goes into a `Products` table. What's left is a table linking them together.</p>
+                                    <div class="code-block mt-4">
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-sql">-- 2NF COMPLIANT
+-- Table for Products (depends on ProductID)
+CREATE TABLE Products_2NF (
+    ProductID INT PRIMARY KEY,
+    ProductName VARCHAR(100),
+    PricePerUnit DECIMAL(10, 2)
+);
+
+-- Table for Orders (depends on OrderID)
+CREATE TABLE Orders_2NF (
+    OrderID INT PRIMARY KEY,
+    OrderDate DATE,
+    CustomerID INT,
+    CustomerName VARCHAR(100),
+    CustomerEmail VARCHAR(100)
+);
+
+-- Junction table linking Orders and Products
+CREATE TABLE OrderItems_2NF (
+    OrderID INT,
+    ProductID INT,
+    Quantity INT,
+    PRIMARY KEY (OrderID, ProductID),
+    FOREIGN KEY (OrderID) REFERENCES Orders_2NF(OrderID),
+    FOREIGN KEY (ProductID) REFERENCES Products_2NF(ProductID)
+);</code></pre>
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <p class="mt-4 font-semibold text-green-600">Improvement:</p>
+                                    <p class="text-slate-600">This is a huge leap forward. Product data is no longer duplicated. But look at the `Orders_2NF` table—we still have redundant customer data.</p>
+                                </div>
+
+                                <div class="p-6 rounded-lg bg-white shadow-md border border-slate-200">
+                                    <h5 class="font-bold text-slate-800 text-lg">Step 3: Achieving Third Normal Form (3NF)</h5>
+                                    <p class="mt-2"><strong>The Rule:</strong> Must be in 2NF, and there must be no transitive dependencies.</p>
+                                    <p class="mt-1"><strong>In Plain English:</strong> A non-key column cannot depend on another non-key column. All non-key columns must depend *only* on the primary key.</p>
+                                    <p class="mt-2"><strong>Problem in our `Orders_2NF` table:</strong> The primary key is `OrderID`.
+                                        <ul class="list-disc list-inside mt-2 ml-4 text-slate-600">
+                                            <li>`CustomerName` and `CustomerEmail` depend on `CustomerID`.</li>
+                                            <li>`CustomerID` is a non-key attribute.</li>
+                                        </ul>
+                                    This is a **transitive dependency**: `CustomerName` -> `CustomerID` -> `OrderID`. It causes redundancy because customer info is stored with every order.</p>
+                                    <p class="mt-2"><strong>Solution:</strong> Remove the transitive dependency by creating a separate `Customers` table.</p>
+                                    <div class="code-block mt-4">
+                                        <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-sql">-- 3NF COMPLIANT (Final Normalized Schema)
+-- Customers Table
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY,
+    CustomerName VARCHAR(100),
+    CustomerEmail VARCHAR(100)
+);
+
+-- Orders Table (now clean)
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY,
+    OrderDate DATE,
+    CustomerID INT, -- Foreign key to link to the Customers table
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+
+-- Products Table (was already 3NF)
+CREATE TABLE Products (
+    ProductID INT PRIMARY KEY,
+    ProductName VARCHAR(100),
+    PricePerUnit DECIMAL(10, 2)
+);
+
+-- OrderItems Junction Table (was already 3NF)
+CREATE TABLE OrderItems (
+    OrderID INT,
+    ProductID INT,
+    Quantity INT,
+    PRIMARY KEY (OrderID, ProductID),
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID)
+);</code></pre>
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                    </div>
+                                    <p class="mt-4 font-semibold text-green-600">Improvement:</p>
+                                    <p class="text-slate-600">Our schema is now fully normalized to 3NF. Each piece of data has a single home, redundancy is eliminated, and we are protected from data anomalies. This is the standard goal for most transactional (OLTP) databases.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="denormalization">
+                             <h4 class="text-xl font-semibold text-slate-800">Advanced Topic: Denormalization</h4>
+                             <p class="mt-2">Normalization is not a universal law. **Denormalization** is the intentional process of violating normalization rules to improve query performance. A highly normalized schema can sometimes require many joins to retrieve data, which can be slow for complex reporting queries.</p>
+                             <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                                <h5 class="font-semibold text-amber-800">When to Consider Denormalization</h5>
+                                <p class="mt-2 text-amber-700">The classic use case is for reporting or analytical (OLAP) databases. Imagine you need to generate a report showing total sales per product category, but `CategoryName` is in a separate `Categories` table. To avoid a costly join every time the report is run, you might add the `CategoryName` directly to the `Products` table.</p>
+                                <p class="mt-2 text-sm text-amber-700"><strong>Trade-off:</strong> You gain read speed at the cost of write complexity and data redundancy. When a category name changes, you now have to update it in many places. It's a strategic decision based on whether read performance is more critical than write performance and data purity for that specific use case.</p>
+                             </div>
+                        </div>
+                        
+                        <div id="relationships">
+                             <h4 class="text-xl font-semibold text-slate-800">Defining Data Relationships</h4>
+                             <p class="mt-2">Relationships are the ligaments of your database, connecting the bones (tables) into a functional skeleton. They are enforced by `PRIMARY KEY` and `FOREIGN KEY` constraints.</p>
+                             <div class="mt-6 space-y-4">
+                                 <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <h5 class="font-semibold text-slate-700">One-to-One (1:1)</h5>
+                                    <p class="mt-1 text-sm text-slate-600"><strong>Concept:</strong> One record in Table A corresponds to exactly one record in Table B.
+                                    <br><strong>Use Case:</strong> Often used to split a large table for security (e.g., sensitive employee data in a separate table) or to handle optional data that is often NULL (e.g., `UserProfile` for a `User`).
+                                    <br><strong>Implementation:</strong> The primary key of one table is also a foreign key in the other table, and that foreign key column must be constrained to be unique.</p>
+                                 </div>
+                                 <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <h5 class="font-semibold text-slate-700">One-to-Many (1:M)</h5>
+                                    <p class="mt-1 text-sm text-slate-600"><strong>Concept:</strong> The most common relationship. One record in Table A can be related to many records in Table B.
+                                    <br><strong>Use Case:</strong> A `Customer` can have many `Orders`. A `BlogPost` can have many `Comments`.
+                                    <br><strong>Implementation:</strong> The primary key of the "one" side (e.g., `CustomerID` from `Customers`) is added as a foreign key column to the "many" side (the `Orders` table).</p>
+                                 </div>
+                                 <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <h5 class="font-semibold text-slate-700">Many-to-Many (M:M)</h5>
+                                    <p class="mt-1 text-sm text-slate-600"><strong>Concept:</strong> A record in Table A can relate to many records in Table B, and a record in Table B can relate to many records in Table A.
+                                    <br><strong>Use Case:</strong> A `Student` can enroll in many `Courses`, and a `Course` can have many `Students`. A `Post` can have many `Tags`, and a `Tag` can be on many `Posts`.
+                                    <br><strong>Implementation:</strong> This relationship cannot be implemented directly. It requires a third table, called a **junction** or **linking table**, that contains foreign keys pointing to the primary keys of the two main tables. The primary key of this junction table is often a composite of the two foreign keys.</p>
+                                 </div>
+                             </div>
+                        </div>
+
+                         <div id="indexes">
+                            <h4 class="text-xl font-semibold text-slate-800">Masterclass: Database Indexing</h4>
+                            <p class="mt-2">If normalization is about structuring data correctly, indexing is about accessing that data quickly. An index is a separate data structure, most commonly a B-Tree, that allows the database to find rows without performing a full table scan.</p>
+                            <div class="mt-4 p-4 bg-sky-50 border-l-4 border-sky-500 text-sky-800 rounded-r-lg">
+                                <p><strong class="font-semibold">How Indexes Work (The B-Tree Analogy):</strong> Imagine a giant, multi-level filing cabinet for a massive table of employees sorted by `LastName`. 
+                                <ul class="list-decimal list-inside mt-2 text-sky-700 text-sm">
+                                    <li>The **Root Node** (top drawer) has broad pointers, like 'A-G', 'H-P', 'Q-Z'.</li>
+                                    <li>You search for 'Smith'. You open the 'Q-Z' drawer. This is an **Intermediate Node**.</li>
+                                    <li>Inside, you find more specific pointers: 'Q-R', 'S-T', 'U-Z'. You follow 'S-T'.</li>
+                                    <li>Finally, you reach a **Leaf Node** which contains the index entry for 'Smith' and a direct pointer to the exact physical location of Smith's row on the disk.</li>
+                                </ul>
+                                This is vastly faster than reading every employee record from start to finish.
+                                </p>
+                            </div>
+                            <div class="mt-6 space-y-8">
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <h5 class="font-semibold text-slate-700 cursor-pointer">Clustered vs. Non-Clustered Indexes</h5>
+                                    <p class="mt-2">This is the most fundamental distinction.</p>
+                                    <ul class="mt-2 list-disc list-inside space-y-2">
+                                        <li><strong>Clustered Index:</strong> This IS the table. It defines the physical sorting of the data on the disk. Think of a dictionary: the words are physically stored in alphabetical order. Because data can only be physically stored in one order, a table can have **only one** clustered index. The `PRIMARY KEY` constraint usually creates a clustered index by default.</li>
+                                        <li><strong>Non-Clustered Index:</strong> This is a separate structure, like the index at the back of a book. It contains the indexed column value(s) and a pointer (a Row ID or the clustered key) back to the actual data row. A table can have many non-clustered indexes.</li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <h5 class="font-semibold text-slate-700 cursor-pointer">A Deeper Dive into Index Types</h5>
+                                    <ul class="mt-2 list-disc list-inside space-y-4">
+                                        <li>
+                                            <strong>Unique Index:</strong>
+                                            <p class="text-sm"><strong>Purpose:</strong> Enforces data uniqueness on a column (or columns) that is not the primary key. For example, you want to ensure no two users can have the same `Email` or `Username`.
+                                            <br><strong>How it works:</strong> Prevents the insertion or update of a value if that value already exists in the indexed column. A `UNIQUE` constraint automatically creates a unique index.
+                                            <div class="code-block mt-2">
+                                                <pre class="bg-slate-800 text-white p-2 rounded-md text-sm"><code class="language-sql">CREATE UNIQUE INDEX uq_user_email ON Users (Email);</code></pre>
+                                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                            </div>
+                                            </p>
+                                        </li>
+                                        <li>
+                                            <strong>Composite (Multi-Column) Index:</strong>
+                                            <p class="text-sm"><strong>Purpose:</strong> Speeds up queries that filter, sort, or group by multiple columns.
+                                            <br><strong>Crucial Detail:</strong> The order of columns in the index matters immensely. An index on `(LastName, FirstName)` is very useful for a query `WHERE LastName = 'Smith' AND FirstName = 'John'`. It's also useful for a query `WHERE LastName = 'Smith'`. It is NOT useful for a query `WHERE FirstName = 'John'`. The database can only use the index from the leftmost column onward.
+                                            <div class="code-block mt-2">
+                                                <pre class="bg-slate-800 text-white p-2 rounded-md text-sm"><code class="language-sql">CREATE INDEX idx_customer_location ON Customers (Country, State, City);</code></pre>
+                                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                            </div>
+                                            </p>
+                                        </li>
+                                        <li>
+                                            <strong>Covering Index:</strong>
+                                            <p class="text-sm"><strong>Purpose:</strong> The ultimate performance optimization for a specific query. A query is "covered" if all the information it needs (from `SELECT`, `WHERE`, `JOIN`, `ORDER BY`) can be found within the index itself. The database doesn't even need to touch the actual table data (a "key lookup"), which is a huge performance win.
+                                            <br><strong>How it works:</strong> It's a non-clustered index that includes extra columns that are not part of the key using the `INCLUDE` clause.
+                                            <div class="code-block mt-2">
+                                                <pre class="bg-slate-800 text-white p-2 rounded-md text-sm"><code class="language-sql">-- For the query: SELECT Email, LastLoginDate FROM Users WHERE IsActive = 1;
+-- A covering index would be:
+CREATE INDEX idx_active_users_cover ON Users (IsActive) INCLUDE (Email, LastLoginDate);</code></pre>
+                                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                            </div>
+                                            </p>
+                                        </li>
+                                         <li>
+                                            <strong>Filtered Index:</strong>
+                                            <p class="text-sm"><strong>Purpose:</strong> An index on a subset of rows in a table. This is useful when a column has very low cardinality (few unique values), but you frequently query for one specific value.
+                                            <br><strong>Example:</strong> Imagine an `Orders` table where 99% of orders have a status of 'Completed'. An index on the `Status` column would not be very selective. However, if you frequently query for the 1% of orders that are 'Pending', a filtered index is perfect. It will be much smaller and more efficient.
+                                            <div class="code-block mt-2">
+                                                <pre class="bg-slate-800 text-white p-2 rounded-md text-sm"><code class="language-sql">CREATE INDEX idx_pending_orders ON Orders (Status) WHERE Status = 'Pending';</code></pre>
+                                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                            </div>
+                                            </p>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg shadow-sm">
+                                    <h5 class="font-semibold text-slate-700 cursor-pointer">Indexing Strategy: The Art and Science</h5>
+                                     <ul class="mt-2 list-disc list-inside space-y-2 text-slate-600">
+                                        <li><strong>Index Your `WHERE` Clauses:</strong> The most common candidates for indexes are the columns you use to filter data.</li>
+                                        <li><strong>Index Your `JOIN` Columns:</strong> Always place indexes on foreign key columns. This dramatically speeds up join operations.</li>
+                                        <li><strong>Consider `ORDER BY` Columns:</strong> Indexing columns used for sorting can prevent a costly sorting operation by the database.</li>
+                                        <li><strong>Don't Over-Index:</strong> Remember the trade-off. Every index you add speeds up reads but slows down writes (`INSERT`, `UPDATE`, `DELETE`) because the index itself must be maintained. Find the right balance for your application's workload (is it read-heavy or write-heavy?).</li>
+                                        <li><strong>Analyze Query Plans:</strong> Use tools like `EXPLAIN` in your database to see if your queries are actually using the indexes you've created. This is the ground truth for performance tuning.</li>
+                                     </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="er-diagram" class="mt-12 space-y-6">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-sky-200 pb-2">UML/Schema Task: E-commerce ER Diagram</h3>
+                        <p class="text-slate-600">An Entity-Relationship (ER) diagram is the visual blueprint for your database. It's a critical communication tool that helps developers and stakeholders agree on the data structure before writing any code.</p>
+                        <div class="mt-6 p-6 bg-white rounded-lg shadow-md overflow-x-auto min-h-[450px]">
+                            <div class="relative w-full h-[400px]">
+                                <div class="er-diagram-entity absolute top-[150px] left-0">Customers</div>
+                                <div class="er-diagram-entity absolute top-[150px] left-[250px]">Orders</div>
+                                <div class="er-diagram-entity absolute top-0 left-[550px]">Order_Items<br>(Junction Table)</div>
+                                <div class="er-diagram-entity absolute top-[300px] left-[800px]">Products</div>
+
+                                <div class="er-diagram-line" style="width: 100px; height: 2px; top: 178px; left: 150px;"></div>
+                                <div class="er-diagram-label" style="top: 158px; left: 170px;">places</div>
+                                <div class="er-diagram-label" style="top: 170px; left: 140px; font-size:1.2rem; font-weight:bold;">|</div>
+                                <div class="er-diagram-label" style="top: 170px; left: 235px; font-size:1.2rem; font-weight:bold;">&#8717;</div>
+                                
+                                <div class="er-diagram-line" style="width: 150px; height: 2px; top: 58px; left: 400px;"></div>
+                                <div class="er-diagram-label" style="top: 38px; left: 450px;">links to</div>
+                                <div class="er-diagram-label" style="top: 50px; left: 390px; font-size:1.2rem; font-weight:bold;">|</div>
+                                <div class="er-diagram-label" style="top: 50px; left: 535px; font-size:1.2rem; font-weight:bold;">&#8717;</div>
+
+
+                                <div class="er-diagram-line" style="width: 2px; height: 150px; top: 58px; left: 400px;"></div>
+                                <div class="er-diagram-line" style="width: 2px; height: 150px; top: 208px; left: 860px;"></div>
+                                
+                                <div class="er-diagram-line" style="width: 210px; height: 2px; top: 208px; left: 650px;"></div>
+                                <div class="er-diagram-label" style="top: 188px; left: 710px;">contains</div>
+                                <div class="er-diagram-label" style="top: 200px; left: 640px; font-size:1.2rem; font-weight:bold;">|</div>
+                                <div class="er-diagram-label" style="top: 200px; left: 845px; font-size:1.2rem; font-weight:bold;">&#8717;</div>
+                           </div>
+                           <div class="mt-4 border-t pt-2 text-sm text-slate-500">
+                               <strong>Legend:</strong> Boxes are <strong>Entities</strong> (Tables). Lines are <strong>Relationships</strong>. The symbols at the end of the lines represent <strong>Cardinality</strong>: <strong>|</strong> means "one", and <strong>&#8717;</strong> (crows foot) means "many".
+                           </div>
+                        </div>
+                    </section>
+
+                    <section id="case-study" class="mt-12 space-y-6">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-sky-200 pb-2">Case Study: E-commerce DB Schema Implementation</h3>
+                        <p class="text-slate-600">Here is the full SQL code to implement the 3NF-compliant schema from our ER diagram. The comments explain the reasoning behind data type choices and constraints, turning the theoretical design into a practical, robust database structure.</p>
+                        <div class="code-block">
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-sql">-- Customers Table: The single source of truth for all customer data.
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL, -- UNIQUE constraint creates a unique index automatically.
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Products Table: The single source of truth for all product data.
+CREATE TABLE Products (
+    ProductID INT PRIMARY KEY AUTO_INCREMENT,
+    ProductName VARCHAR(100) NOT NULL,
+    Description TEXT,
+    Price DECIMAL(10, 2) NOT NULL, -- Use DECIMAL for monetary values to avoid floating point inaccuracies.
+    StockQuantity INT NOT NULL DEFAULT 0
+);
+
+-- Orders Table: Captures an order event and links to a customer. One-to-Many with Customers.
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY AUTO_INCREMENT,
+    CustomerID INT,
+    OrderDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Use DATETIME for more precision.
+    OrderStatus VARCHAR(20) NOT NULL DEFAULT 'Pending',
+    TotalAmount DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID) ON DELETE SET NULL -- If a customer is deleted, keep their orders but unlink them.
+);
+
+-- Order_Items Table (Junction Table): Implements the Many-to-Many relationship between Orders and Products.
+CREATE TABLE Order_Items (
+    OrderItemID INT PRIMARY KEY AUTO_INCREMENT,
+    OrderID INT,
+    ProductID INT,
+    Quantity INT NOT NULL,
+    PricePerUnit DECIMAL(10, 2) NOT NULL, -- Crucial: Captures the price AT THE TIME OF SALE, as product prices can change.
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE, -- If an order is deleted, its items are also deleted.
+    FOREIGN KEY (ProductID) REFERENCES Products(ProductID) ON DELETE RESTRICT -- Prevent deleting a product if it's part of an existing order.
+);
+
+-- STRATEGIC INDEXING FOR PERFORMANCE
+-- Indexes on foreign keys are critical for JOIN performance.
+CREATE INDEX idx_order_customer_id ON Orders(CustomerID);
+CREATE INDEX idx_orderitem_order_id ON Order_Items(OrderID);
+CREATE INDEX idx_orderitem_product_id ON Order_Items(ProductID);
+
+-- Index on commonly searched columns.
+CREATE INDEX idx_product_name ON Products(ProductName);
+</code></pre>
+                            <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                        </div>
+                    </section>
+                    
+                     <section id="knowledge-check" class="mt-12 space-y-6">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-sky-200 pb-2">Knowledge Check Quiz</h3>
+                        <p class="text-slate-600">Test your comprehensive understanding with this quiz.</p>
+                        <div id="quiz-container" class="space-y-6 bg-white p-6 rounded-lg shadow-sm"></div>
+                        <button id="submit-quiz-btn" class="bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors">Check Answers</button>
+                        <div id="quiz-results" class="mt-4 font-semibold"></div>
+                    </section>
+                    
+                    <section id="self-assessment" class="mt-12">
+                        <h3 class="text-2xl font-bold text-slate-800 border-b-2 border-sky-200 pb-2">Self-Assessment Challenge</h3>
+                         <div class="mt-4 p-6 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                            <p class="font-semibold text-amber-800">Your Challenge:</p>
+                            <p class="mt-2 text-amber-700">Design a 3NF database schema for a simple library management system.
+                            <br><strong>Requirements:</strong>
+                            <br>1. The system must track Books (with title, author, ISBN). An author can write multiple books.
+                            <br>2. It must track Members (name, email).
+                            <br>3. Members can borrow multiple books. A specific copy of a book (e.g., Copy #3 of "The Hobbit") can only be borrowed by one member at a time. The system must record the checkout date and due date for each borrowing event.
+                            </p>
+                             <button id="show-solution-btn" class="mt-4 bg-slate-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">Show Solution</button>
+                        </div>
+                        <div id="solution-container" class="hidden mt-4">
+                            <div class="code-block">
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto"><code class="language-sql">-- Authors Table (Normalized from Books)
+CREATE TABLE Authors (
+    AuthorID INT PRIMARY KEY AUTO_INCREMENT,
+    AuthorName VARCHAR(100) NOT NULL
+);
+
+-- Books Table (Represents a book title, not a physical copy)
+CREATE TABLE Books (
+    BookID INT PRIMARY KEY AUTO_INCREMENT,
+    Title VARCHAR(255) NOT NULL,
+    ISBN VARCHAR(13) UNIQUE NOT NULL,
+    AuthorID INT,
+    FOREIGN KEY (AuthorID) REFERENCES Authors(AuthorID)
+);
+
+-- BookCopies Table (Represents a specific physical copy of a book)
+-- This is the key to solving the "one copy borrowed at a time" problem.
+CREATE TABLE BookCopies (
+    CopyID INT PRIMARY KEY AUTO_INCREMENT,
+    BookID INT,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Available', -- e.g., 'Available', 'Borrowed', 'Damaged'
+    FOREIGN KEY (BookID) REFERENCES Books(BookID)
+);
+
+-- Members Table
+CREATE TABLE Members (
+    MemberID INT PRIMARY KEY AUTO_INCREMENT,
+    MemberName VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL
+);
+
+-- Checkouts Table (A junction table tracking borrowing events)
+CREATE TABLE Checkouts (
+    CheckoutID INT PRIMARY KEY AUTO_INCREMENT,
+    CopyID INT NOT NULL,
+    MemberID INT NOT NULL,
+    CheckoutDate DATE NOT NULL,
+    DueDate DATE NOT NULL,
+    ReturnDate DATE, -- Can be NULL until the book is returned
+    UNIQUE (CopyID, CheckoutDate), -- A specific copy can only be checked out once on a given day
+    FOREIGN KEY (CopyID) REFERENCES BookCopies(CopyID),
+    FOREIGN KEY (MemberID) REFERENCES Members(MemberID)
+);
+</code></pre>
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </div>
+
+            <aside class="lg:w-1/4 mt-12 lg:mt-0">
+                <div class="sticky top-24">
+                    <h3 class="text-lg font-semibold text-slate-800">On this page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="toc-link block text-slate-600 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Introduction</a></li>
+                            <li>
+                                <a href="#theory" class="toc-link block text-slate-600 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">In-Depth Theory</a>
+                                <ul class="mt-2 space-y-2 pl-4">
+                                    <li><a href="#schema-basics" class="toc-link block text-sm text-slate-500 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">The "Why"</a></li>
+                                    <li><a href="#normalization" class="toc-link block text-sm text-slate-500 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Normalization Masterclass</a></li>
+                                    <li><a href="#denormalization" class="toc-link block text-sm text-slate-500 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Denormalization</a></li>
+                                    <li><a href="#relationships" class="toc-link block text-sm text-slate-500 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Relationships</a></li>
+                                    <li><a href="#indexes" class="toc-link block text-sm text-slate-500 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Indexing Masterclass</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#er-diagram" class="toc-link block text-slate-600 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">ER Diagram Task</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-600 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Case Study</a></li>
+                            <li><a href="#knowledge-check" class="toc-link block text-slate-600 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="toc-link block text-slate-600 hover:text-sky-600 border-l-2 border-transparent pl-4 transition-colors">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const pre = button.parentElement.querySelector('pre');
+            const code = pre.innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                button.innerText = 'Copied!';
+                setTimeout(() => {
+                    button.innerText = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section[id], div[id]');
+            const tocLinks = document.querySelectorAll('.toc-link');
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    let tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                    
+                    if (entry.isIntersecting) {
+                       tocLinks.forEach(link => link.classList.remove('active'));
+                       if(tocLink) {
+                           tocLink.classList.add('active');
+                           const parentUl = tocLink.closest('ul');
+                           if (parentUl && parentUl.previousElementSibling && parentUl.previousElementSibling.matches('.toc-link')) {
+                               parentUl.previousElementSibling.classList.add('active');
+                           }
+                       }
+                    }
+                });
+            }, { rootMargin: '-20% 0px -70% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const showSolutionBtn = document.getElementById('show-solution-btn');
+            const solutionContainer = document.getElementById('solution-container');
+            showSolutionBtn.addEventListener('click', () => {
+                solutionContainer.classList.toggle('hidden');
+                showSolutionBtn.textContent = solutionContainer.classList.contains('hidden') ? 'Show Solution' : 'Hide Solution';
+            });
+        
+            setupQuiz();
+        });
+
+        const quizData = [
+            {
+                question: "Which of the following best describes the primary goal of Third Normal Form (3NF)?",
+                options: ["To ensure all values are atomic", "To eliminate partial dependencies on a composite key", "To eliminate transitive dependencies", "To introduce redundancy for performance"],
+                answer: "To eliminate transitive dependencies"
+            },
+            {
+                question: "A table storing a list of phone numbers in a single column like '555-1234, 555-5678' violates which normal form?",
+                options: ["First Normal Form (1NF)", "Second Normal Form (2NF)", "Third Normal Form (3NF)"],
+                answer: "First Normal Form (1NF)"
+            },
+            {
+                question: "You have a query: SELECT username, avatar_url FROM Users WHERE country = 'India'. To get the best possible performance, what kind of index should you create?",
+                options: ["A non-clustered index on (country)", "A composite index on (country, username)", "A covering index on (country) INCLUDE (username, avatar_url)", "A filtered index on (username)"],
+                answer: "A covering index on (country) INCLUDE (username, avatar_url)"
+            },
+            {
+                question: "How many Clustered Indexes can a single table have, and why?",
+                options: ["Unlimited, because they are just lookup structures", "One for each column, to sort the data multiple ways", "Only one, because it dictates the physical storage order of the data", "Zero, primary keys serve the same purpose"],
+                answer: "Only one, because it dictates the physical storage order of the data"
+            },
+            {
+                question: "In what scenario is denormalization a valid strategy?",
+                options: ["In a write-heavy transactional database to ensure data integrity", "In a read-heavy reporting database to reduce complex joins and speed up queries", "For all tables by default to make them simpler", "When you don't understand normalization rules"],
+                answer: "In a read-heavy reporting database to reduce complex joins and speed up queries"
+            },
+            {
+                question: "You are designing a schema for Blog Posts and Tags. A post can have many tags, and a tag can be applied to many posts. How do you model this?",
+                options: ["Add a 'Tags' column in the Posts table", "Add a 'PostIDs' column in the Tags table", "Create a third 'Post_Tags' junction table with PostID and TagID foreign keys", "Create a one-to-one relationship between them"],
+                answer: "Create a third 'Post_Tags' junction table with PostID and TagID foreign keys"
+            }
+        ];
+
+        function setupQuiz() {
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.innerHTML = ''; 
+            quizData.forEach((item, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.classList.add('quiz-question');
+                questionEl.innerHTML = `<p class="font-semibold text-slate-700">${index + 1}. ${item.question}</p>`;
+                
+                const optionsEl = document.createElement('div');
+                optionsEl.classList.add('mt-2', 'space-y-2');
+                optionsEl.setAttribute('data-question-index', index);
+                
+                item.options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.classList.add('quiz-option', 'p-3', 'border', 'rounded-lg', 'cursor-pointer', 'transition-colors');
+                    optionEl.textContent = option;
+                    optionEl.addEventListener('click', () => selectOption(index, optionEl));
+                    optionsEl.appendChild(optionEl);
+                });
+                
+                questionEl.appendChild(optionsEl);
+                quizContainer.appendChild(questionEl);
+            });
+
+            document.getElementById('submit-quiz-btn').addEventListener('click', checkQuizAnswers);
+        }
+        
+        function selectOption(questionIndex, selectedOptionEl) {
+            const optionsContainer = document.querySelector(`div[data-question-index="${questionIndex}"]`);
+            optionsContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.dataset.selected = "false";
+            });
+            selectedOptionEl.dataset.selected = "true";
+        }
+
+        function checkQuizAnswers() {
+            let score = 0;
+            quizData.forEach((item, index) => {
+                const optionsContainer = document.querySelector(`div[data-question-index="${index}"]`);
+                const selectedOption = optionsContainer.querySelector('.quiz-option[data-selected="true"]');
+                
+                optionsContainer.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('correct', 'incorrect');
+                    if (opt.textContent === item.answer) {
+                        opt.classList.add('correct');
+                    }
+                });
+
+                if (selectedOption) {
+                    if (selectedOption.textContent === item.answer) {
+                        score++;
+                    } else {
+                        selectedOption.classList.add('incorrect');
+                    }
+                }
+            });
+
+            const resultsEl = document.getElementById('quiz-results');
+            resultsEl.textContent = `You scored ${score} out of ${quizData.length}. Review the theory and try again!`;
+        }
+    </script>
+</body>
+</html>
+

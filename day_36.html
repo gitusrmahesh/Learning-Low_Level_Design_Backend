@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 36: Strategy Pattern - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Slate, with Sky/Teal accents) -->
+    <!-- Application Structure Plan: A two-column layout is chosen for this educational content. The main left column presents the lesson in a linear, scrollable format. The right, sticky column contains a Table of Contents (ToC) for persistent, easy navigation. This structure is superior to a single, long column as it prevents users from getting lost and allows them to jump between complex topics like theory, code examples, and the case study. The ToC will dynamically highlight the current section on scroll. Interactions are focused on learning reinforcement: code copying, an interactive quiz with instant feedback, and a revealable solution for the final challenge. -->
+    <!-- Visualization & Content Choices: Report Info: UML Diagram -> Goal: Organize/Visualize -> Viz Method: HTML/CSS Diagram -> Interaction: Subtle hover highlights -> Justification: Recreates standard UML visually without disallowed SVG/images, clearly showing class relationships. Report Info: Coding Problems -> Goal: Demonstrate -> Presentation: Styled code blocks -> Interaction: Copy-to-clipboard button -> Justification: Improves user experience by making it easy to grab and test code. Report Info: Quiz -> Goal: Assess -> Presentation: Interactive question cards -> Interaction: Clickable answers with instant color-coded feedback -> Justification: Provides immediate learning reinforcement. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; 
+        }
+        h1, h2, h3 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link {
+            transition: all 0.2s ease-in-out;
+            border-right: 2px solid transparent;
+        }
+        .toc-link.active {
+            color: #0ea5e9;
+            font-weight: 600;
+            border-right-color: #0ea5e9;
+            transform: translateX(-4px);
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            background-color: #334155;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-button:hover {
+            background-color: #475569;
+        }
+        .quiz-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .quiz-option.correct {
+            background-color: #10b981;
+            color: white;
+            border-color: #059669;
+            transform: scale(1.02);
+        }
+        .quiz-option.incorrect {
+            background-color: #ef4444;
+            color: white;
+            border-color: #dc2626;
+            opacity: 0.7;
+        }
+        .uml-diagram {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            font-family: monospace;
+        }
+        .uml-class, .uml-interface {
+            border: 2px solid #64748b;
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .uml-interface {
+            border-style: dashed;
+            background-color: #f0f9ff;
+        }
+        .uml-title {
+            font-weight: bold;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .uml-connector {
+            position: relative;
+            height: 4rem;
+        }
+        .uml-line {
+            position: absolute;
+            background-color: #64748b;
+        }
+        .arrow-up-diamond {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid #64748b;
+        }
+        .arrow-up-triangle {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid white;
+            -webkit-filter: drop-shadow(0 -1px 0 #64748b);
+            filter: drop-shadow(0 -1px 0 #64748b);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-12">
+            
+            <main class="lg:col-span-3 prose prose-slate max-w-none prose-a:text-sky-600 prose-code:text-sky-700 prose-code:font-semibold prose-code:before:content-[''] prose-code:after:content-['']">
+                
+                <header class="mb-12">
+                    <p class="text-sm font-semibold text-sky-600">Day 36 of 60</p>
+                    <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Behavioral Patterns: The Strategy Pattern</h1>
+                    <p class="mt-4 text-lg text-slate-600">Learn how to encapsulate algorithms into separate classes and make them interchangeable, allowing behavior to change at runtime without altering the context class.</p>
+                </header>
+
+                <section id="section-theory" class="scroll-mt-24">
+                    <h2 class="text-3xl font-bold text-slate-800 border-b border-slate-200 pb-2">Theory: Unpacking the Strategy Pattern</h2>
+                    <p>The Strategy Pattern is a behavioral design pattern that enables selecting an algorithm at runtime. Instead of implementing a single algorithm directly, code receives run-time instructions as to which in a family of algorithms to use.</p>
+
+                    <div class="my-6 p-4 bg-sky-50 border-l-4 border-sky-500 rounded-r-lg">
+                        <h4 class="font-bold text-sky-800">The Core Idea</h4>
+                        <p class="text-sky-700 mt-2">Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.</p>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold text-slate-800 mt-8">Why Use the Strategy Pattern?</h3>
+                    <p>Imagine you're building an e-commerce application. You need to offer various payment methods: Credit Card, PayPal, Bank Transfer. A naive approach would be to use a large `if-else` or `switch` statement in your `Order` processing class.</p>
+                    
+                    <div class="my-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                        <h4 class="font-bold text-red-800">The Problem with If-Else</h4>
+                        <p class="text-red-700 mt-2">This approach violates the Open/Closed Principle. Every time you need to add a new payment method, you have to modify the existing `Order` class. This makes the code rigid, hard to maintain, and prone to bugs.</p>
+                    </div>
+                    
+                    <p>The Strategy Pattern solves this by extracting these algorithms (payment methods) into separate classes, called "Strategies." The main class, or "Context" (in this case, the `Order` class), doesn't know the specifics of each payment method. It just knows it has a "Payment Strategy" object and calls its `Pay` method.</p>
+
+                    <h3 class="text-2xl font-semibold text-slate-800 mt-8">Components of the Strategy Pattern</h3>
+                    <ul class="list-disc pl-5 space-y-2 mt-4 text-slate-700">
+                        <li><strong>Strategy (Interface):</strong> An interface common to all supported algorithms. The Context uses this interface to call the algorithm defined by a Concrete Strategy.</li>
+                        <li><strong>Concrete Strategy:</strong> Implements the algorithm using the Strategy interface. There can be multiple concrete strategies, each for a different algorithm.</li>
+                        <li><strong>Context:</strong> Maintains a reference to a Strategy object. The Context does not know the concrete class of a strategy. It should work with all strategies via the Strategy interface.</li>
+                    </ul>
+
+                    <div class="my-8 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                        <h4 class="font-bold text-amber-800">Real-World Analogy: Commuting</h4>
+                        <p class="text-amber-700 mt-2">Think of your daily commute to work as the <strong>Context</strong>. Your goal is to get from home to the office. The method you choose—driving a car, taking a bus, riding a bike—is your <strong>Strategy</strong>. You can switch your strategy at any time (e.g., take the bus if your car is in the shop) without changing your goal (the Context). Each mode of transport is a <strong>Concrete Strategy</strong> implementing a common `Travel()` method.</p>
+                    </div>
+                </section>
+
+                <section id="section-uml" class="scroll-mt-24 mt-12">
+                    <h2 class="text-3xl font-bold text-slate-800 border-b border-slate-200 pb-2">UML Diagram</h2>
+                    <p>The following diagram illustrates the structure of the Strategy Pattern for a payment processing system. It shows how the `PaymentContext` interacts with various payment strategies through the common `IPaymentStrategy` interface.</p>
+                    <div class="uml-diagram my-6">
+                        <div class="flex flex-col items-center">
+                            <div class="uml-class w-64">
+                                <div class="uml-title">PaymentContext</div>
+                                <div>- _strategy: IPaymentStrategy</div>
+                                <div>+ SetStrategy(strategy)</div>
+                                <div>+ Pay(amount)</div>
+                            </div>
+                            <div class="uml-connector flex justify-center items-end">
+                                <div class="uml-line w-0.5 h-full"></div>
+                                <div class="absolute bottom-0 transform translate-y-1/2">
+                                    <div class="arrow-up-diamond"></div>
+                                </div>
+                            </div>
+                            <div class="uml-interface w-64">
+                                <div class="uml-title">&lt;&lt;interface&gt;&gt;<br>IPaymentStrategy</div>
+                                <div>+ Pay(amount)</div>
+                            </div>
+                             <div class="uml-connector flex justify-center w-full">
+                                <div class="uml-line w-0.5 h-8"></div>
+                             </div>
+                             <div class="w-full h-0.5 bg-slate-500 my-2"></div>
+                             <div class="uml-connector flex w-full">
+                                 <div class="w-1/3 flex justify-center"><div class="uml-line w-0.5 h-8"></div></div>
+                                 <div class="w-1/3 flex justify-center"><div class="uml-line w-0.5 h-8"></div></div>
+                                 <div class="w-1/3 flex justify-center"><div class="uml-line w-0.5 h-8"></div></div>
+                             </div>
+                             <div class="flex w-full justify-around">
+                                <div class="flex flex-col items-center w-1/3">
+                                    <div class="arrow-up-triangle"></div>
+                                    <div class="uml-class w-48">
+                                        <div class="uml-title">CreditCardStrategy</div>
+                                        <div>+ Pay(amount)</div>
+                                    </div>
+                                </div>
+                                 <div class="flex flex-col items-center w-1/3">
+                                    <div class="arrow-up-triangle"></div>
+                                    <div class="uml-class w-48">
+                                        <div class="uml-title">PayPalStrategy</div>
+                                        <div>+ Pay(amount)</div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center w-1/3">
+                                    <div class="arrow-up-triangle"></div>
+                                    <div class="uml-class w-48">
+                                        <div class="uml-title">BankTransferStrategy</div>
+                                        <div>+ Pay(amount)</div>
+                                    </div>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="section-practice" class="scroll-mt-24 mt-12">
+                    <h2 class="text-3xl font-bold text-slate-800 border-b border-slate-200 pb-2">Coding Practice (C#)</h2>
+                    <p>Let's implement the Strategy Pattern with a few examples, starting from simple to more complex scenarios.</p>
+
+                    <h3 class="text-2xl font-semibold text-slate-800 mt-8">[Easy] Sorting Strategy</h3>
+                    <p>A simple list sorter that can switch between ascending and descending sort algorithms.</p>
+                    <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="ISortStrategy.cs">// Strategy Interface
+public interface ISortStrategy
+{
+    List&lt;int&gt; Sort(List&lt;int&gt; list);
+}
+
+// Concrete Strategies
+public class AscendingSortStrategy : ISortStrategy
+{
+    public List&lt;int&gt; Sort(List&lt;int&gt; list)
+    {
+        list.Sort();
+        return list;
+    }
+}
+
+public class DescendingSortStrategy : ISortStrategy
+{
+    public List&lt;int&gt; Sort(List&lt;int&gt; list)
+    {
+        list.Sort();
+        list.Reverse();
+        return list;
+    }
+}
+
+// Context
+public class SortedListContext
+{
+    private ISortStrategy _strategy;
+    private List&lt;int&gt; _list = new List&lt;int&gt;();
+
+    public void SetSortStrategy(ISortStrategy strategy)
+    {
+        this._strategy = strategy;
+    }
+
+    public void Add(int value)
+    {
+        _list.Add(value);
+    }
+
+    public void Sort()
+    {
+        _list = _strategy.Sort(_list);
+        Console.WriteLine("List sorted using " + _strategy.GetType().Name);
+        Console.WriteLine(string.Join(", ", _list));
+    }
+}
+
+// Client Code
+var listContext = new SortedListContext();
+listContext.Add(5);
+listContext.Add(1);
+listContext.Add(9);
+listContext.Add(3);
+
+listContext.SetSortStrategy(new AscendingSortStrategy());
+listContext.Sort();
+
+listContext.SetSortStrategy(new DescendingSortStrategy());
+listContext.Sort();
+</code></pre>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold text-slate-800 mt-8">[Medium] Payment Strategy</h3>
+                    <p>The classic e-commerce example. This demonstrates how to handle different payment methods cleanly.</p>
+                     <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="IPaymentStrategy.cs">// Strategy Interface
+public interface IPaymentStrategy
+{
+    void Pay(decimal amount);
+}
+
+// Concrete Strategies
+public class CreditCardStrategy : IPaymentStrategy
+{
+    private readonly string _name;
+    private readonly string _cardNumber;
+
+    public CreditCardStrategy(string name, string cardNumber)
+    {
+        _name = name;
+        _cardNumber = cardNumber;
+    }
+
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine($"Paid ${amount} with Credit Card (Card Number: ending in { _cardNumber.Substring(_cardNumber.Length - 4) })");
+    }
+}
+
+public class PayPalStrategy : IPaymentStrategy
+{
+    private readonly string _email;
+
+    public PayPalStrategy(string email)
+    {
+        _email = email;
+    }
+
+    public void Pay(decimal amount)
+    {
+        Console.WriteLine($"Paid ${amount} using PayPal (Account: {_email})");
+    }
+}
+
+// Context
+public class PaymentContext
+{
+    private IPaymentStrategy _paymentStrategy;
+
+    public void SetPaymentStrategy(IPaymentStrategy strategy)
+    {
+        this._paymentStrategy = strategy;
+    }
+
+    public void CompletePayment(decimal amount)
+    {
+        // The context delegates the work to the strategy object
+        _paymentStrategy.Pay(amount);
+    }
+}
+
+// Client Code
+var paymentContext = new PaymentContext();
+var orderAmount = 199.99m;
+
+// Pay with Credit Card
+paymentContext.SetPaymentStrategy(new CreditCardStrategy("John Doe", "1234567890123456"));
+paymentContext.CompletePayment(orderAmount);
+
+// Pay with PayPal
+paymentContext.SetPaymentStrategy(new PayPalStrategy("john.doe@example.com"));
+paymentContext.CompletePayment(orderAmount);
+</code></pre>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold text-slate-800 mt-8">[Hard] Routing Strategy</h3>
+                    <p>A navigation app that calculates a route. The strategy can be changed based on the mode of transport (driving, walking, public transit).</p>
+                    <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="IRoutingStrategy.cs">// Strategy Interface
+public interface IRoutingStrategy
+{
+    string CalculateRoute(string origin, string destination);
+}
+
+// Concrete Strategies
+public class DrivingStrategy : IRoutingStrategy
+{
+    public string CalculateRoute(string origin, string destination)
+    {
+        return $"Route for DRIVING from {origin} to {destination}:\n1. Take Highway A.\n2. Exit at B.\n3. Arrive at destination. (ETA: 25 mins)";
+    }
+}
+
+public class WalkingStrategy : IRoutingStrategy
+{
+    public string CalculateRoute(string origin, string destination)
+    {
+        return $"Route for WALKING from {origin} to {destination}:\n1. Walk through Park St.\n2. Turn left at Main Ave.\n3. Arrive at destination. (ETA: 1.5 hours)";
+    }
+}
+
+public class PublicTransitStrategy : IRoutingStrategy
+{
+    public string CalculateRoute(string origin, string destination)
+    {
+        return $"Route for PUBLIC TRANSIT from {origin} to {destination}:\n1. Take Bus #42 at Central Station.\n2. Transfer to Subway Line 2.\n3. Arrive at destination. (ETA: 45 mins)";
+    }
+}
+
+// Context
+public class Navigator
+{
+    private IRoutingStrategy _routingStrategy;
+
+    public void SetRoutingStrategy(IRoutingStrategy strategy)
+    {
+        _routingStrategy = strategy;
+    }
+
+    public void GetDirections(string origin, string destination)
+    {
+        var route = _routingStrategy.CalculateRoute(origin, destination);
+        Console.WriteLine("----- Navigation -----");
+        Console.WriteLine(route);
+        Console.WriteLine("----------------------\n");
+    }
+}
+
+// Client Code
+var navigator = new Navigator();
+string start = "Home";
+string end = "Work";
+
+// Get driving directions
+navigator.SetRoutingStrategy(new DrivingStrategy());
+navigator.GetDirections(start, end);
+
+// Get walking directions for a short trip
+navigator.SetRoutingStrategy(new WalkingStrategy());
+navigator.GetDirections("Office", "Coffee Shop");
+
+// Get public transit directions
+navigator.SetRoutingStrategy(new PublicTransitStrategy());
+navigator.GetDirections(start, end);
+</code></pre>
+                    </div>
+                </section>
+
+                <section id="section-case-study" class="scroll-mt-24 mt-12">
+                    <h2 class="text-3xl font-bold text-slate-800 border-b border-slate-200 pb-2">Case Study: Discount Engine</h2>
+                    <p>Let's build a flexible discount engine for a shopping cart. The system needs to support different types of discounts (e.g., percentage-based, fixed amount, seasonal) and allow new discount types to be added easily.</p>
+                    <p><strong>1. Define the Strategy Interface (`IDiscountStrategy`)</strong></p>
+                     <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="IDiscountStrategy.cs">public interface IDiscountStrategy
+{
+    decimal ApplyDiscount(decimal originalPrice);
+}</code></pre>
+                    </div>
+
+                    <p><strong>2. Create Concrete Strategies</strong></p>
+                    <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="ConcreteStrategies.cs">// Strategy for a percentage-based discount
+public class PercentageDiscountStrategy : IDiscountStrategy
+{
+    private readonly double _percentage;
+
+    public PercentageDiscountStrategy(double percentage)
+    {
+        _percentage = percentage;
+    }
+
+    public decimal ApplyDiscount(decimal originalPrice)
+    {
+        return originalPrice - (originalPrice * (decimal)(_percentage / 100));
+    }
+}
+
+// Strategy for a fixed amount discount
+public class FixedAmountDiscountStrategy : IDiscountStrategy
+{
+    private readonly decimal _amount;
+
+    public FixedAmountDiscountStrategy(decimal amount)
+    {
+        _amount = amount;
+    }
+
+    public decimal ApplyDiscount(decimal originalPrice)
+    {
+        return originalPrice > _amount ? originalPrice - _amount : 0;
+    }
+}
+
+// Strategy for no discount
+public class NoDiscountStrategy : IDiscountStrategy
+{
+    public decimal ApplyDiscount(decimal originalPrice)
+    {
+        return originalPrice;
+    }
+}</code></pre>
+                    </div>
+
+                    <p><strong>3. Implement the Context (`ShoppingCart`)</strong></p>
+                    <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="ShoppingCart.cs">public class ShoppingCart
+{
+    private IDiscountStrategy _discountStrategy = new NoDiscountStrategy(); // Default strategy
+    private decimal _totalPrice;
+
+    public ShoppingCart(decimal totalPrice)
+    {
+        _totalPrice = totalPrice;
+    }
+
+    public void SetDiscountStrategy(IDiscountStrategy strategy)
+    {
+        _discountStrategy = strategy;
+    }
+
+    public void Checkout()
+    {
+        decimal finalPrice = _discountStrategy.ApplyDiscount(_totalPrice);
+        Console.WriteLine($"Original Price: ${_totalPrice:C}");
+        Console.WriteLine($"Applied Discount via: {_discountStrategy.GetType().Name}");
+        Console.WriteLine($"Final Price: ${finalPrice:C}\n");
+    }
+}</code></pre>
+                    </div>
+
+                    <p><strong>4. Client Code in Action</strong></p>
+                    <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                        <button class="copy-button">Copy</button>
+                        <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="Program.cs">var cart = new ShoppingCart(500m);
+
+// Default behavior (no discount)
+cart.Checkout();
+
+// Applying a 20% discount
+cart.SetDiscountStrategy(new PercentageDiscountStrategy(20));
+cart.Checkout();
+
+// Applying a fixed $50 discount
+cart.SetDiscountStrategy(new FixedAmountDiscountStrategy(50));
+cart.Checkout();
+</code></pre>
+                    </div>
+                </section>
+
+                <section id="section-quiz" class="scroll-mt-24 mt-12">
+                    <h2 class="text-3xl font-bold text-slate-800 border-b border-slate-200 pb-2">Knowledge Check</h2>
+                    <p>Test your understanding of the Strategy Pattern.</p>
+                    <div id="quiz-container" class="space-y-6 mt-6">
+                        <!-- Quiz questions will be injected here by JS -->
+                    </div>
+                </section>
+
+                <section id="section-challenge" class="scroll-mt-24 mt-12">
+                    <h2 class="text-3xl font-bold text-slate-800 border-b border-slate-200 pb-2">Self-Assessment Challenge</h2>
+                    <div class="my-6 p-4 bg-slate-100 border border-slate-200 rounded-lg">
+                        <h4 class="font-bold text-slate-800">The Challenge: Data Exporter</h4>
+                        <p class="text-slate-700 mt-2">You are tasked with creating a data exporting tool. This tool takes a block of text and must be able to export it in different formats (e.g., JSON, CSV, Plain Text). The user should be able to choose the export format at runtime.</p>
+                        <p class="mt-2"><strong>Requirements:</strong></p>
+                        <ul class="list-disc pl-5 space-y-1 mt-2 text-slate-600">
+                            <li>Create a `DataExporter` context class.</li>
+                            <li>Define an `IExportStrategy` interface with a method `Export(string data)`.</li>
+                            <li>Implement three concrete strategies: `JsonExportStrategy`, `CsvExportStrategy`, and `PlainTextExportStrategy`.</li>
+                            <li>The client code should demonstrate exporting the same piece of data using all three formats.</li>
+                        </ul>
+                         <button id="reveal-solution-btn" class="mt-4 bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">Reveal Solution</button>
+                    </div>
+                   
+                    <div id="solution-container" class="hidden">
+                         <h3 class="text-2xl font-semibold text-slate-800 mt-8">Challenge Solution</h3>
+                         <div class="code-block my-4 bg-slate-900 rounded-lg overflow-hidden">
+                            <button class="copy-button">Copy</button>
+                            <pre class="p-4 text-sm text-slate-200 overflow-x-auto"><code class="language-csharp" data-filename="DataExporterSolution.cs">// 1. Strategy Interface
+public interface IExportStrategy
+{
+    void Export(string data);
+}
+
+// 2. Concrete Strategies
+public class JsonExportStrategy : IExportStrategy
+{
+    public void Export(string data)
+    {
+        Console.WriteLine("Exporting as JSON:");
+        Console.WriteLine($"{{ \"data\": \"{data}\" }}");
+    }
+}
+
+public class CsvExportStrategy : IExportStrategy
+{
+    public void Export(string data)
+    {
+        Console.WriteLine("Exporting as CSV:");
+        Console.WriteLine($"data_header\n\"{data}\"");
+    }
+}
+
+public class PlainTextExportStrategy : IExportStrategy
+{
+    public void Export(string data)
+    {
+        Console.WriteLine("Exporting as Plain Text:");
+        Console.WriteLine(data);
+    }
+}
+
+// 3. Context
+public class DataExporter
+{
+    private IExportStrategy _strategy;
+
+    public void SetStrategy(IExportStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void ExportData(string data)
+    {
+        Console.WriteLine($"--- Using {_strategy.GetType().Name} ---");
+        _strategy.Export(data);
+        Console.WriteLine("------------------------------------\n");
+    }
+}
+
+// 4. Client Code
+public class ChallengeRunner
+{
+    public static void Run()
+    {
+        var exporter = new DataExporter();
+        var myData = "This is a sample data block for the challenge.";
+
+        // Export as JSON
+        exporter.SetStrategy(new JsonExportStrategy());
+        exporter.ExportData(myData);
+
+        // Export as CSV
+        exporter.SetStrategy(new CsvExportStrategy());
+        exporter.ExportData(myData);
+
+        // Export as Plain Text
+        exporter.SetStrategy(new PlainTextExportStrategy());
+        exporter.ExportData(myData);
+    }
+}
+
+// To run: ChallengeRunner.Run();
+</code></pre>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <aside class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-8">
+                    <h3 class="text-slate-800 font-semibold mb-4 text-right">On this page</h3>
+                    <nav id="table-of-contents" class="flex flex-col space-y-2 text-sm text-slate-500">
+                        <a href="#section-theory" class="toc-link pr-2 py-1 text-right">Theory: The Strategy Pattern</a>
+                        <a href="#section-uml" class="toc-link pr-2 py-1 text-right">UML Diagram</a>
+                        <a href="#section-practice" class="toc-link pr-2 py-1 text-right">Coding Practice</a>
+                        <a href="#section-case-study" class="toc-link pr-2 py-1 text-right">Case Study: Discount Engine</a>
+                        <a href="#section-quiz" class="toc-link pr-2 py-1 text-right">Knowledge Check</a>
+                        <a href="#section-challenge" class="toc-link pr-2 py-1 text-right">Self-Assessment Challenge</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Table of Contents Active State Scroller ---
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('#table-of-contents a');
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const correspondingLink = document.querySelector(`#table-of-contents a[href="#${id}"]`);
+                    
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        tocLinks.forEach(link => link.classList.remove('active'));
+                        if (correspondingLink) {
+                            correspondingLink.classList.add('active');
+                        }
+                    }
+                });
+            }, { rootMargin: "0px 0px -50% 0px", threshold: 0.5 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // --- Copy to Clipboard Functionality ---
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                const copyButton = block.querySelector('.copy-button');
+                const codeElement = block.querySelector('code');
+                copyButton.addEventListener('click', () => {
+                    navigator.clipboard.writeText(codeElement.innerText).then(() => {
+                        copyButton.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy';
+                        }, 2000);
+                    });
+                });
+            });
+
+            // --- Quiz Logic ---
+            const quizContainer = document.getElementById('quiz-container');
+            const quizData = [
+                {
+                    question: "What is the primary purpose of the Strategy Pattern?",
+                    options: [
+                        "To create objects without specifying the exact class of object that will be created.",
+                        "To define a family of algorithms, encapsulate each one, and make them interchangeable.",
+                        "To attach additional responsibilities to an object dynamically.",
+                        "To provide a simplified interface to a complex subsystem."
+                    ],
+                    correctAnswer: 1
+                },
+                {
+                    question: "Which SOLID principle is most directly supported by the Strategy Pattern?",
+                    options: [
+                        "Single Responsibility Principle",
+                        "Open/Closed Principle",
+                        "Liskov Substitution Principle",
+                        "Interface Segregation Principle"
+                    ],
+                    correctAnswer: 1
+                },
+                {
+                    question: "In the Strategy Pattern, what is the role of the 'Context'?",
+                    options: [
+                        "It implements the specific algorithm.",
+                        "It defines the interface for the algorithms.",
+                        "It maintains a reference to a Strategy object and delegates work to it.",
+                        "It is the client code that uses the pattern."
+                    ],
+                    correctAnswer: 2
+                }
+            ];
+
+            function buildQuiz() {
+                quizData.forEach((q, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'p-5 bg-white border border-slate-200 rounded-lg';
+                    
+                    const questionP = document.createElement('p');
+                    questionP.className = 'font-semibold text-slate-800';
+                    questionP.textContent = `${index + 1}. ${q.question}`;
+                    questionDiv.appendChild(questionP);
+
+                    const optionsDiv = document.createElement('div');
+                    optionsDiv.className = 'mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3';
+                    
+                    q.options.forEach((option, optionIndex) => {
+                        const button = document.createElement('button');
+                        button.className = 'quiz-option text-left w-full p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-md text-slate-700';
+                        button.textContent = option;
+                        button.dataset.index = optionIndex;
+                        button.addEventListener('click', () => checkAnswer(q, optionsDiv, button));
+                        optionsDiv.appendChild(button);
+                    });
+                    
+                    questionDiv.appendChild(optionsDiv);
+                    const feedbackP = document.createElement('p');
+                    feedbackP.className = 'feedback mt-3 text-sm font-medium hidden';
+                    questionDiv.appendChild(feedbackP);
+
+                    quizContainer.appendChild(questionDiv);
+                });
+            }
+
+            function checkAnswer(questionData, optionsContainer, selectedButton) {
+                const selectedIndex = parseInt(selectedButton.dataset.index);
+                const isCorrect = selectedIndex === questionData.correctAnswer;
+                const feedbackP = optionsContainer.nextElementSibling;
+                
+                optionsContainer.querySelectorAll('.quiz-option').forEach((btn, idx) => {
+                    if (idx === questionData.correctAnswer) {
+                        btn.classList.add('correct');
+                    } else if (idx === selectedIndex) {
+                        btn.classList.add('incorrect');
+                    }
+                    btn.disabled = true;
+                });
+                
+                if(isCorrect) {
+                    feedbackP.textContent = "Correct! This pattern lets algorithms vary independently from the clients that use them.";
+                    feedbackP.className = "feedback mt-3 text-sm font-medium block text-green-600";
+                } else {
+                    feedbackP.textContent = "Not quite. The correct answer highlights the core idea of interchangable algorithms.";
+                     feedbackP.className = "feedback mt-3 text-sm font-medium block text-red-600";
+                }
+            }
+            
+            buildQuiz();
+
+            // --- Self-Assessment Solution Toggle ---
+            const revealBtn = document.getElementById('reveal-solution-btn');
+            const solutionContainer = document.getElementById('solution-container');
+
+            revealBtn.addEventListener('click', () => {
+                const isHidden = solutionContainer.classList.contains('hidden');
+                if (isHidden) {
+                    solutionContainer.classList.remove('hidden');
+                    revealBtn.textContent = 'Hide Solution';
+                } else {
+                    solutionContainer.classList.add('hidden');
+                    revealBtn.textContent = 'Reveal Solution';
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
+
