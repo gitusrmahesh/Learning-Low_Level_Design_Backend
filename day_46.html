@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 46: Load Balancers & Proxies - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: A two-column layout is chosen for optimal learning ergonomics. The main content area on the left provides a linear, top-down progression from theory to practice, which is the most intuitive flow for mastering a new technical subject. The sticky Table of Contents on the right allows for non-linear navigation, letting users jump to specific sections or easily reference concepts. Interactive demos are placed directly after their corresponding theory to immediately reinforce learning. This structure balances guided learning with self-directed exploration. -->
+    <!-- Visualization & Content Choices: Report Info: Load balancing strategies. -> Goal: Compare, Inform. -> Viz/Presentation Method: Interactive HTML/CSS diagram + dynamic Chart.js bar chart. -> Interaction: User clicks a button to send a request; the diagram animates the request path, and the chart updates to show server load. -> Justification: This provides immediate, visual feedback that makes abstract algorithms like Round-Robin and Weighted Round-Robin tangible and easy to grasp. It's more effective than static text alone. Library/Method: HTML/CSS/JS for diagrams, Chart.js for charts. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #f59e0b; /* amber-500 */
+            border-left-color: #f59e0b;
+            font-weight: 600;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #64748b;
+        }
+        .quiz-option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .quiz-option.correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+        }
+        .quiz-option.incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .diagram-box {
+            border: 2px solid #cbd5e1;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            background-color: white;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .diagram-arrow {
+            position: relative;
+            width: 100%;
+            height: 2px;
+            background-color: #94a3b8;
+        }
+        .diagram-arrow::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: -4px;
+            border: solid #94a3b8;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 4px;
+            transform: rotate(-45deg);
+        }
+        .request-dot {
+            position: absolute;
+            width: 1rem;
+            height: 1rem;
+            background-color: #f59e0b;
+            border-radius: 9999px;
+            z-index: 10;
+            transition: all 0.5s ease-in-out;
+        }
+        .chart-container {
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 300px; 
+            max-height: 400px;
+        }
+        @media (min-width: 768px) { 
+            .chart-container { 
+                height: 350px; 
+            } 
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm" onclick="event.preventDefault(); alert('Homepage functionality is for demonstration.');">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="text-center mb-12">
+                <p class="text-base font-semibold text-amber-600">Day 46: Networking & API Design</p>
+                <h2 class="mt-2 text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">Load Balancers & Proxies</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-500">Understanding how to manage traffic and requests is crucial for building scalable and resilient systems. Today, we'll explore the gatekeepers of modern architecture.</p>
+            </div>
+
+            <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+                <main class="lg:col-span-9 lg:order-1 space-y-16">
+                    <section id="theory">
+                        <h2 class="text-3xl font-extrabold text-slate-900">✅ Core Theory & Concepts</h2>
+                        <div class="mt-6 prose prose-slate max-w-none prose-a:text-amber-600 prose-code:bg-slate-100 prose-code:p-1 prose-code:rounded">
+                            <p>Load balancers and proxies are fundamental components in system architecture that act as intermediaries for network traffic. They enhance performance, security, and reliability by managing how clients connect to servers. Think of them as the highly efficient traffic police, receptionists, and security guards of the internet, all rolled into one.</p>
+
+                            <h3 class="text-2xl font-bold mt-8">Forward Proxy vs. Reverse Proxy</h3>
+                            <p>While both are intermediaries, their position and purpose are different. Understanding this distinction is key.</p>
+                            <ul>
+                                <li><strong>Forward Proxy:</strong> A server that sits in front of <strong>client machines</strong>. When clients from a private network (like a company office) want to access the public internet, their requests go through the forward proxy. To the outside world, all requests appear to come from the proxy's IP address, not the individual clients.
+                                    <ul>
+                                        <li><strong>Analogy:</strong> A company mailroom. All outgoing mail from employees is first sent to the mailroom, which then sends it out to the public postal service. The return address might be the company's main address, not the employee's specific desk.</li>
+                                        <li><strong>Primary Use Cases:</strong> Bypassing geo-restrictions, filtering content (e.g., blocking social media sites in a corporate environment), and providing anonymity for clients.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Reverse Proxy:</strong> A server that sits in front of <strong>backend servers</strong>. When clients from the public internet want to access a service, they send requests to the reverse proxy. The proxy then forwards the request to one of several backend servers. The client never directly communicates with the backend servers.
+                                    <ul>
+                                        <li><strong>Analogy:</strong> A company's main phone number and receptionist. You don't know the direct lines of individual employees. You call the main number, and the receptionist (reverse proxy) connects you to the right person (backend server).</li>
+                                        <li><strong>Primary Use Cases:</strong> Load balancing, SSL termination, caching, and providing a single, secure entry point to a complex backend system. Most load balancers are, in fact, a type of reverse proxy.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            
+                            <h3 class="text-2xl font-bold mt-8">Load Balancer Types: L4 vs. L7</h3>
+                            <p>Load balancers operate at different layers of the OSI model, which grants them different capabilities. The two most common types are Layer 4 and Layer 7.</p>
+                            
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-6 my-6">
+                                <h4 class="text-lg font-semibold text-slate-800">Layer 4 (Transport Layer) Load Balancer</h4>
+                                <p class="mt-2">This type of load balancer makes routing decisions based on information from the network transport layer, primarily the source/destination IP addresses and ports from TCP or UDP packets. It doesn't inspect the actual content of the packets.</p>
+                                <ul>
+                                    <li><strong>How it works:</strong> It forwards network packets to and from the upstream server without terminating the connection. It performs Network Address Translation (NAT) to route the packets.</li>
+                                    <li><strong>Pros:</strong> Extremely fast and efficient because it doesn't need to look inside the packets.</li>
+                                    <li><strong>Cons:</strong> Not content-aware. It can't make decisions based on the type of request (e.g., routing <code>/api/images</code> to an image server).</li>
+                                    <li><strong>Analogy:</strong> A postal worker sorting mail based only on the zip code. It's fast, but doesn't know anything about the letter's content or recipient inside the building.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-6 my-6">
+                                <h4 class="text-lg font-semibold text-slate-800">Layer 7 (Application Layer) Load Balancer</h4>
+                                <p class="mt-2">This is a more sophisticated type of load balancer that operates at the highest level of the OSI model. It can inspect application-level data, such as HTTP headers, cookies, and URL paths.</p>
+                                <ul>
+                                     <li><strong>How it works:</strong> It terminates the network traffic, reads the message content, and makes a routing decision. It can then establish a new connection to the selected backend server.</li>
+                                     <li><strong>Pros:</strong> Highly intelligent and flexible. It enables content-based routing (e.g., sending write requests to one server pool and read requests to another), SSL termination, and more.</li>
+                                     <li><strong>Cons:</strong> Slower than L4 balancers because it requires more CPU to inspect packets.</li>
+                                     <li><strong>Analogy:</strong> A smart building receptionist who opens the mail, reads the "Attention:" line, and delivers it to the specific person or department. It's more work, but ensures the mail gets to the exact right place.</li>
+                                </ul>
+                            </div>
+                            
+                             <h3 class="text-2xl font-bold mt-8">Health Checks: The Unsung Hero</h3>
+                            <p>A load balancer is only effective if it sends traffic to healthy servers. What happens if a server crashes or becomes unresponsive? This is where health checks come in. They are crucial for building a fault-tolerant system.</p>
+                            <ul>
+                                <li><strong>Active Health Checks:</strong> The load balancer periodically sends a request (like a PING or an HTTP call to a specific <code>/health</code> endpoint) to each backend server. If a server fails to respond correctly a few times in a row, the load balancer marks it as "down" and temporarily removes it from the pool of available servers. It will continue to check and will add the server back once it becomes healthy again.</li>
+                                <li><strong>Passive Health Checks:</strong> The load balancer monitors the live traffic as it passes through. If it detects a significant number of connection errors or timeouts when trying to forward requests to a specific server, it will mark that server as "down." This is faster at detecting failures but may not catch servers that are "sick" but not completely failing.</li>
+                            </ul>
+                            <p>Most production systems use a combination of both active and passive health checks for maximum reliability.</p>
+                            
+                            <h3 class="text-2xl font-bold mt-8">Load Balancing Strategies (In-Depth)</h3>
+                            <p>How does a load balancer decide which healthy server gets the next request? It uses various algorithms, each with its own trade-offs.</p>
+                             <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse mt-4">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-4 font-semibold border-b">Strategy</th>
+                                            <th class="p-4 font-semibold border-b">Description</th>
+                                            <th class="p-4 font-semibold border-b">Use Case & (Trade-offs)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white">
+                                        <tr>
+                                            <td class="p-4 border-b"><strong>Round Robin</strong></td>
+                                            <td class="p-4 border-b">Requests are distributed sequentially across the group of servers. 1 -> 2 -> 3 -> 1 -> 2 -> 3...</td>
+                                            <td class="p-4 border-b">Simple and effective for servers with similar specifications. (Inefficient if servers have different capacities).</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-4 border-b"><strong>Weighted Round Robin</strong></td>
+                                            <td class="p-4 border-b">Servers are assigned a weight, typically based on their capacity. A server with weight 3 will receive 3 times as many requests as a server with weight 1.</td>
+                                            <td class="p-4 border-b">Perfect for environments with heterogeneous servers. (Requires careful configuration of weights).</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-4 border-b"><strong>Least Connections</strong></td>
+                                            <td class="p-4 border-b">The next request is sent to the server with the fewest active connections. This is a dynamic algorithm that adapts to the current load.</td>
+                                            <td class="p-4 border-b">Ideal for traffic where requests have varying completion times or result in long-lived connections (e.g., database connections).</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-4 border-b"><strong>Least Response Time</strong></td>
+                                            <td class="p-4 border-b">A more advanced version of Least Connections. It sends the next request to the server with both the fewest active connections and the lowest average response time.</td>
+                                            <td class="p-4 border-b">Provides the best user experience by routing to the fastest server at that moment. (Can be more complex for the LB to calculate).</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-4 border-b"><strong>IP Hash</strong></td>
+                                            <td class="p-4 border-b">A hash of the client's IP address is used to determine which server receives the request.</td>
+                                            <td class="p-4 border-b">Ensures session persistence (stickiness). (Can lead to uneven load if many clients are behind a single corporate NAT IP).</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h3 class="text-2xl font-bold mt-8">Sticky Sessions (Session Persistence)</h3>
+                            <p>Imagine you're shopping online. You add an item to your cart (request 1, goes to server A). Then you browse another page (request 2, goes to server B). If your cart information is only stored on server A, your cart will appear empty on server B! This is a bad user experience.</p>
+                            <p><strong>Sticky sessions</strong> solve this. The load balancer is configured to always send requests from a particular user to the same backend server for the duration of their session. This is often achieved using cookies or the IP Hash method.</p>
+                            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-6">
+                                <p class="font-semibold text-amber-800">The Problem with Statefulness</p>
+                                <p class="text-amber-700">While useful, sticky sessions create a stateful dependency. If the server a user is "stuck" to fails, their session is lost. Modern stateless architectures, which store session data in a shared distributed cache (like Redis) or database, are often preferred. This allows any server to handle any user's request, providing much better fault tolerance and scalability.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="interactive-demos">
+                        <h2 class="text-3xl font-extrabold text-slate-900">✅ Interactive Demos</h2>
+                        <p class="mt-4 text-slate-600">Let's visualize these load balancing strategies. Click the buttons to simulate incoming requests and see how the load balancer distributes them. The chart will update in real-time to show the load on each server.</p>
+
+                        <div class="mt-8 p-6 border rounded-lg bg-white shadow-sm">
+                            <h3 class="text-2xl font-bold">Round-Robin Demo</h3>
+                            <p class="text-slate-500 mb-4">Requests are sent to each server in order. Notice the perfectly even distribution.</p>
+                            <div class="relative p-4 rounded-lg bg-slate-50">
+                                <div id="rr-animation-container" class="flex items-center justify-between h-32">
+                                    <div class="diagram-box w-24">Client</div>
+                                    <div class="flex-grow mx-4"><div class="diagram-arrow"></div></div>
+                                    <div class="diagram-box w-32">Load Balancer</div>
+                                    <div class="flex-grow mx-4"><div class="diagram-arrow"></div></div>
+                                    <div class="flex flex-col space-y-2">
+                                        <div id="rr-server-1" class="diagram-box w-32">Server 1 (0)</div>
+                                        <div id="rr-server-2" class="diagram-box w-32">Server 2 (0)</div>
+                                        <div id="rr-server-3" class="diagram-box w-32">Server 3 (0)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center mt-6 space-x-4">
+                                <button id="rr-send-request" class="px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors">Send Request</button>
+                                <button id="rr-reset" class="px-6 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 transition-colors">Reset</button>
+                            </div>
+                            <div class="mt-6 chart-container">
+                                <canvas id="rr-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="mt-12 p-6 border rounded-lg bg-white shadow-sm">
+                            <h3 class="text-2xl font-bold">Least Connections Demo</h3>
+                            <p class="text-slate-500 mb-4">Requests are sent to the server with the fewest active connections. Click 'Send Request' to add a connection and 'Complete Random' to simulate a request finishing.</p>
+                             <div class="relative p-4 rounded-lg bg-slate-50">
+                                <div id="lc-animation-container" class="flex items-center justify-between h-32">
+                                    <div class="diagram-box w-24">Client</div>
+                                    <div class="flex-grow mx-4"><div class="diagram-arrow"></div></div>
+                                    <div class="diagram-box w-32">Load Balancer</div>
+                                    <div class="flex-grow mx-4"><div class="diagram-arrow"></div></div>
+                                    <div class="flex flex-col space-y-2">
+                                        <div id="lc-server-1" class="diagram-box w-32">Server 1 (0)</div>
+                                        <div id="lc-server-2" class="diagram-box w-32">Server 2 (0)</div>
+                                        <div id="lc-server-3" class="diagram-box w-32">Server 3 (0)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center mt-6 space-x-4">
+                                <button id="lc-send-request" class="px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors">Send Request</button>
+                                <button id="lc-complete-request" class="px-6 py-2 bg-sky-500 text-white font-semibold rounded-lg hover:bg-sky-600 transition-colors">Complete Random</button>
+                                <button id="lc-reset" class="px-6 py-2 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 transition-colors">Reset</button>
+                            </div>
+                            <div class="mt-6 chart-container">
+                                <canvas id="lc-chart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <section id="system-design">
+                        <h2 class="text-3xl font-extrabold text-slate-900">✅ Load Balancers in System Architecture</h2>
+                        <p class="mt-4 text-slate-600">Load balancers are rarely deployed in isolation. They are part of a larger, highly available infrastructure. A single load balancer, while useful, introduces a single point of failure (SPOF). If it goes down, your entire service is inaccessible.</p>
+                        <h4 class="text-xl font-bold mt-6 text-slate-800">High Availability (HA) Pair</h4>
+                        <p class="mt-2 text-slate-600">To mitigate this, load balancers are typically deployed in a high-availability pair (or cluster). The most common setup is Active-Passive:</p>
+                        <ul>
+                            <li><strong>Active LB:</strong> Handles all live traffic.</li>
+                            <li><strong>Passive LB:</strong> Sits idle, but constantly monitors the health of the active LB.</li>
+                            <li><strong>Floating IP:</strong> Both LBs share a virtual "floating" IP address. This is the public IP that DNS points to.</li>
+                            <li><strong>Failover:</strong> If the passive LB detects that the active LB has failed (using a heartbeat mechanism), it immediately takes over the floating IP address and begins handling traffic. This failover process is usually automatic and takes only a few seconds, making it seamless to users.</li>
+                        </ul>
+                         <h4 class="text-xl font-bold mt-6 text-slate-800">A More Complete System Diagram</h4>
+                        <p class="mt-2 text-slate-600">Here's a more realistic architecture diagram showing an HA pair of load balancers in a typical web stack.</p>
+                        <div class="mt-8 p-8 border rounded-lg bg-white shadow-sm flex flex-col items-center space-y-4">
+                             <div class="diagram-box w-48">Internet Users</div>
+                             <div class="text-3xl text-slate-400">↓</div>
+                             <div class="diagram-box w-48">DNS / GSLB</div>
+                             <div class="text-3xl text-slate-400">↓</div>
+                             <div class="diagram-box w-48">Firewall</div>
+                             <div class="text-3xl text-slate-400">↓</div>
+                             <div class="diagram-box w-48 bg-amber-100 border-amber-400">Floating IP</div>
+                             <div class="text-xl text-slate-400">↙ ↘</div>
+                             <div class="flex w-full justify-around">
+                                <div class="diagram-box w-48 bg-green-100 border-green-400">Active LB</div>
+                                <div class="diagram-box w-48 bg-slate-100 border-slate-400">Passive LB</div>
+                             </div>
+                             <div class="text-3xl text-slate-400">↓</div>
+                            <div class="w-full flex justify-around">
+                                <div class="diagram-box w-48">App Server 1</div>
+                                <div class="diagram-box w-48">App Server 2</div>
+                                <div class="diagram-box w-48">App Server 3</div>
+                            </div>
+                             <div class="text-3xl text-slate-400">↓</div>
+                            <div class="diagram-box w-48">Database Cluster</div>
+                        </div>
+                    </section>
+
+                    <section id="case-study">
+                        <h2 class="text-3xl font-extrabold text-slate-900">✅ Advanced Use Cases</h2>
+                        <div class="mt-6 prose prose-slate max-w-none prose-a:text-amber-600">
+                            <h3 class="text-2xl font-bold">Case Study 1: The API Gateway Pattern</h3>
+                            <p>In a microservices architecture, an application is broken down into dozens of smaller, independent services. The <strong>API Gateway</strong> is a specialized L7 reverse proxy that acts as a single, unified entry point for all client requests, solving many challenges of microservice architectures.</p>
+                             <div class="bg-slate-50 border border-slate-200 rounded-lg p-6 my-6">
+                                <h4 class="text-lg font-semibold text-slate-800">Key API Gateway Functions:</h4>
+                                <ul class="mt-4 list-disc list-inside space-y-2">
+                                    <li><strong>Request Routing:</strong> It inspects an incoming request (e.g., <code>/api/products/123</code>) and routes it to the correct microservice (the Product Service).</li>
+                                    <li><strong>Authentication & Authorization:</strong> It acts as a central gatekeeper, authenticating users before any request reaches an internal service.</li>
+                                    <li><strong>Rate Limiting & Throttling:</strong> It protects services from being overwhelmed by too many requests.</li>
+                                    <li><strong>Request Aggregation (Fan-out):</strong> A client might need data that lives in multiple services. For a product page, the API Gateway can call the Product Service, Review Service, and Inventory Service, then combine the responses into a single, efficient response for the client.</li>
+                                    <li><strong>Protocol Translation:</strong> It can translate between client-facing protocols (like REST over HTTP) and internal protocols (like gRPC).</li>
+                                </ul>
+                            </div>
+                            
+                            <h3 class="text-2xl font-bold mt-8">Case Study 2: Global Server Load Balancing (GSLB)</h3>
+                            <p>What if your application is deployed in multiple data centers around the world (e.g., in North America, Europe, and Asia) to serve a global audience? How do you direct users to the data center closest to them to minimize latency?</p>
+                            <p>This is the job of <strong>Global Server Load Balancing (GSLB)</strong>. Unlike a traditional load balancer that distributes traffic to servers within one data center, GSLB distributes traffic across multiple geographically distributed data centers.</p>
+                            <p>GSLB typically works at the DNS layer. When a user tries to access <code>www.example.com</code>, the GSLB-aware DNS service doesn't just return a single IP address. Instead, it makes an intelligent decision based on a chosen policy:</p>
+                             <ul>
+                                <li><strong>Geoproximity:</strong> The DNS returns the IP address of the data center that is geographically closest to the user's location (determined by the IP of the user's DNS resolver).</li>
+                                <li><strong>Latency-Based:</strong> The system performs real-time latency measurements and directs the user to the data center with the lowest RTT (Round Trip Time). This is often the most effective for performance.</li>
+                                <li><strong>Failover:</strong> If an entire data center becomes unavailable (e.g., due to a power outage), the GSLB will automatically redirect all traffic to the next closest healthy data center, providing disaster recovery.</li>
+                             </ul>
+                             <p>GSLB is essential for building highly available, performant, and resilient global applications.</p>
+                        </div>
+                    </section>
+
+                    <section id="knowledge-check">
+                        <h2 class="text-3xl font-extrabold text-slate-900">✅ Knowledge Check Quiz</h2>
+                        <p class="mt-4 text-slate-600">Test your understanding of the concepts covered. Select an answer to see immediate feedback.</p>
+                        <div id="quiz-container" class="mt-8 space-y-6">
+                        </div>
+                        <div class="mt-6 flex justify-between">
+                            <button id="quiz-submit" class="px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors">Submit Answers</button>
+                            <div id="quiz-score" class="text-lg font-bold text-slate-700 self-center"></div>
+                        </div>
+                    </section>
+                    
+                    <section id="self-assessment">
+                        <h2 class="text-3xl font-extrabold text-slate-900">✅ Self-Assessment Challenge</h2>
+                        <p class="mt-4 text-slate-600">Ready to apply what you've learned? Here's a challenge. Try to solve it before revealing the solution.</p>
+                        <div class="mt-8 p-6 border rounded-lg bg-white shadow-sm">
+                            <h3 class="text-xl font-bold text-slate-800">The Scenario</h3>
+                            <p class="mt-2 text-slate-600">You are the lead architect for a global e-commerce platform with data centers in the US, Germany, and Japan. The platform experiences heavy traffic, especially during sales events. The backend consists of two primary microservice types:
+                                <br>• <strong>Order Service:</strong> Handles write-heavy operations (creating orders). These servers are high-performance and costly.
+                                <br>• <strong>Product Catalog Service:</strong> Handles read-heavy operations (browsing products). These servers are standard, read-optimized, and more numerous.
+                            <br>Your goals are: 1) Ensure low latency for all global users. 2) Protect the critical Order Service from being overwhelmed by browser traffic. 3) Maintain high availability even if an entire data center fails.
+                            <br>Describe the comprehensive load balancing strategy you would implement, covering both local (in-datacenter) and global traffic management.</p>
+                            <div class="mt-6">
+                                <details class="bg-slate-50 rounded-lg p-4">
+                                    <summary class="font-semibold text-amber-600 cursor-pointer hover:text-amber-700">Reveal Solution</summary>
+                                    <div class="mt-4 prose prose-slate max-w-none">
+                                        <p>This complex scenario requires a multi-layered load balancing solution:</p>
+                                        <ol>
+                                            <li><strong>Global Layer (GSLB):</strong>
+                                                <ul>
+                                                    <li>Implement a GSLB solution at the DNS level.</li>
+                                                    <li>Configure a latency-based routing policy. This will automatically route users to the data center (US, Germany, or Japan) that provides them with the fastest connection.</li>
+                                                    <li>Configure health checks for each data center. If the Germany data center goes down, the GSLB should automatically start routing European users to the next best location (likely the US data center) for disaster recovery.</li>
+                                                </ul>
+                                            </li>
+                                            <li><strong>Local Datacenter Layer (L7 Load Balancer / API Gateway):</strong>
+                                                <ul>
+                                                    <li>Within each data center, deploy an HA pair of L7 load balancers (acting as an API Gateway). This prevents a single point of failure within the datacenter.</li>
+                                                    <li>Configure path-based routing. All requests to <code>/api/orders/*</code> (e.g., <code>POST /api/orders</code>) are routed to the Order Service server pool. All requests to <code>/api/products/*</code> are routed to the Product Catalog Service pool.</li>
+                                                    <li>This routing isolates the critical, write-heavy Order Service from the high-volume, read-heavy browsing traffic.</li>
+                                                </ul>
+                                            </li>
+                                            <li><strong>Service Pool Layer (Intra-Pool Strategy):</strong>
+                                                <ul>
+                                                    <li><strong>For the Order Service pool:</strong> Use the <strong>Least Connections</strong> strategy. Since creating an order can take a variable amount of time, this ensures new orders are always sent to the least busy server, preventing bottlenecks.</li>
+                                                     <li><strong>For the Product Catalog pool:</strong> Use a standard <strong>Round Robin</strong> or Weighted Round Robin strategy, as these read requests are typically fast and uniform, and the servers are homogeneous.</li>
+                                                </ul>
+                                            </li>
+                                        </ol>
+                                        <p>This three-tiered approach provides global performance and failover (GSLB), intelligent and secure traffic isolation within each datacenter (L7 Gateway), and optimized load distribution at the service level, creating a robust, scalable, and highly available system.</p>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <aside class="hidden lg:block lg:col-span-3 lg:order-2">
+                    <nav id="toc" class="sticky top-8 space-y-2">
+                        <h3 class="text-sm font-bold uppercase text-slate-500 tracking-wider">On this page</h3>
+                        <a href="#theory" class="toc-link group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border-l-2 border-transparent">Core Theory</a>
+                        <a href="#interactive-demos" class="toc-link group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border-l-2 border-transparent">Interactive Demos</a>
+                        <a href="#system-design" class="toc-link group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border-l-2 border-transparent">System Design</a>
+                        <a href="#case-study" class="toc-link group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border-l-2 border-transparent">Advanced Use Cases</a>
+                        <a href="#knowledge-check" class="toc-link group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border-l-2 border-transparent">Knowledge Check</a>
+                        <a href="#self-assessment" class="toc-link group flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-md hover:text-slate-900 hover:bg-slate-100 border-l-2 border-transparent">Self-Assessment</a>
+                    </nav>
+                </aside>
+            </div>
+        </div>
+
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('main section');
+    
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            const id = entry.target.getAttribute('id');
+            const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+            if (entry.isIntersecting && tocLink) {
+                 tocLinks.forEach(link => link.classList.remove('active'));
+                 tocLink.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-40% 0px -60% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+    
+    function createChart(ctx, servers, label) {
+        return new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: servers.map((s, i) => `Server ${i + 1}`),
+                datasets: [{
+                    label: label || '# of Requests',
+                    data: servers.map(s => s.requests),
+                    backgroundColor: ['#38bdf8', '#fbbf24', '#34d399'],
+                    borderColor: ['#0ea5e9', '#f59e0b', '#10b981'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    function updateChart(chart, servers) {
+        chart.data.datasets[0].data = servers.map(s => s.requests);
+        chart.update();
+    }
+    
+    function animateRequest(prefix, serverIndex) {
+        const container = document.getElementById(`${prefix}-animation-container`);
+        if (!container) return;
+        const serverEl = document.getElementById(`${prefix}-server-${serverIndex + 1}`);
+        const dot = document.createElement('div');
+        dot.className = 'request-dot';
+        container.appendChild(dot);
+        
+        const startX = 60; 
+        const endX = serverEl.offsetLeft + serverEl.offsetWidth / 2 - 8;
+        const endY = serverEl.offsetTop + serverEl.offsetHeight / 2 - 8;
+        
+        dot.style.transform = `translate(${startX}px, ${container.offsetHeight / 2 - 8}px)`;
+        
+        setTimeout(() => {
+             dot.style.transform = `translate(${endX}px, ${endY}px)`;
+        }, 10);
+        
+        setTimeout(() => {
+            dot.remove();
+        }, 510);
+    }
+    
+    function updateServerLabels(prefix, servers) {
+        servers.forEach((server, index) => {
+            const serverEl = document.getElementById(`${prefix}-server-${index + 1}`);
+            if(serverEl) {
+                serverEl.innerText = `Server ${index + 1} (${server.requests})`;
+            }
+        });
+    }
+
+    // --- Round Robin Demo ---
+    const rrServers = [
+        { id: 'rr-server-1', requests: 0 },
+        { id: 'rr-server-2', requests: 0 },
+        { id: 'rr-server-3', requests: 0 },
+    ];
+    let rrCurrentServer = 0;
+    const rrChartCtx = document.getElementById('rr-chart').getContext('2d');
+    let rrChart = createChart(rrChartCtx, rrServers, '# of Requests');
+
+    document.getElementById('rr-send-request').addEventListener('click', () => {
+        rrServers[rrCurrentServer].requests++;
+        updateChart(rrChart, rrServers);
+        animateRequest('rr', rrCurrentServer);
+        updateServerLabels('rr', rrServers);
+        rrCurrentServer = (rrCurrentServer + 1) % rrServers.length;
+    });
+
+    document.getElementById('rr-reset').addEventListener('click', () => {
+        rrServers.forEach(s => s.requests = 0);
+        rrCurrentServer = 0;
+        updateChart(rrChart, rrServers);
+        updateServerLabels('rr', rrServers);
+    });
+    
+    // --- Least Connections Demo ---
+    const lcServers = [
+        { id: 'lc-server-1', requests: 0 },
+        { id: 'lc-server-2', requests: 0 },
+        { id: 'lc-server-3', requests: 0 },
+    ];
+    const lcChartCtx = document.getElementById('lc-chart').getContext('2d');
+    let lcChart = createChart(lcChartCtx, lcServers, 'Active Connections');
+
+    document.getElementById('lc-send-request').addEventListener('click', () => {
+        let minConnections = Infinity;
+        let serverIndex = -1;
+        for (let i = 0; i < lcServers.length; i++) {
+            if (lcServers[i].requests < minConnections) {
+                minConnections = lcServers[i].requests;
+                serverIndex = i;
+            }
+        }
+        if (serverIndex !== -1) {
+            lcServers[serverIndex].requests++;
+            updateChart(lcChart, lcServers);
+            animateRequest('lc', serverIndex);
+            updateServerLabels('lc', lcServers);
+        }
+    });
+    
+    document.getElementById('lc-complete-request').addEventListener('click', () => {
+        const activeServers = lcServers.map((s, i) => s.requests > 0 ? i : -1).filter(i => i !== -1);
+        if (activeServers.length > 0) {
+            const randomServerIndex = activeServers[Math.floor(Math.random() * activeServers.length)];
+            lcServers[randomServerIndex].requests--;
+            updateChart(lcChart, lcServers);
+            updateServerLabels('lc', lcServers);
+        }
+    });
+
+    document.getElementById('lc-reset').addEventListener('click', () => {
+        lcServers.forEach(s => s.requests = 0);
+        updateChart(lcChart, lcServers);
+        updateServerLabels('lc', lcServers);
+    });
+
+    // --- Quiz Logic ---
+    const quizData = [
+        {
+            question: "A company wants to prevent employees from accessing social media. What type of proxy would they install?",
+            options: ["Reverse Proxy", "Forward Proxy", "L4 Load Balancer", "API Gateway"],
+            answer: "Forward Proxy"
+        },
+        {
+            question: "Which type of load balancer can route traffic based on the URL path (e.g., sending `/api/video` to video processing servers)?",
+            options: ["Layer 4", "Layer 2", "Layer 7", "IP Hash"],
+            answer: "Layer 7"
+        },
+        {
+            question: "What is the primary purpose of a 'health check'?",
+            options: ["To check the security of a server.", "To ensure traffic is only sent to responsive, working servers.", "To apply software updates to servers.", "To encrypt traffic between the client and server."],
+            answer: "To ensure traffic is only sent to responsive, working servers."
+        },
+        {
+            question: "A user in Japan is accessing your global website. What technology directs them to the Japanese data center instead of the one in the US?",
+            options: ["Round Robin DNS", "API Gateway", "Sticky Sessions", "Global Server Load Balancing (GSLB)"],
+            answer: "Global Server Load Balancing (GSLB)"
+        },
+        {
+            question: "Which load balancing strategy is most appropriate for a set of servers with varying hardware capacities (e.g., some powerful, some weak)?",
+            options: ["Least Connections", "IP Hash", "Weighted Round Robin", "Standard Round Robin"],
+            answer: "Weighted Round Robin"
+        },
+        {
+            question: "What is the main disadvantage of a 'stateless' architecture compared to one using sticky sessions?",
+            options: ["It is less scalable.", "It requires an external shared store (like Redis or a DB) for session data.", "It has worse fault tolerance.", "It's slower for every request."],
+            answer: "It requires an external shared store (like Redis or a DB) for session data."
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    
+    quizData.forEach((q, index) => {
+        const questionEl = document.createElement('div');
+        questionEl.className = 'p-4 border rounded-lg bg-white';
+        questionEl.innerHTML = `
+            <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+            <div class="mt-4 space-y-2" data-question-index="${index}">
+                ${q.options.map((opt) => `
+                    <div class="quiz-option p-3 border-2 border-slate-200 rounded-md cursor-pointer hover:bg-slate-50">
+                        ${opt}
+                    </div>
+                `).join('')}
+            </div>
+            <div id="feedback-${index}" class="mt-2 text-sm"></div>
+        `;
+        quizContainer.appendChild(questionEl);
+    });
+
+    quizContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('quiz-option')) {
+            const parent = e.target.parentElement;
+            parent.querySelectorAll('.quiz-option').forEach(el => el.classList.remove('selected'));
+            e.target.classList.add('selected');
+        }
+    });
+
+    document.getElementById('quiz-submit').addEventListener('click', () => {
+        let score = 0;
+        quizData.forEach((q, index) => {
+            const container = quizContainer.querySelector(`[data-question-index="${index}"]`);
+            const selectedOptionEl = container.querySelector('.quiz-option.selected');
+            const feedbackEl = document.getElementById(`feedback-${index}`);
+            
+            container.querySelectorAll('.quiz-option').forEach(optEl => {
+                optEl.classList.remove('correct', 'incorrect');
+                if (optEl.innerText === q.answer) {
+                    // Mark correct answer regardless of selection
+                    if(!selectedOptionEl || selectedOptionEl.innerText !== q.answer) {
+                       optEl.classList.add('correct');
+                    }
+                }
+            });
+
+            if (selectedOptionEl) {
+                if (selectedOptionEl.innerText === q.answer) {
+                    score++;
+                    selectedOptionEl.classList.add('correct');
+                    feedbackEl.innerHTML = `<span class="font-bold text-green-600">Correct!</span>`;
+                } else {
+                    selectedOptionEl.classList.add('incorrect');
+                    feedbackEl.innerHTML = `<span class="font-bold text-red-600">Incorrect.</span> The correct answer is highlighted in green.`;
+                }
+            } else {
+                 feedbackEl.innerHTML = `<span class="font-bold text-red-600">No answer selected.</span> The correct answer is highlighted in green.`;
+            }
+        });
+        document.getElementById('quiz-score').textContent = `Your Score: ${score} / ${quizData.length}`;
+    });
+
+});
+</script>
+</body>
+</html>
+

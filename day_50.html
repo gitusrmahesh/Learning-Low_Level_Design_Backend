@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 50: MVC Basics – Controllers, Models & Views</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A two-column layout was chosen to present this educational content. The main, wider left column provides a linear, top-to-bottom flow for guided learning, moving from theory to practical application. The narrower, sticky right column contains a Table of Contents for quick, non-linear navigation, allowing users to jump to specific topics for review or reference. This structure is optimal for a self-contained learning module, supporting both initial learning and future study. Interactions are focused on reinforcing knowledge (quizzes, code copying) rather than data exploration. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: MVC Component Diagram -> Goal: Organize/Inform -> Viz Method: HTML/CSS Diagram -> Interaction: Static Visual -> Justification: Clearly illustrates the core architecture and data flow of MVC using basic web technologies, fulfilling the 'no SVG' constraint while being highly effective.
+        - Report Info: MVC for APIs vs Web Apps -> Goal: Compare -> Presentation Method: HTML Table -> Interaction: Static -> Justification: A table provides a direct, side-by-side comparison for easy differentiation of the two concepts.
+        - Report Info: Knowledge Check Quiz -> Goal: Assess/Engage -> Presentation Method: Interactive HTML Form -> Interaction: Click to answer, reveal feedback -> Justification: Promotes active recall and self-assessment, which is crucial for effective learning. The immediate feedback loop reinforces concepts.
+        - Chart.js/Plotly.js were not used as the source material is conceptual and code-based, lacking quantitative data that would be appropriately represented by a chart. An interactive diagram and quiz are more effective visualizations for this content.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #0284c7;
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        pre {
+            position: relative;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #374151;
+            color: #d1d5db;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover { background-color: #4b5563; }
+        .quiz-option { transition: all 0.2s ease-in-out; }
+        .quiz-option.correct { background-color: #16a34a; color: white; border-color: #166534; }
+        .quiz-option.incorrect { background-color: #dc2626; color: white; border-color: #991b1b; }
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-4">
+            <div class="text-center mb-12">
+                <p class="text-sky-600 font-semibold">Day 50 of 60</p>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2 tracking-tight font-lexend">MVC Basics: Controllers, Models & Views</h2>
+                <p class="mt-3 text-slate-600 max-w-2xl mx-auto">A deep dive into the foundational architectural pattern for building structured, maintainable, and scalable web applications in .NET Core.</p>
+            </div>
+
+            <div class="lg:flex lg:space-x-12">
+                <div class="lg:w-3/4">
+                    <article class="space-y-12">
+                        
+                        <section id="theory" class="space-y-6">
+                            <h3 class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">✅ Theory Topics</h3>
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">Understanding MVC Architecture in .NET Core</h4>
+                                <p class="mt-3 text-slate-600 leading-relaxed">
+                                    The Model-View-Controller (MVC) is an architectural pattern that separates an application into three main logical components: the Model, the View, and the Controller. This separation of concerns is crucial for building complex applications because it makes them easier to manage, test, and evolve. Each component has a specific responsibility, and they interact in a predictable way.
+                                </p>
+                                <blockquote class="mt-4 border-l-4 border-sky-300 pl-4 italic text-slate-600 bg-sky-50/50 p-4 rounded-r-lg">
+                                    <strong>Analogy: A Restaurant.</strong> Think of a restaurant. The <strong class="text-sky-700">Model</strong> is the kitchen and ingredients—it manages the data and business logic. The <strong class="text-sky-700">View</strong> is the dining area where customers sit and see their food presented on a plate—it's what the user sees. The <strong class="text-sky-700">Controller</strong> is the waiter—it takes the customer's request (HTTP request), tells the kitchen what to prepare (interacts with the Model), and brings the finished dish back to the customer (selects a View to display).
+                                </blockquote>
+                            </div>
+                        </section>
+
+                        <section id="mvc-roles" class="space-y-6">
+                           <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">Role of Model, View, and Controller</h4>
+                                <p class="mt-3 text-slate-600 leading-relaxed">
+                                    Let's break down the role of each component within the .NET Core ecosystem.
+                                </p>
+                                <ul class="mt-4 space-y-4">
+                                    <li class="flex items-start">
+                                        <span class="text-2xl mr-4">📦</span>
+                                        <div>
+                                            <strong class="font-semibold text-slate-800">Model: The Data & Business Logic</strong>
+                                            <p class="text-slate-600">The Model represents the application's data and the business rules that govern access to and updates of this data. In .NET, this is typically a C# class (often called a POCO - Plain Old CLR Object). It's responsible for managing the state of the application, including validating data and interacting with the database (often via an Object-Relational Mapper like Entity Framework Core).</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-2xl mr-4">🎨</span>
+                                        <div>
+                                            <strong class="font-semibold text-slate-800">View: The User Interface</strong>
+                                            <p class="text-slate-600">The View is responsible for presenting the data to the user. In ASP.NET Core MVC, Views are typically Razor files (`.cshtml`). They take the data provided by the Controller and render it into HTML. A key principle is that Views should contain minimal logic—their job is to display, not to process.</p>
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-2xl mr-4">🚦</span>
+                                        <div>
+                                            <strong class="font-semibold text-slate-800">Controller: The Traffic Cop</strong>
+                                            <p class="text-slate-600">The Controller acts as the intermediary between the Model and the View. It handles incoming user requests, interacts with the Model to perform actions and retrieve data, and then selects the appropriate View to render and return to the user. In .NET, controllers are C# classes that inherit from `Microsoft.AspNetCore.Mvc.Controller`, and their public methods are called "action methods".</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </section>
+                        
+                        <section id="mvc-diagram" class="space-y-6">
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">Interactive MVC Data Flow</h4>
+                                <p class="mt-2 text-slate-600">This diagram illustrates the typical flow of a request in an MVC application.</p>
+                                <div class="mt-6 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                    <div class="relative h-64 flex items-center justify-around">
+                                        <div class="absolute top-0 left-0 text-center">
+                                            <div class="font-semibold text-sm">1. HTTP Request</div>
+                                            <div class="w-16 h-8 border-2 border-dashed border-slate-400"></div>
+                                        </div>
+                                        
+                                        <div class="text-center z-10">
+                                            <div class="w-24 h-24 bg-red-100 border-2 border-red-500 rounded-lg flex flex-col items-center justify-center shadow-md">
+                                                <span class="text-4xl">🚦</span>
+                                                <span class="font-bold text-red-800">Controller</span>
+                                            </div>
+                                            <div class="mt-1 text-xs text-slate-500">Handles Input</div>
+                                        </div>
+                                        
+                                        <div class="text-center z-10">
+                                            <div class="w-24 h-24 bg-sky-100 border-2 border-sky-500 rounded-lg flex flex-col items-center justify-center shadow-md">
+                                                <span class="text-4xl">📦</span>
+                                                <span class="font-bold text-sky-800">Model</span>
+                                            </div>
+                                            <div class="mt-1 text-xs text-slate-500">Manages Data</div>
+                                        </div>
+
+                                        <div class="text-center z-10">
+                                            <div class="w-24 h-24 bg-emerald-100 border-2 border-emerald-500 rounded-lg flex flex-col items-center justify-center shadow-md">
+                                                <span class="text-4xl">🎨</span>
+                                                <span class="font-bold text-emerald-800">View</span>
+                                            </div>
+                                            <div class="mt-1 text-xs text-slate-500">Renders UI</div>
+                                        </div>
+
+                                        <div class="absolute bottom-0 right-0 text-center">
+                                            <div class="font-semibold text-sm">4. HTTP Response</div>
+                                            <div class="w-16 h-8 border-2 border-dashed border-slate-400"></div>
+                                        </div>
+                                        
+                                        <!-- Arrows -->
+                                        <div class="arrow" style="top: 20px; left: 65px; border-width: 0 10px 10px 10px; border-color: transparent transparent #718096 transparent;"></div>
+                                        <div class="absolute bg-slate-500" style="top: 30px; left: 74px; width: 2px; height: 18px;"></div>
+                                        
+                                        <div class="arrow" style="top: 68px; left: 130px; border-width: 10px 0 10px 10px; border-color: transparent transparent transparent #718096;"></div>
+                                        <div class="absolute bg-slate-500" style="top: 77px; left: 140px; width: 60px; height: 2px;"></div>
+                                        <div class="font-bold text-xs text-slate-600 absolute" style="top: 55px; left: 155px;">2. Updates</div>
+                                        
+                                        <div class="arrow" style="top: 140px; left: 200px; border-width: 10px 10px 10px 0; border-color: transparent #718096 transparent transparent;"></div>
+                                        <div class="absolute bg-slate-500" style="top: 149px; left: 140px; width: 60px; height: 2px;"></div>
+
+                                        <div class="arrow" style="top: 68px; left: 340px; border-width: 10px 0 10px 10px; border-color: transparent transparent transparent #718096;"></div>
+                                        <div class="absolute bg-slate-500" style="top: 77px; left: 350px; width: 60px; height: 2px;"></div>
+                                        <div class="font-bold text-xs text-slate-600 absolute" style="top: 55px; left: 365px;">3. Renders</div>
+
+                                        <div class="arrow" style="top: 140px; left: 410px; border-width: 10px 10px 10px 0; border-color: transparent #718096 transparent transparent;"></div>
+                                        <div class="absolute bg-slate-500" style="top: 149px; left: 350px; width: 60px; height: 2px;"></div>
+                                        
+                                        <div class="absolute bg-slate-500" style="top: 210px; right: 74px; width: 2px; height: 18px;"></div>
+                                        <div class="arrow" style="top: 228px; right: 65px; border-width: 10px 10px 0 10px; border-color: #718096 transparent transparent transparent;"></div>
+                                    </div>
+                                    <ol class="list-decimal list-inside mt-4 space-y-1 text-slate-700">
+                                        <li>An HTTP request arrives at the application's routing engine.</li>
+                                        <li>The routing engine selects a Controller and an action method to handle the request.</li>
+                                        <li>The Controller action method interacts with the Model (e.g., fetches data from a database).</li>
+                                        <li>The Controller selects a View, passes the Model data to it, and the View renders the final HTML response.</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="mvc-vs-api" class="space-y-6">
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">Difference between MVC for APIs vs Web Apps</h4>
+                                <p class="mt-3 text-slate-600 leading-relaxed">
+                                    While both use the MVC pattern, their outputs are fundamentally different. A traditional Web App returns a user interface (HTML), whereas a Web API returns raw data (like JSON or XML).
+                                </p>
+                                <div class="mt-4 overflow-x-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr>
+                                                <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">Feature</th>
+                                                <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">MVC for Web Apps</th>
+                                                <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">MVC for Web APIs</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="border-b border-slate-200 p-3 font-semibold text-slate-600">Primary Purpose</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">To build user-facing web applications with HTML interfaces.</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">To build services that provide data to other applications (e.g., mobile apps, SPAs).</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border-b border-slate-200 p-3 font-semibold text-slate-600">The "View"</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">A Razor (`.cshtml`) file that generates HTML. The response is `ViewResult`.</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">There is no "View" in the traditional sense. The data is serialized into a format like JSON. The response is `JsonResult` or `OkObjectResult`.</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border-b border-slate-200 p-3 font-semibold text-slate-600">Base Controller</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">Inherits from `Controller`.</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">Inherits from `ControllerBase` (doesn't include view support). Often decorated with `[ApiController]`.</td>
+                                            </tr>
+                                             <tr>
+                                                <td class="border-b border-slate-200 p-3 font-semibold text-slate-600">Use Case</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">A blog, an e-commerce site, a social media platform.</td>
+                                                <td class="border-b border-slate-200 p-3 text-slate-600">A backend for a React/Angular app, a service for a mobile weather app.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="routing" class="space-y-6">
+                           <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">Routing Basics in ASP.NET Core</h4>
+                                <p class="mt-3 text-slate-600 leading-relaxed">
+                                    Routing is the mechanism that matches an incoming URL to a specific controller action. In ASP.NET Core, this is configured in the `Program.cs` file (or `Startup.cs` in older versions). The most common pattern is "convention-based routing".
+                                </p>
+                                <p class="mt-3 text-slate-600 leading-relaxed">
+                                    A typical default route looks like this: `/{controller=Home}/{action=Index}/{id?}`.
+                                </p>
+                                <ul class="mt-4 list-disc list-inside text-slate-600 space-y-2">
+                                    <li>`{controller=Home}`: This segment maps to the controller name. If omitted, it defaults to `Home` (which maps to `HomeController.cs`).</li>
+                                    <li>`{action=Index}`: This maps to the action method name inside the controller. If omitted, it defaults to `Index`.</li>
+                                    <li>`{id?}`: This is an optional route parameter, typically used for unique identifiers (like a blog post ID). The `?` makes it optional.</li>
+                                </ul>
+                                <div class="mt-4">
+                                <pre><code class="csharp" id="code-routing">// In Program.cs
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+</code></pre>
+                                </div>
+                                <table class="w-full text-left border-collapse mt-4">
+                                     <thead>
+                                        <tr>
+                                            <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">URL</th>
+                                            <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">Controller</th>
+                                            <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">Action</th>
+                                            <th class="border-b-2 border-slate-300 p-3 bg-slate-100 font-semibold text-slate-700">ID Parameter</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border-b border-slate-200 p-3 font-mono text-sm text-slate-600">/</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">Home</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">Index</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">null</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border-b border-slate-200 p-3 font-mono text-sm text-slate-600">/Blog/Details/5</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">Blog</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">Details</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">5</td>
+                                        </tr>
+                                         <tr>
+                                            <td class="border-b border-slate-200 p-3 font-mono text-sm text-slate-600">/Account/Login</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">Account</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">Login</td>
+                                            <td class="border-b border-slate-200 p-3 text-slate-600">null</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                           </div>
+                        </section>
+
+                        <section id="coding" class="space-y-6">
+                             <h3 class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">💻 Coding Practice: Simple Blog Application</h3>
+                             <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">[Easy] Create HomeController with Index action</h4>
+                                <p class="mt-3 text-slate-600">First, let's create the simplest possible controller. This will be the entry point of our website.</p>
+                                <p class="mt-2 text-slate-600"><span class="font-semibold">File:</span> `Controllers/HomeController.cs`</p>
+                                <div class="mt-2">
+                                <pre><code class="csharp" id="code-homecontroller">using Microsoft.AspNetCore.Mvc;
+
+namespace SimpleBlogApp.Controllers
+{
+    public class HomeController : Controller
+    {
+        // This action handles requests to the root URL (e.g., https://your-site.com/)
+        public IActionResult Index()
+        {
+            // The View() method looks for a .cshtml file in /Views/Home/Index.cshtml
+            return View();
+        }
+    }
+}
+</code></pre>
+                                </div>
+                                <p class="mt-4 text-slate-600"><span class="font-semibold">File:</span> `Views/Home/Index.cshtml`</p>
+                                <div class="mt-2">
+                                <pre><code class="html" id="code-homeview">@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Our Simple Blog</h1>
+    <p>Learn about building Web apps with ASP.NET Core.</p>
+</div>
+</code></pre>
+                                </div>
+                             </div>
+
+                             <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">[Medium] Add model validation (DataAnnotations)</h4>
+                                <p class="mt-3 text-slate-600">Now, let's create a Model for our blog posts and add validation rules using DataAnnotations. This ensures data integrity before it even reaches our business logic or database.</p>
+                                <p class="mt-2 text-slate-600"><span class="font-semibold">File:</span> `Models/BlogPost.cs`</p>
+                                <div class="mt-2">
+                                <pre><code class="csharp" id="code-blogmodel">using System.ComponentModel.DataAnnotations;
+
+namespace SimpleBlogApp.Models
+{
+    public class BlogPost
+    {
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "The Title is required.")]
+        [StringLength(100, MinimumLength = 5, ErrorMessage = "Title must be between 5 and 100 characters.")]
+        public string Title { get; set; }
+
+        [Required(ErrorMessage = "The Content is required.")]
+        public string Content { get; set; }
+        
+        public DateTime PublishedDate { get; set; }
+    }
+}
+</code></pre>
+                                </div>
+                                <p class="mt-4 text-slate-600">The controller action that receives this model will check `ModelState.IsValid` to see if the validation rules passed.</p>
+                                <div class="mt-2">
+                                <pre><code class="csharp" id="code-modelstate">[HttpPost]
+public IActionResult Create(BlogPost post)
+{
+    if (ModelState.IsValid)
+    {
+        // Save the post to the database...
+        return RedirectToAction("Index");
+    }
+
+    // If validation fails, return the user to the form with the errors.
+    return View(post);
+}
+</code></pre>
+                                </div>
+                             </div>
+
+                             <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">[Hard] Build CRUD operations for Blog Posts</h4>
+                                <p class="mt-3 text-slate-600">Let's implement the full set of Create, Read, Update, and Delete operations for our `BlogPost` model. We'll use a simple in-memory list to act as our database for this example.</p>
+                                <p class="mt-2 text-slate-600"><span class="font-semibold">File:</span> `Controllers/BlogController.cs`</p>
+                                <div class="mt-2">
+                                <pre><code class="csharp" id="code-blogcrud">using Microsoft.AspNetCore.Mvc;
+using SimpleBlogApp.Models;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace SimpleBlogApp.Controllers
+{
+    public class BlogController : Controller
+    {
+        private static List<BlogPost> _posts = new List<BlogPost>
+        {
+            new BlogPost { Id = 1, Title = "First Post", Content = "This is the content of the first post.", PublishedDate = System.DateTime.Now.AddDays(-2) },
+            new BlogPost { Id = 2, Title = "Second Post", Content = "This is the content of the second post.", PublishedDate = System.DateTime.Now.AddDays(-1) }
+        };
+        private static int _nextId = 3;
+
+        // READ: Display all posts
+        public IActionResult Index()
+        {
+            return View(_posts.OrderByDescending(p => p.PublishedDate).ToList());
+        }
+
+        // CREATE: Show form to create a new post
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // CREATE: Handle the form submission
+        [HttpPost]
+        public IActionResult Create(BlogPost post)
+        {
+            if (ModelState.IsValid)
+            {
+                post.Id = _nextId++;
+                post.PublishedDate = System.DateTime.Now;
+                _posts.Add(post);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(post);
+        }
+
+        // UPDATE: Show form to edit an existing post
+        public IActionResult Edit(int id)
+        {
+            var post = _posts.FirstOrDefault(p => p.Id == id);
+            if (post == null) return NotFound();
+            return View(post);
+        }
+
+        // UPDATE: Handle the edit form submission
+        [HttpPost]
+        public IActionResult Edit(int id, BlogPost updatedPost)
+        {
+            if (id != updatedPost.Id) return BadRequest();
+            
+            if (ModelState.IsValid)
+            {
+                var existingPost = _posts.FirstOrDefault(p => p.Id == id);
+                if (existingPost == null) return NotFound();
+
+                existingPost.Title = updatedPost.Title;
+                existingPost.Content = updatedPost.Content;
+                return RedirectToAction(nameof(Index));
+            }
+            return View(updatedPost);
+        }
+
+        // DELETE: Show confirmation page
+        public IActionResult Delete(int id)
+        {
+            var post = _posts.FirstOrDefault(p => p.Id == id);
+            if (post == null) return NotFound();
+            return View(post);
+        }
+
+        // DELETE: Handle the deletion
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var post = _posts.FirstOrDefault(p => p.Id == id);
+            if (post != null)
+            {
+                _posts.Remove(post);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+    }
+}
+</code></pre>
+                                </div>
+                             </div>
+                        </section>
+                        
+                        <section id="case-study" class="space-y-6">
+                            <h3 class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">🚀 Case Study: Movie Review MVC App</h3>
+                            <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <p class="text-slate-600 leading-relaxed">
+                                    Let's apply these concepts to a new domain: a Movie Review application. The goal is to allow users to add, view, edit, and delete reviews for movies.
+                                </p>
+                                <ol class="mt-4 list-decimal list-inside space-y-4">
+                                    <li>
+                                        <strong class="font-semibold text-slate-700">The Model (`MovieReview.cs`):</strong>
+                                        <p class="text-slate-600 pl-2">Define the data structure. It would have properties like `Id`, `MovieTitle`, `ReviewerName`, `Rating` (from 1 to 5), and `ReviewText`.</p>
+                                        <div class="mt-2">
+                                        <pre><code class="csharp" id="code-reviewmodel">public class MovieReview
+{
+    public int Id { get; set; }
+    [Required]
+    public string MovieTitle { get; set; }
+    [Required]
+    public string ReviewerName { get; set; }
+    [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
+    public int Rating { get; set; }
+    public string ReviewText { get; set; }
+}
+</code></pre>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <strong class="font-semibold text-slate-700">The Controller (`ReviewsController.cs`):</strong>
+                                        <p class="text-slate-600 pl-2">This would contain the CRUD action methods (`Index`, `Create`, `Edit`, `Delete`) similar to our `BlogController`. It would manage a list of `MovieReview` objects.</p>
+                                    </li>
+                                     <li>
+                                        <strong class="font-semibold text-slate-700">The Views (`/Views/Reviews/`):</strong>
+                                        <p class="text-slate-600 pl-2">Create the necessary Razor views:</p>
+                                        <ul class="list-disc list-inside pl-6 text-slate-600">
+                                            <li>`Index.cshtml`: Displays a table of all movie reviews.</li>
+                                            <li>`Create.cshtml`: A form for adding a new review.</li>
+                                            <li>`Edit.cshtml`: A form pre-filled with an existing review to edit.</li>
+                                            <li>`Delete.cshtml`: A confirmation page before deleting a review.</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </section>
+
+                        <section id="quiz" class="space-y-6">
+                            <h3 class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">🧠 Knowledge Check Quiz</h3>
+                            <div class="bg-white p-6 rounded-lg shadow-sm space-y-6" id="quiz-container">
+                                <!-- Quiz questions will be injected here by JS -->
+                            </div>
+                        </section>
+                        
+                        <section id="challenge" class="space-y-6">
+                             <h3 class="text-2xl font-bold text-slate-800 font-lexend border-b-2 border-sky-500 pb-2">🏆 Self-Assessment Challenge</h3>
+                             <div class="bg-white p-6 rounded-lg shadow-sm">
+                                <h4 class="text-xl font-semibold text-slate-800">Add "Comments" to the Blog Application</h4>
+                                <p class="mt-3 text-slate-600 leading-relaxed">
+                                    Your challenge is to extend the Blog application by adding a "Comments" feature.
+                                </p>
+                                <p class="mt-3 font-semibold text-slate-700">Requirements:</p>
+                                <ul class="mt-2 list-disc list-inside text-slate-600 space-y-1">
+                                    <li>Create a new `Comment.cs` model with properties like `Id`, `BlogPostId`, `AuthorName`, `Content`, and `PostedDate`.</li>
+                                    <li>On the blog post's "Details" page, display all comments for that post.</li>
+                                    <li>On the "Details" page, include a form to add a new comment for that specific post.</li>
+                                    <li>Implement the controller logic to handle adding a new comment.</li>
+                                </ul>
+                                <div class="mt-6">
+                                    <button id="reveal-solution-btn" class="bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">Reveal Solution</button>
+                                </div>
+                                <div id="solution-content" class="hidden mt-6 border-t border-slate-200 pt-6">
+                                    <h5 class="font-semibold text-slate-800 mb-2">Solution: `Models/Comment.cs`</h5>
+                                    <pre><code class="csharp" id="code-commentmodel">using System;
+using System.ComponentModel.DataAnnotations;
+
+public class Comment
+{
+    public int Id { get; set; }
+    public int BlogPostId { get; set; } // Foreign key
+    
+    [Required]
+    public string AuthorName { get; set; }
+    
+    [Required]
+    public string Content { get; set; }
+    
+    public DateTime PostedDate { get; set; }
+}
+</code></pre>
+                                    <h5 class="font-semibold text-slate-800 mt-6 mb-2">Solution: New Actions in `BlogController.cs`</h5>
+                                    <pre><code class="csharp" id="code-commentscontroller">// Add this to BlogController
+private static List<Comment> _comments = new List<Comment>();
+private static int _nextCommentId = 1;
+
+// READ: Details page to show post and comments
+public IActionResult Details(int id)
+{
+    var post = _posts.FirstOrDefault(p => p.Id == id);
+    if (post == null) return NotFound();
+    
+    // Pass post and its comments to the view
+    ViewBag.Comments = _comments.Where(c => c.BlogPostId == id).ToList();
+    return View(post);
+}
+
+// CREATE: Add a new comment
+[HttpPost]
+public IActionResult AddComment(int blogPostId, string authorName, string content)
+{
+    var newComment = new Comment
+    {
+        Id = _nextCommentId++,
+        BlogPostId = blogPostId,
+        AuthorName = authorName,
+        Content = content,
+        PostedDate = DateTime.Now
+    };
+    _comments.Add(newComment);
+    
+    // Redirect back to the details page for the same post
+    return RedirectToAction("Details", new { id = blogPostId });
+}
+</code></pre>
+                                    <h5 class="font-semibold text-slate-800 mt-6 mb-2">Solution: `Views/Blog/Details.cshtml`</h5>
+                                    <pre><code class="html" id="code-detailsview">@model SimpleBlogApp.Models.BlogPost
+
+<h1>@Model.Title</h1>
+<p><small>Published on @Model.PublishedDate.ToShortDateString()</small></p>
+<hr />
+<div>@Model.Content</div>
+
+<hr class="my-4" />
+
+<h3>Comments</h3>
+@foreach (var comment in ViewBag.Comments)
+{
+    <div class="card my-2">
+        <div class="card-body">
+            <p><strong>@comment.AuthorName</strong> <small>(@comment.PostedDate)</small></p>
+            <p>@comment.Content</p>
+        </div>
+    </div>
+}
+
+<hr class="my-4" />
+
+<h4>Add a Comment</h4>
+<form asp-action="AddComment" method="post">
+    <input type="hidden" name="blogPostId" value="@Model.Id" />
+    <div class="form-group">
+        <label>Name</label>
+        <input type="text" name="authorName" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Comment</label>
+        <textarea name="content" class="form-control"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Submit</button>
+</form>
+</code></pre>
+                                </div>
+                             </div>
+                        </section>
+
+                    </article>
+                </div>
+
+                <aside class="lg:w-1/4 lg:sticky top-8 self-start hidden lg:block">
+                    <div class="p-6 bg-white rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-slate-800 font-lexend">On this page</h4>
+                        <nav id="toc" class="mt-4">
+                            <ul class="space-y-2">
+                                <li><a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Theory Topics</a></li>
+                                <li><a href="#mvc-roles" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Role of MVC Components</a></li>
+                                <li><a href="#mvc-diagram" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">MVC Data Flow</a></li>
+                                <li><a href="#mvc-vs-api" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">MVC for APIs vs Web Apps</a></li>
+                                <li><a href="#routing" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Routing Basics</a></li>
+                                <li><a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Coding Practice</a></li>
+                                <li><a href="#case-study" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Case Study</a></li>
+                                <li><a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Knowledge Check</a></li>
+                                <li><a href="#challenge" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors">Self-Assessment</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </aside>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Syntax Highlighting
+    hljs.highlightAll();
+
+    // Copy-to-Clipboard functionality
+    document.querySelectorAll('pre').forEach(pre => {
+        const code = pre.querySelector('code');
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-btn';
+        copyButton.textContent = 'Copy';
+        
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(code.innerText).then(() => {
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                copyButton.textContent = 'Error';
+                 setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                }, 2000);
+            });
+        });
+        
+        pre.appendChild(copyButton);
+    });
+    
+    // Table of Contents Scrollspy
+    const sections = document.querySelectorAll('section[id]');
+    const tocLinks = document.querySelectorAll('#toc a');
+
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            const id = entry.target.getAttribute('id');
+            const tocLink = document.querySelector(`#toc a[href="#${id}"]`);
+
+            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                tocLinks.forEach(link => link.classList.remove('active'));
+                tocLink.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-30% 0px -70% 0px', threshold: 0.6 });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    // Reveal Solution
+    const revealBtn = document.getElementById('reveal-solution-btn');
+    const solutionContent = document.getElementById('solution-content');
+    if(revealBtn) {
+        revealBtn.addEventListener('click', () => {
+            solutionContent.classList.toggle('hidden');
+            revealBtn.textContent = solutionContent.classList.contains('hidden') ? 'Reveal Solution' : 'Hide Solution';
+        });
+    }
+
+    // Quiz Logic
+    const quizData = [
+        {
+            question: "In MVC, which component is responsible for handling user input and interacting with the data layer?",
+            options: ["Model", "View", "Controller", "Router"],
+            answer: "Controller"
+        },
+        {
+            question: "What is the primary output of an ASP.NET Core MVC Web App action method?",
+            options: ["JSON data", "An XML document", "A ViewResult (HTML)", "A database record"],
+            answer: "A ViewResult (HTML)"
+        },
+        {
+            question: "Which file is typically used for convention-based routing configuration in a modern .NET Core app?",
+            options: ["Web.config", "Program.cs", "Controller.cs", "appsettings.json"],
+            answer: "Program.cs"
+        },
+        {
+            question: "What is the purpose of `ModelState.IsValid` in a controller action?",
+            options: ["To check if the database connection is open", "To verify that the user is authenticated", "To check if the incoming model data passes validation rules (DataAnnotations)", "To see if the view was rendered successfully"],
+            answer: "To check if the incoming model data passes validation rules (DataAnnotations)"
+        },
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    
+    function renderQuiz() {
+        quizData.forEach((quizItem, index) => {
+            const questionBlock = document.createElement('div');
+            questionBlock.className = 'quiz-question-block';
+            
+            const questionText = document.createElement('p');
+            questionText.className = 'font-semibold text-slate-700';
+            questionText.textContent = `${index + 1}. ${quizItem.question}`;
+            questionBlock.appendChild(questionText);
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3';
+            
+            quizItem.options.forEach(option => {
+                const optionButton = document.createElement('button');
+                optionButton.className = 'quiz-option text-left p-3 border-2 border-slate-300 rounded-lg hover:bg-sky-100 hover:border-sky-400';
+                optionButton.textContent = option;
+                optionButton.dataset.questionIndex = index;
+                optionsContainer.appendChild(optionButton);
+            });
+            
+            const feedbackText = document.createElement('p');
+            feedbackText.className = 'mt-2 text-sm font-medium hidden';
+            
+            questionBlock.appendChild(optionsContainer);
+            questionBlock.appendChild(feedbackText);
+            quizContainer.appendChild(questionBlock);
+        });
+
+        quizContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('quiz-option')) {
+                const selectedButton = e.target;
+                const questionIndex = parseInt(selectedButton.dataset.questionIndex);
+                const selectedAnswer = selectedButton.textContent;
+                const correctAnswer = quizData[questionIndex].answer;
+                const questionBlock = selectedButton.closest('.quiz-question-block');
+                const options = questionBlock.querySelectorAll('.quiz-option');
+                const feedback = questionBlock.querySelector('p:last-child');
+                
+                options.forEach(opt => {
+                    opt.disabled = true; // Disable all options for this question
+                    const optAnswer = opt.textContent;
+                    if (optAnswer === correctAnswer) {
+                        opt.classList.add('correct');
+                    } else if (opt === selectedButton) {
+                        opt.classList.add('incorrect');
+                    }
+                });
+
+                feedback.classList.remove('hidden');
+                if (selectedAnswer === correctAnswer) {
+                    feedback.textContent = 'Correct! Well done.';
+                    feedback.className += ' text-green-600';
+                } else {
+                    feedback.textContent = `Incorrect. The correct answer is "${correctAnswer}".`;
+                    feedback.className += ' text-red-600';
+                }
+            }
+        });
+    }
+
+    renderQuiz();
+});
+</script>
+</body>
+</html>

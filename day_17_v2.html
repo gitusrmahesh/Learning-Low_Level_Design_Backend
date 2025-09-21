@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 17: LINQ - Advanced .NET Concepts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate Neutrals with Teal Accents -->
+    <!-- Application Structure Plan: A two-column layout is used for optimal learning experience. The main content area on the left provides a linear, top-to-bottom lesson flow, guiding the user from theory to practice. A sticky Table of Contents on the right offers persistent navigation, allowing users to jump between sections easily. This structure supports both sequential learning and quick referencing. Interactions include tabbed content for comparisons, toggleable solutions for practice problems, an interactive diagram to explain deferred execution, and a quiz for knowledge reinforcement. This design was chosen to make a dense topic digestible and engaging. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Deferred Execution. Goal: Explain a process. Viz/Method: Interactive HTML/CSS diagram. Interaction: User clicks buttons to trigger animations and text updates showing the execution flow. Justification: A dynamic visual is more effective than static text for demonstrating a temporal concept like deferred vs. immediate execution.
+        - Report Info: Query vs. Method Syntax. Goal: Compare. Viz/Method: Tabbed content block. Interaction: User switches between tabs to see the same query in different syntaxes. Justification: Direct side-by-side comparison is the clearest way to highlight similarities and differences.
+        - Report Info: LINQ Data Flow (UML). Goal: Organize. Viz/Method: A flowchart built with styled HTML divs. Interaction: Hovering over elements reveals tooltips with explanations. Justification: This creates a clean, understandable representation of the data pipeline without relying on external libraries or unsupported SVG graphics.
+        - Report Info: Coding problems & quizzes. Goal: Assess. Viz/Method: Styled code blocks and interactive quiz forms. Interaction: Buttons to reveal solutions and radio buttons for quiz answers with instant feedback. Justification: Active recall and practice are essential for learning to code.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3 {
+            font-family: 'Lexend', sans-serif;
+        }
+        .code-block {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            position: relative;
+            overflow-x: auto;
+        }
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #334155;
+            color: #94a3b8;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            background-color: #475569;
+            color: #cbd5e1;
+        }
+        .toc a.active {
+            color: #0d9488;
+            font-weight: 600;
+            border-left-color: #0d9488;
+        }
+        .solution-block {
+            border: 1px dashed #475569;
+            background-color: #3341551a;
+        }
+        .flow-box {
+            transition: all 0.5s ease-in-out;
+            border-width: 2px;
+        }
+        .flow-line {
+            transition: all 0.5s ease-in-out;
+            background-color: #94a3b8;
+            height: 2px;
+            width: 0;
+            position: absolute;
+            top: 50%;
+        }
+        .flow-line.animate {
+            width: 100%;
+        }
+        .flow-box.highlight {
+            background-color: #0d9488;
+            border-color: #0f766e;
+            color: white;
+            transform: scale(1.05);
+        }
+        .quiz-option.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-6">
+        <div class="flex flex-col lg:flex-row lg:space-x-12">
+            
+            <div class="w-full lg:w-3/4">
+                <article class="prose prose-slate max-w-none">
+                    <section id="introduction" class="scroll-mt-24">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="text-3xl font-bold text-teal-600 bg-teal-100 rounded-lg px-4 py-2">17</div>
+                            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800 tracking-tight m-0">Language Integrated Query (LINQ)</h2>
+                        </div>
+                        <p class="text-lg text-slate-700">LINQ is a revolutionary feature in .NET that introduces a unified, declarative syntax for querying data from various sources (collections, databases, XML, etc.) directly within C#. Instead of writing complex loops and conditional logic to filter, sort, and transform data, LINQ allows you to describe *what* you want, not *how* to get it. This leads to code that is more readable, concise, and maintainable.</p>
+                        <div class="bg-teal-50 border border-teal-200 rounded-lg p-6 my-8">
+                            <h3 class="text-xl font-bold text-teal-800 mt-0">Analogy: The Master Librarian</h3>
+                            <p class="text-teal-700">Think of a traditional library without a catalog system. To find a specific book, you'd have to manually search every shelf (a `foreach` loop). LINQ is like a master librarian. You give them a precise request—"Find all books on C# programming published after 2020, sorted by author name"—and they instantly retrieve the exact books you need, without you needing to know the library's layout. LINQ is your personal data librarian for .NET.</p>
+                        </div>
+                    </section>
+
+                    <section id="theory" class="scroll-mt-24">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b pb-2">✅ Theory Topics</h2>
+                        
+                        <div id="linq-queries" class="mt-8">
+                            <h3 class="text-xl font-semibold text-slate-700">LINQ Queries Explained</h3>
+                            <p>A LINQ query is an expression that retrieves data from a data source. A typical query has three parts: obtaining the data source, creating the query, and executing the query. It operates on any source that implements the `IEnumerable<T>` interface.</p>
+                            <div class="code-block" data-code-block>
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <pre><code class="language-csharp">
+// 1. Data Source
+List&lt;int&gt; numbers = new List&lt;int&gt; { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+// 2. Query Creation
+var evenNumbersQuery = 
+    from num in numbers
+    where num % 2 == 0
+    select num;
+
+// 3. Query Execution
+foreach (var number in evenNumbersQuery)
+{
+    Console.WriteLine(number); // Output: 2, 4, 6, 8, 10
+}
+                                </code></pre>
+                            </div>
+                        </div>
+
+                        <div id="deferred-execution" class="mt-8">
+                            <h3 class="text-xl font-semibold text-slate-700">Deferred Execution</h3>
+                            <p>This is a core concept in LINQ. The query is not executed when it is defined, but rather when the results are actually requested (e.g., in a `foreach` loop, or by calling methods like `.ToList()`, `.ToArray()`, `.First()`). This allows for more efficient processing, as queries can be combined and optimized before execution.</p>
+                            
+                            <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                                <h4 class="text-lg font-semibold text-center mb-4">Interactive Execution Flow</h4>
+                                <p class="text-center text-slate-600 mb-6">Click the buttons to see how modifying the data source before execution affects the result, demonstrating the power of deferred execution.</p>
+                                <div id="deferred-flow-output" class="text-center font-mono text-xl p-4 bg-slate-100 rounded-md mb-6 h-16 flex items-center justify-center">Result: []</div>
+                                
+                                <div class="flex justify-center items-center space-x-4">
+                                    <div id="df-box-1" class="flow-box border-slate-300 p-4 rounded-lg text-center w-40">1. Define Data</div>
+                                    <div class="relative w-24"><div id="df-line-1" class="flow-line"></div></div>
+                                    <div id="df-box-2" class="flow-box border-slate-300 p-4 rounded-lg text-center w-40">2. Define Query</div>
+                                    <div class="relative w-24"><div id="df-line-2" class="flow-line"></div></div>
+                                    <div id="df-box-3" class="flow-box border-slate-300 p-4 rounded-lg text-center w-40">3. Modify Data</div>
+                                    <div class="relative w-24"><div id="df-line-3" class="flow-line"></div></div>
+                                    <div id="df-box-4" class="flow-box border-slate-300 p-4 rounded-lg text-center w-40">4. Execute Query</div>
+                                </div>
+                                <div class="mt-8 flex justify-center space-x-4">
+                                    <button id="run-deferred" class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors">Run Deferred Flow</button>
+                                    <button id="run-immediate" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Run Immediate Flow (.ToList())</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="query-vs-method" class="mt-8">
+                            <h3 class="text-xl font-semibold text-slate-700">Query Syntax vs. Method Syntax</h3>
+                            <p>LINQ queries can be written in two ways. Query syntax is declarative and SQL-like, often preferred for its readability. Method syntax uses extension methods (Lambda expressions) and is more concise and powerful, as not all LINQ operators have a query syntax equivalent.</p>
+                            
+                            <div class="mt-4">
+                                <div class="flex border-b border-slate-200">
+                                    <button class="syntax-tab active-tab py-2 px-4 font-semibold text-teal-600 border-b-2 border-teal-600" onclick="showSyntax('query')">Query Syntax</button>
+                                    <button class="syntax-tab py-2 px-4 font-semibold text-slate-500" onclick="showSyntax('method')">Method Syntax</button>
+                                </div>
+                                <div id="query-syntax-content" class="syntax-content">
+                                    <p class="mt-4 text-sm text-slate-600">Resembles SQL. Often more readable for complex filtering and ordering.</p>
+                                    <div class="code-block" data-code-block>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <pre><code class="language-csharp">
+var highScores = from player in players
+                 where player.Score > 100
+                 orderby player.Name
+                 select player.Name;
+                                        </code></pre>
+                                    </div>
+                                </div>
+                                <div id="method-syntax-content" class="syntax-content hidden">
+                                    <p class="mt-4 text-sm text-slate-600">Uses extension methods and lambda expressions. More concise and can be chained.</p>
+                                    <div class="code-block" data-code-block>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <pre><code class="language-csharp">
+var highScores = players.Where(p => p.Score > 100)
+                        .OrderBy(p => p.Name)
+                        .Select(p => p.Name);
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+                    
+                    <section id="coding-practice" class="scroll-mt-24">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b pb-2 mt-16">💻 Coding Practice</h2>
+                        
+                        <div class="mt-8">
+                            <div class="flex border-b border-slate-200">
+                                <button class="practice-tab active-tab py-2 px-4 font-semibold text-teal-600 border-b-2 border-teal-600" onclick="showPractice('easy')">[Easy] LINQ Filtering</button>
+                                <button class="practice-tab py-2 px-4 font-semibold text-slate-500" onclick="showPractice('medium')">[Medium] LINQ Joins</button>
+                                <button class="practice-tab py-2 px-4 font-semibold text-slate-500" onclick="showPractice('hard')">[Hard] Custom Provider</button>
+                            </div>
+
+                            <div id="easy-practice-content" class="practice-content mt-6">
+                                <h3 class="text-xl font-semibold">Filtering a Product List</h3>
+                                <p><strong>Task:</strong> Given a list of `Product` objects, use LINQ to find all products that are in the "Electronics" category and have a price less than $500. Order the results by price in descending order.</p>
+                                <div class="solution-block p-4 mt-4 rounded-lg">
+                                    <button class="bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors" onclick="toggleSolution(this)">Show Solution</button>
+                                    <div class="solution-content hidden mt-4" data-code-block>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <pre><code class="language-csharp">
+public class Product
+{
+    public string Name { get; set; }
+    public string Category { get; set; }
+    public decimal Price { get; set; }
+}
+
+var products = new List&lt;Product&gt;
+{
+    new Product { Name = "Laptop", Category = "Electronics", Price = 1200.00m },
+    new Product { Name = "Keyboard", Category = "Electronics", Price = 75.50m },
+    new Product { Name = "Mouse", Category = "Electronics", Price = 25.00m },
+    new Product { Name = "Desk Chair", Category = "Furniture", Price = 150.00m },
+    new Product { Name = "Monitor", Category = "Electronics", Price = 350.00m }
+};
+
+var affordableElectronics = products
+    .Where(p => p.Category == "Electronics" && p.Price < 500)
+    .OrderByDescending(p => p.Price)
+    .ToList();
+
+foreach (var product in affordableElectronics)
+{
+    Console.WriteLine($"- {product.Name} (${product.Price})");
+}
+
+// Expected Output:
+// - Monitor ($350.00)
+// - Keyboard ($75.50)
+// - Mouse ($25.00)
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="medium-practice-content" class="practice-content hidden mt-6">
+                                <h3 class="text-xl font-semibold">Joining Customers and Orders</h3>
+                                <p><strong>Task:</strong> You have two collections: `Customer` and `Order`. Use a LINQ join to create a new collection of anonymous objects that includes the customer's name and the name of the product they ordered.</p>
+                                 <div class="solution-block p-4 mt-4 rounded-lg">
+                                    <button class="bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors" onclick="toggleSolution(this)">Show Solution</button>
+                                    <div class="solution-content hidden mt-4" data-code-block>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <pre><code class="language-csharp">
+public class Customer
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
+
+public class Order
+{
+    public int CustomerId { get; set; }
+    public string ProductName { get; set; }
+}
+
+var customers = new List&lt;Customer&gt;
+{
+    new Customer { Id = 1, Name = "Alice" },
+    new Customer { Id = 2, Name = "Bob" }
+};
+
+var orders = new List&lt;Order&gt;
+{
+    new Order { CustomerId = 1, ProductName = "Laptop" },
+    new Order { CustomerId = 2, ProductName = "Keyboard" },
+    new Order { CustomerId = 1, ProductName = "Mouse" }
+};
+
+var customerOrders = customers.Join(orders, 
+    customer => customer.Id,
+    order => order.CustomerId,
+    (customer, order) => new { 
+        CustomerName = customer.Name, 
+        Product = order.ProductName 
+    });
+
+foreach (var co in customerOrders)
+{
+    Console.WriteLine($"{co.CustomerName} bought a {co.Product}");
+}
+
+// Expected Output:
+// Alice bought a Laptop
+// Bob bought a Keyboard
+// Alice bought a Mouse
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="hard-practice-content" class="practice-content hidden mt-6">
+                                <h3 class="text-xl font-semibold">Creating a Custom LINQ Provider (Simplified)</h3>
+                                <p><strong>Task:</strong> This is an advanced topic. The goal is to understand the basics of `IQueryable`. Create a very simple LINQ provider that works on a string array and translates a `.Where(s => s.StartsWith("..."))` expression into a custom message. This demonstrates how LINQ queries can be intercepted and translated.</p>
+                                <div class="solution-block p-4 mt-4 rounded-lg">
+                                    <button class="bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors" onclick="toggleSolution(this)">Show Solution</button>
+                                    <div class="solution-content hidden mt-4" data-code-block>
+                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                        <pre><code class="language-csharp">
+// This is a conceptual example. A full implementation is very complex.
+// We'll focus on parsing the expression tree.
+using System.Linq.Expressions;
+
+public static class SimpleQueryTranslator
+{
+    public static string Translate(Expression expression)
+    {
+        if (expression is MethodCallExpression methodCall)
+        {
+            if (methodCall.Method.Name == "Where")
+            {
+                var lambda = (LambdaExpression)StripQuotes(methodCall.Arguments[1]);
+                if (lambda.Body is MethodCallExpression whereBody && whereBody.Method.Name == "StartsWith")
+                {
+                    var constant = (ConstantExpression)whereBody.Arguments[0];
+                    return $"Translated: Searching for strings starting with '{constant.Value}'.";
+                }
+            }
+        }
+        return "Could not translate expression.";
+    }
+
+    private static Expression StripQuotes(Expression e)
+    {
+        while (e.NodeType == ExpressionType.Quote)
+        {
+            e = ((UnaryExpression)e).Operand;
+        }
+        return e;
+    }
+}
+
+// --- Usage ---
+string[] data = { "Apple", "Banana", "Avocado" };
+IQueryable&lt;string&gt; queryableData = data.AsQueryable();
+
+// Create the query. Note it's NOT executed here.
+var query = queryableData.Where(s => s.StartsWith("A"));
+
+// "Execute" the query by passing its expression to our translator.
+string translation = SimpleQueryTranslator.Translate(query.Expression);
+Console.WriteLine(translation);
+
+// Expected Output:
+// Translated: Searching for strings starting with 'A'.
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+
+                    <section id="uml-task" class="scroll-mt-24">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b pb-2 mt-16">🗺️ UML Task: Data Flow with LINQ</h2>
+                        <p class="mt-6">The following diagram illustrates the typical data flow when a LINQ to Objects query is constructed and executed. It highlights the separation between query definition and execution (deferred execution), which is fundamental to how LINQ works.</p>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-lg mt-8 text-center">
+                            <div class="flex flex-col md:flex-row justify-center items-center md:space-x-4 space-y-4 md:space-y-0">
+                                <div class="p-4 bg-indigo-100 border-2 border-indigo-300 rounded-lg w-64 relative group">
+                                    <h4 class="font-bold text-indigo-800">1. Data Source</h4>
+                                    <p class="text-sm text-indigo-700">(`IEnumerable<T>`)</p>
+                                    <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-2xl text-slate-400">⬇️</div>
+                                    <div class="hidden group-hover:block absolute z-10 w-48 p-2 -top-20 left-1/2 -translate-x-1/2 text-xs text-white bg-slate-700 rounded-lg">Data source (e.g., List, Array) is defined.</div>
+                                </div>
+                                <div class="p-4 bg-sky-100 border-2 border-sky-300 rounded-lg w-64 relative group">
+                                    <h4 class="font-bold text-sky-800">2. Query Definition</h4>
+                                    <p class="text-sm text-sky-700">(Query or Method Syntax)</p>
+                                    <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-2xl text-slate-400">⬇️</div>
+                                    <div class="hidden group-hover:block absolute z-10 w-48 p-2 -top-20 left-1/2 -translate-x-1/2 text-xs text-white bg-slate-700 rounded-lg">The LINQ query is created but not executed. An iterator is built.</div>
+                                </div>
+                                <div class="p-4 bg-amber-100 border-2 border-amber-300 rounded-lg w-64 relative group">
+                                    <h4 class="font-bold text-amber-800">3. Execution Trigger</h4>
+                                    <p class="text-sm text-amber-700">(e.g., `foreach`, `.ToList()`)</p>
+                                    <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-2xl text-slate-400">⬇️</div>
+                                    <div class="hidden group-hover:block absolute z-10 w-48 p-2 -top-20 left-1/2 -translate-x-1/2 text-xs text-white bg-slate-700 rounded-lg">An operation requests the data, forcing the query to run.</div>
+                                </div>
+                                <div class="p-4 bg-emerald-100 border-2 border-emerald-300 rounded-lg w-64 relative group">
+                                    <h4 class="font-bold text-emerald-800">4. Result Set</h4>
+                                    <p class="text-sm text-emerald-700">(Filtered/Sorted Data)</p>
+                                    <div class="hidden group-hover:block absolute z-10 w-48 p-2 -top-20 left-1/2 -translate-x-1/2 text-xs text-white bg-slate-700 rounded-lg">The query executes and the final results are returned.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+                    
+                    <section id="case-study" class="scroll-mt-24">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b pb-2 mt-16">📈 Case Study: Reporting Service</h2>
+                        <p class="mt-6"><strong>Scenario:</strong> A sales department needs a simple service to generate a report of top-performing employees. The report should list employees who have sales exceeding a certain threshold, along with their total sales amount, sorted from highest to lowest sales.</p>
+                        <p><strong>Solution using LINQ:</strong> LINQ is perfect for this. We can use a combination of `GroupBy`, `Sum`, `Where`, and `OrderByDescending` to elegantly transform the raw sales data into the required report.</p>
+                        
+                        <div class="code-block" data-code-block>
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <pre><code class="language-csharp">
+public class Sale
+{
+    public string EmployeeName { get; set; }
+    public decimal Amount { get; set; }
+}
+
+public class EmployeeSalesReport
+{
+    public string EmployeeName { get; set; }
+    public decimal TotalSales { get; set; }
+}
+
+public class ReportingService
+{
+    public List&lt;EmployeeSalesReport&gt; GenerateTopPerformersReport(List&lt;Sale&gt; allSales, decimal salesThreshold)
+    {
+        var report = allSales
+            .GroupBy(sale => sale.EmployeeName)
+            .Select(group => new EmployeeSalesReport
+            {
+                EmployeeName = group.Key,
+                TotalSales = group.Sum(sale => sale.Amount)
+            })
+            .Where(employee => employee.TotalSales >= salesThreshold)
+            .OrderByDescending(employee => employee.TotalSales)
+            .ToList();
+
+        return report;
+    }
+}
+
+// --- Usage ---
+var salesData = new List&lt;Sale&gt;
+{
+    new Sale { EmployeeName = "Alice", Amount = 5000 },
+    new Sale { EmployeeName = "Bob", Amount = 3000 },
+    new Sale { EmployeeName = "Alice", Amount = 7500 },
+    new Sale { EmployeeName = "Charlie", Amount = 4000 },
+    new Sale { EmployeeName = "Bob", Amount = 8000 },
+};
+
+var service = new ReportingService();
+var topPerformers = service.GenerateTopPerformersReport(salesData, 10000);
+
+Console.WriteLine("Top Performers Report (Threshold: $10,000):");
+foreach (var employee in topPerformers)
+{
+    Console.WriteLine($"- {employee.EmployeeName}: ${employee.TotalSales:N2}");
+}
+
+// Expected Output:
+// Top Performers Report (Threshold: $10,000):
+// - Alice: $12,500.00
+// - Bob: $11,000.00
+                            </code></pre>
+                        </div>
+                    </section>
+                     <section id="knowledge-check" class="scroll-mt-24">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b pb-2 mt-16">🧠 Knowledge Check</h2>
+                        <div id="quiz-container" class="space-y-8 mt-6"></div>
+                    </section>
+
+                    <section id="self-assessment" class="scroll-mt-24">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b pb-2 mt-16">🏆 Self-Assessment Challenge</h2>
+                        <p class="mt-6"><strong>Challenge:</strong> You are given a list of `Book` objects and a list of `Author` objects. Each book has an `AuthorId`. Your task is to produce a list of strings, where each string contains an author's name and the number of books they have published, but only for authors who have published more than one book. The list should be sorted by the author's name.</p>
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-6 my-6">
+                            <h3 class="text-xl font-bold text-indigo-800 mt-0">Required Output Format</h3>
+                            <p class="font-mono text-indigo-700">"[Author Name]: [Book Count] books"</p>
+                        </div>
+                        <div class="solution-block p-4 mt-4 rounded-lg">
+                            <button class="bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors" onclick="toggleSolution(this)">Show Challenge Solution</button>
+                            <div class="solution-content hidden mt-4" data-code-block>
+                                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                                <pre><code class="language-csharp">
+public class Author { public int Id { get; set; } public string Name { get; set; } }
+public class Book { public string Title { get; set; } public int AuthorId { get; set; } }
+
+var authors = new List&lt;Author&gt; {
+    new Author { Id = 1, Name = "J.K. Rowling" },
+    new Author { Id = 2, Name = "George R.R. Martin" },
+    new Author { Id = 3, Name = "J.R.R. Tolkien" },
+};
+
+var books = new List&lt;Book&gt; {
+    new Book { Title = "Philosopher's Stone", AuthorId = 1 },
+    new Book { Title = "Chamber of Secrets", AuthorId = 1 },
+    new Book { Title = "A Game of Thrones", AuthorId = 2 },
+    new Book { Title = "The Hobbit", AuthorId = 3 },
+    new Book { Title = "The Fellowship of the Ring", AuthorId = 3 },
+    new Book { Title = "The Two Towers", AuthorId = 3 }
+};
+
+var prolificAuthorsReport = authors
+    .GroupJoin(
+        books,
+        author => author.Id,
+        book => book.AuthorId,
+        (author, authorBooks) => new {
+            AuthorName = author.Name,
+            BookCount = authorBooks.Count()
+        })
+    .Where(a => a.BookCount > 1)
+    .OrderBy(a => a.AuthorName)
+    .Select(a => $"{a.AuthorName}: {a.BookCount} books")
+    .ToList();
+
+foreach (var reportLine in prolificAuthorsReport)
+{
+    Console.WriteLine(reportLine);
+}
+// Expected Output:
+// J.K. Rowling: 2 books
+// J.R.R. Tolkien: 3 books
+                                </code></pre>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </div>
+
+            <aside class="w-full lg:w-1/4 lg:pl-8">
+                <div class="sticky top-24 toc">
+                    <h3 class="font-semibold text-slate-800 mb-3">On This Page</h3>
+                    <nav>
+                        <ul class="space-y-2">
+                            <li><a href="#introduction" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">Introduction</a></li>
+                            <li>
+                                <a href="#theory" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">Theory Topics</a>
+                                <ul class="ml-4 mt-2 space-y-2">
+                                    <li><a href="#linq-queries" class="text-sm text-slate-500 hover:text-teal-600 block border-l-2 border-slate-200 pl-4">LINQ Queries</a></li>
+                                    <li><a href="#deferred-execution" class="text-sm text-slate-500 hover:text-teal-600 block border-l-2 border-slate-200 pl-4">Deferred Execution</a></li>
+                                    <li><a href="#query-vs-method" class="text-sm text-slate-500 hover:text-teal-600 block border-l-2 border-slate-200 pl-4">Query vs Method Syntax</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#coding-practice" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">Coding Practice</a></li>
+                            <li><a href="#uml-task" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">UML Task</a></li>
+                            <li><a href="#case-study" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">Case Study</a></li>
+                            <li><a href="#knowledge-check" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="text-slate-600 hover:text-teal-600 transition-colors block border-l-2 border-slate-200 pl-4">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        function copyCode(button) {
+            const codeBlock = button.closest('[data-code-block]');
+            const code = codeBlock.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.innerText;
+                button.innerText = 'Copied!';
+                setTimeout(() => {
+                    button.innerText = originalText;
+                }, 2000);
+            });
+        }
+
+        function showSyntax(syntax) {
+            document.querySelectorAll('.syntax-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${syntax}-syntax-content`).classList.remove('hidden');
+
+            document.querySelectorAll('.syntax-tab').forEach(el => {
+                el.classList.remove('active-tab', 'text-teal-600', 'border-teal-600');
+                el.classList.add('text-slate-500');
+            });
+            event.target.classList.add('active-tab', 'text-teal-600', 'border-teal-600');
+            event.target.classList.remove('text-slate-500');
+        }
+
+        function showPractice(level) {
+            document.querySelectorAll('.practice-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${level}-practice-content`).classList.remove('hidden');
+
+            document.querySelectorAll('.practice-tab').forEach(el => {
+                el.classList.remove('active-tab', 'text-teal-600', 'border-teal-600');
+                el.classList.add('text-slate-500');
+            });
+            event.target.classList.add('active-tab', 'text-teal-600', 'border-teal-600');
+            event.target.classList.remove('text-slate-500');
+        }
+
+        function toggleSolution(button) {
+            const solutionContent = button.nextElementSibling;
+            const isHidden = solutionContent.classList.contains('hidden');
+            if (isHidden) {
+                solutionContent.classList.remove('hidden');
+                button.textContent = 'Hide Solution';
+            } else {
+                solutionContent.classList.add('hidden');
+                button.textContent = button.textContent.replace('Hide', 'Show');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('.toc a');
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const link = document.querySelector(`.toc a[href="#${id}"]`);
+                    
+                    if (entry.isIntersecting) {
+                        tocLinks.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                        // Also activate parent link if it's a sub-item
+                        const parentLink = link.closest('ul.ml-4')?.previousElementSibling;
+                        if(parentLink) {
+                            parentLink.classList.add('active');
+                        }
+                    }
+                });
+            }, { rootMargin: '-20% 0px -75% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Deferred Execution Interactive Demo
+            const runDeferredBtn = document.getElementById('run-deferred');
+            const runImmediateBtn = document.getElementById('run-immediate');
+            const outputEl = document.getElementById('deferred-flow-output');
+            const boxes = [document.getElementById('df-box-1'), document.getElementById('df-box-2'), document.getElementById('df-box-3'), document.getElementById('df-box-4')];
+            const lines = [document.getElementById('df-line-1'), document.getElementById('df-line-2'), document.getElementById('df-line-3')];
+
+            function resetFlow() {
+                boxes.forEach(b => b.classList.remove('highlight'));
+                lines.forEach(l => l.classList.remove('animate'));
+                outputEl.textContent = 'Result: []';
+            }
+
+            function animateFlow(isDeferred) {
+                resetFlow();
+                runDeferredBtn.disabled = true;
+                runImmediateBtn.disabled = true;
+
+                let numbers = [1, 2, 3, 4, 5];
+                
+                setTimeout(() => boxes[0].classList.add('highlight'), 500); // 1. Define Data
+                setTimeout(() => lines[0].classList.add('animate'), 1000);
+                setTimeout(() => boxes[1].classList.add('highlight'), 1500); // 2. Define Query
+                
+                let query = numbers.Where(n => n > 3);
+                
+                if (!isDeferred) {
+                    query = query.ToList(); // Immediate execution
+                }
+                
+                setTimeout(() => lines[1].classList.add('animate'), 2000);
+                setTimeout(() => { // 3. Modify Data
+                    boxes[2].classList.add('highlight');
+                    numbers.push(6);
+                    numbers.push(7);
+                }, 2500); 
+
+                setTimeout(() => lines[2].classList.add('animate'), 3000);
+                setTimeout(() => { // 4. Execute Query
+                    boxes[3].classList.add('highlight');
+                    let result = Array.from(query);
+                    outputEl.textContent = `Result: [${result.join(', ')}]`;
+                }, 3500);
+
+                setTimeout(() => {
+                    runDeferredBtn.disabled = false;
+                    runImmediateBtn.disabled = false;
+                }, 4000);
+            }
+            // Mock LINQ methods for demo
+            Array.prototype.Where = function(predicate) { return this.filter(predicate); };
+            Array.prototype.ToList = function() { return [...this]; };
+
+            runDeferredBtn.addEventListener('click', () => animateFlow(true));
+            runImmediateBtn.addEventListener('click', () => animateFlow(false));
+
+            // Quiz Logic
+            const quizData = [
+                {
+                    question: "What is the primary characteristic of deferred execution in LINQ?",
+                    options: [
+                        "The query runs as soon as it is defined.",
+                        "The query execution is delayed until the results are enumerated.",
+                        "It only works with Method Syntax.",
+                        "It makes the code run slower."
+                    ],
+                    answer: "The query execution is delayed until the results are enumerated.",
+                    explanation: "Deferred execution means the query doesn't run when it's created, but rather when you iterate over it (e.g., with foreach) or call a conversion operator like ToList()."
+                },
+                {
+                    question: "Which of the following will NOT cause a LINQ query to execute immediately?",
+                    options: [
+                        ".ToList()",
+                        "A `foreach` loop",
+                        ".Count()",
+                        "Assigning the query to a variable."
+                    ],
+                    answer: "Assigning the query to a variable.",
+                    explanation: "Simply assigning a query to a variable only stores the query definition. The query is not executed until one of the other actions (iteration or conversion) takes place."
+                },
+                {
+                    question: "Which LINQ syntax is generally more concise and can use all LINQ operators?",
+                    options: [
+                        "Query Syntax",
+                        "SQL Syntax",
+                        "Method Syntax (Lambda Expressions)",
+                        "Both are equally powerful"
+                    ],
+                    answer: "Method Syntax (Lambda Expressions)",
+                    explanation: "Method Syntax is more powerful because not all LINQ operators (like .Take(), .Skip(), .First()) have a dedicated keyword in Query Syntax."
+                },
+                {
+                    question: "What is the purpose of the `join` clause in LINQ?",
+                    options: [
+                        "To combine two strings.",
+                        "To filter results based on a condition.",
+                        "To correlate elements from two data sources based on a common key.",
+                        "To sort the data source."
+                    ],
+                    answer: "To correlate elements from two data sources based on a common key.",
+                    explanation: "The `join` clause is used to merge two collections based on a matching key, similar to a JOIN in SQL, allowing you to create results from related data."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'bg-white p-6 rounded-lg shadow';
+                questionEl.innerHTML = `
+                    <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+                    <div class="mt-4 space-y-3" id="options-${index}">
+                        ${q.options.map((option, i) => `
+                            <label class="quiz-option block p-3 border border-slate-300 rounded-md hover:bg-slate-50 cursor-pointer">
+                                <input type="radio" name="question-${index}" value="${option}" class="mr-3">
+                                ${option}
+                            </label>
+                        `).join('')}
+                    </div>
+                    <p id="feedback-${index}" class="text-sm mt-3 hidden"></p>
+                `;
+                quizContainer.appendChild(questionEl);
+            });
+
+            quizContainer.addEventListener('change', (e) => {
+                if(e.target.type === 'radio') {
+                    const [q, indexStr] = e.target.name.split('-');
+                    const index = parseInt(indexStr);
+                    const selectedValue = e.target.value;
+                    const quizItem = quizData[index];
+                    const feedbackEl = document.getElementById(`feedback-${index}`);
+                    const optionsContainer = document.getElementById(`options-${index}`);
+                    
+                    Array.from(optionsContainer.children).forEach(label => {
+                        label.classList.remove('correct', 'incorrect');
+                        label.querySelector('input').disabled = true;
+                    });
+                    
+                    const selectedLabel = e.target.parentElement;
+                    if(selectedValue === quizItem.answer) {
+                        selectedLabel.classList.add('correct');
+                        feedbackEl.textContent = `Correct! ${quizItem.explanation}`;
+                        feedbackEl.className = 'text-sm mt-3 text-green-700';
+                    } else {
+                        selectedLabel.classList.add('incorrect');
+                        feedbackEl.textContent = `Incorrect. ${quizItem.explanation}`;
+                        feedbackEl.className = 'text-sm mt-3 text-red-700';
+                        Array.from(optionsContainer.children).find(label => label.querySelector('input').value === quizItem.answer).classList.add('correct');
+                    }
+                    feedbackEl.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
