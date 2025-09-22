@@ -431,7 +431,7 @@ public class ECommerceSystem
                     
                     <section id="case-study" class="scroll-mt-24">
                         <h2 class="mt-16">✅ Case Study: Full E-commerce Backend System</h2>
-                        <p>Let's walk through the entire lifecycle of an order to solidify our understanding, combining all the concepts we've discussed.</p>
+                        <p>Let's walk through the entire lifecycle of an order to solidify our understanding, combining all the concepts we've discussed with relevant code examples at each stage.</p>
                         
                         <div x-data="{ activeStep: 1 }" class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
                              <div class="flex flex-col sm:flex-row justify-between items-center text-center border-b pb-4 mb-4">
@@ -441,26 +441,162 @@ public class ECommerceSystem
                                     </div>
                                 </template>
                              </div>
-                             <div>
+                             <div class="space-y-4">
                                  <div x-show="activeStep === 1" x-cloak>
                                      <h4 class="font-bold text-slate-800">Step 1: User Adds to Cart & Checks Out</h4>
-                                     <p>A user browses the product catalog (served from a cache or read-replica database). They add items to their cart. The cart state is managed on the client-side or in a temporary server-side store like Redis. When the user clicks "Checkout", the frontend sends a request to the backend with the list of product IDs and quantities.</p>
+                                     <p>A user browses the product catalog (served from a cache or read-replica database). They add items to their cart. When the user clicks "Checkout", the frontend sends a request to the backend with the list of product IDs and quantities, often as a JSON payload.</p>
+                                     <h5 class="font-semibold text-slate-700 mt-4">Code Spotlight: API Request Model</h5>
+                                     <div class="code-block rounded-xl mt-2">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-xl"><code class="language-csharp">
+// This Data Transfer Object (DTO) represents the incoming checkout request.
+public class CheckoutRequestDto
+{
+    public int CustomerId { get; set; }
+    public List&lt;CartItemDto&gt; Items { get; set; }
+}
+
+public class CartItemDto
+{
+    public int ProductId { get; set; }
+    public int Quantity { get; set; }
+}
+
+// In your API Controller (e.g., ASP.NET Core):
+// [HttpPost]
+// public IActionResult Checkout([FromBody] CheckoutRequestDto request)
+// {
+//     var order = _orderService.CreateOrder(request);
+//     // ... handle success or failure
+// }
+                                        </code></pre>
+                                    </div>
                                  </div>
                                  <div x-show="activeStep === 2" x-cloak>
                                      <h4 class="font-bold text-slate-800">Step 2: Order Placement & Inventory Lock</h4>
-                                     <p>The `OrderService` receives the request. It initiates a database transaction. Inside the transaction, it performs a crucial "SELECT...FOR UPDATE" query on the inventory rows for the requested products. This locks the rows, preventing other transactions from modifying them. It checks if sufficient quantity exists. If yes, it creates an `Order` and `OrderItems` in a "Pending" state and decrements the inventory count. If all steps succeed, the transaction is committed. If anything fails (e.g., insufficient stock), the transaction is rolled back, and an error is returned to the user.</p>
+                                     <p>The `OrderService` receives the request. It initiates a database transaction. Inside the transaction, it performs a crucial "SELECT...FOR UPDATE" query on the inventory rows. This locks the rows, preventing race conditions. It checks if sufficient quantity exists. If yes, it creates an `Order` and `OrderItems` in a "Pending" state and decrements the inventory. The transaction is then committed.</p>
+                                     <h5 class="font-semibold text-slate-700 mt-4">Code Spotlight: Transactional Logic (Conceptual)</h5>
+                                      <div class="code-block rounded-xl mt-2">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-xl"><code class="language-csharp">
+// Inside a hypothetical IInventoryRepository using Dapper and SQL
+public bool ReserveStock(IDbConnection connection, IDbTransaction transaction, int productId, int quantity)
+{
+    // The "FOR UPDATE" clause locks the selected row until the transaction is committed or rolled back.
+    var currentStock = connection.QuerySingle&lt;int&gt;(
+        "SELECT Quantity FROM Inventory WHERE ProductId = @productId FOR UPDATE", 
+        new { productId }, 
+        transaction: transaction);
+        
+    if (currentStock &gt;= quantity)
+    {
+        connection.Execute(
+            "UPDATE Inventory SET Quantity = Quantity - @quantity WHERE ProductId = @productId",
+            new { quantity, productId },
+            transaction: transaction);
+        return true;
+    }
+    return false;
+}
+                                        </code></pre>
+                                    </div>
                                  </div>
                                  <div x-show="activeStep === 3" x-cloak>
                                      <h4 class="font-bold text-slate-800">Step 3: Payment Processing</h4>
-                                     <p>The `OrderService` calls the `PaymentService`, passing the order total. The `PaymentService` uses a `StripeGateway` (Strategy Pattern) to create a payment intent with Stripe and returns a client secret to the frontend. The frontend uses this secret to securely submit card details directly to Stripe. The user's browser is redirected to a success or failure URL.</p>
+                                     <p>The `OrderService` calls the `PaymentService`. The `PaymentService` uses a `StripeGateway` (Strategy Pattern) to create a payment intent with Stripe and returns a client secret to the frontend. The frontend uses this secret to securely submit card details directly to Stripe. The user's browser is redirected to a success or failure URL.</p>
+                                     <h5 class="font-semibold text-slate-700 mt-4">Code Spotlight: Creating a Payment Intent</h5>
+                                     <div class="code-block rounded-xl mt-2">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-xl"><code class="language-csharp">
+// Inside a StripeGateway, using the Stripe.net library
+public string CreatePaymentIntent(decimal amount, string currency)
+{
+    // The amount should be in the smallest currency unit (e.g., cents)
+    var options = new PaymentIntentCreateOptions
+    {
+        Amount = (long)(amount * 100),
+        Currency = currency,
+        // In the latest versions of the API, you must specify payment_method_types
+        PaymentMethodTypes = new List&lt;string&gt; { "card" },
+    };
+    var service = new PaymentIntentService();
+    PaymentIntent intent = service.Create(options);
+    return intent.ClientSecret;
+}
+                                        </code></pre>
+                                    </div>
                                  </div>
                                   <div x-show="activeStep === 4" x-cloak>
                                      <h4 class="font-bold text-slate-800">Step 4: Payment Confirmation (Webhook)</h4>
                                      <p>Stripe processes the payment and sends an asynchronous notification (a webhook) to a dedicated endpoint on our backend. This is more reliable than relying on the user's browser redirection. The webhook handler verifies the event's authenticity, then finds the corresponding order and updates its status to "Paid".</p>
+                                     <h5 class="font-semibold text-slate-700 mt-4">Code Spotlight: Webhook Handler Endpoint</h5>
+                                      <div class="code-block rounded-xl mt-2">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-xl"><code class="language-csharp">
+// In your Webhook Controller (e.g., ASP.NET Core)
+// [HttpPost("stripe-webhook")]
+public async Task&lt;IActionResult&gt; StripeWebhook()
+{
+    var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+    // You must configure this in your app settings
+    var endpointSecret = _configuration["Stripe:WebhookSecret"]; 
+
+    try
+    {
+        var stripeEvent = EventUtility.ConstructEvent(json,
+            Request.Headers["Stripe-Signature"], endpointSecret);
+
+        if (stripeEvent.Type == Events.PaymentIntentSucceeded)
+        {
+            var paymentIntent = (PaymentIntent)stripeEvent.Data.Object;
+            // Find order associated with paymentIntent.Id and update its status
+            await _orderService.ConfirmOrderPayment(paymentIntent.Id);
+        }
+        
+        return Ok();
+    }
+    catch (StripeException e)
+    {
+        return BadRequest();
+    }
+}
+                                        </code></pre>
+                                    </div>
                                  </div>
                                   <div x-show="activeStep === 5" x-cloak>
                                      <h4 class="font-bold text-slate-800">Step 5: Post-Payment Asynchronous Tasks</h4>
-                                     <p>Updating the order status to "Paid" publishes an `OrderPaid` event to a message queue (Observer Pattern). Several worker services (subscribers) listen for this event. A `NotificationService` sends a confirmation email. A `ShippingService` notifies the warehouse to begin fulfillment. An `AnalyticsService` updates sales dashboards. This ensures the checkout response is fast, and subsequent, slower tasks don't block the user.</p>
+                                     <p>Updating the order status to "Paid" publishes an `OrderPaid` event to a message queue (e.g., RabbitMQ). Several worker services listen for this event. A `NotificationService` sends an email, a `ShippingService` notifies the warehouse, and so on. This ensures the checkout response is fast and the system is decoupled.</p>
+                                     <h5 class="font-semibold text-slate-700 mt-4">Code Spotlight: Publishing an Event</h5>
+                                     <div class="code-block rounded-xl mt-2">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-xl"><code class="language-csharp">
+public interface IMessageBus
+{
+    void Publish&lt;T&gt;(T message);
+}
+
+// Event payload
+public class OrderPaidEvent
+{
+    public int OrderId { get; set; }
+    public int CustomerId { get; set; }
+    public DateTime PaidAt { get; set; }
+}
+
+// Inside OrderService, after updating the order status to "Paid"
+public async Task ConfirmOrderPayment(string paymentIntentId)
+{
+    // ... logic to find order and update status ...
+    var order = await _orderRepository.GetByPaymentIntentId(paymentIntentId);
+    order.Status = OrderStatus.Paid;
+    await _orderRepository.Update(order);
+
+    // Publish the event for other services to consume
+    var orderPaidEvent = new OrderPaidEvent { OrderId = order.Id, ... };
+    _messageBus.Publish(orderPaidEvent);
+}
+                                        </code></pre>
+                                    </div>
                                  </div>
                              </div>
                         </div>
@@ -788,3 +924,4 @@ public class ReturnService
     </script>
 </body>
 </html>
+

@@ -102,30 +102,99 @@
                         <h3 class="text-2xl font-bold text-slate-900 font-lexend border-b pb-2">✅ Theory Topics: The Architectural Blueprint</h3>
                         
                         <div class="p-6 bg-white rounded-xl shadow-sm">
-                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">1. Core System Requirements</h4>
-                            <p class="mt-3 text-slate-600">At its heart, a ride-hailing service is a three-sided marketplace connecting Riders, Drivers, and the Platform. The system must manage the lifecycle of a trip from request to completion. Let's break down the primary actors and entities:</p>
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">1. Core System Requirements (Expanded)</h4>
+                            <p class="mt-3 text-slate-600">A robust system starts with a clear definition of what it must do. We'll categorize requirements into Functional (what the system does) and Non-Functional (how the system performs).</p>
+                            
+                            <h5 class="mt-6 text-lg font-semibold text-slate-700">Functional Requirements</h5>
+                            <div class="mt-4 overflow-x-auto">
+                                <table class="min-w-full bg-white border border-slate-200">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="p-3 text-left text-sm font-semibold text-slate-600">User Role</th>
+                                            <th class="p-3 text-left text-sm font-semibold text-slate-600">Requirement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200">
+                                        <tr class="divide-x divide-slate-200">
+                                            <td class="p-3 align-top font-semibold text-slate-700">Rider</td>
+                                            <td class="p-3 text-slate-600">
+                                                <ul class="list-disc list-inside space-y-1">
+                                                    <li>Register and manage their profile.</li>
+                                                    <li>Request a ride for various vehicle types.</li>
+                                                    <li>Get a fare estimate before booking.</li>
+                                                    <li>Track the driver's location in real-time.</li>
+                                                    <li>Make payments through multiple methods.</li>
+                                                    <li>Rate the driver and the trip.</li>
+                                                    <li>View trip history.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                        <tr class="divide-x divide-slate-200 bg-slate-50/50">
+                                            <td class="p-3 align-top font-semibold text-slate-700">Driver</td>
+                                            <td class="p-3 text-slate-600">
+                                                <ul class="list-disc list-inside space-y-1">
+                                                    <li>Register, onboard, and manage their profile/vehicle.</li>
+                                                    <li>Set their availability (online/offline).</li>
+                                                    <li>Accept or reject incoming ride requests.</li>
+                                                    <li>Use in-app navigation to pickup and destination.</li>
+                                                    <li>View earnings and trip history.</li>
+                                                    <li>Rate the rider.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                        <tr class="divide-x divide-slate-200">
+                                            <td class="p-3 align-top font-semibold text-slate-700">Admin</td>
+                                            <td class="p-3 text-slate-600">
+                                                <ul class="list-disc list-inside space-y-1">
+                                                    <li>Manage riders and drivers (view, suspend, delete).</li>
+                                                    <li>Resolve customer support issues and disputes.</li>
+                                                    <li>Monitor system health and ongoing trips from a dashboard.</li>
+                                                    <li>Manage pricing, surge areas, and promotions.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h5 class="mt-6 text-lg font-semibold text-slate-700">Non-Functional Requirements</h5>
                             <ul class="mt-4 list-disc list-inside space-y-2 text-slate-700">
-                                <li><strong>Riders:</strong> Users who request rides. Key attributes include `UserID`, `Name`, `Rating`, `CurrentLocation`, and `PaymentInfo`. They need to be able to request a ride, see fare estimates, track driver location, and rate drivers.</li>
-                                <li><strong>Drivers:</strong> Individuals who provide the ride service. Key attributes include `DriverID`, `Name`, `Rating`, `CurrentLocation`, `VehicleDetails`, and `IsAvailable` status. They need to accept/reject ride requests, navigate, and see earnings.</li>
-                                <li><strong>Trips:</strong> The central entity that links a rider and a driver for a journey. It encapsulates the entire process. Key attributes include `TripID`, `RiderID`, `DriverID`, `Origin`, `Destination`, `Status` (e.g., REQUESTED, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED), `Fare`, and `Route`.</li>
+                                <li><strong>High Availability:</strong> The service must be operational 24/7. System uptime should be above 99.9%.</li>
+                                <li><strong>Low Latency:</strong> Key operations like finding a driver and processing a request must be fast (ideally under 2-3 seconds).</li>
+                                <li><strong>Scalability:</strong> The system must handle millions of users and concurrent trips, especially during peak hours in different cities.</li>
+                                <li><strong>Consistency:</strong> Trip status and user data must be consistent across the system for all parties involved (rider, driver, admin).</li>
+                                <li><strong>Reliability:</strong> The system should be fault-tolerant. Failure in one component (e.g., notifications) should not bring down the entire service.</li>
+                                <li><strong>Security:</strong> User data, payment information, and location data must be securely stored and transmitted.</li>
                             </ul>
                         </div>
 
                         <div class="p-6 bg-white rounded-xl shadow-sm">
-                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">2. The Matching Algorithm: Connecting Rider & Driver</h4>
-                            <p class="mt-3 text-slate-600">The "magic" of a ride-hailing app is its ability to efficiently match a rider with the best possible driver. This isn't just about finding the *closest* driver; it involves a complex set of factors. The primary goal is to minimize the rider's wait time and the driver's travel time to the pickup location.</p>
-                            <p class="mt-2 text-slate-600">The process typically follows these steps:</p>
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">2. The Matching Algorithm: A Deeper Look</h4>
+                            <p class="mt-3 text-slate-600">The matching process is a multi-stage funnel designed to find the best driver quickly and efficiently. The goal is to reduce the number of potential drivers at each stage to minimize expensive calculations.</p>
                             <ol class="mt-4 list-decimal list-inside space-y-2 text-slate-700">
-                                <li>A rider requests a ride from a specific location.</li>
-                                <li>The system identifies a pool of available drivers within a certain radius (e.g., 5 km). This is a spatial query, often optimized using techniques like Geohashing or Quadtrees to avoid scanning all drivers in the database.</li>
-                                <li>For each driver in the pool, the system calculates the Estimated Time of Arrival (ETA) to the rider's pickup location. This uses real-time traffic data from services like Google Maps or Waze.</li>
-                                <li>The system then ranks the drivers based on factors like ETA (lowest is best), driver rating (higher is better), and vehicle type.</li>
-                                <li>The request is sent to the top-ranked driver. If they don't accept within a short time frame (e.g., 15-30 seconds), the request is sent to the next driver in the list, and so on.</li>
+                                <li><strong>Geospatial Indexing (The Wide Net):</strong> First, we identify all available drivers within a broad radius (e.g., 5-10 km). Searching a database of millions of drivers is slow. Instead, we use a geospatial index like <strong>Geohashing</strong> or a <strong>Quadtree</strong>. These structures partition the map into a grid, allowing us to query for drivers in a specific grid cell (and its neighbors) very quickly, without scanning the whole table.</li>
+                                <li><strong>Distance Filtering (The First Cut):</strong> For the drivers found in the initial query, we calculate the straight-line distance to the rider. The <strong>Haversine formula</strong> is used here as it's computationally cheap and accurate for calculating distances on a sphere (Earth). We then filter out drivers beyond a certain distance (e.g., 5km).</li>
+                                <li><strong>ETA Ranking (The Final Selection):</strong> For the remaining handful of drivers, we make calls to a mapping service (like Google Maps API) to get the real-time Estimated Time of Arrival (ETA), which accounts for traffic and road networks. This is the most accurate but also the most expensive and time-consuming step.</li>
+                                <li><strong>Final Ranking:</strong> Drivers are then ranked based on a weighted score of ETA (lowest is best), Driver Rating (highest is best), and potentially other business logic (e.g., premium drivers for certain requests). The request is sent to the top-ranked driver.</li>
                             </ol>
-                            <blockquote class="mt-4 border-l-4 border-sky-400 bg-sky-50 p-4 text-sky-800 rounded-r-lg">
-                                <strong>Deep Dive: The Haversine Formula</strong>
-                                <p class="text-sm mt-1">To calculate the straight-line "as-the-crow-flies" distance between two geographical points (latitude/longitude), the Haversine formula is commonly used. While real-world ETAs depend on road networks and traffic, Haversine provides a quick, computationally cheap way to filter for the closest drivers initially before running more expensive ETA calculations.</p>
-                            </blockquote>
+                            <h5 class="text-md font-semibold text-slate-700 mt-4">Haversine Formula in C#</h5>
+                            <p class="text-sm text-slate-600">This code calculates the great-circle distance between two points.</p>
+                             <div class="code-block mt-2">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg overflow-x-auto text-sm"><code class="language-csharp">
+public static double HaversineDistance(Location loc1, Location loc2)
+{
+    const double R = 6371; // Earth's radius in kilometers
+    var lat = (loc2.Latitude - loc1.Latitude) * (Math.PI / 180);
+    var lng = (loc2.Longitude - loc1.Longitude) * (Math.PI / 180);
+    var h1 = Math.Sin(lat / 2) * Math.Sin(lat / 2) +
+             Math.Cos(loc1.Latitude * (Math.PI / 180)) * Math.Cos(loc2.Latitude * (Math.PI / 180)) *
+             Math.Sin(lng / 2) * Math.Sin(lng / 2);
+    var h2 = 2 * Math.Asin(Math.Min(1, Math.Sqrt(h1)));
+    return R * h2;
+}
+                                </code></pre>
+                            </div>
                             <div class="mt-6">
                                 <h5 class="font-semibold text-center text-slate-700">Interactive Matching Demo</h5>
                                 <p class="text-sm text-center text-slate-500 mb-2">Click the button to find the nearest driver to the rider.</p>
@@ -138,7 +207,12 @@
 
                         <div class="p-6 bg-white rounded-xl shadow-sm">
                             <h4 class="text-xl font-semibold text-slate-800 font-lexend">3. Pricing Model & Surge Pricing</h4>
-                            <p class="mt-3 text-slate-600">Pricing is dynamic and calculated based on several factors:</p>
+                            <p class="mt-3 text-slate-600">Pricing is dynamic and calculated based on several factors. A transparent and predictable pricing model is key to user trust.</p>
+                            <h5 class="text-md font-semibold text-slate-700 mt-4">Fare Calculation Algorithm</h5>
+                            <p class="text-slate-600 mt-2">The final fare is a combination of several components, modified by the surge multiplier.</p>
+                            <div class="font-mono bg-slate-100 p-4 rounded-lg text-slate-800 mt-2 text-sm">
+                                <span class="text-sky-600 font-semibold">TotalFare</span> = (<span class="text-indigo-600">BaseFare</span> + (<span class="text-indigo-600">DistanceInKm</span> * <span class="text-indigo-600">PerKmRate</span>) + (<span class="text-indigo-600">DurationInMinutes</span> * <span class="text-indigo-600">PerMinuteRate</span>)) * <span class="text-red-600 font-semibold">SurgeMultiplier</span> + <span class="text-emerald-600">BookingFee</span>
+                            </div>
                             <ul class="mt-4 list-disc list-inside space-y-2 text-slate-700">
                                 <li><strong>Base Fare:</strong> A flat fee for starting a trip.</li>
                                 <li><strong>Per-Kilometer Rate:</strong> A charge based on the distance of the trip.</li>
@@ -218,76 +292,173 @@
                     </section>
 
                     <section id="uml" class="space-y-8">
-                         <h3 class="text-2xl font-bold text-slate-900 font-lexend border-b pb-2">✅ UML/Schema Task: Visualizing the Ride Request Flow</h3>
-                         <p class="text-slate-600">A sequence diagram is perfect for visualizing the interactions between different components of the system over time. It clearly shows the order of operations for a key process like requesting a ride. This helps in understanding dependencies and potential bottlenecks.</p>
-                         <div class="p-6 bg-white rounded-xl shadow-sm overflow-x-auto">
-                            <h4 class="text-xl font-semibold text-slate-800 font-lexend mb-4">Sequence Diagram: Trip Lifecycle</h4>
-                            <div class="flex gap-4 min-w-[600px]">
-                                <div class="w-1/4 text-center">
-                                    <div class="bg-sky-100 text-sky-800 font-semibold p-2 rounded-lg">Rider App</div>
-                                    <div class="h-full border-l-2 border-dashed border-slate-400 mx-auto w-0 mt-2"></div>
+                         <h3 class="text-2xl font-bold text-slate-900 font-lexend border-b pb-2">✅ UML Diagrams: A Visual Deep Dive</h3>
+                         <p class="text-slate-600">UML diagrams are essential for understanding system structure and behavior. We'll explore three key types: a Class Diagram for static structure, a Sequence Diagram for dynamic interactions, and a Component Diagram for high-level architecture.</p>
+                         
+                         <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend mb-4">1. Class Diagram</h4>
+                            <p class="text-slate-600 mb-4">This diagram shows the core classes, their attributes, methods, and the relationships between them (e.g., a Trip is associated with one Rider and one Driver).</p>
+                            <div class="overflow-x-auto p-4 bg-slate-50 rounded-lg">
+                                <div class="flex gap-8 items-start min-w-[700px]">
+                                    <!-- Rider Class -->
+                                    <div class="border-2 border-slate-600 rounded-lg bg-white shadow-md">
+                                        <div class="font-bold font-mono p-2 bg-slate-200 text-center">Rider</div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm">
+                                            - id: UUID<br>
+                                            - name: string<br>
+                                            - rating: double
+                                        </div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm text-sky-700">
+                                            + requestTrip()<br>
+                                            + cancelTrip()<br>
+                                            + giveRating()
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Trip Class (Center) -->
+                                    <div class="border-2 border-slate-600 rounded-lg bg-white shadow-md flex-shrink-0">
+                                        <div class="font-bold font-mono p-2 bg-slate-200 text-center">Trip</div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm">
+                                            - id: UUID<br>
+                                            - origin: Location<br>
+                                            - destination: Location<br>
+                                            - status: TripStatus<br>
+                                            - fare: double
+                                        </div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm text-sky-700">
+                                            + updateStatus()<br>
+                                            + calculateFare()
+                                        </div>
+                                    </div>
+
+                                    <!-- Driver Class -->
+                                    <div class="border-2 border-slate-600 rounded-lg bg-white shadow-md">
+                                        <div class="font-bold font-mono p-2 bg-slate-200 text-center">Driver</div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm">
+                                            - id: UUID<br>
+                                            - name: string<br>
+                                            - status: DriverStatus<br>
+                                            - currentLocation: Location
+                                        </div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm text-sky-700">
+                                            + acceptTrip()<br>
+                                            + updateLocation()<br>
+                                            + endTrip()
+                                        </div>
+                                    </div>
+                                    
+                                     <!-- Vehicle Class -->
+                                    <div class="border-2 border-slate-600 rounded-lg bg-white shadow-md">
+                                        <div class="font-bold font-mono p-2 bg-slate-200 text-center">Vehicle</div>
+                                        <div class="p-2 border-t border-slate-400 font-mono text-sm">
+                                            - licensePlate: string<br>
+                                            - model: string<br>
+                                            - type: VehicleType
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="w-1/4 text-center">
-                                    <div class="bg-indigo-100 text-indigo-800 font-semibold p-2 rounded-lg">Backend Service</div>
-                                    <div class="h-full border-l-2 border-dashed border-slate-400 mx-auto w-0 mt-2"></div>
+                                <!-- Relationships -->
+                                <div class="mt-4 text-center font-mono text-sm text-slate-500 min-w-[700px]">
+                                    <p>Rider --1..*-- (has) --1-- Trip</p>
+                                    <p>Driver --1..*-- (has) --1-- Trip</p>
+                                    <p>Driver --1-- (drives) --1-- Vehicle</p>
                                 </div>
-                                <div class="w-1/4 text-center">
-                                    <div class="bg-emerald-100 text-emerald-800 font-semibold p-2 rounded-lg">Matching Service</div>
-                                    <div class="h-full border-l-2 border-dashed border-slate-400 mx-auto w-0 mt-2"></div>
-                                </div>
-                                <div class="w-1/4 text-center">
-                                    <div class="bg-amber-100 text-amber-800 font-semibold p-2 rounded-lg">Driver App</div>
-                                    <div class="h-full border-l-2 border-dashed border-slate-400 mx-auto w-0 mt-2"></div>
-                                </div>
-                            </div>
-                            <div class="mt-[-100%] relative space-y-6">
-                                <div class="h-20"></div>
-                                <div class="relative">
-                                    <div class="absolute top-1/2 left-[12.5%] w-[12.5%] border-t-2 border-slate-600"></div>
-                                    <p class="absolute top-1/2 left-[18.75%] -translate-y-6 text-sm">1. RequestRide()</p>
-                                    <div class="absolute top-1/2 left-[25%] w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-slate-600"></div>
-                                </div>
-                                <div class="relative h-12">
-                                     <div class="absolute top-1/2 left-[37.5%] w-[12.5%] border-t-2 border-slate-600"></div>
-                                     <p class="absolute top-1/2 left-[43.75%] -translate-y-6 text-sm">2. FindDriver()</p>
-                                     <div class="absolute top-1/2 left-[50%] w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-slate-600"></div>
-                                </div>
-                                 <div class="relative h-12">
-                                     <div class="absolute top-1/2 right-[37.5%] w-[12.5%] border-t-2 border-dashed border-slate-500"></div>
-                                     <p class="absolute top-1/2 right-[43.75%] -translate-y-6 text-sm">3. Return Driver</p>
-                                     <div class="absolute top-1/2 right-[50%] w-0 h-0 border-y-8 border-y-transparent border-r-8 border-r-slate-500"></div>
-                                </div>
-                                 <div class="relative h-12">
-                                     <div class="absolute top-1/2 left-[37.5%] w-[37.5%] border-t-2 border-slate-600"></div>
-                                     <p class="absolute top-1/2 left-[56.25%] -translate-y-6 text-sm">4. NotifyDriver()</p>
-                                     <div class="absolute top-1/2 left-[75%] w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-slate-600"></div>
-                                </div>
-                                <div class="relative h-12">
-                                     <div class="absolute top-1/2 right-[12.5%] w-[37.5%] border-t-2 border-dashed border-slate-500"></div>
-                                     <p class="absolute top-1/2 right-[31.25%] -translate-y-6 text-sm">5. AcceptRide()</p>
-                                     <div class="absolute top-1/2 right-[50%] w-0 h-0 border-y-8 border-y-transparent border-r-8 border-r-slate-500"></div>
-                                </div>
-                                <div class="relative h-12">
-                                     <div class="absolute top-1/2 right-[37.5%] w-[37.5%] border-t-2 border-dashed border-slate-500"></div>
-                                     <p class="absolute top-1/2 right-[56.25%] -translate-y-6 text-sm">6. Update Rider</p>
-                                     <div class="absolute top-1/2 right-[75%] w-0 h-0 border-y-8 border-y-transparent border-r-8 border-r-slate-500"></div>
-                                </div>
-                                <div class="relative h-12">
-                                     <p class="text-center text-slate-500 text-sm">... Trip In Progress ...</p>
-                                </div>
-                                <div class="relative h-12">
-                                     <div class="absolute top-1/2 right-[12.5%] w-[37.5%] border-t-2 border-slate-600"></div>
-                                     <p class="absolute top-1/2 right-[31.25%] -translate-y-6 text-sm">7. EndTrip()</p>
-                                     <div class="absolute top-1/2 right-[50%] w-0 h-0 border-y-8 border-y-transparent border-l-8 border-l-slate-600 transform -scale-x-100"></div>
-                                </div>
-                                 <div class="relative h-12">
-                                     <div class="absolute top-1/2 right-[37.5%] w-[37.5%] border-t-2 border-dashed border-slate-500"></div>
-                                     <p class="absolute top-1/2 right-[56.25%] -translate-y-6 text-sm">8. Trip Completed</p>
-                                     <div class="absolute top-1/2 right-[75%] w-0 h-0 border-y-8 border-y-transparent border-r-8 border-r-slate-500"></div>
-                                </div>
-                                <div class="h-4"></div>
                             </div>
                          </div>
+                         
+                         <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend mb-4">2. Sequence Diagram: Trip Lifecycle (Detailed)</h4>
+                            <p class="text-slate-600 mb-4">This detailed diagram shows the precise order of interactions between multiple system components for a single ride request, including asynchronous events like notifications.</p>
+                            <div class="overflow-x-auto">
+                                <div class="grid grid-cols-5 gap-2 min-w-[800px] text-center text-sm font-semibold">
+                                    <div class="bg-sky-100 text-sky-800 p-2 rounded">Rider App</div>
+                                    <div class="bg-indigo-100 text-indigo-800 p-2 rounded">Backend API</div>
+                                    <div class="bg-emerald-100 text-emerald-800 p-2 rounded">Trip Service</div>
+                                    <div class="bg-amber-100 text-amber-800 p-2 rounded">Notification Service</div>
+                                    <div class="bg-rose-100 text-rose-800 p-2 rounded">Driver App</div>
+                                </div>
+                                <div class="grid grid-cols-5 gap-2 min-w-[800px] mt-2">
+                                    <div class="border-r-2 border-dashed border-slate-300">&nbsp;</div>
+                                    <div class="border-r-2 border-dashed border-slate-300">&nbsp;</div>
+                                    <div class="border-r-2 border-dashed border-slate-300">&nbsp;</div>
+                                    <div class="border-r-2 border-dashed border-slate-300">&nbsp;</div>
+                                    <div>&nbsp;</div>
+                                </div>
+                                <div class="relative mt-[-2.5rem] space-y-4 text-sm">
+                                    <!-- Request -->
+                                    <div class="relative h-8"><p class="absolute left-[10%] w-[20%] text-center">1. RequestRide() &#8594;</p></div>
+                                    <div class="relative h-8"><p class="absolute left-[30%] w-[20%] text-center">2. CreateTrip() &#8594;</p></div>
+                                    <div class="relative h-8"><p class="absolute left-[50%] w-[20%] text-center text-slate-500">3. [async] NotifyDriver() &#8594;</p></div>
+                                    <div class="relative h-8"><p class="absolute left-[70%] w-[20%] text-center text-slate-500">4. Push Notification &#8594;</p></div>
+                                    <div class="relative h-8"><p class="absolute right-[10%] w-[20%] text-center">&nbsp;</p><p class="text-center font-bold text-slate-400">--- Rider Waits ---</p></div>
+                                    <!-- Accept -->
+                                    <div class="relative h-8"><p class="absolute right-[10%] w-[20%] text-center">5. AcceptRide() &#8592;</p></div>
+                                    <div class="relative h-8"><p class="absolute right-[30%] w-[20%] text-center">6. UpdateTripStatus() &#8592;</p></div>
+                                    <div class="relative h-8"><p class="absolute right-[50%] w-[20%] text-center">7. [async] NotifyRider() &#8592;</p></div>
+                                    <div class="relative h-8"><p class="absolute left-[10%] w-[20%] text-center text-slate-500">&#8592; 8. Push Notification</p></div>
+                                </div>
+                            </div>
+                         </div>
+                         
+                         <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend mb-4">3. Component Diagram</h4>
+                             <p class="text-slate-600 mb-4">This high-level diagram shows the main components of our backend, illustrating a microservices architecture. Each component is a self-contained service responsible for a specific business capability.</p>
+                             <div class="bg-slate-50 p-4 rounded-lg border">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                    <div class="bg-white p-4 rounded-lg shadow border border-slate-300">
+                                        <h5 class="font-semibold text-indigo-700">User Service</h5>
+                                        <p class="text-xs text-slate-500 mt-1">Manages Rider/Driver profiles, authentication.</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-lg shadow border border-slate-300">
+                                        <h5 class="font-semibold text-indigo-700">Trip Service</h5>
+                                        <p class="text-xs text-slate-500 mt-1">Handles trip lifecycle, state management.</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-lg shadow border border-slate-300">
+                                        <h5 class="font-semibold text-indigo-700">Matching Service</h5>
+                                        <p class="text-xs text-slate-500 mt-1">Finds the best driver for a request.</p>
+                                    </div>
+                                    <div class="bg-white p-4 rounded-lg shadow border border-slate-300">
+                                        <h5 class="font-semibold text-indigo-700">Pricing Service</h5>
+                                        <p class="text-xs text-slate-500 mt-1">Calculates fares and handles surge pricing.</p>
+                                    </div>
+                                     <div class="bg-white p-4 rounded-lg shadow border border-slate-300">
+                                        <h5 class="font-semibold text-indigo-700">Notification Service</h5>
+                                        <p class="text-xs text-slate-500 mt-1">Sends push notifications, SMS alerts.</p>
+                                    </div>
+                                     <div class="bg-white p-4 rounded-lg shadow border border-slate-300">
+                                        <h5 class="font-semibold text-indigo-700">Payment Service</h5>
+                                        <p class="text-xs text-slate-500 mt-1">Integrates with payment gateways.</p>
+                                    </div>
+                                </div>
+                                <div class="text-center text-slate-500 mt-4 text-sm">... all communicating via an <strong>API Gateway</strong> and a <strong>Message Bus</strong> ...</div>
+                             </div>
+                         </div>
+                    </section>
+                    
+                    <section id="architecture" class="space-y-8">
+                        <h3 class="text-2xl font-bold text-slate-900 font-lexend border-b pb-2">🏛️ System Architecture & Scalability</h3>
+                        <p class="text-slate-600">To handle millions of users, the system must be designed for scale from day one. A monolithic application would fail under this load. We adopt a microservices architecture to ensure scalability and resilience.</p>
+                        
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">1. Microservices Architecture</h4>
+                            <p class="mt-3 text-slate-600">We break the system down into small, independent services (as shown in the Component Diagram above). Each service has its own database and can be developed, deployed, and scaled independently.</p>
+                            <ul class="mt-4 list-disc list-inside space-y-2 text-slate-700">
+                                <li><strong>Pros:</strong> Improved scalability (we can scale just the Matching Service during peak hours), better fault isolation (a crash in the Pricing Service doesn't take down trip requests), and technology flexibility (each service can use the best tech for its job).</li>
+                                <li><strong>Cons:</strong> Increased operational complexity, challenges in maintaining data consistency across services, and more complex debugging.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h4 class="text-xl font-semibold text-slate-800 font-lexend">2. Asynchronous Communication with Message Queues</h4>
+                            <p class="mt-3 text-slate-600">Many actions in our system don't need to happen instantly. For example, when a trip is completed, we need to process payment, notify the rider, and update the driver's earnings. Doing this synchronously would make the "End Trip" API call very slow.</p>
+                            <p class="mt-2 text-slate-600">Instead, we use a <strong>Message Queue</strong> (like RabbitMQ or Kafka). When the trip ends, the Trip Service publishes a `TripCompleted` event to the queue. Other services (Payment, Notification, etc.) subscribe to this event and process it asynchronously in the background. This makes the system more resilient and responsive.</p>
+                            <div class="font-mono bg-slate-100 p-4 rounded-lg text-slate-800 mt-4 text-sm">
+                                <strong>Trip Service:</strong> Publishes `Event: TripCompleted(tripId, driverId, riderId, fare)`<br>
+                                <strong>Payment Service:</strong> Subscribes, processes payment.<br>
+                                <strong>Notification Service:</strong> Subscribes, sends receipt.<br>
+                                <strong>Driver Service:</strong> Subscribes, updates driver's earnings.
+                            </div>
+                        </div>
                     </section>
 
                     <section id="coding" class="space-y-8">
@@ -661,11 +832,11 @@ public void RateDriver(Guid tripId, int rating)
 
             <aside class="lg:w-1/4 lg:sticky top-8 self-start">
                 <div class="p-6 bg-white rounded-xl shadow-sm">
-                    <h3 class="text-lg font-semibold text-slate-900 font-lexend">On this page</h3>
-                    <nav id="toc" class="mt-4">
+                            <div id="toc" class="mt-4">
                         <ul class="space-y-2">
                             <li><a href="#theory" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">Theory Topics</a></li>
-                            <li><a href="#uml" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">UML Sequence Diagram</a></li>
+                            <li><a href="#uml" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">UML Diagrams</a></li>
+                            <li><a href="#architecture" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">System Architecture</a></li>
                             <li><a href="#coding" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">Coding Practice</a></li>
                             <li><a href="#case-study" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">Case Study</a></li>
                             <li><a href="#quiz" class="toc-link block text-slate-600 border-l-2 border-slate-200 pl-3 hover:text-sky-600 hover:border-sky-600">Knowledge Check</a></li>
@@ -944,3 +1115,4 @@ public void RateDriver(Guid tripId, int rating)
     </script>
 </body>
 </html>
+

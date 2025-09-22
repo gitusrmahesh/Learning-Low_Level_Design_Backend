@@ -47,6 +47,20 @@
         }
         details > summary {
             cursor: pointer;
+            list-style-type: none;
+        }
+         details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details > summary::before {
+            content: '+';
+            font-weight: bold;
+            margin-right: 0.75rem;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        details[open] > summary::before {
+            transform: rotate(45deg);
         }
         details[open] > summary {
            color: #0f172a;
@@ -74,7 +88,6 @@
     <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         <div class="flex flex-col lg:flex-row gap-12">
             
-            <!-- Main Content -->
             <div class="w-full lg:w-3/4 space-y-16">
                 
                 <section id="introduction">
@@ -86,33 +99,47 @@
                 </section>
 
                 <section id="theory">
-                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Core Theoretical Pillars</h2>
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">In-Depth Theoretical Pillars</h2>
                     <div class="space-y-4">
                         <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                            <summary class="font-semibold text-lg text-slate-800">Combining All Concepts</summary>
-                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
-                                <p>An end-to-end system is a symphony of interconnected components, each built upon fundamental principles. Our "Amazon-lite" application will be a testament to this integration:</p>
-                                <ul class="list-disc list-inside space-y-2">
-                                    <li><strong>Object-Oriented Programming (OOP):</strong> We'll model our domain (Products, Users, Orders) using classes and objects, leveraging encapsulation, inheritance, and polymorphism to create a clean, maintainable codebase.</li>
-                                    <li><strong>SOLID Principles:</strong> Every service and module will be designed following SOLID principles to ensure our system is easy to refactor, extend, and test.</li>
-                                    <li><strong>Design Patterns:</strong> We will strategically use patterns like Singleton for database connections, Factory for object creation, and Observer for event-driven notifications (e.g., order confirmation emails).</li>
-                                    <li><strong>APIs & MVC:</strong> The system's functionality will be exposed via a RESTful API. The API layer will be structured using the Model-View-Controller (MVC) pattern, separating business logic (Model), data presentation (View, in this case, JSON responses), and user input handling (Controller).</li>
-                                    <li><strong>Multithreading:</strong> Background jobs, such as processing payments or generating reports, will be handled asynchronously using separate threads or task queues to avoid blocking the main application flow and improve responsiveness.</li>
-                                </ul>
+                            <summary class="font-semibold text-lg text-slate-800">Synergy of Concepts: The Complete Picture</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-4">
+                                <p>A modern backend is not built on a single idea, but on the interplay of many. Here’s a deeper look at how these concepts weave together in our "Amazon-lite" project.</p>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">OOP & SOLID: The Architectural Bedrock</h4>
+                                    <p>OOP helps us model the real world. For example, a `Product` class encapsulates data (name, price) and behavior (IsInStock()). SOLID principles ensure this model is robust. Consider the <strong>Single Responsibility Principle (SRP)</strong>: An `OrderProcessor` class should focus solely on validating and saving an order. It should NOT handle sending confirmation emails. That's a separate concern, belonging to a `NotificationService`. This separation prevents a change in email logic from breaking order processing.</p>
+                                    <p class="mt-2">Similarly, the <strong>Open/Closed Principle (OCP)</strong> is vital. Imagine we want to add a new "Prime" shipping option. Instead of modifying our existing `ShippingCalculator` class, we design it to be extensible. We can create an `IShippingStrategy` interface and implement `StandardShipping` and `PrimeShipping` classes. The calculator uses the interface, allowing us to add new shipping types without touching the core, tested logic.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Design Patterns: Reusable Solutions</h4>
+                                    <p>Patterns provide elegant solutions to common problems. The <strong>Observer Pattern</strong> is perfect for decoupling. When an order's status changes to "Shipped", the `OrderService` (the "Subject") doesn't need to know about the `NotificationService`, `InventoryService`, or `AnalyticsService`. It simply emits an `OrderShipped` event. Any number of "Observers" can subscribe to this event and react accordingly, promoting a highly modular, event-driven architecture.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">APIs & MVC: The System's Gateway</h4>
+                                    <p>The API is the public face of our backend. A request like `GET /api/v1/products/123` is handled by the MVC pattern. The routing directs it to a `ProductsController` (Controller). The controller calls the business logic layer to fetch product data, which uses a `Product` class (Model). This model is then serialized into a JSON response (the "View" in an API context) and sent back to the client.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Multithreading & Async Operations: The Performance Engine</h4>
+                                    <p>To keep the API responsive, long-running tasks must be offloaded. When an order is placed, we can't make the user wait while we process payment, update inventory, and send an email. The controller should quickly validate the request, save the initial order state, and then publish tasks to a <strong>message queue</strong> (like RabbitMQ or Kafka). Separate worker processes (consumers), running on their own threads, pick up these tasks and execute them in the background. This is the <strong>Producer-Consumer pattern</strong>, a cornerstone of scalable systems.</p>
+                                </div>
                             </div>
                         </details>
                         
                         <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                            <summary class="font-semibold text-lg text-slate-800">Scalability & Fault-Tolerance</summary>
-                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
-                                <p>A successful backend must handle growth and failure gracefully. These two concepts are central to our design:</p>
-                                <ul class="list-disc list-inside space-y-2">
-                                    <li><strong>Scalability:</strong> The ability to handle increasing load. We'll design for both <strong>vertical scaling</strong> (adding more power, e.g., CPU/RAM, to a single server) and <strong>horizontal scaling</strong> (adding more servers). Our stateless API design will be key to achieving horizontal scalability, as any server can handle any request.</li>
-                                    <li><strong>Fault-Tolerance:</strong> The ability to remain operational even when some components fail. We'll achieve this through redundancy (running multiple instances of each service), health checks, and graceful degradation (e.g., if the recommendation service is down, the main site still functions without showing recommendations).</li>
-                                </ul>
+                            <summary class="font-semibold text-lg text-slate-800">Advanced Scalability & Fault-Tolerance</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Deep Dive into Scalability</h4>
+                                    <p><strong>Horizontal Scaling</strong> (adding more machines) is preferred for modern web apps because it offers near-limitless growth and fault tolerance. A critical component is the <strong>Load Balancer</strong>. It acts as a traffic cop, sitting in front of your servers and distributing incoming requests among them using algorithms like Round Robin or Least Connections. This prevents any single server from becoming a bottleneck.</p>
+                                    <p class="mt-2"><strong>Database Scaling</strong> is also crucial. A common strategy is using <strong>Read Replicas</strong>. All write operations (INSERT, UPDATE) go to a primary database, which then replicates the data to one or more read-only copies. Read-heavy operations (like fetching product listings) can be directed to these replicas, significantly reducing the load on the primary database.</p>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Engineering for Fault-Tolerance</h4>
+                                    <p>Failure is inevitable in distributed systems. We plan for it using patterns like the <strong>Circuit Breaker</strong>. Imagine our `OrderService` calls a third-party `PaymentGateway`. If the gateway is slow or down, we don't want to keep hammering it with requests, wasting resources and potentially cascading the failure. The Circuit Breaker acts like an electrical one: after a few failures, it "trips" and immediately fails any further calls for a while, giving the downstream service time to recover. This prevents a localized failure from taking down the entire system.</p>
+                                    <p class="mt-2">Combined with intelligent <strong>Retries with Exponential Backoff</strong> (waiting longer between each retry attempt), this makes the system incredibly resilient.</p>
+                                </div>
                                 <div class="mt-6">
                                     <h4 class="font-semibold text-slate-800 mb-2">System Performance Under Stress</h4>
-                                    <p class="text-sm mb-4">This chart illustrates how a scalable system handles increasing requests, while a fault-tolerant system maintains availability during a component failure.</p>
                                     <div class="p-4 bg-slate-50 rounded-lg">
                                         <div class="chart-container" style="position: relative; height:350px; width:100%; max-width: 600px; margin: auto;">
                                             <canvas id="scalabilityChart"></canvas>
@@ -123,22 +150,53 @@
                         </details>
 
                         <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                            <summary class="font-semibold text-lg text-slate-800">Logging, Monitoring & Metrics</summary>
-                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
-                                <p>You can't manage what you can't see. A comprehensive observability strategy is non-negotiable for a production system.</p>
-                                <ul class="list-disc list-inside space-y-2">
-                                    <li><strong>Logging:</strong> Recording key events and errors. We'll implement structured logging (e.g., JSON format) to make logs easily searchable and parsable. We'll define different log levels (INFO, WARN, ERROR) to capture appropriate details.</li>
-                                    <li><strong>Monitoring:</strong> Actively checking the health of the system. This involves setting up health check endpoints (`/health`) that monitoring tools can ping to see if a service is alive.</li>
-                                    <li><strong>Metrics:</strong> Collecting numerical data about system performance. Key metrics include request latency (how long a request takes), error rate (percentage of failed requests), and resource utilization (CPU/memory usage). These are aggregated into dashboards for a high-level view of system health.</li>
-                                </ul>
+                            <summary class="font-semibold text-lg text-slate-800">Comprehensive Observability</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Structured Logging for Traceability</h4>
+                                    <p>In a microservices architecture, a single user request might travel through multiple services. To debug issues, we need to trace this entire journey. We achieve this with <strong>structured logging</strong> and a <strong>Correlation ID</strong>. When a request first enters our system, we generate a unique ID (e.g., a GUID) and include it in every log message produced while processing that request, even as it passes from one service to another. This allows us to filter our logs and see the complete, ordered story of a single transaction.</p>
+                                    <p class="mt-2">Example of a structured log entry:</p>
+                                    <pre class="bg-slate-800 text-white p-3 rounded-md text-xs mt-2"><code>{
+  "timestamp": "2025-09-22T11:43:00Z",
+  "level": "INFO",
+  "service": "OrderService",
+  "correlationId": "abc-123-xyz-789",
+  "message": "Order 54321 successfully validated."
+}</code></pre>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">The RED Method for Service Metrics</h4>
+                                    <p>For monitoring services, the RED method provides a simple, powerful framework:</p>
+                                    <ul class="list-disc list-inside space-y-1 mt-2">
+                                        <li><strong>Rate:</strong> The number of requests per second the service is handling.</li>
+                                        <li><strong>Errors:</strong> The number of failed requests per second.</li>
+                                        <li><strong>Duration:</strong> The distribution of time each request takes to complete (e.g., latency percentiles like p95, p99).</li>
+                                    </ul>
+                                    <p>Monitoring these three metrics gives you an immediate, high-level understanding of your service's health.</p>
+                                </div>
                             </div>
                         </details>
                         
                         <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
-                            <summary class="font-semibold text-lg text-slate-800">CI/CD Pipeline Basics</summary>
-                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
-                                <p>Continuous Integration (CI) and Continuous Deployment (CD) automate the process of building, testing, and deploying code, enabling rapid and reliable software delivery.</p>
-                                <p>A typical pipeline includes the following stages:</p>
+                            <summary class="font-semibold text-lg text-slate-800">Advanced CI/CD Pipeline Concepts</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-4">
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">The 'Test' Stage: A Safety Net</h4>
+                                    <p>This is more than just running a few checks. A mature test stage includes a pyramid of tests:</p>
+                                    <ul class="list-disc list-inside space-y-1 mt-2">
+                                        <li><strong>Unit Tests:</strong> Fast tests that check individual functions or classes in isolation.</li>
+                                        <li><strong>Integration Tests:</strong> Verify that different components of your service work together (e.g., does the controller correctly call the service layer and interact with a test database?).</li>
+                                        <li><strong>End-to-End (E2E) Tests:</strong> Automated tests that simulate a full user journey through the application.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">Smart Deployment Strategies</h4>
+                                    <p>Pushing code directly to all users is risky. Modern CI/CD pipelines use safer strategies:</p>
+                                    <ul class="list-disc list-inside space-y-1 mt-2">
+                                        <li><strong>Blue-Green Deployment:</strong> You have two identical production environments ("Blue" and "Green"). If Blue is live, you deploy the new code to Green. Once it's tested, you switch the router to send all traffic to Green. This allows for instant, zero-downtime deployments and rollbacks.</li>
+                                        <li><strong>Canary Releases:</strong> You release the new version to a small subset of users (the "canaries"). You monitor key metrics for this group. If everything looks good, you gradually roll out the change to the rest of your users. This minimizes the impact of any potential bugs.</li>
+                                    </ul>
+                                </div>
                                 <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-0 mt-6 text-center">
                                     <div class="flex-shrink-0 p-3 bg-sky-100 text-sky-800 rounded-lg shadow-sm w-32">
                                         <p class="font-bold">Commit</p>
@@ -171,7 +229,7 @@
                 </section>
 
                 <section id="uml">
-                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">UML & Schema Design</h2>
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Detailed System Blueprints: UML & Schema</h2>
                     <p class="mb-6">Before writing code, we design the blueprint. The following diagrams represent the structure and relationships within our "Amazon-lite" system. They provide a clear, high-level overview for all stakeholders and serve as a guide during implementation.</p>
                     <div>
                         <div class="border-b border-slate-200">
@@ -184,62 +242,74 @@
                         <div class="mt-6">
                             <div id="class-diagram" class="tab-content">
                                 <h3 class="font-semibold text-lg text-slate-800 mb-2">Class Diagram</h3>
-                                <p class="mb-4">This diagram models the key objects in our system and their relationships. It focuses on the static structure: attributes (properties) and methods (behaviors).</p>
+                                <p class="mb-4">This diagram models the key objects and their static relationships. `User` and `Order` have a one-to-many association. An `Order` is composed of one or more `OrderLineItem` objects, meaning line items cannot exist without an order.</p>
                                 <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs font-mono flex flex-wrap gap-4 justify-center">
-                                    <!-- User Class -->
                                     <div class="border border-slate-400 bg-slate-50 w-48">
                                         <div class="p-1 font-bold bg-slate-200 text-center">User</div>
-                                        <div class="p-1 border-t border-slate-400">- UserId: int<br>- Username: string<br>- Email: string<br>- HashedPassword: string</div>
-                                        <div class="p-1 border-t border-slate-400">+ Register()<br>+ Login()<br>+ GetProfile()</div>
+                                        <div class="p-1 border-t border-slate-400">- UserId: int<br>- Username: string</div>
+                                        <div class="p-1 border-t border-slate-400">+ GetOrders()</div>
                                     </div>
-                                    <!-- Product Class -->
+                                    <div class="border border-slate-400 bg-slate-50 w-56">
+                                        <div class="p-1 font-bold bg-slate-200 text-center">Order</div>
+                                        <div class="p-1 border-t border-slate-400">- OrderId: int<br>- UserId: int<br>- OrderDate: DateTime</div>
+                                        <div class="p-1 border-t border-slate-400">+ AddLineItem(product, qty)<br>+ CalculateTotal()</div>
+                                    </div>
+                                    <div class="border border-slate-400 bg-slate-50 w-56">
+                                        <div class="p-1 font-bold bg-slate-200 text-center">OrderLineItem</div>
+                                        <div class="p-1 border-t border-slate-400">- ProductId: int<br>- Quantity: int<br>- UnitPrice: decimal</div>
+                                    </div>
                                     <div class="border border-slate-400 bg-slate-50 w-48">
                                         <div class="p-1 font-bold bg-slate-200 text-center">Product</div>
-                                        <div class="p-1 border-t border-slate-400">- ProductId: int<br>- Name: string<br>- Price: decimal<br>- Stock: int</div>
-                                        <div class="p-1 border-t border-slate-400">+ GetDetails()<br>+ UpdateStock()</div>
-                                    </div>
-                                    <!-- Order Class -->
-                                    <div class="border border-slate-400 bg-slate-50 w-48">
-                                        <div class="p-1 font-bold bg-slate-200 text-center">Order</div>
-                                        <div class="p-1 border-t border-slate-400">- OrderId: int<br>- UserId: int<br>- OrderDate: DateTime<br>- TotalAmount: decimal</div>
-                                        <div class="p-1 border-t border-slate-400">+ CreateOrder()<br>+ GetStatus()</div>
+                                        <div class="p-1 border-t border-slate-400">- ProductId: int<br>- Name: string<br>- Price: decimal</div>
                                     </div>
                                 </div>
                             </div>
                             <div id="er-diagram" class="tab-content hidden">
                                 <h3 class="font-semibold text-lg text-slate-800 mb-2">Entity-Relationship (ER) Diagram</h3>
-                                <p class="mb-4">The ER diagram models the database schema. It shows the tables (entities), their columns (attributes), and the relationships between them (e.g., one-to-many).</p>
-                                <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs flex flex-wrap gap-6 justify-center items-center">
-                                    <!-- Users Table -->
-                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">Users</div>
-                                    <div class="text-slate-600 font-bold">-- (1..*) --</div>
-                                    <!-- Orders Table -->
-                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">Orders</div>
-                                    <div class="text-slate-600 font-bold">-- (1..*) --</div>
-                                    <!-- OrderItems Table -->
-                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">OrderItems</div>
-                                    <div class="text-slate-600 font-bold">-- (*..1) --</div>
-                                    <!-- Products Table -->
-                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">Products</div>
+                                <p class="mb-4">The ER diagram models the database schema, detailing tables, columns, and key constraints. PK denotes a Primary Key, and FK denotes a Foreign Key, which establishes the link between tables.</p>
+                                <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs flex flex-wrap gap-4 justify-center items-start">
+                                    <div class="border border-slate-500 w-40">
+                                        <div class="font-bold bg-slate-200 p-1">Users</div>
+                                        <div class="p-1"><strong>user_id (PK)</strong><br>username<br>email<br>password_hash</div>
+                                    </div>
+                                    <div class="border border-slate-500 w-40">
+                                        <div class="font-bold bg-slate-200 p-1">Orders</div>
+                                        <div class="p-1"><strong>order_id (PK)</strong><br><em>user_id (FK)</em><br>order_date<br>status</div>
+                                    </div>
+                                    <div class="border border-slate-500 w-40">
+                                        <div class="font-bold bg-slate-200 p-1">OrderItems</div>
+                                        <div class="p-1"><strong>item_id (PK)</strong><br><em>order_id (FK)</em><br><em>product_id (FK)</em><br>quantity<br>price</div>
+                                    </div>
+                                    <div class="border border-slate-500 w-40">
+                                        <div class="font-bold bg-slate-200 p-1">Products</div>
+                                        <div class="p-1"><strong>product_id (PK)</strong><br>name<br>description<br>price<br>stock_count</div>
+                                    </div>
                                 </div>
-                                <p class="text-center mt-4 text-sm text-slate-500">A User can have many Orders. An Order can have many OrderItems. Each OrderItem relates to one Product.</p>
                             </div>
                             <div id="sequence-diagram" class="tab-content hidden">
-                                <h3 class="font-semibold text-lg text-slate-800 mb-2">Sequence Diagram</h3>
-                                <p class="mb-4">This diagram shows how objects interact over time to complete a specific task, such as a user placing an order. It visualizes the sequence of calls between different components.</p>
+                                <h3 class="font-semibold text-lg text-slate-800 mb-2">Sequence Diagram: Placing an Order</h3>
+                                <p class="mb-4">This diagram shows the dynamic interaction between components for a successful order placement, including an alternative flow for an out-of-stock scenario using an 'alt' fragment.</p>
                                 <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs overflow-x-auto">
-                                   <div class="flex justify-between text-center font-semibold gap-4 min-w-[500px]">
+                                   <div class="flex justify-between text-center font-semibold gap-4 min-w-[600px]">
                                        <div>Client</div>
-                                       <div>API Gateway</div>
                                        <div>Order Service</div>
-                                       <div>DB</div>
+                                       <div>Inventory Service</div>
+                                       <div>Database</div>
                                    </div>
-                                   <div class="mt-4 space-y-2 text-slate-600 min-w-[500px]">
-                                       <p class="relative">1. POST /orders <span class="absolute left-0 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-1/4 top-1/2 -mt-px w-1/2 h-px bg-slate-400"></span><span class="absolute right-1/4 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
-                                       <p class="relative text-right">2. CreateOrder(data) <span class="absolute left-1/4 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-1/2 top-1/2 -mt-px w-1/4 h-px bg-slate-400"></span><span class="absolute right-1/4 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
-                                       <p class="relative text-right">3. INSERT INTO Orders <span class="absolute left-3/4 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-3/4 top-1/2 -mt-px w-1/4 h-px bg-slate-400"></span><span class="absolute right-0 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
-                                       <p class="relative text-right">4. Return OrderId <span class="absolute left-3/4 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-3/4 top-1/2 -mt-px w-1/4 h-px bg-slate-400"></span><span class="absolute left-3/4 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
-                                       <p class="relative">5. Return 201 Created <span class="absolute left-0 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-0 top-1/2 -mt-px w-3/4 h-px bg-slate-400"></span><span class="absolute left-0 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                   <div class="mt-4 space-y-2 text-slate-600 min-w-[600px]">
+                                       <p class="relative">1. POST /orders(items) <span class="absolute left-0 w-1/3 top-1/2 -mt-px h-px bg-slate-400"></span><span class="absolute right-2/3 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       <p class="relative pl-[33%]">2. checkStock(items) <span class="absolute left-1/3 w-1/3 top-1/2 -mt-px h-px bg-slate-400"></span><span class="absolute right-1/3 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       <div class="border-2 border-sky-500 rounded p-2 my-2">
+                                           <p class="font-bold text-sky-600">alt [stock available]</p>
+                                           <p class="relative pl-[33%] mt-2">3a. return true <span class="absolute left-1/3 w-1/3 top-1/2 -mt-px h-px bg-slate-400 border-t border-dashed"></span><span class="absolute left-1/3 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                           <p class="relative pl-[33%]">4a. createOrderInDB() <span class="absolute left-1/3 w-2/3 top-1/2 -mt-px h-px bg-slate-400"></span><span class="absolute right-0 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                           <p class="relative">5a. return 201 Created <span class="absolute left-0 w-1/3 top-1/2 -mt-px h-px bg-slate-400 border-t border-dashed"></span><span class="absolute left-0 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       </div>
+                                       <div class="border-2 border-amber-500 rounded p-2 my-2">
+                                           <p class="font-bold text-amber-600">alt [stock unavailable]</p>
+                                           <p class="relative pl-[33%] mt-2">3b. return false <span class="absolute left-1/3 w-1/3 top-1/2 -mt-px h-px bg-slate-400 border-t border-dashed"></span><span class="absolute left-1/3 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                           <p class="relative">4b. return 409 Conflict <span class="absolute left-0 w-1/3 top-1/2 -mt-px h-px bg-slate-400 border-t border-dashed"></span><span class="absolute left-0 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       </div>
                                    </div>
                                 </div>
                             </div>
@@ -252,37 +322,25 @@
                     <p class="mb-6">This section provides the practical C# code for implementing the core modules of our backend system. Each example is a self-contained solution to a specific challenge, moving from foundational authentication to advanced concurrency handling.</p>
                     <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
                         <h3 class="font-semibold text-lg text-slate-800 mb-1">[Easy] Build Authentication Module</h3>
-                        <p class="text-sm text-slate-500 mb-4">A simple JWT-based authentication service.</p>
+                        <p class="text-sm text-slate-500 mb-4">A simple JWT-based authentication service. A JSON Web Token (JWT) is a compact, URL-safe means of representing claims to be transferred between two parties.</p>
                         <div class="code-block">
                             <button class="copy-button" onclick="copyToClipboard(this)">Copy</button>
                             <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">
+// A "Claim" is a piece of information asserted about a subject. 
+// Here, we're claiming the user's ID.
+using System.Security.Claims;
+
 public class AuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly string _jwtSecret;
-
-    public AuthService(IUserRepository userRepository, string jwtSecret)
-    {
-        _userRepository = userRepository;
-        _jwtSecret = jwtSecret;
-    }
+    private readonly string _jwtSecret; // Should be stored securely, e.g., in app settings
 
     public string Register(string username, string password)
     {
-        // Hash password and save user
+        // Use a strong, one-way hashing algorithm for passwords. Never store them in plain text.
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
         var user = new User { Username = username, HashedPassword = hashedPassword };
         _userRepository.Add(user);
-        return GenerateJwtToken(user);
-    }
-
-    public string Login(string username, string password)
-    {
-        var user = _userRepository.GetByUsername(username);
-        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.HashedPassword))
-        {
-            throw new Exception("Invalid credentials");
-        }
         return GenerateJwtToken(user);
     }
 
@@ -292,6 +350,8 @@ public class AuthService
         var key = Encoding.ASCII.GetBytes(_jwtSecret);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
+            // The token's payload contains claims. Here we add the user's ID.
+            // The API can then trust this ID without needing another DB lookup.
             Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
             Expires = DateTime.UtcNow.AddDays(7),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -305,55 +365,45 @@ public class AuthService
                     </div>
                     <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200 mt-6">
                         <h3 class="font-semibold text-lg text-slate-800 mb-1">[Medium] Add Caching & Background Jobs</h3>
-                        <p class="text-sm text-slate-500 mb-4">Using Redis for caching and a message queue for background jobs.</p>
+                        <p class="text-sm text-slate-500 mb-4">This demonstrates the Cache-Aside pattern, where the application code is responsible for reading and writing to the cache. We also offload slow tasks to a message queue.</p>
                         <div class="code-block">
                             <button class="copy-button" onclick="copyToClipboard(this)">Copy</button>
                             <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">
-// Caching with Redis
+// Caching with Redis using the Cache-Aside Pattern
 public class ProductService
 {
-    private readonly IProductRepository _productRepo;
-    private readonly IDatabase _redisCache;
-
-    public ProductService(IProductRepository productRepo, IConnectionMultiplexer redis)
-    {
-        _productRepo = productRepo;
-        _redisCache = redis.GetDatabase();
-    }
-
     public async Task<Product> GetProductById(int id)
     {
         string cacheKey = $"product:{id}";
+        // 1. Attempt to get the item from the cache.
         string cachedProduct = await _redisCache.StringGetAsync(cacheKey);
 
         if (!string.IsNullOrEmpty(cachedProduct))
         {
+            // 2. Cache hit: Deserialize and return the data.
             return JsonSerializer.Deserialize<Product>(cachedProduct);
         }
 
+        // 3. Cache miss: Get data from the primary data source (database).
         var product = await _productRepo.GetByIdAsync(id);
         if (product != null)
         {
+            // 4. Store the data in the cache with an expiration time (TTL).
             await _redisCache.StringSetAsync(cacheKey, JsonSerializer.Serialize(product), TimeSpan.FromMinutes(10));
         }
         return product;
     }
 }
 
-// Background Job with RabbitMQ
+// Background Job with RabbitMQ (Producer)
 public class OrderService
 {
-    private readonly IMessageQueuePublisher _publisher;
-
-    public OrderService(IMessageQueuePublisher publisher) {
-        _publisher = publisher;
-    }
-
     public void PlaceOrder(Order order)
     {
-        // ... save order to DB ...
+        // ... business logic to save order to DB ...
 
-        // Publish event to process payment asynchronously
+        // Publish an event. This is a "fire and forget" operation.
+        // The OrderService's job is done, ensuring a fast API response for the user.
         var paymentEvent = new { OrderId = order.Id, Amount = order.TotalAmount };
         _publisher.Publish("payment_processing_queue", JsonSerializer.Serialize(paymentEvent));
     }
@@ -363,50 +413,48 @@ public class OrderService
                     </div>
                      <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200 mt-6">
                         <h3 class="font-semibold text-lg text-slate-800 mb-1">[Hard] Handle Concurrency in Distributed Environment</h3>
-                        <p class="text-sm text-slate-500 mb-4">Using a distributed lock (e.g., with Redis) to prevent race conditions when updating product stock.</p>
+                        <p class="text-sm text-slate-500 mb-4">A "race condition" occurs when multiple server instances try to update the same product stock simultaneously, leading to incorrect data. A distributed lock ensures only one process can perform the critical stock update at a time.</p>
                         <div class="code-block">
                             <button class="copy-button" onclick="copyToClipboard(this)">Copy</button>
                             <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">
 public class InventoryService
 {
-    private readonly IProductRepository _productRepo;
-    private readonly IDatabase _redisDb;
-
-    public InventoryService(IProductRepository productRepo, IConnectionMultiplexer redis)
-    {
-        _productRepo = productRepo;
-        _redisDb = redis.GetDatabase();
-    }
-
     public async Task<bool> DecreaseStock(int productId, int quantity)
     {
+        // A unique key for this specific product's lock.
         var lockKey = $"lock:product:{productId}";
+        // A unique value to ensure we only release a lock that we acquired.
         var lockToken = Guid.NewGuid().ToString();
         
-        // Try to acquire a distributed lock
+        // Try to acquire the lock from Redis. This is an atomic operation.
         if (await _redisDb.LockTakeAsync(lockKey, lockToken, TimeSpan.FromSeconds(10)))
         {
             try
             {
+                // This is the "critical section". Only one process can execute this code at a time for a given product.
+                // 1. Read the current stock.
                 var product = await _productRepo.GetByIdAsync(productId);
                 if (product.Stock < quantity)
                 {
                     return false; // Not enough stock
                 }
 
+                // 2. Perform the update.
                 product.Stock -= quantity;
                 await _productRepo.UpdateAsync(product);
                 return true;
             }
             finally
             {
-                // Release the lock
+                // It's crucial to release the lock in a 'finally' block
+                // to ensure it gets released even if an exception occurs.
                 await _redisDb.LockReleaseAsync(lockKey, lockToken);
             }
         }
         else
         {
-            // Could not acquire lock, handle accordingly (e.g., retry or fail)
+            // Could not acquire lock. The application should handle this gracefully,
+            // perhaps by telling the user to try again in a moment.
             return false;
         }
     }
@@ -420,41 +468,33 @@ public class InventoryService
                     <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Knowledge Check</h2>
                     <div class="space-y-6 bg-white p-6 rounded-lg border border-slate-200">
                         <div class="quiz-question">
-                            <p class="font-semibold">1. Which of the following is the primary benefit of designing stateless APIs for scalability?</p>
+                            <p class="font-semibold">1. Which SOLID principle is violated if an `OrderProcessor` class also sends confirmation emails?</p>
                             <div class="mt-2 space-y-2">
-                                <div>
-                                    <input type="radio" id="q1a" name="q1" value="a" class="hidden quiz-option">
-                                    <label for="q1a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) It improves database performance.</label>
-                                </div>
-                                <div>
-                                    <input type="radio" id="q1b" name="q1" value="b" class="hidden quiz-option">
-                                    <label for="q1b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) Any server instance can handle any client request, enabling horizontal scaling.</label>
-                                </div>
-                                <div>
-                                    <input type="radio" id="q1c" name="q1" value="c" class="hidden quiz-option">
-                                    <label for="q1c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) It makes logging and monitoring easier.</label>
-                                </div>
+                                <div><input type="radio" id="q1a" name="q1" value="a" class="hidden quiz-option"><label for="q1a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) Open/Closed Principle</label></div>
+                                <div><input type="radio" id="q1b" name="q1" value="b" class="hidden quiz-option"><label for="q1b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) Single Responsibility Principle</label></div>
+                                <div><input type="radio" id="q1c" name="q1" value="c" class="hidden quiz-option"><label for="q1c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) Liskov Substitution Principle</label></div>
                             </div>
                             <div class="mt-3 hidden quiz-feedback text-sm" data-question="q1" data-answer="b"></div>
                         </div>
 
                          <div class="quiz-question pt-4 border-t border-slate-200">
-                            <p class="font-semibold">2. What is the main purpose of a CI/CD pipeline?</p>
+                            <p class="font-semibold">2. What is the role of a Load Balancer in a horizontally scaled system?</p>
                             <div class="mt-2 space-y-2">
-                                <div>
-                                    <input type="radio" id="q2a" name="q2" value="a" class="hidden quiz-option">
-                                    <label for="q2a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) To manually deploy code changes during off-peak hours.</label>
-                                </div>
-                                <div>
-                                    <input type="radio" id="q2b" name="q2" value="b" class="hidden quiz-option">
-                                    <label for="q2b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) To write unit tests for the application.</label>
-                                </div>
-                                <div>
-                                    <input type="radio" id="q2c" name="q2" value="c" class="hidden quiz-option">
-                                    <label for="q2c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) To automate the build, test, and deployment process for faster and more reliable software delivery.</label>
-                                </div>
+                                <div><input type="radio" id="q2a" name="q2" value="a" class="hidden quiz-option"><label for="q2a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) To cache database queries.</label></div>
+                                <div><input type="radio" id="q2b" name="q2" value="b" class="hidden quiz-option"><label for="q2b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) To distribute incoming traffic across multiple server instances.</label></div>
+                                <div><input type="radio" id="q2c" name="q2" value="c" class="hidden quiz-option"><label for="q2c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) To run background jobs asynchronously.</label></div>
                             </div>
-                            <div class="mt-3 hidden quiz-feedback text-sm" data-question="q2" data-answer="c"></div>
+                            <div class="mt-3 hidden quiz-feedback text-sm" data-question="q2" data-answer="b"></div>
+                        </div>
+                        
+                         <div class="quiz-question pt-4 border-t border-slate-200">
+                            <p class="font-semibold">3. A Circuit Breaker pattern is primarily used to enhance a system's...</p>
+                             <div class="mt-2 space-y-2">
+                                <div><input type="radio" id="q3a" name="q3" value="a" class="hidden quiz-option"><label for="q3a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) Security</label></div>
+                                <div><input type="radio" id="q3b" name="q3" value="b" class="hidden quiz-option"><label for="q3b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) Database performance</label></div>
+                                <div><input type="radio" id="q3c" name="q3" value="c" class="hidden quiz-option"><label for="q3c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) Fault-tolerance</label></div>
+                            </div>
+                            <div class="mt-3 hidden quiz-feedback text-sm" data-question="q3" data-answer="c"></div>
                         </div>
 
                         <button id="check-quiz" class="bg-sky-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-600 transition-colors">Check Answers</button>
@@ -468,37 +508,48 @@ public class InventoryService
                         <p class="mt-2">Based on the "Amazon-lite" case study, design a `NotificationService`. This service should be responsible for sending emails to users for events like "Order Confirmed" and "Order Shipped".</p>
                         <p class="mt-3 font-medium">Requirements:</p>
                         <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
-                            <li>The service should be decoupled from the `OrderService`. The `OrderService` should not have to wait for an email to be sent.</li>
-                            <li>The service must be resilient. If an email fails to send, it should be retried automatically a few times.</li>
-                            <li>Create a simple Class Diagram for your proposed design.</li>
+                            <li>The service must be <strong>decoupled</strong> from the `OrderService`. The `OrderService` should not have to wait for an email to be sent.</li>
+                            <li>The service must be <strong>resilient</strong>. If an email fails to send, it should be retried automatically a few times.</li>
+                            <li>Create a simple Class Diagram for your proposed design and provide pseudo-code for the worker.</li>
                         </ul>
                         <button id="reveal-solution" class="mt-6 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Reveal Solution</button>
                         <div id="solution" class="hidden mt-6 pt-6 border-t border-slate-200">
                             <h3 class="font-bold text-lg text-slate-900">Solution Breakdown</h3>
-                            <p class="mt-2">A robust solution involves using a message queue and a dedicated worker service.</p>
+                            <p class="mt-2">A robust solution involves using a message queue and a dedicated worker service, embodying the Producer-Consumer pattern.</p>
                             <ol class="list-decimal list-inside mt-2 space-y-2">
-                                <li><strong>Decoupling with a Message Queue:</strong> The `OrderService` will not call the `NotificationService` directly. Instead, it will publish a message (e.g., `OrderConfirmedEvent`) to a message queue (like RabbitMQ or AWS SQS).</li>
-                                <li><strong>Dedicated Worker:</strong> A separate, independently running `NotificationWorker` service will listen for messages on this queue. When it receives a message, it will process it by calling the actual email sending logic.</li>
-                                <li><strong>Resiliency and Retries:</strong> Message queues naturally provide resiliency. If the `NotificationWorker` is down when an event is published, the message stays in the queue. When the worker comes back online, it processes the message. Most message queue systems also have built-in support for automatic retries with exponential backoff if processing fails (e.g., the email API is temporarily unavailable).</li>
+                                <li><strong>Decoupling with a Message Queue:</strong> The `OrderService` (Producer) will not call the `NotificationService` directly. Instead, it will publish a message (e.g., `OrderConfirmedEvent` containing `OrderId`, `UserEmail`, `UserName`) to a dedicated message queue topic called `notification_events`.</li>
+                                <li><strong>Dedicated Worker (Consumer):</strong> A separate, independently running `NotificationWorker` service will subscribe to and listen for messages on this queue. When it receives a message, it will attempt to process it by calling the actual email sending logic.</li>
+                                <li><strong>Resiliency and Retries:</strong> Message queues provide natural resiliency. If the `NotificationWorker` is down, messages accumulate in the queue. Most queue systems also support a Dead-Letter Queue (DLQ). If a message fails processing a certain number of times (e.g., 3 retries), it is automatically moved to the DLQ for later manual inspection, preventing a poison message from blocking the queue.</li>
                             </ol>
                             <h4 class="font-semibold mt-4 mb-2">Class Diagram:</h4>
                              <div class="p-4 bg-slate-50 rounded-lg text-xs font-mono flex flex-wrap gap-4 justify-center">
-                                <div class="border border-slate-400 bg-white w-48">
-                                    <div class="p-1 font-bold bg-slate-200 text-center">OrderService</div>
-                                    <div class="p-1 border-t border-slate-400">- _publisher: IMessageQueue</div>
-                                    <div class="p-1 border-t border-slate-400">+ ConfirmOrder(order)</div>
-                                </div>
-                                <div class="border border-slate-400 bg-white w-48">
-                                    <div class="p-1 font-bold bg-slate-200 text-center">NotificationWorker</div>
-                                    <div class="p-1 border-t border-slate-400">- _emailClient: IEmailClient</div>
-                                    <div class="p-1 border-t border-slate-400">+ OnMessageReceived(event)</div>
-                                </div>
-                                <div class="border border-slate-400 bg-white w-48">
-                                    <div class="p-1 font-bold bg-slate-200 text-center">IEmailClient</div>
-                                    <div class="p-1 border-t border-slate-400"></div>
-                                    <div class="p-1 border-t border-slate-400">+ SendEmailAsync(to, subject, body)</div>
-                                </div>
+                                <div class="border border-slate-400 bg-white w-48"><div class="p-1 font-bold bg-slate-200 text-center">OrderService</div><div class="p-1 border-t border-slate-400">- _publisher: IMessageQueue</div><div class="p-1 border-t border-slate-400">+ ConfirmOrder(order)</div></div>
+                                <div class="border border-slate-400 bg-white w-48"><div class="p-1 font-bold bg-slate-200 text-center">NotificationWorker</div><div class="p-1 border-t border-slate-400">- _emailClient: IEmailClient</div><div class="p-1 border-t border-slate-400">+ OnMessageReceived(event)</div></div>
+                                <div class="border border-slate-400 bg-white w-48"><div class="p-1 font-bold bg-slate-200 text-center">IEmailClient</div><div class="p-1 border-t border-slate-400"></div><div class="p-1 border-t border-slate-400">+ SendEmailAsync(to, subject, body)</div></div>
                             </div>
+                            <h4 class="font-semibold mt-4 mb-2">Pseudo-code for Worker:</h4>
+                            <pre class="bg-slate-800 text-white p-3 rounded-md text-xs mt-2"><code>
+class NotificationWorker {
+    function listen_on_queue(queue_name) {
+        while (true) {
+            message = queue.get_message(queue_name);
+            if (message) {
+                try {
+                    send_notification(message.body);
+                    queue.acknowledge(message); // Mark as processed
+                } catch (error) {
+                    log_error(error);
+                    // Queue will handle retry logic based on configuration
+                }
+            }
+        }
+    }
+
+    function send_notification(event_data) {
+        // ... Logic to format and send email using IEmailClient ...
+    }
+}
+                            </code></pre>
                         </div>
                     </div>
                 </section>
@@ -511,8 +562,8 @@ public class InventoryService
                     <h3 class="font-bold text-lg text-slate-900 font-lexend mb-4">On This Page</h3>
                     <nav class="space-y-2">
                         <a href="#introduction" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Introduction</a>
-                        <a href="#theory" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Core Theory</a>
-                        <a href="#uml" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">UML & Schema</a>
+                        <a href="#theory" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">In-Depth Theory</a>
+                        <a href="#uml" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">System Blueprints</a>
                         <a href="#coding" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Coding Practice</a>
                         <a href="#quiz" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Knowledge Check</a>
                         <a href="#challenge" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Challenge</a>
@@ -531,50 +582,36 @@ public class InventoryService
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         
-        // --- Copy to Clipboard ---
         window.copyToClipboard = function(button) {
             const codeBlock = button.nextElementSibling;
             const text = codeBlock.innerText;
-            
             const textarea = document.createElement('textarea');
             textarea.value = text;
             document.body.appendChild(textarea);
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-
             button.innerText = 'Copied!';
-            setTimeout(() => {
-                button.innerText = 'Copy';
-            }, 2000);
+            setTimeout(() => { button.innerText = 'Copy'; }, 2000);
         }
 
-        // --- Tabs ---
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabContents = document.querySelectorAll('.tab-content');
-
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const targetId = button.dataset.target;
-                
                 tabButtons.forEach(btn => {
                     btn.classList.remove('active', 'text-sky-600', 'border-sky-500');
                     btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
                 });
                 button.classList.add('active', 'text-sky-600', 'border-sky-500');
                 button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
-                
                 tabContents.forEach(content => {
-                    if (content.id === targetId) {
-                        content.classList.remove('hidden');
-                    } else {
-                        content.classList.add('hidden');
-                    }
+                    content.id === targetId ? content.classList.remove('hidden') : content.classList.add('hidden');
                 });
             });
         });
         
-        // --- Scalability Chart ---
         const ctx = document.getElementById('scalabilityChart').getContext('2d');
         const scalabilityChart = new Chart(ctx, {
             type: 'bar',
@@ -585,13 +622,16 @@ public class InventoryService
                     data: [50, 65, 80, 85],
                     backgroundColor: 'rgba(56, 189, 248, 0.6)',
                     borderColor: 'rgba(14, 165, 233, 1)',
-                    borderWidth: 1
+                    borderWidth: 1,
+                    yAxisID: 'y'
                 }, {
-                    label: 'Fault-Tolerant System Availability (%)',
-                    data: [100, 100, 100, 99.9],
-                    backgroundColor: 'rgba(34, 197, 94, 0.6)',
-                    borderColor: 'rgba(22, 163, 74, 1)',
-                    borderWidth: 1
+                    label: 'Non-Scalable System Response Time (ms)',
+                    data: [55, 250, 1500, 1600],
+                     backgroundColor: 'rgba(244, 63, 94, 0.6)',
+                    borderColor: 'rgba(225, 29, 72, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y',
+                    hidden: true
                 }]
             },
             options: {
@@ -599,79 +639,66 @@ public class InventoryService
                 maintainAspectRatio: false,
                 scales: {
                     y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         beginAtZero: true,
-                        suggestedMax: 100
+                        title: { display: true, text: 'Response Time (ms)' }
                     }
                 },
                 plugins: {
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    tooltip: { mode: 'index', intersect: false },
+                    title: { display: true, text: 'System Response Time Under Increasing Load' }
                 }
             }
         });
 
-        // --- TOC Scrollspy ---
         const sections = document.querySelectorAll('section[id]');
         const tocLinks = document.querySelectorAll('.toc-link');
-
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const id = entry.target.getAttribute('id');
                 const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
-                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {
                     tocLinks.forEach(link => link.classList.remove('active'));
                     tocLink.classList.add('active');
                 }
             });
-        }, { rootMargin: '-20% 0px -60% 0px', threshold: 0.5 });
-
-        sections.forEach(section => {
-            observer.observe(section);
-        });
+        }, { rootMargin: '-20% 0px -70% 0px', threshold: [0.2, 0.8] });
+        sections.forEach(section => { observer.observe(section); });
         
-        // --- Quiz Logic ---
         const checkQuizBtn = document.getElementById('check-quiz');
         checkQuizBtn.addEventListener('click', () => {
-            const questions = document.querySelectorAll('.quiz-question');
-            questions.forEach(q => {
+            document.querySelectorAll('.quiz-question').forEach(q => {
                 const feedbackEl = q.querySelector('.quiz-feedback');
                 const qName = feedbackEl.dataset.question;
                 const correctAnswer = feedbackEl.dataset.answer;
-                
                 const selectedAnswer = document.querySelector(`input[name="${qName}"]:checked`);
-                
+                feedbackEl.classList.remove('hidden');
                 if (selectedAnswer) {
-                    feedbackEl.classList.remove('hidden');
                     if(selectedAnswer.value === correctAnswer) {
-                        feedbackEl.textContent = 'Correct! Well done.';
+                        feedbackEl.textContent = 'Correct! This demonstrates a key design principle.';
                         feedbackEl.className = 'quiz-feedback mt-3 text-sm text-green-600 font-semibold';
                     } else {
-                        feedbackEl.textContent = `Not quite. The correct answer is (${correctAnswer.toUpperCase()}).`;
+                        feedbackEl.textContent = `Not quite. The correct answer is (${correctAnswer.toUpperCase()}). Review the relevant theory section.`;
                         feedbackEl.className = 'quiz-feedback mt-3 text-sm text-red-600 font-semibold';
                     }
                 } else {
-                    feedbackEl.classList.remove('hidden');
                     feedbackEl.textContent = 'Please select an answer.';
                     feedbackEl.className = 'quiz-feedback mt-3 text-sm text-amber-600 font-semibold';
                 }
             });
         });
 
-        // --- Reveal Solution ---
         const revealBtn = document.getElementById('reveal-solution');
         const solutionEl = document.getElementById('solution');
         revealBtn.addEventListener('click', () => {
             solutionEl.classList.toggle('hidden');
-            if(solutionEl.classList.contains('hidden')) {
-                revealBtn.textContent = 'Reveal Solution';
-            } else {
-                revealBtn.textContent = 'Hide Solution';
-            }
+            revealBtn.textContent = solutionEl.classList.contains('hidden') ? 'Reveal Solution' : 'Hide Solution';
         });
 
     });
     </script>
 </body>
 </html>
+
