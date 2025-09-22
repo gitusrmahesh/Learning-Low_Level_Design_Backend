@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 52: Routing, Filters & Model Binding</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .prose a {
+            color: #0ea5e9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .prose a:hover {
+            text-decoration: underline;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            background-color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+        .copy-button:hover {
+            background-color: #475569;
+            opacity: 1;
+        }
+        .toc-link.active {
+            color: #0ea5e9;
+            font-weight: 600;
+            border-left-color: #0ea5e9;
+        }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 800px;
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 400px;
+            max-height: 450px; 
+        }
+        .feedback {
+            padding: 0.75rem 1rem;
+            margin-top: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .feedback.correct {
+            background-color: #dcfce7; /* green-100 */
+            color: #166534; /* green-800 */
+            border-left: 4px solid #22c55e; /* green-500 */
+        }
+        .feedback.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+            border-left: 4px solid #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application is designed as a single, comprehensive lesson page with a linear flow. A sticky table of contents (ToC) on the right provides quick navigation, essential for a long-form technical document. This structure was chosen because it supports both sequential learning for newcomers and quick reference for those revisiting specific topics. The content is broken down into logical sections: Theory, Diagrams, Practice, Case Study, and Assessment, creating a clear and structured educational journey. -->
+    <!-- Visualization & Content Choices: Report Info: UML/Schema Task for routing flow. Goal: Illustrate the request pipeline. Viz/Presentation Method: An interactive Chart.js diagram instead of a static image. Interaction: Tooltips on each node provide more context. Justification: A dynamic chart is more engaging and informative than a static diagram, helping to visualize the abstract flow of data. Library/Method: Chart.js (Canvas). Report Info: Code examples. Goal: Provide practical, usable code. Viz/Presentation Method: Styled code blocks. Interaction: Copy-to-clipboard functionality. Justification: Makes it easy for users to grab and experiment with the code. Library/Method: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=8" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <main class="lg:col-span-9">
+                <div class="prose prose-slate max-w-none prose-h2:font-lexend prose-h2:tracking-tight prose-h2:text-3xl prose-h3:font-lexend prose-h3:tracking-tight prose-h3:text-2xl">
+                    <section id="introduction" class="scroll-mt-20">
+                        <h2 class="text-sky-600">Day 52: Routing, Filters & Model Binding</h2>
+                        <p class="text-lg text-slate-600">Welcome to Day 52! Today, we're performing open-heart surgery on the ASP.NET Core request pipeline. We will dissect the three critical mechanisms that form the backbone of any web API: <b>Routing</b> (the brain that directs traffic), <b>Filters</b> (the gatekeepers that inspect and modify requests), and <b>Model Binding</b> (the universal translator that converts raw web data into clean C# objects). This is not just a high-level overview; it's a deep dive. By the end of this session, you will have a granular understanding of how to build flexible, secure, and maintainable APIs by mastering these core components.</p>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="theory-topics" class="scroll-mt-20">
+                        <h2>✅ In-Depth Theory Topics</h2>
+                        <p>This is your one-stop solution. We will explore not just the "what" but the "why" and "how" of each concept, with detailed explanations, advanced techniques, and best practices. There's no need to look elsewhere.</p>
+
+                        <article id="attribute-vs-conventional" class="mt-8">
+                            <h3>1. Routing: Attribute vs. Conventional</h3>
+                            <p>Routing is the process of mapping an incoming request URL to a specific piece of executable code, known as a controller action. It is the first major decision point in handling a request. ASP.NET Core offers two distinct philosophies for this.</p>
+                            
+                            <div class="mt-6 bg-slate-100 p-4 rounded-xl border border-slate-200">
+                                <p class="font-semibold text-slate-700">Analogy: The Post Office</p>
+                                <p class="text-slate-600 mt-2">Think of routing like a postal system. <b class="text-sky-700">Conventional Routing</b> is a city-wide, standardized addressing system (e.g., all addresses follow the format `[Street Name]/[House Number]`). It's a single, global rule defined at the post office headquarters. <b class="text-teal-700">Attribute Routing</b> is like giving a specific, unique, and permanent address to a landmark right on its front door (e.g., `123 Main Street, "The Grand Library"`). The address is inseparable from the location itself.</p>
+                            </div>
+
+                            <h4 class="font-lexend text-xl text-teal-600 mt-8">Attribute Routing in Detail</h4>
+                            <p>This is the de-facto standard for REST APIs. Routes are defined as attributes directly on controllers and action methods. This co-location of the route and its implementation makes the code self-documenting.</p>
+                            
+                            <p><b>Route Tokens & Constraints:</b> You can make routes dynamic using tokens (e.g., <code>{id}</code>). You can also enforce type safety with constraints.</p>
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">[ApiController]
+[Route("api/v1/warehouses/{warehouseId:int}/products")]
+public class ProductsController : ControllerBase
+{
+    // Matches GET api/v1/warehouses/101/products/{productId:guid}
+    // and only if productId is a valid GUID.
+    [HttpGet("{productId:guid}")]
+    public IActionResult GetProduct(int warehouseId, Guid productId) 
+    {
+        return Ok($"Fetching product {productId} from warehouse {warehouseId}");
+    }
+
+    // Matches GET api/v1/warehouses/101/products/search
+    [HttpGet("search")] // A literal route to avoid conflicts with {productId}
+    public IActionResult SearchProducts([FromQuery] string name)
+    {
+        return Ok($"Searching for product named '{name}'");
+    }
+}</code></pre>
+                            </div>
+                            <p class="mt-2">Common constraints include: <code>:int</code>, <code>:guid</code>, <code>:bool</code>, <code>:datetime</code>, <code>:alpha</code>, <code>:min(value)</code>, <code>:maxlength(len)</code>, <code>:regex(...)</code>.</p>
+                            
+                            <p class="mt-4"><b>Route Name and Order:</b> You can name routes for URL generation and control the matching order. Lower order values are tried first.</p>
+                            <div class="code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">[HttpGet("special-product", Name = "GetSpecialProduct", Order = 1)]
+public IActionResult GetSpecial() { /* ... */ }
+
+[HttpGet("{id}", Order = 99)] // This general route is tried last
+public IActionResult GetById(int id) { /* ... */ }</code></pre>
+                            </div>
+                            
+                            <h4 class="font-lexend text-xl text-sky-600 mt-8">Conventional Routing in Detail</h4>
+                            <p>Used primarily for traditional MVC applications serving HTML views. A global template is defined in `Program.cs` that dictates how URLs are parsed.</p>
+                            <div class="code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">// In Program.cs
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// A URL of "/Products/Details/5" would map to:
+// Controller: ProductsController
+// Action:     Details(int id)
+// Parameter:  id = 5
+</code></pre>
+                            </div>
+                             <p class="mt-2">The <code>?</code> makes the `id` parameter optional. You can set default values (e.g., `controller=Home`). This approach encourages a uniform URL structure across the application.</p>
+                             
+                            <h4 class="font-lexend text-xl mt-8">Side-by-Side Comparison</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full mt-4 border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-200">
+                                            <th class="p-3 font-semibold text-left border-b border-slate-300">Feature</th>
+                                            <th class="p-3 font-semibold text-left border-b border-slate-300 text-teal-700">Attribute Routing</th>
+                                            <th class="p-3 font-semibold text-left border-b border-slate-300 text-sky-700">Conventional Routing</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="p-3">Primary Use Case</td>
+                                            <td class="p-3">REST APIs</td>
+                                            <td class="p-3">Traditional MVC (UI-focused)</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200 bg-slate-50">
+                                            <td class="p-3">Route Definition</td>
+                                            <td class="p-3">On controllers/actions</td>
+                                            <td class="p-3">Global, in `Program.cs`</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="p-3">Readability</td>
+                                            <td class="p-3">High (route is next to code)</td>
+                                            <td class="p-3">Lower (requires checking `Program.cs`)</td>
+                                        </tr>
+                                         <tr class="border-b border-slate-200 bg-slate-50">
+                                            <td class="p-3">Flexibility</td>
+                                            <td class="p-3">Very high, per-endpoint control</td>
+                                            <td class="p-3">Lower, based on a global pattern</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="p-3">"Discoverability"</td>
+                                            <td class="p-3">Easy to find the code for a given URL</td>
+                                            <td class="p-3">Harder, must infer from pattern</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4 class="font-lexend text-xl mt-8">Best Practices for Clean Routing</h4>
+                            <ul class="list-disc list-inside mt-2 space-y-2">
+                                <li><b>For APIs, always use Attribute Routing.</b> It is unambiguous and aligns with REST principles.</li>
+                                <li><b>Be Consistent.</b> Use a standard pattern, e.g., <code>/api/v1/[controller]</code>. Use plural nouns for collections (e.g., <code>/products</code> not <code>/product</code>).</li>
+                                <li><b>Use a base route on the controller.</b> Define the common part of the route on the controller (<code>[Route("api/products")]</code>) and specific parts on the actions (<code>[HttpGet("{id}")]</code>).</li>
+                                <li><b>Use route constraints</b> to avoid ambiguity and fail fast on invalid requests (e.g., <code>{id:int}</code> won't match a non-integer).</li>
+                                <li><b>Place more specific routes before more generic ones</b>, or use the <code>Order</code> property to ensure they are matched correctly.</li>
+                            </ul>
+                        </article>
+                        
+                        <article id="filters" class="mt-12">
+                            <h3>2. Filters: The AOP Guardians</h3>
+                            <p>Filters allow you to inject logic into the request processing pipeline at various stages. This is an implementation of Aspect-Oriented Programming (AOP), letting you address <b>cross-cutting concerns</b> (like logging, authentication, caching) in a clean, reusable way without polluting your business logic inside action methods.</p>
+                            
+                            <h4 class="font-lexend text-xl mt-6">The Filter Pipeline Execution Order</h4>
+                            <p>Filters run in a specific, nested order. Imagine them as Russian dolls, where the request goes in to the center and the response comes back out.</p>
+                            <ol class="list-decimal list-inside mt-2 font-semibold">
+                                <li>Authorization Filters (<code>IAuthorizationFilter</code>)</li>
+                                <li>Resource Filters (<code>IResourceFilter</code>)</li>
+                                <li>Action Filters (<code>IActionFilter</code>)</li>
+                                <li><b>Action Method Execution</b></li>
+                                <li>Result Filters (<code>IResultFilter</code>)</li>
+                                <li><b>Result Execution</b></li>
+                            </ol>
+                            <p>Exception Filters (<code>IExceptionFilter</code>) don't have a fixed stage; they run only when an unhandled exception is thrown by a preceding stage.</p>
+
+                            <h4 class="font-lexend text-xl mt-8">Deep Dive into Filter Types</h4>
+                            <div class="space-y-6 mt-4">
+                                <div>
+                                    <h5 class="font-semibold text-lg">Action Filters (<code>IActionFilter</code>, <code>IAsyncActionFilter</code>)</h5>
+                                    <p>The most commonly used filter. Runs immediately before and after the action method executes. Perfect for logic that needs to inspect or manipulate action arguments and results.</p>
+                                    <p><b>Real-world Use Case: Response Wrapping.</b> A filter that wraps every successful API response in a consistent JSON structure.</p>
+                                     <div class="mt-4 code-block">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">public class ApiResponseWrapperFilter : IActionFilter
+{
+    public void OnActionExecuting(ActionExecutingContext context) { } // Do nothing before
+
+    public void OnActionExecuted(ActionExecutedContext context)
+    {
+        if (context.Exception == null && context.Result is ObjectResult objectResult)
+        {
+            var apiResponse = new { Succeeded = true, Data = objectResult.Value };
+            context.Result = new ObjectResult(apiResponse)
+            {
+                StatusCode = objectResult.StatusCode
+            };
+        }
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-lg">Result Filters (<code>IResultFilter</code>, <code>IAsyncResultFilter</code>)</h5>
+                                    <p>Similar to action filters, but they only run around the execution of the <code>IActionResult</code> object itself. They are ideal when you only care about the final result being sent to the client, not the action method's logic.</p>
+                                    <p><b>Real-world Use Case: Adding Custom Headers.</b> This is the canonical example, like adding a `X-Response-Time` header to every response.</p>
+                                     <div class="mt-4 code-block">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">public class AddHeaderResultFilter : IResultFilter
+{
+    public void OnResultExecuting(ResultExecutingContext context)
+    {
+        context.HttpContext.Response.Headers.Add(
+            "X-Content-Type-Options", "nosniff");
+    }
+
+    public void OnResultExecuted(ResultExecutedContext context) { }
+}</code></pre>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-lg">Exception Filters (<code>IExceptionFilter</code>, <code>IAsyncExceptionFilter</code>)</h5>
+                                    <p>Your global safety net. They catch unhandled exceptions that occur during action execution or filter execution. They are critical for preventing stack traces from leaking to the client and for centralized error logging.</p>
+                                    <p><b>Real-world Use Case: Standardized Error Response.</b> Convert different exception types into a consistent, user-friendly JSON error format.</p>
+                                     <div class="mt-4 code-block">
+                                        <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                        <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">public class CustomExceptionFilter : IExceptionFilter
+{
+    private readonly ILogger<CustomExceptionFilter> _logger;
+    public CustomExceptionFilter(ILogger<CustomExceptionFilter> logger) => _logger = logger;
+
+    public void OnException(ExceptionContext context)
+    {
+        _logger.LogError(context.Exception, "An unhandled exception occurred.");
+        
+        var errorResponse = new { message = "An internal server error occurred." };
+        context.Result = new ObjectResult(errorResponse) { StatusCode = 500 };
+        context.ExceptionHandled = true;
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4 class="font-lexend text-xl mt-8">Applying and Registering Filters</h4>
+                            <p>Filters can be applied at three levels, from broadest to most specific:</p>
+                            <ol class="list-decimal list-inside mt-2">
+                                <li><b>Globally:</b> For all actions in the application. (In `Program.cs`)</li>
+                                <li><b>Controller-level:</b> For all actions within a single controller.</li>
+                                <li><b>Action-level:</b> For a single action method.</li>
+                            </ol>
+                            <p>For filters with dependencies (like a logger), you must register them with the DI container and apply them using <code>[ServiceFilter(typeof(MyFilter))]</code>. For simple filters without dependencies, you can apply them directly as an attribute.</p>
+                        </article>
+
+                        <article id="model-binding-validation" class="mt-12">
+                            <h3>3. Model Binding and Validation</h3>
+                            <p>Model binding is the "magic" that translates incoming HTTP request data into strongly-typed C# objects. Validation is the gatekeeper that ensures this data is sane and complete before your business logic ever sees it.</p>
+                            
+                            <h4 class="font-lexend text-xl mt-6">The Model Binding System in Depth</h4>
+                            <p>The binder is highly configurable and looks for data in a specific order. You can guide it with attributes to be more explicit about where data should come from.</p>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="w-full mt-4 border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-200">
+                                            <th class="p-3 font-semibold text-left border-b border-slate-300">Attribute</th>
+                                            <th class="p-3 font-semibold text-left border-b border-slate-300">Source</th>
+                                            <th class="p-3 font-semibold text-left border-b border-slate-300">Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="p-3 font-mono">[FromRoute]</td>
+                                            <td class="p-3">URL path</td>
+                                            <td class="p-3"><code>/products/{id}</code></td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200 bg-slate-50">
+                                            <td class="p-3 font-mono">[FromQuery]</td>
+                                            <td class="p-3">URL query string</td>
+                                            <td class="p-3"><code>/products?name=widget</code></td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="p-3 font-mono">[FromHeader]</td>
+                                            <td class="p-3">HTTP headers</td>
+                                            <td class="p-3"><code>X-Api-Key: mysecret</code></td>
+                                        </tr>
+                                         <tr class="border-b border-slate-200 bg-slate-50">
+                                            <td class="p-3 font-mono">[FromBody]</td>
+                                            <td class="p-3">Request body (JSON/XML)</td>
+                                            <td class="p-3"><code>{ "name": "Test" }</code></td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td class="p-3 font-mono">[FromForm]</td>
+                                            <td class="p-3">Form fields in body</td>
+                                            <td class="p-3"><code>name=Test&amp;price=10</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">[HttpPost("{id}")]
+public IActionResult UpdateProduct(
+    [FromRoute] int id, 
+    [FromHeader(Name = "X-User-Id")] string userId,
+    [FromBody] ProductUpdateModel model)
+{
+    // ... logic
+}</code></pre>
+                            </div>
+                            
+                            <h4 class="font-lexend text-xl mt-6">Deep Dive into Validation</h4>
+                            <p>ASP.NET Core's validation is powered by Data Annotations. When you apply the <code>[ApiController]</code> attribute to a controller, it automatically enables a filter that checks <code>ModelState.IsValid</code>. If validation fails, it short-circuits the request and returns a 400 Bad Request with a detailed error object.</p>
+                            
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">public class RegisterUserModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; }
+
+    [Required]
+    [StringLength(100, MinimumLength = 8)]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,15}$", ErrorMessage = "Password must be complex.")]
+    public string Password { get; set; }
+
+    [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+    public string ConfirmPassword { get; set; }
+}</code></pre>
+                            </div>
+
+                            <p class="mt-4"><b>Custom Validation:</b> For business rules that can't be expressed with built-in attributes, you can create your own by inheriting from <code>ValidationAttribute</code>.</p>
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">public class NoFutureDateAttribute : ValidationAttribute
+{
+    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    {
+        if (value is DateTime dateTime && dateTime > DateTime.UtcNow)
+        {
+            return new ValidationResult("Date cannot be in the future.");
+        }
+        return ValidationResult.Success;
+    }
+}
+
+// Usage:
+// [NoFutureDate]
+// public DateTime DateOfBirth { get; set; }
+</code></pre>
+                            </div>
+                            <p class="mt-4">For very complex or dynamic validation scenarios, many developers prefer the library <a href="https://fluentvalidation.net/" target="_blank">FluentValidation</a>, which provides a powerful and expressive way to define validation rules using a fluent interface and lambda expressions.</p>
+                        </article>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="uml-schema" class="scroll-mt-20">
+                        <h2>✅ UML/Schema Task: Routing Flow Diagram</h2>
+                        <p>This diagram visualizes the journey of an HTTP request through the ASP.NET Core middleware pipeline, highlighting where routing and filters come into play.</p>
+                        <div class="mt-6 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                           <div class="chart-container">
+                                <canvas id="routingFlowChart"></canvas>
+                           </div>
+                        </div>
+                    </section>
+
+                    <hr class="my-12">
+                    
+                    <section id="coding-practice" class="scroll-mt-20">
+                        <h2>✅ Coding Practice</h2>
+                        <p>Time to get our hands dirty. Here are the solutions for today's coding exercises. Each example is a self-contained class you can add to a .NET Web API project to see it in action.</p>
+
+                        <article id="easy-practice" class="mt-8">
+                            <h3 class="text-green-600">[Easy] Use Attribute Routing for Versioning</h3>
+                            <p>API versioning is a common requirement. The simplest way to handle this is by including the version number in the route template. This makes the endpoint explicit and clear to consumers.</p>
+                            <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">using Microsoft.AspNetCore.Mvc;
+
+namespace LLD_Bootcamp.Controllers;
+
+[ApiController]
+public class UsersController : ControllerBase
+{
+    // Best practice: Define a base route for the resource
+    // This endpoint serves the first version of the API
+    [HttpGet("api/v1/users")]
+    public IActionResult GetUsersV1()
+    {
+        var users = new[] { "Alice (v1)", "Bob (v1)", "Charlie (v1)" };
+        return Ok(users);
+    }
+    
+    // A new version of the API can be introduced side-by-side
+    // This allows old clients to continue working while new clients can use the new version
+    [HttpGet("api/v2/users")]
+    public IActionResult GetUsersV2()
+    {
+        var usersData = new[] 
+        { 
+            new { Id = 1, Name = "Alice (v2)", Role = "Admin" },
+            new { Id = 2, Name = "Bob (v2)", Role = "User" },
+        };
+        return Ok(usersData);
+    }
+}
+</code></pre>
+                            </div>
+                        </article>
+
+                        <article id="medium-practice" class="mt-12">
+                            <h3 class="text-yellow-600">[Medium] Add Custom Action Filter for Logging</h3>
+                            <p>This filter will log information about the action being executed and how long it took. This is a classic example of a cross-cutting concern that you don't want to repeat in every action method.</p>
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Diagnostics;
+
+namespace LLD_Bootcamp.Filters;
+
+// 1. Define the Filter Attribute
+public class LogExecutionTimeAttribute : ActionFilterAttribute
+{
+    private readonly Stopwatch _stopwatch = new();
+
+    // Runs BEFORE the action method
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        _stopwatch.Start();
+        Console.WriteLine($"[LOG] Action '{context.ActionDescriptor.DisplayName}' starting execution.");
+    }
+
+    // Runs AFTER the action method
+    public override void OnActionExecuted(ActionExecutedContext context)
+    {
+        _stopwatch.Stop();
+        long elapsedMs = _stopwatch.ElapsedMilliseconds;
+        Console.WriteLine($"[LOG] Action '{context.ActionDescriptor.DisplayName}' finished execution in {elapsedMs}ms.");
+    }
+}
+
+// 2. Apply the Filter to a Controller or Action
+[ApiController]
+[Route("api/diagnostics")]
+[LogExecutionTime] // Apply to all actions in this controller
+public class DiagnosticsController : ControllerBase
+{
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+        Thread.Sleep(150); // Simulate some work
+        return Ok("Pong!");
+    }
+    
+    [HttpGet("status")]
+    // [LogExecutionTime] // Can also be applied to a single action
+    public IActionResult GetStatus()
+    {
+        return Ok(new { Status = "Healthy" });
+    }
+}</code></pre>
+                            </div>
+                        </article>
+                        
+                        <article id="hard-practice" class="mt-12">
+                            <h3 class="text-red-600">[Hard] Build Request Validation Filter</h3>
+                            <p>While <code>[ApiController]</code> handles model validation automatically, creating a custom validation filter gives you more control. For example, you can customize the format of the error response to match a specific API standard. This filter checks <code>ModelState.IsValid</code> and, if it's false, short-circuits the request and returns a custom 400 Bad Request response.</p>
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.ComponentModel.DataAnnotations;
+
+namespace LLD_Bootcamp.Filters;
+
+// 1. Define the Custom Filter
+public class ValidationFilterAttribute : IActionFilter
+{
+    public void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (!context.ModelState.IsValid)
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value.Errors.Count > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray());
+            
+            var errorResponse = new 
+            {
+                Title = "One or more validation errors occurred.",
+                Status = 400,
+                Errors = errors
+            };
+
+            context.Result = new BadRequestObjectResult(errorResponse);
+        }
+    }
+
+    public void OnActionExecuted(ActionExecutedContext context) { }
+}
+
+// 2. Define a Model with Validation
+public class ProductInput
+{
+    [Required]
+    [StringLength(100)]
+    public string Name { get; set; }
+
+    [Range(0.01, 10000.00)]
+    public decimal Price { get; set; }
+}
+
+// 3. Apply the filter and use the model
+[ApiController]
+[Route("api/products")]
+[ServiceFilter(typeof(ValidationFilterAttribute))] // Register with DI and use ServiceFilter
+public class FilteredProductsController : ControllerBase
+{
+    [HttpPost]
+    public IActionResult CreateProduct([FromBody] ProductInput product)
+    {
+        // Because of our filter, this code will only run if the model is valid.
+        // No need for 'if (!ModelState.IsValid)' here.
+        return CreatedAtAction(nameof(CreateProduct), new { id = 1 }, product);
+    }
+}
+
+// 4. Remember to register the filter in Program.cs
+// builder.Services.AddScoped<ValidationFilterAttribute>();
+</code></pre>
+                            </div>
+                        </article>
+                    </section>
+                    
+                    <hr class="my-12">
+
+                    <section id="case-study" class="scroll-mt-20">
+                        <h2>✅ Case Study: User Profile Service</h2>
+                        <p>Let's tie everything together by building a simple User Profile service. This case study demonstrates using attribute routing for versioning, model binding and validation for creating a user, and a custom filter for logging.</p>
+                        
+                        <p><b>Requirements:</b></p>
+                        <ul class="list-disc list-inside">
+                            <li>API should have two versions.</li>
+                            <li>v1 allows fetching a list of user names.</li>
+                            <li>v2 allows fetching detailed user profiles and creating new users.</li>
+                            <li>Creating a user requires a valid username and email.</li>
+                            <li>All requests to the v2 endpoints should be logged with their execution time.</li>
+                        </ul>
+                        
+                        <p class="mt-4">Here is the complete implementation for the controller, models, and filter.</p>
+
+                        <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+
+// --- NAMESPACE FOR CASE STUDY ---
+namespace LLD_Bootcamp.CaseStudy.UserProfile;
+
+// --- 1. MODEL DEFINITIONS ---
+public class UserProfileV2
+{
+    public int Id { get; set; }
+    public string Username { get; set; }
+    public string Email { get; set; }
+    public DateTime MemberSince { get; set; }
+}
+
+public class CreateUserRequest
+{
+    [Required]
+    [StringLength(50, MinimumLength = 3)]
+    public string Username { get; set; }
+
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; }
+}
+
+
+// --- 2. CUSTOM FILTER ---
+public class LogExecutionTimeAttribute : ActionFilterAttribute
+{
+    private readonly Stopwatch _stopwatch = new();
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        _stopwatch.Start();
+        Console.WriteLine($"[CASE_STUDY_LOG] Executing: {context.ActionDescriptor.DisplayName}");
+    }
+    public override void OnActionExecuted(ActionExecutedContext context)
+    {
+        _stopwatch.Stop();
+        Console.WriteLine($"[CASE_STUDY_LOG] Finished in {_stopwatch.ElapsedMilliseconds}ms.");
+    }
+}
+
+
+// --- 3. CONTROLLER IMPLEMENTATION ---
+[ApiController]
+public class UserProfileController : ControllerBase
+{
+    private static readonly List<UserProfileV2> _users = new()
+    {
+        new UserProfileV2 { Id = 1, Username = "dev_guru", Email = "guru@example.com", MemberSince = DateTime.UtcNow.AddDays(-10) },
+        new UserProfileV2 { Id = 2, Username = "code_ninja", Email = "ninja@example.com", MemberSince = DateTime.UtcNow.AddDays(-5) }
+    };
+
+    // --- VERSION 1 ENDPOINTS ---
+    
+    [HttpGet("api/v1/profiles")]
+    public IActionResult GetUserNamesV1()
+    {
+        // v1 only returns a simple list of names
+        return Ok(_users.Select(u => u.Username));
+    }
+
+    // --- VERSION 2 ENDPOINTS ---
+    
+    [HttpGet("api/v2/profiles")]
+    [LogExecutionTime] // Apply filter to v2 endpoints
+    public IActionResult GetUserProfilesV2()
+    {
+        // v2 returns the full profile object
+        return Ok(_users);
+    }
+
+    [HttpGet("api/v2/profiles/{id:int}")]
+    [LogExecutionTime]
+    public IActionResult GetUserProfileByIdV2(int id)
+    {
+        var user = _users.FirstOrDefault(u => u.Id == id);
+        if (user == null)
+        {
+            return NotFound($"User with ID {id} not found.");
+        }
+        return Ok(user);
+    }
+    
+    [HttpPost("api/v2/profiles")]
+    [LogExecutionTime]
+    public IActionResult CreateUserProfileV2([FromBody] CreateUserRequest request)
+    {
+        // [ApiController] attribute handles the ModelState.IsValid check automatically!
+        // If the request model is invalid, a 400 response is sent before this code runs.
+        
+        var newUser = new UserProfileV2
+        {
+            Id = _users.Max(u => u.Id) + 1,
+            Username = request.Username,
+            Email = request.Email,
+            MemberSince = DateTime.UtcNow
+        };
+        
+        _users.Add(newUser);
+        
+        // Return a 201 Created response with the location of the new resource
+        return CreatedAtAction(nameof(GetUserProfileByIdV2), new { id = newUser.Id }, newUser);
+    }
+}
+</code></pre>
+                            </div>
+                    </section>
+                     
+                    <hr class="my-12">
+
+                    <section id="knowledge-check" class="scroll-mt-20">
+                        <h2>🧠 Knowledge Check</h2>
+                        <p>Test your understanding of the key concepts with this quick quiz.</p>
+                        <div id="quiz-container" class="space-y-8 mt-6">
+                            <!-- Question 1 -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold">1. Which routing method is strongly preferred for building RESTful APIs in ASP.NET Core and why?</p>
+                                <form class="mt-4 space-y-2 quiz-form" data-correct="a">
+                                    <label class="block"><input type="radio" name="q1" value="a"> Attribute Routing, because it co-locates the route definition with the action method, improving readability.</label>
+                                    <label class="block"><input type="radio" name="q1" value="b"> Conventional Routing, because it centralizes all route logic in one file.</label>
+                                    <label class="block"><input type="radio" name="q1" value="c"> Both are equally good for REST APIs.</label>
+                                    <button type="submit" class="mt-4 px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors">Check Answer</button>
+                                    <div class="feedback hidden"></div>
+                                </form>
+                            </div>
+                            <!-- Question 2 -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold">2. You want to add a custom `X-Transaction-ID` header to every successful API response. Which type of filter is the most appropriate for this task?</p>
+                                <form class="mt-4 space-y-2 quiz-form" data-correct="c">
+                                    <label class="block"><input type="radio" name="q2" value="a"> Action Filter</label>
+                                    <label class="block"><input type="radio" name="q2" value="b"> Exception Filter</label>
+                                    <label class="block"><input type="radio" name="q2" value="c"> Result Filter</label>
+                                    <label class="block"><input type="radio" name="q2" value="d"> Authorization Filter</label>
+                                    <button type="submit" class="mt-4 px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors">Check Answer</button>
+                                    <div class="feedback hidden"></div>
+                                </form>
+                            </div>
+                             <!-- Question 3 -->
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                                <p class="font-semibold">3. When using the <code>[ApiController]</code> attribute, what happens automatically if model binding results in an invalid <code>ModelState</code>?</p>
+                                <form class="mt-4 space-y-2 quiz-form" data-correct="d">
+                                    <label class="block"><input type="radio" name="q3" value="a"> An exception is thrown, which must be caught by an Exception Filter.</label>
+                                    <label class="block"><input type="radio" name="q3" value="b"> The action method is still executed, but `ModelState.IsValid` will be false.</label>
+                                    <label class="block"><input type="radio" name="q3" value="c"> The server returns a 500 Internal Server Error.</label>
+                                    <label class="block"><input type="radio" name="q3" value="d"> The request is short-circuited and an automatic 400 Bad Request response is returned with error details.</label>
+                                    <button type="submit" class="mt-4 px-4 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors">Check Answer</button>
+                                    <div class="feedback hidden"></div>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <hr class="my-12">
+                    
+                    <section id="self-assessment" class="scroll-mt-20">
+                        <h2>🚀 Self-Assessment Challenge</h2>
+                        <p>Time to synthesize your knowledge. This challenge requires you to combine routing, model binding, and a custom filter with dependency injection to solve a real-world problem.</p>
+                        
+                        <div class="mt-6 bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
+                            <h4 class="font-lexend text-xl text-yellow-800">The Challenge: Prevent Duplicate Reviews</h4>
+                            <p class="mt-2">You are building a product review system. A user should not be able to submit a new review for a product if their new rating is identical to their most recent rating for that same product.</p>
+                            
+                            <p class="mt-4"><b>Your Task:</b></p>
+                            <ol class="list-decimal list-inside mt-2 space-y-2">
+                                <li>Create a `POST` endpoint at <code>/api/products/{productId:int}/reviews</code>.</li>
+                                <li>The endpoint should accept a JSON body matching the <code>ReviewInputModel</code>.</li>
+                                <li>The user's ID will be passed in an HTTP header named <code>X-User-ID</code>.</li>
+                                <li>Create a custom <b>async action filter</b> named <code>PreventDuplicateRatingFilter</code>.</li>
+                                <li>This filter must use a (dummy) service to fetch the user's last rating for the product.</li>
+                                <li>If the new rating in the request body is the same as the last rating, the filter should short-circuit the request and return a <code>409 Conflict</code> response with an appropriate error message.</li>
+                                <li>If the rating is different (or there's no previous rating), the request should proceed to the action method.</li>
+                            </ol>
+                            
+                             <p class="mt-4"><b>Provided Code Snippets:</b></p>
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">// The model for the request body
+public class ReviewInputModel
+{
+    [Required]
+    [Range(1, 5)]
+    public int Rating { get; set; }
+    public string Comment { get; set; }
+}
+
+// A dummy service to simulate database access
+public interface IReviewService
+{
+    Task<int?> GetLastRatingAsync(int productId, string userId);
+}
+public class DummyReviewService : IReviewService
+{
+    // In a real app, this would query a database.
+    // For this test, it simulates that user "user123" previously gave product 1 a rating of 4.
+    public Task<int?> GetLastRatingAsync(int productId, string userId)
+    {
+        if (productId == 1 && userId == "user123")
+        {
+            return Task.FromResult<int?>(4);
+        }
+        return Task.FromResult<int?>(null);
+    }
+}</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 text-center">
+                            <button id="toggle-solution-btn" class="px-6 py-3 bg-slate-700 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg">Show Solution</button>
+                        </div>
+                        
+                        <div id="solution-block" class="hidden mt-8">
+                            <h4 class="font-lexend text-2xl">Solution Breakdown</h4>
+                            <p>Here is a complete, working solution. The key is creating an <code>IAsyncActionFilter</code> because our service call is asynchronous. We use <code>[ServiceFilter]</code> because our filter has a dependency on <code>IReviewService</code>.</p>
+                             <div class="mt-4 code-block">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-md overflow-x-auto text-sm"><code class="language-csharp">// --- 1. The Custom Async Action Filter ---
+public class PreventDuplicateRatingFilter : IAsyncActionFilter
+{
+    private readonly IReviewService _reviewService;
+
+    public PreventDuplicateRatingFilter(IReviewService reviewService)
+    {
+        _reviewService = reviewService;
+    }
+
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        // --- Extract data using model binding knowledge ---
+        if (!context.ActionArguments.TryGetValue("productId", out var productIdObj) || !(productIdObj is int productId))
+        {
+            context.Result = new BadRequestObjectResult("Product ID is missing or invalid.");
+            return;
+        }
+
+        if (!context.ActionArguments.TryGetValue("model", out var modelObj) || !(modelObj is ReviewInputModel model))
+        {
+            context.Result = new BadRequestObjectResult("Review model is missing.");
+            return;
+        }
+        
+        var userId = context.HttpContext.Request.Headers["X-User-ID"].FirstOrDefault();
+        if (string.IsNullOrEmpty(userId))
+        {
+            context.Result = new BadRequestObjectResult("X-User-ID header is required.");
+            return;
+        }
+
+        // --- The core logic ---
+        var lastRating = await _reviewService.GetLastRatingAsync(productId, userId);
+
+        if (lastRating.HasValue && lastRating.Value == model.Rating)
+        {
+            // Short-circuit the pipeline!
+            context.Result = new ConflictObjectResult($"Your new rating of {model.Rating} is the same as your previous rating.");
+            return;
+        }
+
+        // --- If validation passes, proceed to the action ---
+        await next();
+    }
+}
+
+
+// --- 2. The Controller ---
+[ApiController]
+[Route("api/products")]
+public class ReviewsController : ControllerBase
+{
+    [HttpPost("{productId:int}/reviews")]
+    [ServiceFilter(typeof(PreventDuplicateRatingFilter))] // Apply the filter
+    public IActionResult AddReview(
+        [FromRoute] int productId, 
+        [FromBody] ReviewInputModel model,
+        [FromHeader(Name = "X-User-ID")] string userId) // Model bind header for internal use
+    {
+        // This code only runs if the filter allows it.
+        return Ok($"Review for product {productId} by user {userId} with rating {model.Rating} accepted.");
+    }
+}
+
+
+// --- 3. Dependency Injection Setup in Program.cs ---
+// var builder = WebApplication.CreateBuilder(args);
+// ...
+// builder.Services.AddSingleton<IReviewService, DummyReviewService>();
+// builder.Services.AddScoped<PreventDuplicateRatingFilter>(); // Register the filter itself
+// ...
+</code></pre>
+                            </div>
+                        </div>
+
+                    </section>
+                </div>
+            </main>
+             <aside class="hidden lg:block lg:col-span-3">
+                <nav id="table-of-contents" class="sticky top-8 space-y-2">
+                    <p class="text-sm font-bold uppercase text-slate-500">On this page</p>
+                </nav>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- Copy to Clipboard functionality ---
+            window.copyCode = function(button) {
+                const pre = button.parentElement.querySelector('pre');
+                const code = pre.querySelector('code');
+                navigator.clipboard.writeText(code.innerText).then(() => {
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                });
+            }
+            
+            // --- Table of Contents Generation and Logic ---
+            const tocContainer = document.getElementById('table-of-contents');
+            const sections = document.querySelectorAll('main section');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const link = tocContainer.querySelector(`a[href="#${id}"]`);
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.toc-link').forEach(l => l.classList.remove('active'));
+                        if(link) link.classList.add('active');
+                    }
+                });
+            }, { rootMargin: "-30% 0px -70% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+                const titleElement = section.querySelector('h2');
+                if (titleElement) {
+                    const id = section.id;
+                    const title = titleElement.textContent.replace('✅ ', '').replace('🧠 ', '').replace('🚀 ', '');
+                    const link = document.createElement('a');
+                    link.href = `#${id}`;
+                    link.textContent = title;
+                    link.className = 'block toc-link text-slate-600 hover:text-sky-600 transition-colors py-1 pl-4 border-l-2 border-slate-200';
+                    tocContainer.appendChild(link);
+                }
+            });
+
+            // --- Chart.js Routing Flow Diagram ---
+            const ctx = document.getElementById('routingFlowChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Request In', 'Middleware', 'Routing', 'Filters (OnExecuting)', 'Controller Action', 'Filters (OnExecuted)', 'Result Execution', 'Response Out'],
+                    datasets: [{
+                        label: 'Request Pipeline Stage',
+                        data: [10, 20, 30, 40, 50, 60, 70, 80],
+                        backgroundColor: ['#fde047', '#a5b4fc', '#67e8f9', '#f9a8d4', '#38bdf8', '#f9a8d4', '#818cf8', '#a7f3d0'],
+                        borderColor: ['#facc15', '#818cf8', '#22d3ee', '#f472b6', '#0ea5e9', '#f472b6', '#6366f1', '#6ee7b7'],
+                        borderWidth: 1, borderRadius: 5, categoryPercentage: 0.6, barPercentage: 0.7
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => [
+                                    'Client sends an HTTP request to the server.',
+                                    'Request passes through configured middleware (e.g., authentication, static files).',
+                                    'Routing middleware inspects the URL and matches it to a controller action.',
+                                    'Filters like ActionFilters run their `OnActionExecuting` methods.',
+                                    'The matched controller action method is invoked with model-bound parameters.',
+                                    'After the action returns, `OnActionExecuted` methods of filters run.',
+                                    'The action result (e.g., Ok(), NotFound()) is executed to generate the response.',
+                                    'The final HTTP response is sent back to the client.'
+                                ][context.dataIndex] || ''
+                            }
+                        },
+                        title: { display: true, text: 'ASP.NET Core Request Pipeline Flow', font: { size: 18, family: 'Lexend' }, padding: { top: 10, bottom: 20 } }
+                    },
+                    scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { weight: '600' } } } }
+                }
+            });
+
+            // --- Knowledge Check Quiz Logic ---
+            document.querySelectorAll('.quiz-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const selected = form.querySelector('input:checked');
+                    const feedbackEl = form.querySelector('.feedback');
+                    const correctAnswer = form.dataset.correct;
+                    
+                    if (!selected) {
+                        feedbackEl.textContent = 'Please select an answer.';
+                        feedbackEl.className = 'feedback incorrect';
+                        feedbackEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    const explanations = {
+                        q1: "Correct! Attribute Routing is preferred for APIs because it tightly couples the endpoint's address with its implementation, making the code easier to understand and maintain.",
+                        q2: "Correct! Result Filters run just before and after the action's result is executed. This is the perfect place to modify the final response, such as adding headers, without interfering with the action's logic.",
+                        q3: "Correct! The [ApiController] attribute enhances developer experience by automatically triggering an HTTP 400 response for invalid models, saving you from writing boilerplate validation checks in every action."
+                    };
+
+                    if (selected.value === correctAnswer) {
+                        feedbackEl.innerHTML = `<strong>Correct!</strong> ${explanations[selected.name]}`;
+                        feedbackEl.className = 'feedback correct';
+                    } else {
+                        feedbackEl.innerHTML = `<strong>Incorrect.</strong> ${explanations[selected.name]}`;
+                        feedbackEl.className = 'feedback incorrect';
+                    }
+                    
+                    feedbackEl.classList.remove('hidden');
+                    form.querySelectorAll('input').forEach(input => input.disabled = true);
+                    form.querySelector('button').disabled = true;
+                    form.querySelector('button').classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            });
+
+            // --- Self-Assessment Solution Toggle ---
+            const toggleBtn = document.getElementById('toggle-solution-btn');
+            const solutionBlock = document.getElementById('solution-block');
+            if(toggleBtn && solutionBlock) {
+                toggleBtn.addEventListener('click', () => {
+                    const isHidden = solutionBlock.classList.contains('hidden');
+                    solutionBlock.classList.toggle('hidden');
+                    toggleBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>
+
