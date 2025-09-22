@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 53: Authentication (JWT) - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #4f46e5;
+            border-left-color: #4f46e5;
+            font-weight: 600;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.8rem;
+            background-color: #4a5568;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s ease-in-out;
+        }
+        .copy-btn:hover {
+            opacity: 1;
+            background-color: #2d3748;
+        }
+        .copy-btn.copied {
+            background-color: #2f855a;
+        }
+        .quiz-option.selected {
+            background-color: #e0e7ff;
+            border-color: #6366f1;
+        }
+        .quiz-option.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .diagram-box {
+            border: 2px solid #e5e7eb;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 0.5rem;
+            font-weight: 500;
+        }
+        .diagram-arrow {
+            position: relative;
+            flex-grow: 1;
+            height: 2px;
+            background-color: #9ca3af;
+            margin: 0 1rem;
+        }
+        .diagram-arrow::after {
+            content: '►';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .diagram-step {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .diagram-step.active .diagram-box {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .diagram-step.active .diagram-arrow {
+            background-color: #4f46e5;
+        }
+        .diagram-step.active .diagram-arrow::after {
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: A two-column single-page application. The left, main column presents a comprehensive, sequential learning module on JWT Authentication, flowing from theory to practical application. The right column features a sticky table of contents for easy navigation. This structure was chosen to provide a guided learning path for a complex topic while allowing experienced users to jump directly to sections of interest, maximizing usability for all skill levels. Interactivity is layered on top with a JWT decoder, an interactive sequence diagram, and quizzes to reinforce learning. -->
+    <!-- Visualization & Content Choices: 
+    - Report Info: Authentication vs. Authorization -> Goal: Compare -> Viz: HTML Table -> Interaction: Static -> Justification: Clear, direct comparison of definitions and examples.
+    - Report Info: JWT Structure -> Goal: Organize/Inform -> Viz: Interactive HTML/CSS component -> Interaction: User can paste a JWT to see it decoded into Header, Payload, Signature -> Justification: Provides a hands-on tool to understand the abstract structure of a JWT.
+    - Report Info: Authentication Sequence Flow -> Goal: Organize/Change -> Viz: HTML/CSS/JS Diagram -> Interaction: Clickable steps highlight the current stage of the flow -> Justification: Visually explains the multi-step process in a dynamic, easy-to-follow manner, avoiding static and forbidden SVG/Mermaid.
+    - Report Info: Knowledge Check -> Goal: Assess -> Viz: Interactive HTML Form -> Interaction: Multiple-choice questions with instant feedback -> Justification: Reinforces learning through active recall. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=8" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+            <main class="lg:col-span-3 space-y-16">
+                <header class="pb-6 border-b border-slate-200">
+                    <p class="text-indigo-600 font-semibold">Day 53</p>
+                    <h1 class="font-lexend text-4xl font-bold text-slate-900 mt-2">Authentication (JWT)</h1>
+                    <p class="mt-4 text-lg text-slate-600">Mastering stateless authentication with JSON Web Tokens to build secure, scalable, and modern APIs. This is your one-stop guide, covering everything from fundamental theory to advanced implementation patterns.</p>
+                </header>
+                
+                <section id="theory" class="space-y-12">
+                    <h2 class="font-lexend text-3xl font-bold text-slate-900 border-b border-slate-200 pb-4">✅ Theory Topics</h2>
+
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">1. Authentication vs. Authorization: A Deep Dive</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed">
+                            In the world of software security, Authentication (AuthN) and Authorization (AuthZ) are fundamental pillars. While they work together, they serve distinct and separate purposes. Confusing them can lead to critical security vulnerabilities. Let's break them down completely.
+                        </p>
+                        
+                        <p class="mt-4 text-slate-600 leading-relaxed">
+                            <strong>Authentication is the process of proving you are who you say you are.</strong> It's the front door. The system doesn't know you yet, and its only goal is to verify your claimed identity by checking a secret only you should know.
+                        </p>
+
+                        <p class="mt-4 text-slate-600 leading-relaxed">
+                           <strong>Authorization is the process of determining if you have permission to do what you're trying to do.</strong> This happens *after* you've successfully authenticated. The system knows who you are now, and it checks an access control list or a set of rules to see if your identity is allowed to perform the requested action.
+                        </p>
+
+                        <div class="mt-6 bg-indigo-50 border-l-4 border-indigo-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-indigo-800">Analogy: The Airport</p>
+                            <p class="mt-2 text-indigo-700">
+                                <strong>Authentication</strong> is when you present your passport and boarding pass at the check-in counter. The agent verifies your identity against a government-issued document. You've proven you are John Smith.
+                                <br><br>
+                                <strong>Authorization</strong> is what your boarding pass allows you to do. It grants you permission to go through security, board a specific flight (e.g., Flight 123 to London), and sit in a specific seat (e.g., 24A). It does *not* authorize you to board a different flight or enter the cockpit.
+                            </p>
+                        </div>
+                        <div class="mt-8 overflow-x-auto">
+                            <table class="w-full min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Concept</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Authentication (AuthN)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Authorization (AuthZ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    <tr>
+                                        <td class="px-6 py-4 font-semibold">Core Question</td>
+                                        <td class="px-6 py-4 text-slate-600">"Who are you?"</td>
+                                        <td class="px-6 py-4 text-slate-600">"What are you allowed to do?"</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-semibold">Implementation</td>
+                                        <td class="px-6 py-4 text-slate-600">Handled by login forms, identity providers (e.g., Google Sign-In), API key validation. In .NET, this is managed by the Authentication middleware.</td>
+                                        <td class="px-6 py-4 text-slate-600">Handled by checking roles, permissions (claims), or access control policies. In .NET, this is managed by the Authorization middleware and attributes like `[Authorize(Roles = "Admin")]`.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-semibold">State</td>
+                                        <td class="px-6 py-4 text-slate-600">Binary: you are either authenticated or anonymous.</td>
+                                        <td class="px-6 py-4 text-slate-600">Granular: you can be authorized for some actions but not others.</td>
+                                    </tr>
+                                     <tr>
+                                        <td class="px-6 py-4 font-semibold">HTTP Response</td>
+                                        <td class="px-6 py-4 text-slate-600">Failure results in `401 Unauthorized`. (Ironically, it means "Unauthenticated").</td>
+                                        <td class="px-6 py-4 text-slate-600">Failure results in `403 Forbidden`. The server knows who you are, but you lack permissions.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">2. JWT Structure: The Anatomy of a Token</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed">
+                            A JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed. JWTs are often called "stateless" because all the information needed to verify the user is contained within the token itself, removing the need for the server to store session state.
+                        </p>
+                         <p class="mt-4 text-slate-600 leading-relaxed">
+                            A JWT consists of three Base64Url-encoded parts separated by dots (`.`):
+                        </p>
+                        <div class="mt-6 p-4 bg-slate-800 rounded-lg font-mono text-sm text-center break-all">
+                            <span class="text-cyan-400">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span>.<span class="text-pink-400">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ</span>.<span class="text-orange-400">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
+                        </div>
+                         <div class="mt-8 grid md:grid-cols-3 gap-6">
+                            <div class="bg-white p-4 rounded-lg border">
+                                <h4 class="font-semibold text-cyan-700">Part 1: Header</h4>
+                                <p class="text-sm text-slate-600 mt-2">Metadata about the token. Typically consists of two parts: the token type (`typ`), which is always `JWT`, and the signing algorithm (`alg`) being used, such as HMAC SHA256 (`HS256`) or RSA (`RS256`).</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-lg border">
+                                <h4 class="font-semibold text-pink-700">Part 2: Payload</h4>
+                                <p class="text-sm text-slate-600 mt-2">Contains the claims. Claims are statements about an entity (typically, the user) and additional data. There are three types of claims: registered, public, and private claims.</p>
+                            </div>
+                             <div class="bg-white p-4 rounded-lg border">
+                                <h4 class="font-semibold text-orange-700">Part 3: Signature</h4>
+                                <p class="text-sm text-slate-600 mt-2">The signature is used to verify that the sender of the JWT is who it says it is and to ensure that the message wasn't changed along the way. It is created by signing the encoded header, the encoded payload, a secret, using the algorithm specified in the header.</p>
+                            </div>
+                        </div>
+
+                        <div id="jwt-decoder" class="mt-8">
+                            <h4 class="font-lexend text-xl font-semibold text-slate-800">Interactive JWT Decoder</h4>
+                            <p class="text-slate-600 mt-2">Paste a JWT (like the one above) to see its decoded components.</p>
+                            <textarea id="jwt-input" class="w-full mt-4 p-3 border border-slate-300 rounded-md font-mono text-sm" rows="3" placeholder="Paste your JWT here..."></textarea>
+                            <div class="mt-4 grid md:grid-cols-3 gap-4">
+                                <div>
+                                    <h5 class="font-semibold text-cyan-600">Header (Algorithm & Token Type)</h5>
+                                    <pre id="jwt-header" class="mt-2 p-3 bg-slate-100 rounded-md text-sm whitespace-pre-wrap break-all min-h-[100px]"></pre>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-pink-600">Payload (Data & Claims)</h5>
+                                    <pre id="jwt-payload" class="mt-2 p-3 bg-slate-100 rounded-md text-sm whitespace-pre-wrap break-all min-h-[100px]"></pre>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-orange-600">Signature (Verification)</h5>
+                                    <pre id="jwt-signature" class="mt-2 p-3 bg-slate-100 rounded-md text-sm whitespace-pre-wrap break-all min-h-[100px]"></pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 class="font-lexend text-xl font-semibold text-slate-800 mt-8">Deep Dive into Payload Claims</h4>
+                        <p class="mt-2 text-slate-600">The payload is the heart of the JWT. Here's a breakdown of the most common registered claims:</p>
+                        <table class="w-full mt-4 min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Claim</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200 text-sm">
+                                    <tr>
+                                        <td class="px-6 py-4 font-mono font-semibold">iss</td>
+                                        <td class="px-6 py-4">Issuer</td>
+                                        <td class="px-6 py-4 text-slate-600">Identifies the principal that issued the JWT.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-mono font-semibold">sub</td>
+                                        <td class="px-6 py-4">Subject</td>
+                                        <td class="px-6 py-4 text-slate-600">Identifies the subject of the JWT (e.g., the user's ID). This is often used as the primary identifier.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-mono font-semibold">aud</td>
+                                        <td class="px-6 py-4">Audience</td>
+                                        <td class="px-6 py-4 text-slate-600">Identifies the recipients that the JWT is intended for. The recipient must identify itself with this value.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 font-mono font-semibold">exp</td>
+                                        <td class="px-6 py-4">Expiration Time</td>
+                                        <td class="px-6 py-4 text-slate-600">Identifies the expiration time on or after which the JWT MUST NOT be accepted for processing. (Unix timestamp).</td>
+                                    </tr>
+                                     <tr>
+                                        <td class="px-6 py-4 font-mono font-semibold">iat</td>
+                                        <td class="px-6 py-4">Issued At</td>
+                                        <td class="px-6 py-4 text-slate-600">Identifies the time at which the JWT was issued. (Unix timestamp).</td>
+                                    </tr>
+                                     <tr>
+                                        <td class="px-6 py-4 font-mono font-semibold">jti</td>
+                                        <td class="px-6 py-4">JWT ID</td>
+                                        <td class="px-6 py-4 text-slate-600">Provides a unique identifier for the JWT. Can be used to prevent the token from being replayed.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                    </article>
+                    
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">3. Implementing JWT authentication in .NET Core</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed">
+                            Integrating JWT authentication into a .NET API is a streamlined process thanks to built-in libraries. It primarily involves configuring services in `Program.cs` to tell the application how to validate incoming tokens.
+                        </p>
+                        <h4 class="font-lexend text-xl font-semibold text-slate-800 mt-6">Step 1: Install NuGet Packages</h4>
+                        <p class="mt-2 text-slate-600">First, you need the necessary tools. `Microsoft.AspNetCore.Authentication.JwtBearer` is the core package that provides the JWT authentication handler.</p>
+                        <div class="code-block mt-4">
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-shell">dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer</code></pre>
+                        </div>
+
+                        <h4 class="font-lexend text-xl font-semibold text-slate-800 mt-6">Step 2: Configure `appsettings.json`</h4>
+                        <p class="mt-2 text-slate-600">Externalize your JWT settings. Never hard-code secrets or configuration values. `Key` must be a sufficiently long and complex string to be secure.</p>
+                         <div class="code-block mt-4">
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-json">{
+  "Jwt": {
+    "Issuer": "https://your-api.com",
+    "Audience": "https://your-clients.com",
+    "Key": "ThisIsAStrongAndSecretKeyThatShouldBeStoredSecurely"
+  }
+}</code></pre>
+                        </div>
+
+                        <h4 class="font-lexend text-xl font-semibold text-slate-800 mt-6">Step 3: Configure Services and Middleware in `Program.cs`</h4>
+                        <p class="mt-2 text-slate-600">This is the most critical step. Here you define the rules for token validation and register the necessary middleware.</p>
+                        <div class="code-block mt-4">
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// In Program.cs
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+
+// 1. Add Authentication Services
+builder.Services.AddAuthentication(options =>
+{
+    // Set the default schemes for different operations
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+// 2. Configure the JWT Bearer Handler
+.AddJwtBearer(options =>
+{
+    // Define the parameters for validating incoming tokens
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        // --- Validation Rules ---
+        ValidateIssuer = true, // Check if the 'iss' claim matches ValidIssuer
+        ValidateAudience = true, // Check if the 'aud' claim matches ValidAudience
+        ValidateLifetime = true, // Check if the token is not expired
+        ValidateIssuerSigningKey = true, // Validate the signature of the token
+
+        // --- Required Values ---
+        ValidIssuer = config["Jwt:Issuer"],
+        ValidAudience = config["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]))
+    };
+});
+
+// 3. Add Authorization Services (works hand-in-hand with Authentication)
+builder.Services.AddAuthorization();
+// ... other services
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+// 4. Add Authentication Middleware to the pipeline
+// This middleware inspects incoming requests for the Authorization header
+// and populates HttpContext.User if the token is valid.
+app.UseAuthentication();
+
+// 5. Add Authorization Middleware to the pipeline
+// This middleware checks if the authenticated user has the necessary
+// permissions to access the requested endpoint (e.g., checks roles).
+// IMPORTANT: UseAuthentication() must come BEFORE UseAuthorization().
+app.UseAuthorization();
+
+// ... other middleware
+app.Run();</code></pre>
+                        </div>
+                    </article>
+
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">4. Refresh Tokens and Security Best Practices</h3>
+                        <p class="mt-4 text-slate-600 leading-relaxed">
+                           An access token's short lifespan is a crucial security feature. If it's compromised, the window of opportunity for an attacker is small. However, this creates a usability problem. Refresh tokens solve this by allowing a client to obtain a new access token without forcing the user to re-enter their credentials.
+                        </p>
+                        <h4 class="font-lexend text-xl font-semibold text-slate-800 mt-6">The Refresh Token Flow</h4>
+                        <ol class="mt-4 list-decimal list-inside space-y-2 text-slate-600">
+                           <li>User logs in. Server returns both an Access Token (short-lived) and a Refresh Token (long-lived).</li>
+                           <li>Client stores both tokens securely. It uses the Access Token for API calls.</li>
+                           <li>The Access Token expires. The API returns a `401 Unauthorized` error.</li>
+                           <li>The client detects the 401, then sends its Refresh Token to a special `/refresh` endpoint.</li>
+                           <li>The server validates the Refresh Token. If valid, it issues a *new* Access Token and often a *new* Refresh Token (this is called rotation).</li>
+                           <li>The client replaces its old tokens with the new ones and retries the original API call.</li>
+                        </ol>
+                        
+                         <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                            <p class="font-semibold text-yellow-800">Critical Security Best Practices:</p>
+                            <ul class="mt-2 text-yellow-700 list-disc list-inside space-y-2">
+                                <li><strong>Secure Storage:</strong> This cannot be overstated.
+                                    <ul class="list-['-_'] list-inside ml-4">
+                                        <li><strong>Web Clients:</strong> Use an `HttpOnly`, `Secure`, `SameSite=Strict` cookie. This prevents JavaScript from accessing the token, mitigating XSS attacks.</li>
+                                        <li><strong>Mobile Clients:</strong> Use the platform's secure storage mechanism (e.g., Keychain on iOS, Keystore on Android).</li>
+                                        <li><strong>Server-Side:</strong> Never store refresh tokens in plain text. Hash them like passwords.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Refresh Token Rotation:</strong> When a refresh token is used, immediately invalidate it and issue a new one. If an attacker steals a refresh token and uses it, the legitimate user's subsequent attempt will fail. This allows you to detect the breach and force a logout of all sessions for that user.</li>
+                                <li><strong>Revocation:</strong> Always provide an endpoint to revoke refresh tokens (e.g., on logout). This immediately invalidates the session.</li>
+                            </ul>
+                        </div>
+                    </article>
+                </section>
+
+                <section id="coding" class="space-y-12">
+                     <h2 class="font-lexend text-3xl font-bold text-slate-900 border-b border-slate-200 pb-4">✅ Coding Practice</h2>
+                     <p class="text-slate-600">Here are complete, commented C# solutions for the coding challenges. These examples demonstrate how to apply the theory in a real .NET Core API project.</p>
+
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">[Easy] Generate JWT Token</h3>
+                        <p class="mt-2 text-slate-600">This service method takes user details (like ID and email) and generates a signed JWT. It uses claims to embed user information into the token payload.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-btn">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+public class TokenService
+{
+    private readonly IConfiguration _config;
+
+    public TokenService(IConfiguration config)
+    {
+        _config = config;
+    }
+
+    public string GenerateToken(string userId, string email, IEnumerable<string> roles)
+    {
+        // Retrieve the secret key from configuration
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+        // Create signing credentials using the key and a secure algorithm
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        // Define the claims to be included in the token
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, userId), // Subject: a unique identifier for the user
+            new Claim(JwtRegisteredClaim-Names.Email, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // JWT ID: ensures token is unique
+        };
+
+        // Add role claims for authorization
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+        
+        // Describe the token to be created
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddMinutes(15), // Set a short expiration for the access token
+            Issuer = _config["Jwt:Issuer"],
+            Audience = _config["Jwt:Audience"],
+            SigningCredentials = credentials
+        };
+
+        // Create and write the token
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+
+        return tokenHandler.WriteToken(token);
+    }
+}</code></pre>
+                        </div>
+                    </article>
+
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">[Medium] Secure API Endpoints with [Authorize]</h3>
+                        <p class="mt-2 text-slate-600">The `[Authorize]` attribute is a powerful declarative way to protect your API endpoints. Only authenticated requests with a valid JWT will be allowed access.</p>
+                         <div class="code-block mt-4">
+                            <button class="copy-btn">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize] // This attribute protects all methods in this controller
+public class AccountController : ControllerBase
+{
+    [HttpGet("profile")]
+    public IActionResult GetUserProfile()
+    {
+        // Inside an authorized endpoint, `HttpContext.User` is populated by the authentication middleware.
+        // We can safely access user claims from this `ClaimsPrincipal` object.
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Gets the 'sub' claim from the token
+        var userEmail = User.FindFirstValue(ClaimTypes.Email);
+
+        if (userId == null)
+        {
+            // This check is good practice but often redundant, as the [Authorize]
+            // attribute would have already rejected the request if the token was invalid.
+            return Unauthorized();
+        }
+
+        return Ok(new { Id = userId, Email = userEmail });
+    }
+
+    [HttpGet("admin-data")]
+    [Authorize(Roles = "Admin,SuperAdmin")] // This endpoint is further restricted to specific roles.
+                                          // A user must have EITHER "Admin" OR "SuperAdmin" role claim.
+    public IActionResult GetAdminData()
+    {
+        return Ok(new { Message = "This is sensitive admin data, accessed by an authorized user." });
+    }
+}</code></pre>
+                        </div>
+                    </article>
+                    
+                    <article>
+                        <h3 class="font-lexend text-2xl font-semibold text-slate-800">[Hard] Implement Refresh Token Workflow</h3>
+                        <p class="mt-2 text-slate-600">This involves a more complex flow with a dedicated endpoint to refresh tokens. We need a way to generate, store, and validate refresh tokens.</p>
+                        <div class="code-block mt-4">
+                            <button class="copy-btn">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// In your authentication or token service
+public class RefreshTokenService 
+{
+    // WARNING: This in-memory dictionary is for DEMONSTRATION ONLY.
+    // In a real application, use a persistent, secure database (e.g., a table `UserRefreshTokens`).
+    private static readonly Dictionary<string, (string refreshTokenHash, DateTime expiryDate)> _refreshTokens = new();
+
+    public string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+
+    public void StoreRefreshToken(string userId, string token)
+    {
+        // In a real DB, you would hash the token before storing it
+        var refreshTokenHash = Hash(token); // Assume Hash() is a secure hashing function like SHA256
+        _refreshTokens[userId] = (refreshTokenHash, DateTime.UtcNow.AddDays(7));
+    }
+    
+    public bool ValidateRefreshToken(string userId, string token)
+    {
+        if (_refreshTokens.TryGetValue(userId, out var storedToken))
+        {
+            var tokenHash = Hash(token);
+            // Compare hashes and check expiry
+            return storedToken.refreshTokenHash == tokenHash && storedToken.expiryDate > DateTime.UtcNow;
+        }
+        return false;
+    }
+}
+
+
+// In your AuthController
+[HttpPost("refresh")]
+public IActionResult Refresh(RefreshTokenRequest request)
+{
+    var principal = GetPrincipalFromExpiredToken(request.AccessToken);
+    var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (userId == null || !_refreshTokenService.ValidateRefreshToken(userId, request.RefreshToken))
+    {
+        return BadRequest("Invalid client request: Invalid token or refresh token.");
+    }
+    
+    // Token rotation: Issue new tokens and invalidate the old refresh token
+    var newAccessToken = _tokenService.GenerateToken(userId, principal.FindFirstValue(ClaimTypes.Email), new[] {"User"});
+    var newRefreshToken = _refreshTokenService.GenerateRefreshToken();
+    _refreshTokenService.StoreRefreshToken(userId, newRefreshToken); // This overwrites/invalidates the old one
+
+    return Ok(new { AccessToken = newAccessToken, RefreshToken = newRefreshToken });
+}
+
+// Helper method to read claims from an expired token without validating its lifetime
+private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+{
+    var tokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateAudience = false, // We don't care about audience for this
+        ValidateIssuer = false, // or issuer
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"])),
+        ValidateLifetime = false // HERE is the key: we accept expired tokens
+    };
+
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+    
+    // Security check: ensure the algorithm is what we expect
+    if (securityToken is not JwtSecurityToken jwtSecurityToken || 
+        !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+    {
+        throw new SecurityTokenException("Invalid token");
+    }
+
+    return principal;
+}</code></pre>
+                        </div>
+                    </article>
+                </section>
+
+                <section id="uml" class="space-y-8">
+                    <h2 class="font-lexend text-3xl font-bold text-slate-900 border-b border-slate-200 pb-4">✅ UML/Schema Task</h2>
+                    <h3 class="font-lexend text-2xl font-semibold text-slate-800">Authentication Sequence Diagram</h3>
+                    <p class="text-slate-600">This diagram illustrates the complete authentication flow from login to accessing a protected resource. Click on each step to see a description of what's happening.</p>
+                    <div id="sequence-diagram" class="mt-6 space-y-4">
+                        <div class="grid grid-cols-3 gap-4 font-bold text-center">
+                            <p>Client (e.g., Browser)</p>
+                            <p>Authentication Server</p>
+                            <p>Resource Server (API)</p>
+                        </div>
+
+                        <div id="step-1" class="diagram-step active">
+                            <div class="flex items-center">
+                                <div class="diagram-box w-1/3">User Login</div>
+                                <div class="diagram-arrow w-1/3"></div>
+                                <div class="diagram-box w-1/3 bg-slate-100">Validate Credentials</div>
+                            </div>
+                            <p id="desc-1" class="mt-2 text-sm text-slate-600"><strong>1. Submit Credentials:</strong> The user submits their username and password via an HTTPS POST request. The server validates these against a user database (e.g., by comparing a hashed password).</p>
+                        </div>
+                        
+                        <div id="step-2" class="diagram-step">
+                             <div class="flex items-center flex-row-reverse">
+                                <div class="diagram-box w-1/3">Receive Tokens</div>
+                                <div class="diagram-arrow w-1/3 transform rotate-180"></div>
+                                <div class="diagram-box w-1/3 bg-slate-100">Issue JWT & Refresh Token</div>
+                            </div>
+                            <p id="desc-2" class="mt-2 text-sm text-slate-600 hidden"><strong>2. Issue Tokens:</strong> On successful validation, the server generates a short-lived Access Token (JWT) and a long-lived Refresh Token. It returns both in the response body.</p>
+                        </div>
+                        
+                        <div id="step-3" class="diagram-step">
+                             <div class="flex items-center">
+                                <div class="w-1/3"></div>
+                                <div class="diagram-box w-1/3">Request Protected Resource</div>
+                                <div class="diagram-arrow w-1/3"></div>
+                                <div class="diagram-box w-1/3 bg-slate-100">Validate JWT</div>
+                            </div>
+                            <p id="desc-3" class="mt-2 text-sm text-slate-600 hidden"><strong>3. Access Protected Resource:</strong> The client makes a request to the API, including the JWT in the `Authorization: Bearer <token>` header.</p>
+                        </div>
+
+                        <div id="step-4" class="diagram-step">
+                            <div class="flex items-center flex-row-reverse">
+                                <div class="w-1/3"></div>
+                                <div class="diagram-box w-1/3">Receive Data</div>
+                                <div class="diagram-arrow w-1/3 transform rotate-180"></div>
+                                <div class="diagram-box w-1/3 bg-slate-100">Return Resource</div>
+                            </div>
+                            <p id="desc-4" class="mt-2 text-sm text-slate-600 hidden"><strong>4. Verify and Respond:</strong> The API's authentication middleware intercepts the request. It validates the JWT's signature, issuer, audience, and expiration. If valid, it grants access and the controller returns the protected data.</p>
+                        </div>
+
+                    </div>
+                </section>
+                
+                <section id="casestudy" class="space-y-8">
+                    <h2 class="font-lexend text-3xl font-bold text-slate-900 border-b border-slate-200 pb-4">✅ Case Study</h2>
+                    <h3 class="font-lexend text-2xl font-semibold text-slate-800">Building a Secure Banking API</h3>
+                    <p class="text-slate-600">Let's apply these concepts to a practical scenario: a simple Banking API. The goal is to ensure that only authenticated users can access their own account information and that only authorized bank employees can perform sensitive actions like approving loans.</p>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h4 class="font-lexend text-xl font-semibold text-slate-800">Scenario Breakdown</h4>
+                        <ul class="mt-4 space-y-3 text-slate-600 list-disc list-inside">
+                            <li><strong>Public Endpoint:</strong> `POST /api/auth/login` - Anyone can attempt to log in. This endpoint takes credentials and, on success, returns an access token and a refresh token.</li>
+                            <li><strong>Protected Endpoint:</strong> `GET /api/accounts/my-balance` - Requires a valid JWT. The API identifies the user from the `sub` (subject) claim in the token to fetch the correct account balance. This prevents User A from seeing User B's balance.</li>
+                            <li><strong>Role-Protected Endpoint:</strong> `POST /api/accounts/approve-loan` - Requires a valid JWT *and* the token's payload must contain a claim of `"role": "LoanOfficer"`. A regular customer's token will not have this claim, and they will receive a `403 Forbidden` response.</li>
+                            <li><strong>Refresh Endpoint:</strong> `POST /api/auth/refresh` - Takes an expired access token and a valid refresh token to issue a new set of tokens, maintaining the user's session.</li>
+                        </ul>
+                    </div>
+
+                    <h4 class="font-lexend text-xl font-semibold text-slate-800">Implementation Snapshot: `AccountsController`</h4>
+                    <p class="text-slate-600">This controller demonstrates how the `[Authorize]` attribute enforces these security rules. The logic for checking permissions isn't written manually in every method; the framework handles it based on the attributes and the claims present in the validated token.</p>
+                     <div class="code-block mt-4">
+                        <button class="copy-btn">Copy</button>
+                        <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">[ApiController]
+[Route("api/[controller]")]
+[Authorize] // All actions in this controller require a valid token, by default.
+public class AccountsController : ControllerBase
+{
+    private readonly IAccountService _accountService;
+
+    public AccountsController(IAccountService accountService)
+    {
+        _accountService = accountService;
+    }
+
+    [HttpGet("my-balance")]
+    public async Task<IActionResult> GetMyBalance()
+    {
+        // The [Authorize] attribute ensures we have a valid `User` object here.
+        // We extract the user's unique ID from the token's 'sub' claim.
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null) return Unauthorized(); // Failsafe
+
+        // The business logic only ever receives the validated user ID.
+        var balance = await _accountService.GetBalanceForUserAsync(userId);
+        return Ok(new { Balance = balance });
+    }
+
+    [HttpPost("approve-loan")]
+    [Authorize(Roles = "LoanOfficer, Admin")] // Layered authorization: requires authentication AND a specific role.
+    public async Task<IActionResult> ApproveLoan([FromBody] LoanApprovalRequest request)
+    {
+        var approverId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        // The authorization middleware has already verified the user has the required role.
+        // If they didn't, this code would never be executed; a 403 Forbidden would be returned.
+        
+        await _accountService.ApproveLoanAsync(request.LoanId, approverId);
+        return Ok(new { Message = "Loan approved successfully." });
+    }
+}</code></pre>
+                    </div>
+                </section>
+
+                <section id="quiz" class="space-y-8">
+                    <h2 class="font-lexend text-3xl font-bold text-slate-900 border-b border-slate-200 pb-4">🧠 Knowledge Check</h2>
+                    <p class="text-slate-600">Test your understanding of JWT and authentication concepts.</p>
+                    <div id="quiz-container" class="space-y-6"></div>
+                    <button id="submit-quiz-btn" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Submit Answers</button>
+                    <div id="quiz-results" class="hidden mt-4 font-semibold"></div>
+                </section>
+
+                <section id="challenge" class="space-y-8">
+                    <h2 class="font-lexend text-3xl font-bold text-slate-900 border-b border-slate-200 pb-4">💪 Self-Assessment Challenge</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-lexend text-xl font-semibold text-slate-800">Task: Implement Token Revocation</h3>
+                        <p class="mt-3 text-slate-600">Your task is to extend the refresh token implementation with a revocation feature. Create a new endpoint `POST /api/auth/logout` that invalidates the user's current refresh token, effectively ending their session.</p>
+                        <h4 class="font-semibold text-slate-700 mt-4">Requirements:</h4>
+                        <ul class="mt-2 list-disc list-inside text-slate-600 space-y-1">
+                            <li>The endpoint must be protected with `[Authorize]`.</li>
+                            <li>It should identify the user from their active access token (`sub` claim).</li>
+                            <li>It should find and delete/invalidate the refresh token associated with that user from your storage mechanism (the dictionary in our example, or a database in a real app).</li>
+                            <li>Subsequent calls to `/api/auth/refresh` with the now-revoked refresh token should fail.</li>
+                        </ul>
+                        <button id="toggle-solution-btn" class="mt-6 bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Show Solution</button>
+                        <div id="solution" class="hidden mt-4">
+                             <div class="code-block mt-4">
+                                <button class="copy-btn">Copy</button>
+                                <pre class="bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto"><code class="language-csharp">// In RefreshTokenService
+public void RevokeToken(string userId)
+{
+    // Simply remove the token from our storage.
+    // In a real database, you might set an `IsRevoked` flag or delete the row.
+    if (_refreshTokens.ContainsKey(userId))
+    {
+        _refreshTokens.Remove(userId);
+    }
+}
+
+// In AuthController
+[HttpPost("logout")]
+[Authorize] // Requires a valid access token to log out.
+public IActionResult Logout()
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return BadRequest("User not found in token.");
+    }
+
+    _refreshTokenService.RevokeToken(userId);
+    
+    // Return a success response. The client should now delete its tokens.
+    return Ok(new { Message = "Successfully logged out." });
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            
+            <aside class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-24">
+                    <h3 class="font-lexend font-semibold text-lg text-slate-800 mb-4">On this page</h3>
+                    <nav id="toc" class="text-sm">
+                        <ul>
+                            <li><a href="#theory" class="toc-link block py-2 border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-colors">Theory Topics</a></li>
+                            <li><a href="#coding" class="toc-link block py-2 border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-colors">Coding Practice</a></li>
+                            <li><a href="#uml" class="toc-link block py-2 border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-colors">UML/Schema Task</a></li>
+                            <li><a href="#casestudy" class="toc-link block py-2 border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-colors">Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block py-2 border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block py-2 border-l-2 border-slate-200 pl-4 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-colors">Self-Assessment Challenge</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const copyButtons = document.querySelectorAll('.copy-btn');
+    copyButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            if (pre && pre.querySelector('code')) {
+                copyCode(pre.querySelector('code'), btn);
+            }
+        });
+    });
+
+    async function copyCode(codeElement, button) {
+        if (!codeElement) return;
+        const codeToCopy = codeElement.innerText;
+        try {
+            await navigator.clipboard.writeText(codeToCopy);
+            button.textContent = 'Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = 'Copy';
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            button.textContent = 'Error';
+        }
+    }
+
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const sections = document.querySelectorAll('main section[id]');
+    
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            const id = entry.target.getAttribute('id');
+            const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+            if (entry.isIntersecting) {
+                tocLinks.forEach(link => link.classList.remove('active'));
+                tocLink.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    const jwtInput = document.getElementById('jwt-input');
+    const jwtHeader = document.getElementById('jwt-header');
+    const jwtPayload = document.getElementById('jwt-payload');
+    const jwtSignature = document.getElementById('jwt-signature');
+    const defaultJwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
+    function base64UrlDecode(str) {
+        let output = str.replace(/-/g, '+').replace(/_/g, '/');
+        switch (output.length % 4) {
+            case 0: break;
+            case 2: output += '=='; break;
+            case 3: output += '='; break;
+            default: throw new Error('Illegal base64url string!');
+        }
+        try {
+            return decodeURIComponent(atob(output).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        } catch (e) {
+            return atob(output);
+        }
+    }
+
+    function decodeJwt(token) {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            jwtHeader.textContent = 'Invalid JWT';
+            jwtPayload.textContent = 'Invalid JWT';
+            jwtSignature.textContent = 'Invalid JWT';
+            return;
+        }
+
+        try {
+            const header = JSON.parse(base64UrlDecode(parts[0]));
+            const payload = JSON.parse(base64UrlDecode(parts[1]));
+            
+            jwtHeader.textContent = JSON.stringify(header, null, 2);
+            jwtPayload.textContent = JSON.stringify(payload, null, 2);
+            jwtSignature.textContent = parts[2];
+        } catch (e) {
+            jwtHeader.textContent = 'Error decoding header';
+            jwtPayload.textContent = 'Error decoding payload';
+            jwtSignature.textContent = parts[2] || 'Invalid signature part';
+        }
+    }
+    
+    jwtInput.addEventListener('input', (e) => decodeJwt(e.target.value));
+    decodeJwt(defaultJwt);
+    
+    const toggleSolutionBtn = document.getElementById('toggle-solution-btn');
+    const solutionDiv = document.getElementById('solution');
+    toggleSolutionBtn.addEventListener('click', () => {
+        const isHidden = solutionDiv.classList.contains('hidden');
+        solutionDiv.classList.toggle('hidden');
+        toggleSolutionBtn.textContent = isHidden ? 'Hide Solution' : 'Show Solution';
+    });
+
+    const diagramSteps = document.querySelectorAll('.diagram-step');
+    diagramSteps.forEach(step => {
+        step.addEventListener('click', () => {
+            diagramSteps.forEach(s => {
+                s.classList.remove('active');
+                const desc = document.getElementById(`desc-${s.id.split('-')[1]}`);
+                if (desc) desc.classList.add('hidden');
+            });
+            step.classList.add('active');
+            const activeDesc = document.getElementById(`desc-${step.id.split('-')[1]}`);
+            if (activeDesc) activeDesc.classList.remove('hidden');
+        });
+    });
+
+    const quizData = [
+        {
+            question: "An API returns a `403 Forbidden` error. What is the most likely cause?",
+            options: ["The user's password was incorrect.", "The user sent an expired JWT access token.", "The user is authenticated but lacks the necessary roles or permissions for the action.", "The user sent no `Authorization` header."],
+            answer: "The user is authenticated but lacks the necessary roles or permissions for the action."
+        },
+        {
+            question: "Which part of a JWT is used to verify its integrity and authenticity?",
+            options: ["Header", "Signature", "Payload", "JTI Claim"],
+            answer: "Signature"
+        },
+        {
+            question: "What is the primary purpose of Refresh Token Rotation?",
+            options: ["To make access tokens expire faster.", "To help detect if a refresh token has been stolen and used by an attacker.", "To reduce the size of the JWT payload.", "To allow users to stay logged in forever."],
+            answer: "To help detect if a refresh token has been stolen and used by an attacker."
+        },
+        {
+            question: "In .NET, what is the correct order for authentication and authorization middleware in `Program.cs`?",
+            options: ["`app.UseAuthorization()` then `app.UseAuthentication()`", "`app.UseAuthentication()` then `app.UseAuthorization()`", "The order does not matter.", "They should be combined into a single `app.UseAuth()` call."],
+            answer: "`app.UseAuthentication()` then `app.UseAuthorization()`"
+        },
+        {
+            question: "Which of the following is a 'registered claim' in a JWT payload?",
+            options: ["`userId`", "`role`", "`exp` (Expiration Time)", "`permission`"],
+            answer: "`exp` (Expiration Time)"
+        }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    
+    quizData.forEach((q, index) => {
+        const questionEl = document.createElement('div');
+        questionEl.className = 'bg-white p-6 rounded-lg shadow-sm border border-slate-200';
+        
+        const questionText = document.createElement('p');
+        questionText.className = 'font-semibold text-slate-800';
+        questionText.textContent = `${index + 1}. ${q.question}`;
+        questionEl.appendChild(questionText);
+        
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'mt-4 space-y-3';
+        optionsContainer.dataset.questionIndex = index;
+        
+        q.options.forEach(optionText => {
+            const optionLabel = document.createElement('label');
+            optionLabel.className = 'quiz-option block p-3 border-2 border-slate-200 rounded-md cursor-pointer hover:bg-slate-100 transition-colors';
+            
+            const optionInput = document.createElement('input');
+            optionInput.type = 'radio';
+            optionInput.name = `question-${index}`;
+            optionInput.value = optionText;
+            optionInput.className = 'hidden';
+            
+            optionLabel.appendChild(optionInput);
+            optionLabel.append(optionText);
+            
+            optionLabel.addEventListener('click', () => {
+                const parent = optionLabel.parentElement;
+                parent.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+                optionLabel.classList.add('selected');
+            });
+
+            optionsContainer.appendChild(optionLabel);
+        });
+
+        questionEl.appendChild(optionsContainer);
+        quizContainer.appendChild(questionEl);
+    });
+
+    const submitQuizBtn = document.getElementById('submit-quiz-btn');
+    submitQuizBtn.addEventListener('click', () => {
+        let score = 0;
+        quizData.forEach((q, index) => {
+            const container = quizContainer.querySelector(`[data-question-index="${index}"]`);
+            const selectedOption = container.querySelector('input[type="radio"]:checked');
+
+            container.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+                const inputVal = opt.querySelector('input').value;
+                if(inputVal === q.answer) {
+                    opt.classList.add('correct');
+                }
+            });
+            
+            if (selectedOption) {
+                const parentLabel = selectedOption.parentElement;
+                if (selectedOption.value === q.answer) {
+                    score++;
+                } else {
+                    parentLabel.classList.add('incorrect');
+                }
+            }
+        });
+
+        const quizResults = document.getElementById('quiz-results');
+        quizResults.textContent = `You scored ${score} out of ${quizData.length}!`;
+        quizResults.classList.remove('hidden');
+        submitQuizBtn.disabled = true;
+        submitQuizBtn.style.opacity = '0.5';
+    });
+});
+</script>
+
+</body>
+</html>
+

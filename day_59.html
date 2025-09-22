@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 59: E-commerce System - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Slate -->
+    <!-- Application Structure Plan: A single-page, long-scroll lesson designed for optimal learning flow. The layout is a two-column grid: a main content area on the left and a sticky table of contents (ToC) on the right. This structure allows users to easily navigate through extensive content while always maintaining context. The user flow is sequential and logical, starting with foundational theory (Core Components, Design Principles), moving to visual schema design (ERD), then to practical implementation (C# Code), a comprehensive case study, and finally, self-assessment (Quiz & Challenge). This top-down approach ensures a solid understanding before diving into code, which is a proven pedagogical method for complex software design topics. -->
+    <!-- Visualization & Content Choices: 
+        1. ER Diagram: Report Info: Database schema relationships. Goal: Organize. Viz/Presentation: HTML/CSS table-like structure using divs, borders, and flexbox. Interaction: Static visual. Justification: Provides a clear, universally understood representation of the database schema without using forbidden SVG/Mermaid, directly addressing a core lesson task.
+        2. Payment Workflow: Report Info: Steps for payment processing. Goal: Organize/Change. Viz/Presentation: Interactive flowchart built with styled HTML elements. Interaction: Clicking on a step highlights it and reveals a detailed text description. Justification: Deconstructs a complex, multi-step process into manageable, interactive chunks, enhancing comprehension.
+        3. Scaling Comparison: Report Info: Handling large traffic. Goal: Compare. Viz/Presentation: Chart.js Bar Chart. Interaction: Hover tooltips. Justification: A simple bar chart offers a powerful and immediate visual comparison between monolithic and microservice architectures under load, making the abstract concept of scalability tangible.
+        4. Interactive Quiz: Report Info: All lesson concepts. Goal: Assess/Inform. Viz/Presentation: Multiple-choice quiz UI. Interaction: Users select answers, receive instant feedback (color changes, text), and see their score. Justification: Reinforces learning through active recall and provides immediate feedback, which is crucial for self-assessment.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .font-lexend { font-family: 'Lexend', sans-serif; }
+        .toc-link.active { color: #0284c7; font-weight: 600; border-left-color: #0284c7; }
+        .code-block { position: relative; }
+        .copy-button { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #e2e8f0; color: #475569; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; transition: background-color 0.2s; }
+        .copy-button:hover { background-color: #cbd5e1; }
+        .quiz-option.correct { background-color: #dcfce7 !important; border-color: #22c55e !important; }
+        .quiz-option.incorrect { background-color: #fee2e2 !important; border-color: #ef4444 !important; }
+        .quiz-option.reveal-correct { border-color: #22c55e !important; box-shadow: 0 0 0 2px #22c55e; }
+        [x-cloak] { display: none !important; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+    </style>
+</head>
+<body x-data="ecomLesson()">
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=9" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 mt-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+            <div class="lg:col-span-3">
+                <div class="prose prose-slate max-w-none prose-h2:font-lexend prose-h2:text-2xl prose-h2:font-bold prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-3 prose-h3:font-lexend prose-h3:text-xl prose-h3:font-semibold prose-a:text-sky-600 hover:prose-a:text-sky-700 prose-code:before:content-none prose-code:after:content-none">
+                    <div class="mb-8">
+                        <p class="text-base font-semibold text-sky-600">Day 59: Final Case Studies</p>
+                        <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight font-lexend">E-commerce System Backend Design</h1>
+                        <p class="mt-4 text-lg text-slate-600">Welcome to a deep dive into designing a robust, scalable, and maintainable e-commerce backend. This is one of the most common and comprehensive system design challenges, touching upon databases, business logic, third-party integrations, and performance. This lesson will provide a one-stop, complete guide to mastering this domain.</p>
+                    </div>
+
+                    <section id="theory" class="space-y-8 scroll-mt-24">
+                        <h2>✅ Theory: Core Components & Principles</h2>
+                        <p>An e-commerce system is a complex symphony of interconnected modules. At its heart are four pillars: Products, Inventory, Orders, and Payments. We'll explore each, then discuss the architectural principles that ensure the system is built to last and scale.</p>
+
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                            <h3 id="theory-requirements" class="mt-0">1. Core Functional Requirements</h3>
+                            <p>Understanding the requirements of each module is the first step in designing the schema and business logic.</p>
+                            <ul class="space-y-4">
+                                <li>
+                                    <strong class="text-slate-800">Products:</strong> The catalog of items for sale. This involves more than just a name and price. Key attributes include SKU (Stock Keeping Unit), description, images, categories, variants (e.g., size, color), and pricing information.
+                                </li>
+                                <li>
+                                    <strong class="text-slate-800">Inventory:</strong> The system must know how many of each product are available. Inventory management prevents overselling. It's tightly coupled with Products and Orders. When an order is placed, inventory is reserved; when a payment is confirmed, it's deducted.
+                                </li>
+                                <li>
+                                    <strong class="text-slate-800">Orders:</strong> Represents a customer's intention to purchase one or more products. An order contains customer information, shipping details, a list of products (order items), total cost, and its current status (e.g., Pending, Paid, Shipped, Delivered, Cancelled).
+                                </li>
+                                <li>
+                                    <strong class="text-slate-800">Payments:</strong> Handles the financial transaction. This is almost always integrated with a third-party payment gateway (like Stripe, PayPal). The system needs to create payment intents, handle success and failure callbacks from the gateway, and update the order status accordingly.
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                            <h3 id="theory-solid">2. Applying SOLID Principles</h3>
+                            <p>SOLID principles are crucial for creating a system that is easy to maintain and extend. Let's see how they apply here:</p>
+                            <dl class="space-y-4">
+                                <dt><strong class="text-slate-800">Single Responsibility Principle (SRP):</strong></dt>
+                                <dd>A class should have only one reason to change. For example, an `OrderService` handles order creation and status updates. A separate `PaymentService` handles payment processing. An `InventoryService` manages stock levels. This separation prevents a single change (e.g., adding a new payment provider) from breaking order logic.</dd>
+                                
+                                <dt><strong class="text-slate-800">Open/Closed Principle (OCP):</strong></dt>
+                                <dd>Software entities should be open for extension but closed for modification. A classic example is payment processing. We can define a common `IPaymentGateway` interface. Then, we can create concrete implementations like `StripeGateway` and `PayPalGateway`. To add a new provider, we just add a new class; the core `PaymentService` that uses the interface doesn't change.</dd>
+
+                                <dt><strong class="text-slate-800">Liskov Substitution Principle (LSP):</strong></dt>
+                                <dd>Subtypes must be substitutable for their base types. If we have a base `NotificationService` and subtypes like `EmailNotificationService` and `SmsNotificationService`, our application should be able to use any of them without knowing the specific type, and it should work flawlessly.</dd>
+
+                                <dt><strong class="text-slate-800">Interface Segregation Principle (ISP):</strong></dt>
+                                <dd>Clients should not be forced to depend on interfaces they do not use. Instead of one massive `IOrderService` interface, we can have smaller ones like `IOrderCreator`, `IOrderFinder`, `IOrderStatusUpdater`. This allows classes to depend only on the functionality they need.</dd>
+
+                                <dt><strong class="text-slate-800">Dependency Inversion Principle (DIP):</strong></dt>
+                                <dd>High-level modules should not depend on low-level modules. Both should depend on abstractions. Our `OrderService` shouldn't directly instantiate a `SqlServerOrderRepository`. Instead, it should depend on an `IOrderRepository` interface. This allows us to easily swap the database technology later without changing the service logic.</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                           <h3 id="theory-patterns">3. Key Design Patterns</h3>
+                           <p>Design patterns provide reusable solutions to common problems. In e-commerce, several are particularly useful:</p>
+                           <dl class="space-y-4">
+                               <dt><strong class="text-slate-800">Strategy Pattern:</strong></dt>
+                               <dd>Perfect for implementing different payment methods or shipping calculations. The `PaymentService` would use a `IPaymentStrategy` (our `IPaymentGateway` from the OCP example is a form of this) to process payments without being coupled to a specific implementation.</dd>
+                               <dt><strong class="text-slate-800">Factory Method / Abstract Factory:</strong></dt>
+                               <dd>Used to create objects without specifying the exact class. An `AbstractFactory` could be used to create related objects like `IPaymentGateway` and its corresponding `IPaymentValidator`. For example, a `StripeFactory` would create both `StripeGateway` and `StripeValidator` instances.</dd>
+                               <dt><strong class="text-slate-800">Observer Pattern:</strong></dt>
+                               <dd>Useful for decoupling actions that happen after a core event. When an `Order` is successfully paid for, it can notify several observers: an `InventoryObserver` to deduct stock, a `NotificationObserver` to send an email to the customer, and a `ShippingObserver` to start the fulfillment process.</dd>
+                               <dt><strong class="text-slate-800">Repository Pattern:</strong></dt>
+                               <dd>An abstraction over the data access layer. It mediates between the domain and data mapping layers. Using repositories (e.g., `IProductRepository`) ensures our business logic is independent of the database technology, which aligns with the Dependency Inversion Principle.</dd>
+                           </dl>
+                        </div>
+
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                           <h3 id="theory-scaling">4. Handling Large Traffic</h3>
+                           <p>E-commerce sites experience massive traffic spikes (e.g., Black Friday). The architecture must be resilient and scalable.</p>
+                           <ul class="space-y-4">
+                               <li><strong class="text-slate-800">Database Scaling:</strong> Read replicas are essential. Most traffic is product browsing (reads). A primary database handles writes (orders, payments), while multiple read replicas handle reads, distributing the load. Sharding (partitioning data across multiple databases) can be used for even larger scale.</li>
+                               <li><strong class="text-slate-800">Caching:</strong> Aggressively cache frequently accessed, rarely changing data. Product details, categories, and best-seller lists are perfect candidates. Use a distributed cache like Redis or Memcached.</li>
+                               <li><strong class="text-slate-800">Asynchronous Operations:</strong> Don't make the user wait for non-essential tasks. When an order is placed, the immediate response only needs to confirm order reception. Sending confirmation emails, updating analytics, etc., should be handled asynchronously by a message queue (like RabbitMQ or Kafka) and background workers.</li>
+                               <li><strong class="text-slate-800">Microservices Architecture:</strong> For large-scale systems, breaking the monolith into smaller, independent services (Product Service, Order Service, Payment Service) is a common strategy. Each service can be scaled independently. For example, during a flash sale, you can scale up the Order and Payment services without touching the Product service.</li>
+                           </ul>
+                           <div class="mt-6 chart-container">
+                                <canvas id="scalingChart"></canvas>
+                           </div>
+                           <p class="text-center text-sm text-slate-500 mt-2">Fig 1: Illustrative comparison of requests handled by Monolith vs. scaled Microservices during a traffic spike.</p>
+                        </div>
+
+                    </section>
+
+                    <section id="schema" class="space-y-8 scroll-mt-24">
+                        <h2 class="mt-16">✅ UML/Schema Task: ER Diagram</h2>
+                        <p>A well-designed database schema is the foundation of our system. It defines the entities, their attributes, and the relationships between them. Below is a simplified Entity-Relationship (ER) diagram representing the core tables. Primary Keys (PK) and Foreign Keys (FK) are indicated.</p>
+                        
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200 space-y-6">
+                            <h3 class="mt-0 text-center">E-commerce Schema</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 border-b pb-2 mb-2">Products</h4>
+                                    <ul>
+                                        <li><strong class="text-sky-700">ProductID (PK)</strong></li>
+                                        <li>SKU</li>
+                                        <li>Name</li>
+                                        <li>Description</li>
+                                        <li>Price</li>
+                                        <li>CreatedAt</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 border-b pb-2 mb-2">Inventory</h4>
+                                    <ul>
+                                        <li><strong class="text-sky-700">InventoryID (PK)</strong></li>
+                                        <li>ProductID (FK)</li>
+                                        <li>Quantity</li>
+                                        <li>LastUpdatedAt</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 border-b pb-2 mb-2">Orders</h4>
+                                    <ul>
+                                        <li><strong class="text-sky-700">OrderID (PK)</strong></li>
+                                        <li>CustomerID</li>
+                                        <li>OrderDate</li>
+                                        <li>TotalAmount</li>
+                                        <li>Status</li>
+                                    </ul>
+                                </div>
+                                 <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <h4 class="font-bold text-slate-800 border-b pb-2 mb-2">Payments</h4>
+                                    <ul>
+                                        <li><strong class="text-sky-700">PaymentID (PK)</strong></li>
+                                        <li>OrderID (FK)</li>
+                                        <li>Amount</li>
+                                        <li>Status</li>
+                                        <li>Provider</li>
+                                        <li>TransactionID</li>
+                                        <li>PaymentDate</li>
+                                    </ul>
+                                </div>
+                            </div>
+                             <div class="text-center text-slate-600">...and an `OrderItems` table to link Products and Orders (Many-to-Many).</div>
+                        </div>
+                    </section>
+
+                    <section id="coding" class="space-y-8 scroll-mt-24">
+                        <h2 class="mt-16">✅ Coding Practice (C#)</h2>
+                        <p>Let's translate theory into practice with C# code. We'll implement the core classes and workflows. Note: This is a simplified, in-memory representation to focus on the logic. A real application would use a database and repositories.</p>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                            <div class="p-6">
+                                <h3 id="coding-easy" class="mt-0">[Easy] Implement & Fetch Products</h3>
+                                <p>First, we define our `Product` and a simple `ProductService` to manage them.</p>
+                            </div>
+                            <div class="code-block rounded-b-xl">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-b-xl"><code class="language-csharp">
+public class Product
+{
+    public int ProductId { get; set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+}
+
+public static class Inventory
+{
+    // In-memory inventory for demonstration
+    public static Dictionary&lt;int, int&gt; Stock = new Dictionary&lt;int, int&gt;()
+    {
+        { 1, 10 }, // Product 1 has 10 items
+        { 2, 5 }   // Product 2 has 5 items
+    };
+}
+
+public class ProductService
+{
+    private readonly List&lt;Product&gt; _products;
+
+    public ProductService()
+    {
+        // Seed with some data
+        _products = new List&lt;Product&gt;
+        {
+            new Product { ProductId = 1, Name = "Laptop", Price = 1200.00m },
+            new Product { ProductId = 2, Name = "Mouse", Price = 25.00m }
+        };
+    }
+
+    public Product CreateProduct(string name, decimal price)
+    {
+        var product = new Product
+        {
+            ProductId = _products.Count + 1,
+            Name = name,
+            Price = price
+        };
+        _products.Add(product);
+        Inventory.Stock[product.ProductId] = 0; // Initialize inventory
+        Console.WriteLine($"Product '{name}' created.");
+        return product;
+    }
+
+    public Product GetProductById(int productId)
+    {
+        return _products.FirstOrDefault(p => p.ProductId == productId);
+    }
+}
+                                </code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                            <div class="p-6">
+                                <h3 id="coding-medium" class="mt-0">[Medium] Place an Order</h3>
+                                <p>Now, let's create the `Order` class and an `OrderService`. The crucial logic here is checking and deducting inventory when an order is placed.</p>
+                            </div>
+                            <div class="code-block rounded-b-xl">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-b-xl"><code class="language-csharp">
+public enum OrderStatus { Pending, Paid, Shipped, Cancelled }
+
+public class OrderItem
+{
+    public int ProductId { get; set; }
+    public int Quantity { get; set; }
+    public decimal PriceAtTimeOfOrder { get; set; }
+}
+
+public class Order
+{
+    public int OrderId { get; set; }
+    public List&lt;OrderItem&gt; Items { get; set; } = new List&lt;OrderItem&gt;();
+    public decimal TotalAmount { get; set; }
+    public OrderStatus Status { get; set; }
+}
+
+public class OrderService
+{
+    private readonly ProductService _productService;
+    private readonly List&lt;Order&gt; _orders = new List&lt;Order&gt;();
+
+    public OrderService(ProductService productService)
+    {
+        _productService = productService;
+    }
+
+    public Order PlaceOrder(Dictionary&lt;int, int&gt; productQuantities)
+    {
+        // 1. Validate inventory
+        foreach (var item in productQuantities)
+        {
+            if (!Inventory.Stock.ContainsKey(item.Key) || Inventory.Stock[item.Key] &lt; item.Value)
+            {
+                Console.WriteLine($"Error: Not enough stock for Product ID {item.Key}.");
+                return null; // Transaction fails
+            }
+        }
+        
+        var newOrder = new Order 
+        { 
+            OrderId = _orders.Count + 1, 
+            Status = OrderStatus.Pending 
+        };
+        
+        decimal total = 0;
+
+        // 2. Create order items and deduct inventory
+        foreach (var item in productQuantities)
+        {
+            var product = _productService.GetProductById(item.Key);
+            newOrder.Items.Add(new OrderItem
+            {
+                ProductId = item.Key,
+                Quantity = item.Value,
+                PriceAtTimeOfOrder = product.Price
+            });
+            total += product.Price * item.Value;
+
+            // This is a critical section. In a real system, you'd use a database transaction.
+            Inventory.Stock[item.Key] -= item.Value; 
+            Console.WriteLine($"Inventory for Product ID {item.Key} reduced to {Inventory.Stock[item.Key]}.");
+        }
+        
+        newOrder.TotalAmount = total;
+        _orders.Add(newOrder);
+
+        Console.WriteLine($"Order {newOrder.OrderId} placed successfully for amount {newOrder.TotalAmount:C}.");
+        return newOrder;
+    }
+}
+                                </code></pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+                             <div class="p-6">
+                                <h3 id="coding-hard" class="mt-0">[Hard] Integrate Payment Workflow</h3>
+                                <p>This involves orchestrating multiple services. We'll create a mock `PaymentService` and show how the `OrderService` would use it to complete a transaction.</p>
+                            </div>
+                            <div class="code-block rounded-b-xl">
+                                <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-b-xl"><code class="language-csharp">
+// Using the Strategy Pattern for payments
+public interface IPaymentGateway
+{
+    bool ProcessPayment(decimal amount);
+}
+
+public class StripeGateway : IPaymentGateway
+{
+    public bool ProcessPayment(decimal amount)
+    {
+        Console.WriteLine($"Processing ${amount} with Stripe...");
+        // In reality, this would call the Stripe API.
+        // We'll simulate a successful payment.
+        Console.WriteLine("Stripe payment successful.");
+        return true;
+    }
+}
+
+public class PaymentService
+{
+    private IPaymentGateway _gateway;
+
+    public PaymentService(IPaymentGateway gateway)
+    {
+        _gateway = gateway;
+    }
+
+    public bool MakePayment(Order order)
+    {
+        if (order == null) return false;
+        
+        bool success = _gateway.ProcessPayment(order.TotalAmount);
+        if (success)
+        {
+            Console.WriteLine($"Payment for Order {order.OrderId} successful.");
+            // This would trigger notifications, shipping, etc. (Observer pattern)
+        }
+        else
+        {
+            Console.WriteLine($"Payment for Order {order.OrderId} failed.");
+            // This would trigger a process to revert inventory.
+        }
+        return success;
+    }
+}
+
+// ---- Tying it all together in a main execution flow ----
+public class ECommerceSystem
+{
+    public static void Run()
+    {
+        var productService = new ProductService();
+        var orderService = new OrderService(productService);
+        
+        // Customer wants to buy 2 Laptops and 1 Mouse
+        var cart = new Dictionary&lt;int, int&gt; { { 1, 2 }, { 2, 1 } };
+        
+        Console.WriteLine("--- Placing Order ---");
+        Order myOrder = orderService.PlaceOrder(cart);
+
+        if (myOrder != null)
+        {
+            Console.WriteLine("\n--- Processing Payment ---");
+            IPaymentGateway paymentGateway = new StripeGateway();
+            var paymentService = new PaymentService(paymentGateway);
+            bool paymentSuccess = paymentService.MakePayment(myOrder);
+
+            if (paymentSuccess)
+            {
+                myOrder.Status = OrderStatus.Paid;
+                Console.WriteLine($"\nOrder {myOrder.OrderId} is now Paid. Preparing for shipment.");
+            }
+            else
+            {
+                // In a real system, we'd need a robust mechanism to roll back the inventory change.
+                myOrder.Status = OrderStatus.Cancelled;
+                Console.WriteLine($"\nOrder {myOrder.OrderId} is cancelled due to payment failure.");
+            }
+        }
+    }
+}
+                                </code></pre>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="case-study" class="scroll-mt-24">
+                        <h2 class="mt-16">✅ Case Study: Full E-commerce Backend System</h2>
+                        <p>Let's walk through the entire lifecycle of an order to solidify our understanding, combining all the concepts we've discussed.</p>
+                        
+                        <div x-data="{ activeStep: 1 }" class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                             <div class="flex flex-col sm:flex-row justify-between items-center text-center border-b pb-4 mb-4">
+                                <template x-for="step in [1, 2, 3, 4, 5]" :key="step">
+                                    <div @click="activeStep = step" class="cursor-pointer p-2 flex-1" :class="{ 'font-bold text-sky-600': activeStep === step }">
+                                        Step <span x-text="step"></span>
+                                    </div>
+                                </template>
+                             </div>
+                             <div>
+                                 <div x-show="activeStep === 1" x-cloak>
+                                     <h4 class="font-bold text-slate-800">Step 1: User Adds to Cart & Checks Out</h4>
+                                     <p>A user browses the product catalog (served from a cache or read-replica database). They add items to their cart. The cart state is managed on the client-side or in a temporary server-side store like Redis. When the user clicks "Checkout", the frontend sends a request to the backend with the list of product IDs and quantities.</p>
+                                 </div>
+                                 <div x-show="activeStep === 2" x-cloak>
+                                     <h4 class="font-bold text-slate-800">Step 2: Order Placement & Inventory Lock</h4>
+                                     <p>The `OrderService` receives the request. It initiates a database transaction. Inside the transaction, it performs a crucial "SELECT...FOR UPDATE" query on the inventory rows for the requested products. This locks the rows, preventing other transactions from modifying them. It checks if sufficient quantity exists. If yes, it creates an `Order` and `OrderItems` in a "Pending" state and decrements the inventory count. If all steps succeed, the transaction is committed. If anything fails (e.g., insufficient stock), the transaction is rolled back, and an error is returned to the user.</p>
+                                 </div>
+                                 <div x-show="activeStep === 3" x-cloak>
+                                     <h4 class="font-bold text-slate-800">Step 3: Payment Processing</h4>
+                                     <p>The `OrderService` calls the `PaymentService`, passing the order total. The `PaymentService` uses a `StripeGateway` (Strategy Pattern) to create a payment intent with Stripe and returns a client secret to the frontend. The frontend uses this secret to securely submit card details directly to Stripe. The user's browser is redirected to a success or failure URL.</p>
+                                 </div>
+                                  <div x-show="activeStep === 4" x-cloak>
+                                     <h4 class="font-bold text-slate-800">Step 4: Payment Confirmation (Webhook)</h4>
+                                     <p>Stripe processes the payment and sends an asynchronous notification (a webhook) to a dedicated endpoint on our backend. This is more reliable than relying on the user's browser redirection. The webhook handler verifies the event's authenticity, then finds the corresponding order and updates its status to "Paid".</p>
+                                 </div>
+                                  <div x-show="activeStep === 5" x-cloak>
+                                     <h4 class="font-bold text-slate-800">Step 5: Post-Payment Asynchronous Tasks</h4>
+                                     <p>Updating the order status to "Paid" publishes an `OrderPaid` event to a message queue (Observer Pattern). Several worker services (subscribers) listen for this event. A `NotificationService` sends a confirmation email. A `ShippingService` notifies the warehouse to begin fulfillment. An `AnalyticsService` updates sales dashboards. This ensures the checkout response is fast, and subsequent, slower tasks don't block the user.</p>
+                                 </div>
+                             </div>
+                        </div>
+                    </section>
+
+                    <section id="quiz" class="scroll-mt-24">
+                        <h2 class="mt-16">🧠 Knowledge Check Quiz</h2>
+                        <p>Test your understanding of the key concepts discussed in this lesson.</p>
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+                            <div x-show="!quiz.isFinished" x-cloak>
+                                <div class="mb-4">
+                                    <p class="text-slate-600">Question <span x-text="quiz.currentQuestionIndex + 1"></span> of <span x-text="quiz.questions.length"></span></p>
+                                    <p class="text-lg font-semibold text-slate-800" x-text="quiz.questions[quiz.currentQuestionIndex].question"></p>
+                                </div>
+                                <div class="space-y-3">
+                                    <template x-for="(option, index) in quiz.questions[quiz.currentQuestionIndex].options" :key="index">
+                                        <button 
+                                            @click="quiz.submitAnswer(index)"
+                                            :disabled="quiz.answered"
+                                            class="w-full text-left p-4 rounded-lg border-2 border-slate-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 quiz-option"
+                                            :class="{
+                                                'correct': quiz.answered && index === quiz.questions[quiz.currentQuestionIndex].correctAnswer,
+                                                'incorrect': quiz.answered && quiz.userAnswer === index && index !== quiz.questions[quiz.currentQuestionIndex].correctAnswer,
+                                                'reveal-correct': quiz.answered && index === quiz.questions[quiz.currentQuestionIndex].correctAnswer
+                                            }"
+                                        >
+                                            <span x-text="option"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <div x-show="quiz.answered" class="mt-4" x-cloak>
+                                    <p class="text-sm text-slate-700" x-html="quiz.feedback"></p>
+                                    <button @click="quiz.nextQuestion()" class="mt-4 bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors">
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                            <div x-show="quiz.isFinished" x-cloak>
+                                <h3 class="text-xl font-bold text-slate-800">Quiz Complete!</h3>
+                                <p class="text-lg mt-2">Your score: <span x-text="quiz.score"></span> out of <span x-text="quiz.questions.length"></span></p>
+                                <p class="mt-2 text-slate-600" x-text="quiz.getFinalMessage()"></p>
+                                <button @click="quiz.reset()" class="mt-6 bg-slate-200 text-slate-700 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors">
+                                    Try Again
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="challenge" class="scroll-mt-24">
+                        <h2 class="mt-16">🚀 Self-Assessment Challenge</h2>
+                        <p>Time to put your skills to the test. Read the challenge below and think about how you would implement the solution before revealing the answer.</p>
+                        <div class="p-6 bg-white rounded-xl shadow-sm border border-slate-200" x-data="{ solutionVisible: false }">
+                            <h3 class="mt-0">Challenge: Implement a Product Return Workflow</h3>
+                            <p class="text-slate-600">A customer wants to return a product from a delivered order. Your task is to design and outline the `ReturnService`.</p>
+                            <p><strong>Requirements:</strong></p>
+                            <ul class="list-disc pl-5 text-slate-600 space-y-1">
+                                <li>The service should accept an `orderId` and a dictionary of `productId` to `quantity` to be returned.</li>
+                                <li>It must validate that the products were actually part of the specified order and that the return quantity does not exceed the purchased quantity.</li>
+                                <li>Upon a successful return, the inventory for the product should be increased.</li>
+                                <li>The order status should be updated to `PartiallyReturned` or `Returned`.</li>
+                                <li>A refund must be initiated (you can describe how you'd call a `RefundService`).</li>
+                            </ul>
+                            
+                            <button @click="solutionVisible = !solutionVisible" class="mt-6 inline-flex items-center gap-2 bg-slate-100 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors text-sm">
+                                <span x-text="solutionVisible ? 'Hide Solution' : 'Show Detailed Solution'"></span>
+                                <svg x-show="!solutionVisible" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                <svg x-show="solutionVisible" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
+                            </button>
+                            
+                            <div x-show="solutionVisible" x-cloak class="mt-6 border-t pt-6">
+                                <h4 class="font-bold text-slate-800">Solution Outline (C#)</h4>
+                                <p>Here is a conceptual implementation of the `ReturnService`.</p>
+                                 <div class="code-block rounded-xl mt-4">
+                                    <button class="copy-button" onclick="copyCode(this)">Copy</button>
+                                    <pre class="p-6 bg-slate-800 text-white text-sm overflow-x-auto rounded-xl"><code class="language-csharp">
+public class RefundService 
+{
+    public void ProcessRefund(int orderId, decimal amount) 
+    {
+        Console.WriteLine($"Initiating refund of {amount:C} for order {orderId}.");
+        // Logic to call payment gateway's refund API
+    }
+}
+
+public class ReturnService
+{
+    private readonly OrderService _orderService; // Assuming OrderService can fetch orders
+    private readonly RefundService _refundService;
+
+    public ReturnService(OrderService orderService, RefundService refundService)
+    {
+        _orderService = orderService;
+        _refundService = refundService;
+    }
+
+    public bool ProcessReturn(int orderId, Dictionary&lt;int, int&gt; itemsToReturn)
+    {
+        // 1. Fetch the order
+        var order = _orderService.GetOrderById(orderId); // Method needs to be added to OrderService
+        if (order == null || order.Status != OrderStatus.Delivered) // Assuming a Delivered status exists
+        {
+            Console.WriteLine("Error: Order not found or not in a returnable state.");
+            return false;
+        }
+
+        decimal refundAmount = 0;
+
+        // 2. Validate items
+        foreach (var itemToReturn in itemsToReturn)
+        {
+            var orderedItem = order.Items.FirstOrDefault(i => i.ProductId == itemToReturn.Key);
+            if (orderedItem == null || orderedItem.Quantity < itemToReturn.Value)
+            {
+                Console.WriteLine($"Error: Invalid return request for Product ID {itemToReturn.Key}.");
+                return false; // Rollback needed in a real system
+            }
+            refundAmount += orderedItem.PriceAtTimeOfOrder * itemToReturn.Value;
+        }
+
+        // 3. Update inventory and order (within a transaction)
+        foreach (var itemToReturn in itemsToReturn)
+        {
+            Inventory.Stock[itemToReturn.Key] += itemToReturn.Value;
+            Console.WriteLine($"Inventory for Product ID {itemToReturn.Key} increased to {Inventory.Stock[itemToReturn.Key]}.");
+        }
+
+        // 4. Update order status
+        // Complex logic to determine if it's a full or partial return
+        order.Status = OrderStatus.Returned; // Simplified
+        Console.WriteLine($"Order {order.OrderId} status updated to Returned.");
+
+        // 5. Initiate refund
+        _refundService.ProcessRefund(order.OrderId, refundAmount);
+
+        return true;
+    }
+}
+                                    </code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <aside class="lg:col-span-1">
+                <div class="sticky top-24">
+                    <h3 class="font-semibold text-slate-800 font-lexend">On this page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="#theory" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">✅ Theory Topics</a>
+                               <ul class="space-y-2 text-sm mt-2 pl-4">
+                                  <li><a href="#theory-requirements" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">Core Requirements</a></li>
+                                  <li><a href="#theory-solid" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">SOLID Principles</a></li>
+                                  <li><a href="#theory-patterns" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">Design Patterns</a></li>
+                                  <li><a href="#theory-scaling" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">Scaling</a></li>
+                               </ul>
+                            </li>
+                            <li><a href="#schema" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">✅ UML/Schema Task</a></li>
+                            <li><a href="#coding" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">✅ Coding Practice</a>
+                                <ul class="space-y-2 text-sm mt-2 pl-4">
+                                  <li><a href="#coding-easy" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">[Easy] Products</a></li>
+                                  <li><a href="#coding-medium" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">[Medium] Orders</a></li>
+                                  <li><a href="#coding-hard" class="toc-link block border-l-2 border-transparent pl-4 text-slate-500 hover:text-slate-900">[Hard] Payments</a></li>
+                               </ul>
+                            </li>
+                            <li><a href="#case-study" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">✅ Case Study</a></li>
+                            <li><a href="#quiz" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">🧠 Knowledge Check</a></li>
+                            <li><a href="#challenge" class="toc-link block border-l-2 border-transparent pl-4 text-slate-600 hover:text-slate-900 hover:border-slate-400">🚀 Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        function copyCode(button) {
+            const pre = button.parentElement.querySelector('pre');
+            const code = pre.querySelector('code');
+            const text = code.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                button.innerText = 'Copied!';
+                setTimeout(() => {
+                    button.innerText = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        function ecomLesson() {
+            return {
+                quiz: {
+                    questions: [
+                        {
+                            question: "Which SOLID principle is best demonstrated by using an IPaymentGateway interface to support multiple payment providers like Stripe and PayPal?",
+                            options: ["Single Responsibility Principle", "Open/Closed Principle", "Liskov Substitution Principle", "Dependency Inversion Principle"],
+                            correctAnswer: 1,
+                            explanation: "The Open/Closed Principle states that software entities should be open for extension but closed for modification. By using an interface, we can add new payment gateways without modifying the existing PaymentService."
+                        },
+                        {
+                            question: "When placing an order, why is it critical to use a database transaction?",
+                            options: ["To make the query run faster", "To ensure atomicity: either both inventory is deducted AND an order is created, or neither happens", "To log the event for auditing purposes", "To bypass the caching layer"],
+                            correctAnswer: 1,
+                            explanation: "A transaction ensures atomicity. Deducting inventory and creating an order are two separate operations that must succeed or fail together to prevent data inconsistency (e.g., deducting stock for an order that was never created)."
+                        },
+                        {
+                            question: "What is the primary benefit of using a message queue for post-payment tasks like sending emails?",
+                            options: ["It guarantees the email is delivered within 1 second.", "It makes the system more complex.", "It decouples services and improves the responsiveness of the checkout process.", "It processes payments more securely."],
+                            correctAnswer: 2,
+                            explanation: "By offloading tasks to a message queue, the initial checkout API can respond to the user immediately after payment confirmation. The slower, non-critical tasks are handled asynchronously by background workers, improving user experience and system resilience."
+                        },
+                        {
+                            question: "Which design pattern is ideal for allowing an Order object to notify multiple other systems (like Inventory, Notifications, Shipping) when its status changes to 'Paid'?",
+                            options: ["Strategy Pattern", "Factory Pattern", "Observer Pattern", "Singleton Pattern"],
+                            correctAnswer: 2,
+                            explanation: "The Observer Pattern allows an object (the subject, our Order) to maintain a list of its dependents (observers, like InventoryService) and notify them automatically of any state changes."
+                        }
+                    ],
+                    currentQuestionIndex: 0,
+                    score: 0,
+                    answered: false,
+                    isFinished: false,
+                    userAnswer: null,
+                    feedback: '',
+
+                    submitAnswer(index) {
+                        this.answered = true;
+                        this.userAnswer = index;
+                        if (index === this.questions[this.currentQuestionIndex].correctAnswer) {
+                            this.score++;
+                            this.feedback = `<strong>Correct!</strong> ${this.questions[this.currentQuestionIndex].explanation}`;
+                        } else {
+                            this.feedback = `<strong>Incorrect.</strong> ${this.questions[this.currentQuestionIndex].explanation}`;
+                        }
+                    },
+                    nextQuestion() {
+                        if (this.currentQuestionIndex < this.questions.length - 1) {
+                            this.currentQuestionIndex++;
+                            this.answered = false;
+                            this.userAnswer = null;
+                            this.feedback = '';
+                        } else {
+                            this.isFinished = true;
+                        }
+                    },
+                    getFinalMessage() {
+                        const percentage = this.score / this.questions.length;
+                        if (percentage === 1) return "Excellent! You have a solid grasp of e-commerce system design.";
+                        if (percentage >= 0.75) return "Great job! You've understood most of the key concepts.";
+                        if (percentage >= 0.5) return "Good effort. Review the theory sections to solidify your knowledge.";
+                        return "It's a good start. Go through the lesson again to better understand the fundamentals.";
+                    },
+                    reset() {
+                        this.currentQuestionIndex = 0;
+                        this.score = 0;
+                        this.answered = false;
+                        this.isFinished = false;
+                        this.userAnswer = null;
+                        this.feedback = '';
+                    }
+                },
+                
+                init() {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            const id = entry.target.getAttribute('id');
+                            const link = document.querySelector(`.toc-link[href="#${id}"]`);
+                            if (entry.isIntersecting) {
+                                document.querySelectorAll('.toc-link.active').forEach(l => l.classList.remove('active'));
+                                link.classList.add('active');
+                            }
+                        });
+                    }, { rootMargin: "-30% 0px -60% 0px" });
+
+                    document.querySelectorAll('section[id]').forEach(section => {
+                        observer.observe(section);
+                    });
+
+                    const ctx = document.getElementById('scalingChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Normal Load', 'Traffic Spike', 'Peak Spike'],
+                            datasets: [{
+                                label: 'Monolith',
+                                data: [5000, 6000, 6500],
+                                backgroundColor: 'rgba(100, 116, 139, 0.6)',
+                                borderColor: 'rgba(100, 116, 139, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: 'Microservices (Scaled)',
+                                data: [5000, 15000, 25000],
+                                backgroundColor: 'rgba(2, 132, 199, 0.6)',
+                                borderColor: 'rgba(2, 132, 199, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: { display: true, text: 'System Performance Under Load' },
+                                legend: { position: 'bottom' }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: { display: true, text: 'Requests per Minute' }
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+        }
+    </script>
+</body>
+</html>

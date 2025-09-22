@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 60: Final Capstone – End-to-End Backend System</title>
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertically flowing lesson with a sticky table of contents (TOC) on the right for easy navigation. This structure is ideal for a dense, educational topic as it allows users to both follow the logical progression of the material and jump directly to specific sections of interest. The flow moves from high-level theory (Core Concepts) to visual architecture (System Blueprint), then to detailed design (UML/Schema), practical implementation (Coding), and finally to self-assessment (Quiz & Challenge). This top-down approach reinforces learning by building context before diving into details. Interactive elements like accordions for theory, clickable diagrams for architecture, and tabs for coding examples are used to manage information density and keep the user engaged, preventing overwhelm. -->
+    <!-- Visualization & Content Choices: The application uses a variety of interactive methods to present the report's content without using SVG or Mermaid JS. 1) System Architecture: Represented by an interactive HTML/CSS diagram where clicking components reveals details, which is more engaging than a static image. Goal: Organize/Inform. Method: HTML/CSS/JS. 2) CI/CD Pipeline: A visual flowchart built with HTML/CSS to clarify the process flow. Goal: Change/Process. Method: HTML/CSS. 3) Scalability Chart: A Chart.js bar chart dynamically illustrates system performance under stress, making an abstract concept concrete. Goal: Compare/Inform. Method: Chart.js Canvas. 4) UML Diagrams: Recreated using styled HTML divs within a tabbed interface, providing necessary visuals while adhering to constraints. Goal: Organize/Relationships. Method: HTML/CSS/JS. This multi-faceted approach ensures each piece of information is presented in its most effective, interactive format to maximize user understanding. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0ea5e9;
+            font-weight: 600;
+            border-left-color: #0ea5e9;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .code-block:hover .copy-button {
+            opacity: 1;
+        }
+        details > summary {
+            cursor: pointer;
+        }
+        details[open] > summary {
+           color: #0f172a;
+        }
+        .quiz-option:checked + label {
+            border-color: #0ea5e9;
+            background-color: #f0f9ff;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=9" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row gap-12">
+            
+            <!-- Main Content -->
+            <div class="w-full lg:w-3/4 space-y-16">
+                
+                <section id="introduction">
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-2">Day 60: Final Capstone</h2>
+                    <p class="text-lg text-slate-600">End-to-End Backend System Integration</p>
+                    <p class="mt-4 text-base leading-relaxed">
+                        Welcome to the culmination of your 60-day journey. Today, we bring together every concept you've mastered—from Object-Oriented Programming to complex Design Patterns—to design and build a robust, scalable, and resilient backend system. This capstone is not just an exercise; it's a simulation of real-world backend engineering, challenging you to think about the entire lifecycle of a service, from design and implementation to deployment and maintenance. We will architect an "Amazon-lite" e-commerce platform, applying advanced principles to ensure it can handle high traffic, recover from failures, and be maintained efficiently.
+                    </p>
+                </section>
+
+                <section id="theory">
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Core Theoretical Pillars</h2>
+                    <div class="space-y-4">
+                        <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <summary class="font-semibold text-lg text-slate-800">Combining All Concepts</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
+                                <p>An end-to-end system is a symphony of interconnected components, each built upon fundamental principles. Our "Amazon-lite" application will be a testament to this integration:</p>
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Object-Oriented Programming (OOP):</strong> We'll model our domain (Products, Users, Orders) using classes and objects, leveraging encapsulation, inheritance, and polymorphism to create a clean, maintainable codebase.</li>
+                                    <li><strong>SOLID Principles:</strong> Every service and module will be designed following SOLID principles to ensure our system is easy to refactor, extend, and test.</li>
+                                    <li><strong>Design Patterns:</strong> We will strategically use patterns like Singleton for database connections, Factory for object creation, and Observer for event-driven notifications (e.g., order confirmation emails).</li>
+                                    <li><strong>APIs & MVC:</strong> The system's functionality will be exposed via a RESTful API. The API layer will be structured using the Model-View-Controller (MVC) pattern, separating business logic (Model), data presentation (View, in this case, JSON responses), and user input handling (Controller).</li>
+                                    <li><strong>Multithreading:</strong> Background jobs, such as processing payments or generating reports, will be handled asynchronously using separate threads or task queues to avoid blocking the main application flow and improve responsiveness.</li>
+                                </ul>
+                            </div>
+                        </details>
+                        
+                        <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <summary class="font-semibold text-lg text-slate-800">Scalability & Fault-Tolerance</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
+                                <p>A successful backend must handle growth and failure gracefully. These two concepts are central to our design:</p>
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Scalability:</strong> The ability to handle increasing load. We'll design for both <strong>vertical scaling</strong> (adding more power, e.g., CPU/RAM, to a single server) and <strong>horizontal scaling</strong> (adding more servers). Our stateless API design will be key to achieving horizontal scalability, as any server can handle any request.</li>
+                                    <li><strong>Fault-Tolerance:</strong> The ability to remain operational even when some components fail. We'll achieve this through redundancy (running multiple instances of each service), health checks, and graceful degradation (e.g., if the recommendation service is down, the main site still functions without showing recommendations).</li>
+                                </ul>
+                                <div class="mt-6">
+                                    <h4 class="font-semibold text-slate-800 mb-2">System Performance Under Stress</h4>
+                                    <p class="text-sm mb-4">This chart illustrates how a scalable system handles increasing requests, while a fault-tolerant system maintains availability during a component failure.</p>
+                                    <div class="p-4 bg-slate-50 rounded-lg">
+                                        <div class="chart-container" style="position: relative; height:350px; width:100%; max-width: 600px; margin: auto;">
+                                            <canvas id="scalabilityChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <summary class="font-semibold text-lg text-slate-800">Logging, Monitoring & Metrics</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
+                                <p>You can't manage what you can't see. A comprehensive observability strategy is non-negotiable for a production system.</p>
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Logging:</strong> Recording key events and errors. We'll implement structured logging (e.g., JSON format) to make logs easily searchable and parsable. We'll define different log levels (INFO, WARN, ERROR) to capture appropriate details.</li>
+                                    <li><strong>Monitoring:</strong> Actively checking the health of the system. This involves setting up health check endpoints (`/health`) that monitoring tools can ping to see if a service is alive.</li>
+                                    <li><strong>Metrics:</strong> Collecting numerical data about system performance. Key metrics include request latency (how long a request takes), error rate (percentage of failed requests), and resource utilization (CPU/memory usage). These are aggregated into dashboards for a high-level view of system health.</li>
+                                </ul>
+                            </div>
+                        </details>
+                        
+                        <details class="bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                            <summary class="font-semibold text-lg text-slate-800">CI/CD Pipeline Basics</summary>
+                            <div class="mt-4 pt-4 border-t border-slate-200 text-slate-600 leading-relaxed space-y-3">
+                                <p>Continuous Integration (CI) and Continuous Deployment (CD) automate the process of building, testing, and deploying code, enabling rapid and reliable software delivery.</p>
+                                <p>A typical pipeline includes the following stages:</p>
+                                <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-0 mt-6 text-center">
+                                    <div class="flex-shrink-0 p-3 bg-sky-100 text-sky-800 rounded-lg shadow-sm w-32">
+                                        <p class="font-bold">Commit</p>
+                                        <p class="text-xs">Developer pushes code</p>
+                                    </div>
+                                    <div class="w-10 h-1 bg-slate-300 hidden sm:block"></div>
+                                    <div class="flex-shrink-0 p-3 bg-sky-100 text-sky-800 rounded-lg shadow-sm w-32">
+                                        <p class="font-bold">Build</p>
+                                        <p class="text-xs">Code is compiled</p>
+                                    </div>
+                                    <div class="w-10 h-1 bg-slate-300 hidden sm:block"></div>
+                                    <div class="flex-shrink-0 p-3 bg-sky-100 text-sky-800 rounded-lg shadow-sm w-32">
+                                        <p class="font-bold">Test</p>
+                                        <p class="text-xs">Unit & Integration tests run</p>
+                                    </div>
+                                    <div class="w-10 h-1 bg-slate-300 hidden sm:block"></div>
+                                    <div class="flex-shrink-0 p-3 bg-sky-100 text-sky-800 rounded-lg shadow-sm w-32">
+                                        <p class="font-bold">Deploy</p>
+                                        <p class="text-xs">Pushed to production</p>
+                                    </div>
+                                    <div class="w-10 h-1 bg-slate-300 hidden sm:block"></div>
+                                    <div class="flex-shrink-0 p-3 bg-sky-100 text-sky-800 rounded-lg shadow-sm w-32">
+                                        <p class="font-bold">Monitor</p>
+                                        <p class="text-xs">Observe performance</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </section>
+
+                <section id="uml">
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">UML & Schema Design</h2>
+                    <p class="mb-6">Before writing code, we design the blueprint. The following diagrams represent the structure and relationships within our "Amazon-lite" system. They provide a clear, high-level overview for all stakeholders and serve as a guide during implementation.</p>
+                    <div>
+                        <div class="border-b border-slate-200">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button class="tab-button active text-sky-600 border-sky-500 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-target="class-diagram">Class Diagram</button>
+                                <button class="tab-button text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-target="er-diagram">ER Diagram</button>
+                                <button class="tab-button text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-target="sequence-diagram">Sequence Diagram</button>
+                            </nav>
+                        </div>
+                        <div class="mt-6">
+                            <div id="class-diagram" class="tab-content">
+                                <h3 class="font-semibold text-lg text-slate-800 mb-2">Class Diagram</h3>
+                                <p class="mb-4">This diagram models the key objects in our system and their relationships. It focuses on the static structure: attributes (properties) and methods (behaviors).</p>
+                                <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs font-mono flex flex-wrap gap-4 justify-center">
+                                    <!-- User Class -->
+                                    <div class="border border-slate-400 bg-slate-50 w-48">
+                                        <div class="p-1 font-bold bg-slate-200 text-center">User</div>
+                                        <div class="p-1 border-t border-slate-400">- UserId: int<br>- Username: string<br>- Email: string<br>- HashedPassword: string</div>
+                                        <div class="p-1 border-t border-slate-400">+ Register()<br>+ Login()<br>+ GetProfile()</div>
+                                    </div>
+                                    <!-- Product Class -->
+                                    <div class="border border-slate-400 bg-slate-50 w-48">
+                                        <div class="p-1 font-bold bg-slate-200 text-center">Product</div>
+                                        <div class="p-1 border-t border-slate-400">- ProductId: int<br>- Name: string<br>- Price: decimal<br>- Stock: int</div>
+                                        <div class="p-1 border-t border-slate-400">+ GetDetails()<br>+ UpdateStock()</div>
+                                    </div>
+                                    <!-- Order Class -->
+                                    <div class="border border-slate-400 bg-slate-50 w-48">
+                                        <div class="p-1 font-bold bg-slate-200 text-center">Order</div>
+                                        <div class="p-1 border-t border-slate-400">- OrderId: int<br>- UserId: int<br>- OrderDate: DateTime<br>- TotalAmount: decimal</div>
+                                        <div class="p-1 border-t border-slate-400">+ CreateOrder()<br>+ GetStatus()</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="er-diagram" class="tab-content hidden">
+                                <h3 class="font-semibold text-lg text-slate-800 mb-2">Entity-Relationship (ER) Diagram</h3>
+                                <p class="mb-4">The ER diagram models the database schema. It shows the tables (entities), their columns (attributes), and the relationships between them (e.g., one-to-many).</p>
+                                <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs flex flex-wrap gap-6 justify-center items-center">
+                                    <!-- Users Table -->
+                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">Users</div>
+                                    <div class="text-slate-600 font-bold">-- (1..*) --</div>
+                                    <!-- Orders Table -->
+                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">Orders</div>
+                                    <div class="text-slate-600 font-bold">-- (1..*) --</div>
+                                    <!-- OrderItems Table -->
+                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">OrderItems</div>
+                                    <div class="text-slate-600 font-bold">-- (*..1) --</div>
+                                    <!-- Products Table -->
+                                    <div class="border-2 border-slate-600 p-2 w-40 text-center font-semibold">Products</div>
+                                </div>
+                                <p class="text-center mt-4 text-sm text-slate-500">A User can have many Orders. An Order can have many OrderItems. Each OrderItem relates to one Product.</p>
+                            </div>
+                            <div id="sequence-diagram" class="tab-content hidden">
+                                <h3 class="font-semibold text-lg text-slate-800 mb-2">Sequence Diagram</h3>
+                                <p class="mb-4">This diagram shows how objects interact over time to complete a specific task, such as a user placing an order. It visualizes the sequence of calls between different components.</p>
+                                <div class="p-4 bg-white rounded-lg border border-slate-200 text-xs overflow-x-auto">
+                                   <div class="flex justify-between text-center font-semibold gap-4 min-w-[500px]">
+                                       <div>Client</div>
+                                       <div>API Gateway</div>
+                                       <div>Order Service</div>
+                                       <div>DB</div>
+                                   </div>
+                                   <div class="mt-4 space-y-2 text-slate-600 min-w-[500px]">
+                                       <p class="relative">1. POST /orders <span class="absolute left-0 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-1/4 top-1/2 -mt-px w-1/2 h-px bg-slate-400"></span><span class="absolute right-1/4 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       <p class="relative text-right">2. CreateOrder(data) <span class="absolute left-1/4 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-1/2 top-1/2 -mt-px w-1/4 h-px bg-slate-400"></span><span class="absolute right-1/4 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       <p class="relative text-right">3. INSERT INTO Orders <span class="absolute left-3/4 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-3/4 top-1/2 -mt-px w-1/4 h-px bg-slate-400"></span><span class="absolute right-0 top-1/2 -mt-1 w-2 h-2 border-r-2 border-b-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       <p class="relative text-right">4. Return OrderId <span class="absolute left-3/4 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-3/4 top-1/2 -mt-px w-1/4 h-px bg-slate-400"></span><span class="absolute left-3/4 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                       <p class="relative">5. Return 201 Created <span class="absolute left-0 w-full top-1/2 border-t border-slate-400 border-dashed"></span><span class="absolute left-0 top-1/2 -mt-px w-3/4 h-px bg-slate-400"></span><span class="absolute left-0 top-1/2 -mt-1 w-2 h-2 border-l-2 border-t-2 border-slate-400 rotate-[-45deg]"></span></p>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="coding">
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Coding Practice & Implementation</h2>
+                    <p class="mb-6">This section provides the practical C# code for implementing the core modules of our backend system. Each example is a self-contained solution to a specific challenge, moving from foundational authentication to advanced concurrency handling.</p>
+                    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-semibold text-lg text-slate-800 mb-1">[Easy] Build Authentication Module</h3>
+                        <p class="text-sm text-slate-500 mb-4">A simple JWT-based authentication service.</p>
+                        <div class="code-block">
+                            <button class="copy-button" onclick="copyToClipboard(this)">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">
+public class AuthService
+{
+    private readonly IUserRepository _userRepository;
+    private readonly string _jwtSecret;
+
+    public AuthService(IUserRepository userRepository, string jwtSecret)
+    {
+        _userRepository = userRepository;
+        _jwtSecret = jwtSecret;
+    }
+
+    public string Register(string username, string password)
+    {
+        // Hash password and save user
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+        var user = new User { Username = username, HashedPassword = hashedPassword };
+        _userRepository.Add(user);
+        return GenerateJwtToken(user);
+    }
+
+    public string Login(string username, string password)
+    {
+        var user = _userRepository.GetByUsername(username);
+        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.HashedPassword))
+        {
+            throw new Exception("Invalid credentials");
+        }
+        return GenerateJwtToken(user);
+    }
+
+    private string GenerateJwtToken(User user)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_jwtSecret);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
+            Expires = DateTime.UtcNow.AddDays(7),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200 mt-6">
+                        <h3 class="font-semibold text-lg text-slate-800 mb-1">[Medium] Add Caching & Background Jobs</h3>
+                        <p class="text-sm text-slate-500 mb-4">Using Redis for caching and a message queue for background jobs.</p>
+                        <div class="code-block">
+                            <button class="copy-button" onclick="copyToClipboard(this)">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">
+// Caching with Redis
+public class ProductService
+{
+    private readonly IProductRepository _productRepo;
+    private readonly IDatabase _redisCache;
+
+    public ProductService(IProductRepository productRepo, IConnectionMultiplexer redis)
+    {
+        _productRepo = productRepo;
+        _redisCache = redis.GetDatabase();
+    }
+
+    public async Task<Product> GetProductById(int id)
+    {
+        string cacheKey = $"product:{id}";
+        string cachedProduct = await _redisCache.StringGetAsync(cacheKey);
+
+        if (!string.IsNullOrEmpty(cachedProduct))
+        {
+            return JsonSerializer.Deserialize<Product>(cachedProduct);
+        }
+
+        var product = await _productRepo.GetByIdAsync(id);
+        if (product != null)
+        {
+            await _redisCache.StringSetAsync(cacheKey, JsonSerializer.Serialize(product), TimeSpan.FromMinutes(10));
+        }
+        return product;
+    }
+}
+
+// Background Job with RabbitMQ
+public class OrderService
+{
+    private readonly IMessageQueuePublisher _publisher;
+
+    public OrderService(IMessageQueuePublisher publisher) {
+        _publisher = publisher;
+    }
+
+    public void PlaceOrder(Order order)
+    {
+        // ... save order to DB ...
+
+        // Publish event to process payment asynchronously
+        var paymentEvent = new { OrderId = order.Id, Amount = order.TotalAmount };
+        _publisher.Publish("payment_processing_queue", JsonSerializer.Serialize(paymentEvent));
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                     <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200 mt-6">
+                        <h3 class="font-semibold text-lg text-slate-800 mb-1">[Hard] Handle Concurrency in Distributed Environment</h3>
+                        <p class="text-sm text-slate-500 mb-4">Using a distributed lock (e.g., with Redis) to prevent race conditions when updating product stock.</p>
+                        <div class="code-block">
+                            <button class="copy-button" onclick="copyToClipboard(this)">Copy</button>
+                            <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">
+public class InventoryService
+{
+    private readonly IProductRepository _productRepo;
+    private readonly IDatabase _redisDb;
+
+    public InventoryService(IProductRepository productRepo, IConnectionMultiplexer redis)
+    {
+        _productRepo = productRepo;
+        _redisDb = redis.GetDatabase();
+    }
+
+    public async Task<bool> DecreaseStock(int productId, int quantity)
+    {
+        var lockKey = $"lock:product:{productId}";
+        var lockToken = Guid.NewGuid().ToString();
+        
+        // Try to acquire a distributed lock
+        if (await _redisDb.LockTakeAsync(lockKey, lockToken, TimeSpan.FromSeconds(10)))
+        {
+            try
+            {
+                var product = await _productRepo.GetByIdAsync(productId);
+                if (product.Stock < quantity)
+                {
+                    return false; // Not enough stock
+                }
+
+                product.Stock -= quantity;
+                await _productRepo.UpdateAsync(product);
+                return true;
+            }
+            finally
+            {
+                // Release the lock
+                await _redisDb.LockReleaseAsync(lockKey, lockToken);
+            }
+        }
+        else
+        {
+            // Could not acquire lock, handle accordingly (e.g., retry or fail)
+            return false;
+        }
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="quiz">
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Knowledge Check</h2>
+                    <div class="space-y-6 bg-white p-6 rounded-lg border border-slate-200">
+                        <div class="quiz-question">
+                            <p class="font-semibold">1. Which of the following is the primary benefit of designing stateless APIs for scalability?</p>
+                            <div class="mt-2 space-y-2">
+                                <div>
+                                    <input type="radio" id="q1a" name="q1" value="a" class="hidden quiz-option">
+                                    <label for="q1a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) It improves database performance.</label>
+                                </div>
+                                <div>
+                                    <input type="radio" id="q1b" name="q1" value="b" class="hidden quiz-option">
+                                    <label for="q1b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) Any server instance can handle any client request, enabling horizontal scaling.</label>
+                                </div>
+                                <div>
+                                    <input type="radio" id="q1c" name="q1" value="c" class="hidden quiz-option">
+                                    <label for="q1c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) It makes logging and monitoring easier.</label>
+                                </div>
+                            </div>
+                            <div class="mt-3 hidden quiz-feedback text-sm" data-question="q1" data-answer="b"></div>
+                        </div>
+
+                         <div class="quiz-question pt-4 border-t border-slate-200">
+                            <p class="font-semibold">2. What is the main purpose of a CI/CD pipeline?</p>
+                            <div class="mt-2 space-y-2">
+                                <div>
+                                    <input type="radio" id="q2a" name="q2" value="a" class="hidden quiz-option">
+                                    <label for="q2a" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">a) To manually deploy code changes during off-peak hours.</label>
+                                </div>
+                                <div>
+                                    <input type="radio" id="q2b" name="q2" value="b" class="hidden quiz-option">
+                                    <label for="q2b" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">b) To write unit tests for the application.</label>
+                                </div>
+                                <div>
+                                    <input type="radio" id="q2c" name="q2" value="c" class="hidden quiz-option">
+                                    <label for="q2c" class="block p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">c) To automate the build, test, and deployment process for faster and more reliable software delivery.</label>
+                                </div>
+                            </div>
+                            <div class="mt-3 hidden quiz-feedback text-sm" data-question="q2" data-answer="c"></div>
+                        </div>
+
+                        <button id="check-quiz" class="bg-sky-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-sky-600 transition-colors">Check Answers</button>
+                    </div>
+                </section>
+
+                <section id="challenge">
+                    <h2 class="text-3xl font-bold text-slate-900 font-lexend mb-6">Self-Assessment Challenge</h2>
+                    <div class="bg-white p-6 rounded-lg border border-slate-200">
+                        <p class="font-semibold text-slate-800">Your Challenge: Design the "Notification Service"</p>
+                        <p class="mt-2">Based on the "Amazon-lite" case study, design a `NotificationService`. This service should be responsible for sending emails to users for events like "Order Confirmed" and "Order Shipped".</p>
+                        <p class="mt-3 font-medium">Requirements:</p>
+                        <ul class="list-disc list-inside mt-2 space-y-1 text-slate-600">
+                            <li>The service should be decoupled from the `OrderService`. The `OrderService` should not have to wait for an email to be sent.</li>
+                            <li>The service must be resilient. If an email fails to send, it should be retried automatically a few times.</li>
+                            <li>Create a simple Class Diagram for your proposed design.</li>
+                        </ul>
+                        <button id="reveal-solution" class="mt-6 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">Reveal Solution</button>
+                        <div id="solution" class="hidden mt-6 pt-6 border-t border-slate-200">
+                            <h3 class="font-bold text-lg text-slate-900">Solution Breakdown</h3>
+                            <p class="mt-2">A robust solution involves using a message queue and a dedicated worker service.</p>
+                            <ol class="list-decimal list-inside mt-2 space-y-2">
+                                <li><strong>Decoupling with a Message Queue:</strong> The `OrderService` will not call the `NotificationService` directly. Instead, it will publish a message (e.g., `OrderConfirmedEvent`) to a message queue (like RabbitMQ or AWS SQS).</li>
+                                <li><strong>Dedicated Worker:</strong> A separate, independently running `NotificationWorker` service will listen for messages on this queue. When it receives a message, it will process it by calling the actual email sending logic.</li>
+                                <li><strong>Resiliency and Retries:</strong> Message queues naturally provide resiliency. If the `NotificationWorker` is down when an event is published, the message stays in the queue. When the worker comes back online, it processes the message. Most message queue systems also have built-in support for automatic retries with exponential backoff if processing fails (e.g., the email API is temporarily unavailable).</li>
+                            </ol>
+                            <h4 class="font-semibold mt-4 mb-2">Class Diagram:</h4>
+                             <div class="p-4 bg-slate-50 rounded-lg text-xs font-mono flex flex-wrap gap-4 justify-center">
+                                <div class="border border-slate-400 bg-white w-48">
+                                    <div class="p-1 font-bold bg-slate-200 text-center">OrderService</div>
+                                    <div class="p-1 border-t border-slate-400">- _publisher: IMessageQueue</div>
+                                    <div class="p-1 border-t border-slate-400">+ ConfirmOrder(order)</div>
+                                </div>
+                                <div class="border border-slate-400 bg-white w-48">
+                                    <div class="p-1 font-bold bg-slate-200 text-center">NotificationWorker</div>
+                                    <div class="p-1 border-t border-slate-400">- _emailClient: IEmailClient</div>
+                                    <div class="p-1 border-t border-slate-400">+ OnMessageReceived(event)</div>
+                                </div>
+                                <div class="border border-slate-400 bg-white w-48">
+                                    <div class="p-1 font-bold bg-slate-200 text-center">IEmailClient</div>
+                                    <div class="p-1 border-t border-slate-400"></div>
+                                    <div class="p-1 border-t border-slate-400">+ SendEmailAsync(to, subject, body)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Sticky Table of Contents -->
+            <aside class="w-full lg:w-1/4 lg:sticky top-8 self-start">
+                <div class="p-6 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-lg text-slate-900 font-lexend mb-4">On This Page</h3>
+                    <nav class="space-y-2">
+                        <a href="#introduction" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Introduction</a>
+                        <a href="#theory" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Core Theory</a>
+                        <a href="#uml" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">UML & Schema</a>
+                        <a href="#coding" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Coding Practice</a>
+                        <a href="#quiz" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Knowledge Check</a>
+                        <a href="#challenge" class="block text-slate-600 hover:text-sky-600 border-l-2 border-slate-200 pl-4 py-1 text-sm toc-link">Challenge</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- Copy to Clipboard ---
+        window.copyToClipboard = function(button) {
+            const codeBlock = button.nextElementSibling;
+            const text = codeBlock.innerText;
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            button.innerText = 'Copied!';
+            setTimeout(() => {
+                button.innerText = 'Copy';
+            }, 2000);
+        }
+
+        // --- Tabs ---
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'text-sky-600', 'border-sky-500');
+                    btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                });
+                button.classList.add('active', 'text-sky-600', 'border-sky-500');
+                button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+        
+        // --- Scalability Chart ---
+        const ctx = document.getElementById('scalabilityChart').getContext('2d');
+        const scalabilityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['1k Req/s', '5k Req/s', '10k Req/s', '10k Req/s (Failure)'],
+                datasets: [{
+                    label: 'Scalable System Response Time (ms)',
+                    data: [50, 65, 80, 85],
+                    backgroundColor: 'rgba(56, 189, 248, 0.6)',
+                    borderColor: 'rgba(14, 165, 233, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Fault-Tolerant System Availability (%)',
+                    data: [100, 100, 100, 99.9],
+                    backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                    borderColor: 'rgba(22, 163, 74, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 100
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                }
+            }
+        });
+
+        // --- TOC Scrollspy ---
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc-link');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const tocLink = document.querySelector(`.toc-link[href="#${id}"]`);
+                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    tocLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-20% 0px -60% 0px', threshold: 0.5 });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+        
+        // --- Quiz Logic ---
+        const checkQuizBtn = document.getElementById('check-quiz');
+        checkQuizBtn.addEventListener('click', () => {
+            const questions = document.querySelectorAll('.quiz-question');
+            questions.forEach(q => {
+                const feedbackEl = q.querySelector('.quiz-feedback');
+                const qName = feedbackEl.dataset.question;
+                const correctAnswer = feedbackEl.dataset.answer;
+                
+                const selectedAnswer = document.querySelector(`input[name="${qName}"]:checked`);
+                
+                if (selectedAnswer) {
+                    feedbackEl.classList.remove('hidden');
+                    if(selectedAnswer.value === correctAnswer) {
+                        feedbackEl.textContent = 'Correct! Well done.';
+                        feedbackEl.className = 'quiz-feedback mt-3 text-sm text-green-600 font-semibold';
+                    } else {
+                        feedbackEl.textContent = `Not quite. The correct answer is (${correctAnswer.toUpperCase()}).`;
+                        feedbackEl.className = 'quiz-feedback mt-3 text-sm text-red-600 font-semibold';
+                    }
+                } else {
+                    feedbackEl.classList.remove('hidden');
+                    feedbackEl.textContent = 'Please select an answer.';
+                    feedbackEl.className = 'quiz-feedback mt-3 text-sm text-amber-600 font-semibold';
+                }
+            });
+        });
+
+        // --- Reveal Solution ---
+        const revealBtn = document.getElementById('reveal-solution');
+        const solutionEl = document.getElementById('solution');
+        revealBtn.addEventListener('click', () => {
+            solutionEl.classList.toggle('hidden');
+            if(solutionEl.classList.contains('hidden')) {
+                revealBtn.textContent = 'Reveal Solution';
+            } else {
+                revealBtn.textContent = 'Hide Solution';
+            }
+        });
+
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 56: Capstone Start – URL Shortener (Full Design)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: The application is structured as a comprehensive, single-page educational lesson. It follows a logical, sequential flow from theory to practical application. A two-column layout is used: the main content on the left for focused learning and a sticky Table of Contents on the right for easy navigation. This structure was chosen because it's a proven and highly usable pattern for instructional content, allowing users to both follow the lesson linearly and jump to specific sections of interest without losing context. Key interactions include copy-to-clipboard for code, an interactive quiz for knowledge checks, and a toggle-able solution for the final challenge. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: System Design Process -> Goal: Organize/Inform -> Viz/Method: HTML/CSS Flowchart Diagram -> Interaction: Static -> Justification: Visually breaks down a complex process into simple, digestible steps. -> Library/Method: Tailwind CSS.
+        - Report Info: Database Schema -> Goal: Organize -> Viz/Method: HTML/CSS ER Diagram -> Interaction: Static -> Justification: Clearly represents entities and relationships without requiring external libraries or non-compliant graphics like SVG. -> Library/Method: Tailwind CSS.
+        - Report Info: URL Analytics -> Goal: Inform/Compare -> Viz/Method: Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Provides an interactive and engaging way to represent the analytics data (hit counts), making the concept less abstract. -> Library/Method: Chart.js/Canvas.
+        - Report Info: Coding examples/solutions -> Goal: Inform -> Viz/Method: Syntax-highlighted code blocks -> Interaction: Copy-to-Clipboard button -> Justification: Improves user experience by making it easy to grab and use code snippets. -> Library/Method: Vanilla JS.
+        - Report Info: Knowledge Check -> Goal: Engage/Assess -> Viz/Method: Interactive Quiz Form -> Interaction: Click to select, submit for feedback -> Justification: Actively engages the user and provides immediate feedback on their comprehension. -> Library/Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Lexend', sans-serif; }
+        .toc-link.active {
+            color: #0284c7; /* sky-600 */
+            font-weight: 600;
+            border-left-color: #0284c7;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #e2e8f0;
+            color: #475569;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .quiz-option.selected {
+            background-color: #e0f2fe; /* sky-100 */
+            border-color: #38bdf8; /* sky-400 */
+        }
+        .quiz-option.correct {
+            background-color: #dcfce7; /* green-100 */
+            border-color: #4ade80; /* green-400 */
+        }
+        .quiz-option.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #f87171; /* red-400 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <div id="app">
+        <div class="bg-slate-100/80 border-b border-slate-200">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+                <header class="text-center">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                    <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+                </header>
+                <a href="roadmap.html?week=8" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                    Return to Homepage
+                </a>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="lg:grid lg:grid-cols-4 lg:gap-12">
+                <main class="lg:col-span-3 space-y-12">
+                    <section id="introduction">
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Day 56: Capstone Start – URL Shortener (Full Design)</h2>
+                            <p class="mt-4 text-lg">Welcome to the first day of your capstone project! Today, we'll dive deep into the complete design of a URL shortener service. This is a classic system design problem that touches upon databases, API design, scalability, and algorithms. By the end of this lesson, you'll have a comprehensive understanding of how services like Bitly or TinyURL are built from the ground up.</p>
+                        </div>
+                    </section>
+
+                    <section id="theory" class="space-y-8">
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight border-b pb-2">✅ Theory Topics</h2>
+                        
+                        <div id="theory-requirements" class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-2xl font-semibold text-slate-800">Requirements of a URL Shortener</h3>
+                            <p class="mt-4">Before writing any code, we must define what our system needs to do. These are the functional and non-functional requirements.</p>
+                            <ul class="mt-4 space-y-3 list-disc list-inside">
+                                <li><strong>Functional Requirements:</strong>
+                                    <ul class="ml-6 space-y-2 list-['-_'] list-inside">
+                                        <li>Users can submit a long URL and receive a much shorter one.</li>
+                                        <li>When a user accesses the short URL, they should be redirected to the original long URL.</li>
+                                        <li>Users should optionally be able to set an expiration time for their short URLs.</li>
+                                        <li>The system should collect analytics for each link (e.g., click count).</li>
+                                    </ul>
+                                </li>
+                                <li class="mt-4"><strong>Non-Functional Requirements:</strong>
+                                    <ul class="ml-6 space-y-2 list-['-_'] list-inside">
+                                        <li><strong>Scalability:</strong> The system must handle a high volume of traffic for both creating links and redirections. Read traffic (redirections) will be much higher than write traffic (creations).</li>
+                                        <li><strong>Availability:</strong> The service must be highly available. If the redirection service is down, all shortened links become useless.</li>
+                                        <li><strong>Latency:</strong> Redirections must be extremely fast, happening in milliseconds.</li>
+                                        <li><strong>Uniqueness:</strong> Every long URL should map to a unique short URL. The generated short codes must not collide.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <div class="mt-6 p-4 bg-sky-50 border-l-4 border-sky-400 rounded-r-lg">
+                                <h4 class="font-bold text-sky-800">Analogy: The Library Index Card</h4>
+                                <p class="mt-2 text-sky-700">Think of a URL shortener like a library's card catalog. The long URL is the book's detailed information (title, author, location). The short URL is the simple, unique index card number. When you give the librarian the card number (short URL), they can quickly find the exact book you need (long URL). Scalability is like having a library that can grow to millions of books without slowing down the lookup process.</p>
+                            </div>
+                        </div>
+
+                        <div id="theory-schema" class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-2xl font-semibold text-slate-800">Designing the Schema</h3>
+                            <p class="mt-4">The core of our service is the mapping from a short URL to a long URL. This requires a carefully designed database schema. We'll need to store the original URL, the generated short code, and some metadata.</p>
+                            <p class="mt-2">A crucial design decision is how to generate the unique short code. A common and effective approach is to use a unique, auto-incrementing integer ID from our database for each new URL. This ID is then converted into a short, alphanumeric string. We'll use a technique called <strong>Base62 encoding</strong> for this.</p>
+                            <div class="mt-6 p-4 bg-teal-50 border-l-4 border-teal-400 rounded-r-lg">
+                                <h4 class="font-bold text-teal-800">What is Base62 Encoding?</h4>
+                                <p class="mt-2 text-teal-700">Base62 uses 62 characters: 10 digits (0-9), 26 lowercase letters (a-z), and 26 uppercase letters (A-Z). By converting our unique integer ID (which is Base10) to Base62, we can represent large numbers with very few characters. For example, the number `1,000,000` in Base10 becomes `gfl` in Base62. This is perfect for short, clean URLs.</p>
+                            </div>
+                            <h4 class="mt-6 font-semibold text-slate-800">Core Table: `Urls`</h4>
+                            <div class="mt-2 overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-100">
+                                        <tr>
+                                            <th class="p-2 border">Column Name</th>
+                                            <th class="p-2 border">Data Type</th>
+                                            <th class="p-2 border">Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="p-2 border">`Id`</td>
+                                            <td class="p-2 border">`BIGINT` (Primary Key, Auto-Increment)</td>
+                                            <td class="p-2 border">Unique identifier for each URL. This is the number we'll encode.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 border">`LongUrl`</td>
+                                            <td class="p-2 border">`TEXT` or `VARCHAR(2048)`</td>
+                                            <td class="p-2 border">The original, full-length URL.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 border">`ShortCode`</td>
+                                            <td class="p-2 border">`VARCHAR(10)` (Unique Index)</td>
+                                            <td class="p-2 border">The generated Base62 string.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 border">`CreatedAt`</td>
+                                            <td class="p-2 border">`DATETIME`</td>
+                                            <td class="p-2 border">Timestamp of when the link was created.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 border">`ExpiresAt`</td>
+                                            <td class="p-2 border">`DATETIME` (Nullable)</td>
+                                            <td class="p-2 border">Optional expiration date for the link.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div id="theory-api" class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-2xl font-semibold text-slate-800">API Design for CRUD Operations</h3>
+                            <p class="mt-4">We'll design a RESTful API to manage our URLs. CRUD stands for Create, Read, Update, and Delete. For a URL shortener, the primary operations are Create (shorten), Read (expand/redirect), and Delete.</p>
+                            <ul class="mt-4 space-y-4">
+                                <li>
+                                    <h4 class="font-semibold text-slate-800">1. Shorten a URL (Create)</h4>
+                                    <p class="mt-1">This endpoint takes a long URL and returns a short URL.</p>
+                                    <div class="mt-2 code-block">
+                                        <pre class="bg-slate-100 rounded-md p-4 text-sm font-mono"><code class="language-http">POST /api/urls
+Host: yourservice.com
+Content-Type: application/json
+
+{
+  "longUrl": "https://en.wikipedia.org/wiki/System_design",
+  "expiresInDays": 30
+}</code></pre>
+                                        <button class="copy-btn">Copy</button>
+                                    </div>
+                                    <p class="mt-1"><strong>Response:</strong></p>
+                                     <div class="mt-2 code-block">
+                                        <pre class="bg-slate-100 rounded-md p-4 text-sm font-mono"><code class="language-json">{
+  "shortUrl": "http://yourservice.com/gfl"
+}</code></pre>
+                                         <button class="copy-btn">Copy</button>
+                                     </div>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold text-slate-800">2. Expand/Redirect a URL (Read)</h4>
+                                    <p class="mt-1">This is the core redirection logic. This endpoint is not typically a JSON API but a direct HTTP redirect.</p>
+                                    <div class="mt-2 code-block">
+                                        <pre class="bg-slate-100 rounded-md p-4 text-sm font-mono"><code class="language-http">GET /{shortCode}
+Host: yourservice.com</code></pre>
+                                        <button class="copy-btn">Copy</button>
+                                    </div>
+                                    <p class="mt-1"><strong>Response:</strong> A `301 Moved Permanently` or `302 Found` redirect.</p>
+                                    <div class="mt-2 code-block">
+                                        <pre class="bg-slate-100 rounded-md p-4 text-sm font-mono"><code class="language-http">HTTP/1.1 302 Found
+Location: https://en.wikipedia.org/wiki/System_design</code></pre>
+                                        <button class="copy-btn">Copy</button>
+                                    </div>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold text-slate-800">3. Delete a URL (Delete)</h4>
+                                    <p class="mt-1">Allows for the removal of a shortened URL.</p>
+                                    <div class="mt-2 code-block">
+                                        <pre class="bg-slate-100 rounded-md p-4 text-sm font-mono"><code class="language-http">DELETE /api/urls/{shortCode}
+Host: yourservice.com
+Authorization: Bearer <user_api_key></code></pre>
+                                        <button class="copy-btn">Copy</button>
+                                    </div>
+                                    <p class="mt-1"><strong>Response:</strong> `204 No Content` on success.</p>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div id="theory-policies" class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-2xl font-semibold text-slate-800">Rate Limiting & Expiration Policies</h3>
+                            <p class="mt-4">To prevent abuse and ensure service stability, we need to implement certain policies.</p>
+                            <h4 class="mt-4 font-semibold text-slate-800">Rate Limiting</h4>
+                            <p>This restricts how many requests a user can make in a given time frame. For example, we might limit users to creating 10 short URLs per minute. This protects our service from being spammed by bots.</p>
+                            <div class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
+                                <h4 class="font-bold text-amber-800">How it Works: Token Bucket Algorithm</h4>
+                                <p class="mt-2 text-amber-700">A simple and popular algorithm is the Token Bucket. Imagine each user has a bucket that can hold a fixed number of tokens (e.g., 10). Tokens are added to the bucket at a steady rate (e.g., 1 token every 6 seconds). Each API request requires one token. If the bucket is empty, the request is rejected (`429 Too Many Requests`). This allows for short bursts of traffic while controlling the average rate.</p>
+                            </div>
+                            <h4 class="mt-6 font-semibold text-slate-800">Expiration Policies</h4>
+                            <p>Storing URLs forever can be costly. We need a way to clean up old, unused links.</p>
+                            <ul class="mt-2 space-y-2 list-disc list-inside">
+                                <li><strong>User-Defined Expiration:</strong> Allow users to set an expiration date when they create the link.</li>
+                                <li><strong>System Cleanup:</strong> Run a background job (a "cron job") periodically (e.g., once a day) to find and delete all records where `ExpiresAt` is in the past. This keeps the database lean and performant.</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section id="coding" class="space-y-8">
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight border-b pb-2">✅ Coding Practice (C#)</h2>
+                        <p>Let's translate the theory into code. Here are the practice problems and their solutions using C#.</p>
+
+                        <div id="coding-easy" class="p-6 bg-white rounded-xl shadow-sm">
+                             <h3 class="text-2xl font-semibold text-slate-800">[Easy] Generate Short Code for a Given URL</h3>
+                             <p class="mt-4">The first step is implementing the Base62 encoding logic. Write a function that takes a long integer (our database ID) and converts it to a Base62 string.</p>
+                             <h4 class="mt-6 font-semibold text-slate-800">Solution: Base62 Encoder</h4>
+                             <div class="mt-2 code-block">
+<pre class="bg-slate-800 text-white rounded-md p-4 text-sm font-mono"><code class="language-csharp">public class Base62Converter
+{
+    private const string Characters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static readonly int Base = Characters.Length;
+
+    public static string Encode(long number)
+    {
+        if (number == 0) return Characters[0].ToString();
+
+        var sb = new System.Text.StringBuilder();
+        while (number > 0)
+        {
+            sb.Insert(0, Characters[(int)(number % Base)]);
+            number /= Base;
+        }
+        return sb.ToString();
+    }
+
+    public static long Decode(string str)
+    {
+        long number = 0;
+        for (int i = 0; i < str.Length; i++)
+        {
+            number = number * Base + Characters.IndexOf(str[i]);
+        }
+        return number;
+    }
+}
+
+// Example Usage:
+// long id = 12345;
+// string shortCode = Base62Converter.Encode(id); // Result: "3d7"
+// long originalId = Base62Converter.Decode("3d7"); // Result: 12345
+</code></pre>
+                                 <button class="copy-btn" style="color: #cbd5e1; background-color: #334155;">Copy</button>
+                             </div>
+                        </div>
+
+                        <div id="coding-medium" class="p-6 bg-white rounded-xl shadow-sm">
+                             <h3 class="text-2xl font-semibold text-slate-800">[Medium] CRUD APIs for URLs</h3>
+                             <p class="mt-4">Implement the basic API endpoints for creating and retrieving URLs using ASP.NET Core Minimal APIs.</p>
+                             <h4 class="mt-6 font-semibold text-slate-800">Solution: API Controller</h4>
+                             <p class="mt-2 text-sm text-slate-600">(Note: This is a simplified example. A real implementation would use a database and dependency injection.)</p>
+                             <div class="mt-2 code-block">
+<pre class="bg-slate-800 text-white rounded-md p-4 text-sm font-mono"><code class="language-csharp">// In-memory store for demonstration
+var urls = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
+var idCounter = new System.Threading.AtomicLong(10000);
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// POST /api/urls - Shorten URL
+app.MapPost("/api/urls", (UrlShortenRequest request) => {
+    var id = idCounter.IncrementAndGet();
+    var shortCode = Base62Converter.Encode(id);
+    urls.TryAdd(shortCode, request.LongUrl);
+    
+    var shortUrl = $"http://{app.Urls.First()}/{shortCode}";
+    return Results.Ok(new { ShortUrl = shortUrl });
+});
+
+// GET /{shortCode} - Redirect
+app.MapGet("/{shortCode}", (string shortCode) => {
+    if (urls.TryGetValue(shortCode, out var longUrl))
+    {
+        return Results.Redirect(longUrl, isPermanent: false);
+    }
+    return Results.NotFound();
+});
+
+app.Run();
+
+public record UrlShortenRequest(string LongUrl);
+</code></pre>
+                                 <button class="copy-btn" style="color: #cbd5e1; background-color: #334155;">Copy</button>
+                             </div>
+                        </div>
+                        
+                        <div id="coding-hard" class="p-6 bg-white rounded-xl shadow-sm">
+                             <h3 class="text-2xl font-semibold text-slate-800">[Hard] Add Analytics</h3>
+                             <p class="mt-4">Modify the redirection endpoint to track analytics, such as the total number of hits for a given short code.</p>
+                             <h4 class="mt-6 font-semibold text-slate-800">Solution: Analytics-Enabled Redirect</h4>
+                             <div class="mt-2 code-block">
+<pre class="bg-slate-800 text-white rounded-md p-4 text-sm font-mono"><code class="language-csharp">// In-memory stores for demonstration
+var urls = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
+var analytics = new System.Collections.Concurrent.ConcurrentDictionary<string, long>();
+var idCounter = new System.Threading.AtomicLong(10000);
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// ... (POST endpoint remains the same) ...
+
+// GET /{shortCode} - Redirect with Analytics
+app.MapGet("/{shortCode}", (string shortCode, HttpContext context) => {
+    if (urls.TryGetValue(shortCode, out var longUrl))
+    {
+        // Increment hit count
+        analytics.AddOrUpdate(shortCode, 1, (key, count) => count + 1);
+
+        // Log other info (in a real app, this would be more detailed)
+        Console.WriteLine($"Redirecting {shortCode} to {longUrl}. IP: {context.Connection.RemoteIpAddress}");
+        
+        return Results.Redirect(longUrl, isPermanent: false);
+    }
+    return Results.NotFound();
+});
+
+// GET /api/urls/{shortCode}/analytics - View Analytics
+app.MapGet("/api/urls/{shortCode}/analytics", (string shortCode) => {
+    if (analytics.TryGetValue(shortCode, out var hitCount))
+    {
+        return Results.Ok(new { ShortCode = shortCode, Hits = hitCount });
+    }
+    return Results.NotFound(new { Message = "No analytics found for this code." });
+});
+
+app.Run();
+</code></pre>
+                                 <button class="copy-btn" style="color: #cbd5e1; background-color: #334155;">Copy</button>
+                             </div>
+                             <h4 class="mt-6 font-semibold text-slate-800">Interactive Analytics Visualization</h4>
+                             <p class="mt-2">Here's an example of how you might visualize the data from the analytics endpoint. This chart shows the hit count for a few popular links.</p>
+                             <div class="mt-4 chart-container">
+                                 <canvas id="analyticsChart"></canvas>
+                             </div>
+                        </div>
+                    </section>
+                    
+                    <section id="uml" class="space-y-8">
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight border-b pb-2">✅ UML/Schema Task</h2>
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-2xl font-semibold text-slate-800">Entity-Relationship (ER) Diagram</h3>
+                            <p class="mt-4">This diagram shows the relationships between the main entities in our system: `User`, `Url`, and `Analytics`.</p>
+                            <div class="mt-6 p-4 border rounded-lg bg-slate-50 flex flex-col md:flex-row justify-center items-center gap-8">
+                                <!-- User Entity -->
+                                <div class="w-48 border-2 border-slate-700 rounded-md bg-white shadow-lg">
+                                    <div class="bg-slate-700 text-white p-2 font-bold text-center">User</div>
+                                    <ul class="p-2 text-sm">
+                                        <li class="font-semibold">Id (PK)</li>
+                                        <li>Username</li>
+                                        <li>ApiKey</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="text-slate-600 font-mono text-center">has many ▶</div>
+
+                                <!-- Url Entity -->
+                                <div class="w-48 border-2 border-sky-600 rounded-md bg-white shadow-lg">
+                                    <div class="bg-sky-600 text-white p-2 font-bold text-center">Url</div>
+                                    <ul class="p-2 text-sm">
+                                        <li class="font-semibold">Id (PK)</li>
+                                        <li>LongUrl</li>
+                                        <li>ShortCode</li>
+                                        <li>UserId (FK)</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="text-slate-600 font-mono text-center">has many ▶</div>
+                                
+                                <!-- Analytics Entity -->
+                                <div class="w-48 border-2 border-teal-600 rounded-md bg-white shadow-lg">
+                                    <div class="bg-teal-600 text-white p-2 font-bold text-center">Analytics</div>
+                                    <ul class="p-2 text-sm">
+                                        <li class="font-semibold">Id (PK)</li>
+                                        <li>UrlId (FK)</li>
+                                        <li>Timestamp</li>
+                                        <li>IpAddress</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <ul class="mt-4 list-disc list-inside space-y-1">
+                                <li>A `User` can have many `Url` records.</li>
+                                <li>A `Url` record is owned by one `User`.</li>
+                                <li>A `Url` can have many `Analytics` records (one for each click).</li>
+                                <li>An `Analytics` record belongs to one `Url`.</li>
+                            </ul>
+                        </div>
+                    </section>
+                    
+                    <section id="casestudy" class="space-y-8">
+                         <h2 class="text-3xl font-bold text-slate-800 tracking-tight border-b pb-2">✅ Case Study: End-to-End Backend Build</h2>
+                         <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-2xl font-semibold text-slate-800">Building a Production-Ready URL Shortener</h3>
+                            <p class="mt-4">Let's walk through the high-level steps to build this service for production.</p>
+                            <ol class="mt-4 space-y-6 relative border-l border-slate-200 ml-4">
+                                <li class="ml-8">
+                                    <span class="absolute flex items-center justify-center w-8 h-8 bg-sky-100 rounded-full -left-4 ring-8 ring-white">1</span>
+                                    <h4 class="font-semibold text-slate-800">Database Selection & Schema</h4>
+                                    <p class="mt-1">Choose a database. For high read throughput, a NoSQL database like Redis or Cassandra can be used as a cache in front of a relational SQL database (like PostgreSQL or MySQL). The SQL DB acts as the source of truth, while the cache handles the millions of fast redirects.</p>
+                                </li>
+                                <li class="ml-8">
+                                    <span class="absolute flex items-center justify-center w-8 h-8 bg-sky-100 rounded-full -left-4 ring-8 ring-white">2</span>
+                                    <h4 class="font-semibold text-slate-800">API Layer Implementation</h4>
+                                    <p class="mt-1">Build the API using a robust framework (e.g., ASP.NET Core, Express.js, Spring Boot). Implement the endpoints we designed. The flow for creating a short link is:</p>
+                                    <ol class="list-decimal list-inside mt-2 text-sm space-y-1">
+                                        <li>Receive `POST /api/urls` request with a long URL.</li>
+                                        <li>Save the long URL to the primary SQL database. This generates a unique `Id`.</li>
+                                        <li>Encode the `Id` into a `shortCode` using Base62.</li>
+                                        <li>Update the database record with the new `shortCode`.</li>
+                                        <li>Return the full short URL to the user.</li>
+                                    </ol>
+                                </li>
+                                <li class="ml-8">
+                                    <span class="absolute flex items-center justify-center w-8 h-8 bg-sky-100 rounded-full -left-4 ring-8 ring-white">3</span>
+                                    <h4 class="font-semibold text-slate-800">Redirection and Caching</h4>
+                                    <p class="mt-1">The `GET /{shortCode}` endpoint is critical. When a request comes in:</p>
+                                     <ol class="list-decimal list-inside mt-2 text-sm space-y-1">
+                                        <li>First, check the high-speed cache (Redis) for the `shortCode`.</li>
+                                        <li><strong>Cache Hit:</strong> If found, immediately return the `302 Found` redirect with the long URL. This is the fast path.</li>
+                                        <li><strong>Cache Miss:</strong> If not in the cache, query the primary SQL database for the `shortCode`.</li>
+                                        <li>If found in the DB, add it to the cache for future requests (with an expiration time) and then perform the redirect.</li>
+                                        <li>If not found in the DB, return a `404 Not Found`.</li>
+                                    </ol>
+                                </li>
+                                <li class="ml-8">
+                                    <span class="absolute flex items-center justify-center w-8 h-8 bg-sky-100 rounded-full -left-4 ring-8 ring-white">4</span>
+                                    <h4 class="font-semibold text-slate-800">Asynchronous Analytics</h4>
+                                     <p class="mt-1">Logging analytics synchronously during a redirect adds latency. Instead, push analytics events (click info, timestamp, IP) into a message queue like RabbitMQ or Kafka. A separate worker service can then process these messages in batches and write them to an analytics database (which could be optimized for writes, like TimescaleDB or ClickHouse).</p>
+                                </li>
+                                <li class="ml-8">
+                                    <span class="absolute flex items-center justify-center w-8 h-8 bg-sky-100 rounded-full -left-4 ring-8 ring-white">5</span>
+                                    <h4 class="font-semibold text-slate-800">Deployment and Scaling</h4>
+                                    <p class="mt-1">Deploy the API service behind a load balancer. Use auto-scaling groups to add more instances of the API service as traffic increases. Use a managed database service that can scale independently. This architecture ensures high availability and scalability.</p>
+                                </li>
+                            </ol>
+                         </div>
+                    </section>
+
+                    <section id="quiz" class="space-y-8">
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight border-b pb-2">🧠 Knowledge Check Quiz</h2>
+                        <div id="quiz-container" class="p-6 bg-white rounded-xl shadow-sm space-y-6">
+                            <!-- Questions will be injected here by JS -->
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button id="submit-quiz-btn" class="px-6 py-2 bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors shadow-sm">Submit Answers</button>
+                            <div id="quiz-result" class="text-lg font-semibold text-slate-800"></div>
+                        </div>
+                    </section>
+
+                    <section id="challenge" class="space-y-8">
+                        <h2 class="text-3xl font-bold text-slate-800 tracking-tight border-b pb-2">🚀 Self-Assessment Challenge</h2>
+                        <div class="p-6 bg-white rounded-xl shadow-sm">
+                            <h3 class="text-xl font-semibold text-slate-800">Challenge: Custom Short Codes</h3>
+                            <p class="mt-4">Your task is to extend the URL shortener design to allow users to provide their own custom short codes (e.g., `yourservice.com/my-event`).</p>
+                            <p class="mt-2">Consider the following:</p>
+                            <ul class="mt-2 list-disc list-inside space-y-1">
+                                <li>How would you modify the API request to accept an optional custom code?</li>
+                                <li>What happens if a user tries to claim a custom code that's already taken?</li>
+                                <li>How does this affect the schema and the link creation logic? Does the auto-incrementing ID/Base62 approach still work alongside custom codes?</li>
+                            </ul>
+                            <button id="toggle-solution-btn" class="mt-6 inline-block px-4 py-2 text-sm bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 transition-colors">Show Solution</button>
+                            <div id="solution-content" class="hidden mt-6 pt-4 border-t border-slate-200 space-y-4">
+                                <h4 class="text-lg font-semibold text-slate-800">Proposed Solution</h4>
+                                <p>1. <strong>API Modification:</strong> The `POST /api/urls` request body would be updated to accept an optional `customCode` field.</p>
+                                <div class="code-block">
+                                    <pre class="bg-slate-100 rounded-md p-4 text-sm font-mono"><code class="language-json">{
+  "longUrl": "...",
+  "customCode": "my-event" // Optional
+}</code></pre>
+                                    <button class="copy-btn">Copy</button>
+                                </div>
+                                <p>2. <strong>Conflict Handling:</strong> When a request with a `customCode` comes in, you must first query the database to see if that code is already present in the `ShortCode` column. If it is, you must return an error response, such as `409 Conflict`, with a message like "This custom alias is already taken."</p>
+                                <p>3. <strong>Schema & Logic:</strong> The schema remains largely the same, but the logic for creating a `ShortCode` changes:</p>
+                                <ul class="list-disc list-inside text-sm space-y-1">
+                                    <li><strong>If `customCode` is provided:</strong> Validate it (e.g., check for allowed characters, length) and check for uniqueness. If valid and unique, use it as the `ShortCode`. You still save the record and get a unique `Id`, but you don't use the `Id` to generate the code.</li>
+                                    <li><strong>If `customCode` is NOT provided:</strong> Follow the original logic. Save the record, get the auto-generated `Id`, and then encode that `Id` using Base62 to create the `ShortCode`.</li>
+                                </ul>
+                                <p>This hybrid approach allows for both predictable, system-generated short URLs and user-friendly, custom-branded links within the same system. The `ShortCode` column must have a `UNIQUE` constraint to enforce this at the database level.</p>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <aside class="hidden lg:block lg:col-span-1">
+                    <div class="sticky top-24">
+                        <h4 class="font-semibold text-slate-800 mb-3">On this page</h4>
+                        <nav id="toc" class="text-sm">
+                            <ul class="space-y-2">
+                                <li><a href="#introduction" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">Introduction</a></li>
+                                <li>
+                                    <a href="#theory" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">✅ Theory Topics</a>
+                                    <ul class="pl-4 mt-2 space-y-2">
+                                        <li><a href="#theory-requirements" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">Requirements</a></li>
+                                        <li><a href="#theory-schema" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">Schema Design</a></li>
+                                        <li><a href="#theory-api" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">API Design</a></li>
+                                        <li><a href="#theory-policies" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">Policies</a></li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <a href="#coding" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">✅ Coding Practice</a>
+                                    <ul class="pl-4 mt-2 space-y-2">
+                                        <li><a href="#coding-easy" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">[Easy] Short Code Gen</a></li>
+                                        <li><a href="#coding-medium" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">[Medium] CRUD APIs</a></li>
+                                        <li><a href="#coding-hard" class="toc-link block border-l-2 border-slate-200 pl-4 text-slate-500 hover:text-sky-600 hover:border-sky-600">[Hard] Add Analytics</a></li>
+                                    </ul>
+                                </li>
+                                <li><a href="#uml" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">✅ UML/Schema Task</a></li>
+                                <li><a href="#casestudy" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">✅ Case Study</a></li>
+                                <li><a href="#quiz" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">🧠 Knowledge Check</a></li>
+                                <li><a href="#challenge" class="toc-link block border-l-2 border-slate-200 pl-4 py-1 text-slate-600 hover:text-sky-600 hover:border-sky-600">🚀 Self-Assessment</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+            <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+            <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Copy to clipboard functionality
+            const allCodeBlocks = document.querySelectorAll('.code-block');
+            allCodeBlocks.forEach(block => {
+                const copyButton = block.querySelector('.copy-btn');
+                const code = block.querySelector('code').innerText;
+                copyButton.addEventListener('click', () => {
+                    navigator.clipboard.writeText(code).then(() => {
+                        copyButton.innerText = 'Copied!';
+                        setTimeout(() => {
+                            copyButton.innerText = 'Copy';
+                        }, 2000);
+                    });
+                });
+            });
+
+            // Sticky ToC highlighting
+            const sections = document.querySelectorAll('main section[id]');
+            const tocLinks = document.querySelectorAll('#toc a.toc-link');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        tocLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: '-20% 0px -80% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Analytics Chart
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            const analyticsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['/gfl', '/3d7', '/abc', '/xyz', '/jkl'],
+                    datasets: [{
+                        label: 'Total Hits',
+                        data: [1250, 890, 720, 550, 310],
+                        backgroundColor: 'rgba(2, 132, 199, 0.6)', // sky-600
+                        borderColor: 'rgba(2, 132, 199, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Clicks'
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'Short Code'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Top 5 Most Clicked Links'
+                        }
+                    }
+                }
+            });
+
+            // Quiz functionality
+            const quizData = [
+                {
+                    question: "What is the primary advantage of using Base62 encoding for short codes?",
+                    options: ["It's more secure than other encodings.", "It generates the shortest possible strings for a given number using alphanumeric characters.", "It's the only encoding that guarantees uniqueness.", "It's easier to implement than Base64."],
+                    answer: "It generates the shortest possible strings for a given number using alphanumeric characters."
+                },
+                {
+                    question: "In a highly scalable URL shortener, why is a cache like Redis used?",
+                    options: ["To store user login information.", "To serve redirects extremely quickly without hitting the main database on every request.", "To run the Base62 encoding algorithm.", "To permanently store all long URLs."],
+                    answer: "To serve redirects extremely quickly without hitting the main database on every request."
+                },
+                {
+                    question: "What HTTP status code is most appropriate for a successful URL redirection?",
+                    options: ["200 OK", "404 Not Found", "500 Internal Server Error", "302 Found"],
+                    answer: "302 Found"
+                },
+                {
+                    question: "Why is rate limiting important for a URL shortening service?",
+                    options: ["To ensure users create very long URLs.", "To charge users more for the service.", "To prevent abuse and spam from overwhelming the system.", "To slow down the redirection process."],
+                    answer: "To prevent abuse and spam from overwhelming the system."
+                }
+            ];
+
+            const quizContainer = document.getElementById('quiz-container');
+            quizData.forEach((q, index) => {
+                const questionEl = document.createElement('div');
+                questionEl.className = 'quiz-question';
+                let optionsHtml = '';
+                q.options.forEach(option => {
+                    optionsHtml += `<div class="quiz-option mt-2 p-3 border rounded-lg cursor-pointer hover:bg-slate-100 transition-colors" data-question="${index}">${option}</div>`;
+                });
+
+                questionEl.innerHTML = `
+                    <p class="font-semibold text-slate-800">${index + 1}. ${q.question}</p>
+                    <div class="mt-2 space-y-2">${optionsHtml}</div>
+                `;
+                quizContainer.appendChild(questionEl);
+            });
+
+            const selectedAnswers = new Array(quizData.length).fill(null);
+            quizContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quiz-option')) {
+                    const qIndex = e.target.dataset.question;
+                    selectedAnswers[qIndex] = e.target.innerText;
+                    
+                    // Visual feedback for selection
+                    const optionsForQuestion = quizContainer.querySelectorAll(`[data-question="${qIndex}"]`);
+                    optionsForQuestion.forEach(opt => opt.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                }
+            });
+
+            document.getElementById('submit-quiz-btn').addEventListener('click', () => {
+                let score = 0;
+                quizData.forEach((q, index) => {
+                    const questionDiv = quizContainer.querySelectorAll('.quiz-question')[index];
+                    const optionsDivs = questionDiv.querySelectorAll('.quiz-option');
+                    
+                    optionsDivs.forEach(opt => {
+                        const isCorrect = opt.innerText === q.answer;
+                        const isSelected = selectedAnswers[index] === opt.innerText;
+
+                        opt.classList.remove('selected');
+                        if(isCorrect) {
+                            opt.classList.add('correct');
+                        } else if(isSelected && !isCorrect) {
+                            opt.classList.add('incorrect');
+                        }
+                    });
+
+                    if (selectedAnswers[index] === q.answer) {
+                        score++;
+                    }
+                });
+
+                document.getElementById('quiz-result').innerText = `Your Score: ${score} out of ${quizData.length}`;
+            });
+
+            // Challenge solution toggle
+            document.getElementById('toggle-solution-btn').addEventListener('click', function() {
+                const solutionContent = document.getElementById('solution-content');
+                const isHidden = solutionContent.classList.contains('hidden');
+                solutionContent.classList.toggle('hidden');
+                this.innerText = isHidden ? 'Hide Solution' : 'Show Solution';
+            });
+
+        });
+    </script>
+</body>
+</html>
