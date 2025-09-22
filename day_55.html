@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 55: Caching & Rate Limiting - LLD Bootcamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .font-lexend {
+            font-family: 'Lexend', sans-serif;
+        }
+        .toc-link.active {
+            color: #0f766e;
+            font-weight: 600;
+            border-left-color: #0f766e;
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: #475569;
+            color: #e2e8f0;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+        }
+        .quiz-option:hover {
+            background-color: #f1f5f9;
+        }
+        .token {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sequence-diagram { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 1rem; background-color: white; border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+        .lifeline-container { display: flex; justify-content: space-around; width: 100%; }
+        .lifeline { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .lifeline-box { padding: 0.5rem 1rem; background-color: #e0f2f1; border: 1px solid #4db6ac; border-radius: 0.375rem; font-weight: 600; color: #00796b; }
+        .lifeline-line { width: 2px; background-color: #9ca3af; flex-grow: 1; }
+        .messages-container { position: relative; width: 100%; height: 250px; }
+        .message { position: absolute; display: flex; align-items: center; font-size: 0.875rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; white-space: nowrap; }
+        .message-arrow { content: ''; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid; }
+        .message.request { background-color: #eef2ff; color: #4338ca; }
+        .message.request .message-arrow { border-left-color: #eef2ff; }
+        .message.response { background-color: #f0fdf4; color: #15803d; border-style: dashed; }
+        .message.response .message-arrow { border-left-color: #f0fdf4; }
+        .note { position: absolute; background-color: #fefce8; border: 1px solid #facc15; padding: 0.5rem; border-radius: 0.375rem; font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .solution-reveal {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Chosen Palette: Cool Slate & Teal -->
+    <!-- Application Structure Plan: A two-column responsive layout is used. The left, wider column contains the main lesson content in a logical, scrollable flow from theory to practice. The right, narrower column features a sticky table of contents for quick navigation. This structure is ideal for a dense, educational module, as it separates content from navigation, preventing user overwhelm and allowing easy access to any section. On mobile, the layout stacks vertically, with the ToC accessible at the top. This design prioritizes a structured, self-paced learning experience. -->
+    <!-- Visualization & Content Choices: 
+        - Caching Process -> Goal: Explain -> UML Sequence Diagram (HTML/CSS) -> Justification: Visually models the conditional logic of cache hits/misses, which is clearer than text alone. Built with HTML to avoid prohibited libraries.
+        - Rate Limiting Algorithms -> Goal: Compare & Explain -> Interactive HTML/JS Models -> Justification: Allows users to actively trigger requests and see the algorithms work in real-time (tokens depleting, requests being queued), which solidifies understanding far better than static descriptions.
+        - Cache Performance -> Goal: Inform -> Chart.js Doughnut Chart -> Justification: Provides a simple, universally understood visual summary of the core caching metric (hit vs. miss ratio).
+        - Core Concepts -> Goal: Reinforce -> Syntax Snippets & Comparison Tables -> Justification: Provides quick, scannable reference points for developers and clarifies nuanced differences between related technologies like In-Memory vs. Distributed caching.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <div class="bg-slate-100/80 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 relative">
+            <header class="text-center">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 mt-1 tracking-tight font-lexend">Low-Level Design Bootcamp</h1>
+                <p class="mt-3 text-slate-600 max-w-xl mx-auto">Your 60-Day Interactive Roadmap to Mastering Backend Engineering.</p>
+            </header>
+            <a href="roadmap.html?week=8" class="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 lg:right-8 bg-slate-200 text-slate-700 text-sm font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors shadow-sm">
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row lg:space-x-8">
+            
+            <main class="w-full lg:w-3/4">
+                <article class="prose max-w-none">
+                    <header class="mb-12 border-b pb-8">
+                        <p class="text-lg font-semibold text-teal-600">Day 55</p>
+                        <h2 class="text-4xl font-extrabold text-slate-900 font-lexend tracking-tight">Caching & Rate Limiting</h2>
+                        <p class="mt-4 text-xl text-slate-600">Learn how to dramatically improve your application's performance and resilience by implementing intelligent caching strategies and protective rate limiting.</p>
+                    </header>
+
+                    <section id="theory" class="space-y-10">
+                        <h3 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-teal-500 pb-3">✅ Theory Deep Dive</h3>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-2xl font-bold text-slate-800 font-lexend">1. What is Caching? The Complete Picture</h4>
+                            <p class="mt-4 text-slate-700">Caching is the process of storing copies of files or data in a temporary storage location—a cache—so that they can be accessed more quickly. Instead of retrieving data from a slow data source (like a database or a remote API) every time it's needed, an application can fetch it from the high-speed cache.</p>
+                            <blockquote class="mt-4 border-l-4 border-teal-500 bg-teal-50 p-4 rounded-r-lg">
+                                <p class="font-semibold text-teal-800">The Library Analogy</p>
+                                <p class="text-teal-700">Think of a cache like keeping a popular book on your desk instead of going to the library (the database) every time you want to read it. It's much faster to grab it from your desk (the cache). You only go back to the library when you need a new book or if you suspect the book has a new edition (data invalidation).</p>
+                            </blockquote>
+                            <h5 class="mt-6 text-xl font-semibold text-slate-700">Why Caching is Non-Negotiable for Modern Apps</h5>
+                            <ul class="mt-4 list-disc list-inside space-y-2 text-slate-600">
+                                <li><strong>Reduced Latency:</strong> Reading from memory (cache) is orders of magnitude faster than reading from a disk (database) or a network call. This makes your application feel significantly faster to the end-user.</li>
+                                <li><strong>Reduced Load on Backend Systems:</strong> By serving requests from the cache, you reduce the number of queries hitting your database or other backend services. This lowers their CPU and I/O load, allowing them to serve other essential requests more efficiently and reducing infrastructure costs.</li>
+                                <li><strong>Increased Availability & Fault Tolerance:</strong> If your database or a downstream service temporarily goes down, a cache can continue to serve stale data, providing a degraded but still functional experience rather than a complete outage.</li>
+                                <li><strong>Improved Throughput:</strong> Because cached responses are served faster, the application server can handle a higher number of requests per second, increasing overall system throughput.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                             <h4 class="text-2xl font-bold text-slate-800 font-lexend">2. Cache Invalidation and Eviction Policies</h4>
+                            <p class="mt-4 text-slate-700">A cache is only useful if the data is fresh. The two biggest challenges in caching are deciding when to remove data (invalidation) and what to remove when the cache is full (eviction).</p>
+                             <h5 class="mt-6 text-xl font-semibold text-slate-700">Cache Invalidation Strategies</h5>
+                             <ul class="mt-4 space-y-4">
+                                <li><strong>Time To Live (TTL):</strong> The simplest strategy. You set an expiration time when you add an item to the cache. After the time is up, the item is automatically removed.
+                                    <br><span class="text-sm text-slate-500"><strong>Real-world Scenario:</strong> Caching weather forecast data. A 1-hour TTL is perfect because the data doesn't need to be real-time and will be updated periodically anyway.</span>
+                                </li>
+                                <li><strong>Write-Through Cache:</strong> Data is written to the cache and the database at the same time. This ensures the cache is always consistent with the database, but it introduces a slight write latency.
+                                     <br><span class="text-sm text-slate-500"><strong>Real-world Scenario:</strong> A user's shopping cart. When they add an item, you write it to both Redis (cache) and the database simultaneously to ensure it's never lost and is fast to retrieve.</span>
+                                </li>
+                                 <li><strong>Write-Back Cache:</strong> Data is written only to the cache first. The cache then asynchronously writes the data to the database after a delay. This is very fast for writes but risks data loss if the cache server fails before the data is persisted.
+                                     <br><span class="text-sm text-slate-500"><strong>Real-world Scenario:</strong> High-frequency trading systems or logging services, where write speed is paramount and a tiny amount of data loss might be acceptable in case of a crash.</span>
+                                </li>
+                            </ul>
+
+                            <h5 class="mt-8 text-xl font-semibold text-slate-700">Cache Eviction Policies</h5>
+                             <p class="mt-2 text-slate-600">When your cache runs out of space, you need a policy to decide which items to discard.</p>
+                             <ul class="mt-4 space-y-4">
+                                <li><strong>Least Recently Used (LRU):</strong> Discards the item that hasn't been accessed for the longest time. This is a very common and effective default.
+                                    <br><span class="text-sm text-slate-500"><strong>Use Case:</strong> Caching user profile data. A user who hasn't logged in for months is a good candidate for eviction.</span>
+                                </li>
+                                <li><strong>Least Frequently Used (LFU):</strong> Discards the item that has been accessed the fewest times. This is useful when some items are consistently more popular than others, even if they aren't accessed very recently.
+                                     <br><span class="text-sm text-slate-500"><strong>Use Case:</strong> Caching product data on an e-commerce site. A consistently best-selling product should stay in the cache even if it wasn't viewed in the last hour, while a rarely viewed item can be evicted.</span>
+                                </li>
+                                 <li><strong>First-In, First-Out (FIFO):</strong> Discards the oldest item, regardless of how often or recently it was accessed. Simple, but often inefficient.
+                                     <br><span class="text-sm text-slate-500"><strong>Use Case:</strong> A simple message queue cache where the order of processing matters and old messages must be cleared.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-2xl font-bold text-slate-800 font-lexend">3. Caching Architectures: In-Memory vs. Distributed</h4>
+                            <p class="mt-4 text-slate-700">Choosing the right caching strategy depends on your application's architecture and scaling needs.</p>
+                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="border border-slate-200 rounded-lg p-4">
+                                    <h5 class="font-bold text-lg text-slate-800">In-Memory Cache</h5>
+                                    <p class="text-sm text-slate-600 mt-2">Data is stored in the application's own memory space (RAM). It's the fastest possible caching method.</p>
+                                    <ul class="mt-4 text-sm space-y-2">
+                                        <li class="flex items-start"><span class="text-green-500 mr-2 font-bold">✓</span> <strong>Pros:</strong> Extremely fast, no network latency, easy to implement.</li>
+                                        <li class="flex items-start"><span class="text-red-500 mr-2 font-bold">✗</span> <strong>Cons:</strong> Data is lost on application restart, cache is not shared between multiple instances, consumes application server's memory.</li>
+                                        <li class="flex items-start"><span class="text-teal-600 mr-2 font-bold">▶</span> <strong>Real-world Scenario:</strong> Caching a user's permissions after they log in. The data is small, frequently accessed, and specific to that server instance for the duration of the user's session.</li>
+                                    </ul>
+                                </div>
+                                <div class="border border-slate-200 rounded-lg p-4">
+                                    <h5 class="font-bold text-lg text-slate-800">Distributed Cache (e.g., Redis)</h5>
+                                    <p class="text-sm text-slate-600 mt-2">Data is stored in an external service that is shared by multiple application instances.</p>
+                                    <ul class="mt-4 text-sm space-y-2">
+                                        <li class="flex items-start"><span class="text-green-500 mr-2 font-bold">✓</span> <strong>Pros:</strong> Cache is shared and consistent across all app instances, persists through app restarts, can be scaled independently.</li>
+                                        <li class="flex items-start"><span class="text-red-500 mr-2 font-bold">✗</span> <strong>Cons:</strong> Slower than in-memory due to network calls, more complex to set up and maintain.</li>
+                                        <li class="flex items-start"><span class="text-teal-600 mr-2 font-bold">▶</span> <strong>Real-world Scenario:</strong> An e-commerce site caching its product catalog. When the marketing team updates a product price, the change must be reflected instantly for all users, regardless of which of the 50 web servers they are connected to.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                           <h4 class="text-2xl font-bold text-slate-800 font-lexend">4. Rate Limiting Deep Dive</h4>
+                            <p class="mt-4 text-slate-700">Rate limiting is a technique used to control the amount of incoming traffic to a service. It's crucial for preventing abuse (like DoS attacks), ensuring fair resource usage among users, and managing costs associated with third-party API calls.</p>
+                            <div class="mt-6 space-y-6">
+                                <div>
+                                    <h5 class="font-bold text-lg text-slate-800">Token Bucket Algorithm</h5>
+                                    <p class="text-sm text-slate-600 mt-2">Imagine a bucket with a fixed capacity of tokens. Tokens are added to the bucket at a steady rate. Each incoming request must take one token from the bucket. If the bucket is empty, the request is rejected or queued.</p>
+                                    <ul class="mt-4 text-sm space-y-2">
+                                        <li class="flex items-start"><span class="text-green-500 mr-2 font-bold">✓</span> <strong>Allows Bursts:</strong> If the bucket is full, a user can make a burst of requests up to the bucket's capacity. Ideal for APIs where clients might be idle then send a batch of requests.</li>
+                                        <li class="flex items-start"><span class="text-teal-600 mr-2 font-bold">▶</span> <strong>Real-world Scenario:</strong> A social media API. A user might open the app and it makes 10 simultaneous requests to fetch their feed, notifications, messages, etc. Token Bucket handles this burst gracefully.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg text-slate-800">Leaky Bucket Algorithm</h5>
+                                    <p class="text-sm text-slate-600 mt-2">Imagine a bucket with a hole at the bottom. Incoming requests are added to the bucket (like water). The bucket processes requests at a constant rate (the leak). If the bucket is full, new requests are discarded.</p>
+                                    <ul class="mt-4 text-sm space-y-2">
+                                        <li class="flex items-start"><span class="text-green-500 mr-2 font-bold">✓</span> <strong>Smooths Out Traffic:</strong> This algorithm enforces a steady, predictable outflow of requests, which is great for services that can't handle bursts.</li>
+                                        <li class="flex items-start"><span class="text-teal-600 mr-2 font-bold">▶</span> <strong>Real-world Scenario:</strong> A video processing service. You can accept a burst of upload requests, but you can only process one video at a time. The Leaky Bucket ensures the processing queue is fed at a constant, manageable rate.</li>
+                                    </ul>
+                                </div>
+                                <h5 class="mt-6 text-xl font-semibold text-slate-700">Interactive Demonstration</h5>
+                                <p class="text-slate-600">Click the buttons below to see how each algorithm handles incoming requests. Notice how the Token Bucket allows for an initial burst, while the Leaky Bucket processes requests at a steady pace.</p>
+                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="border p-4 rounded-lg">
+                                        <h6 class="font-bold text-center">Token Bucket</h6>
+                                        <div id="token-bucket-viz" class="w-24 h-32 mx-auto mt-4 border-4 border-slate-700 rounded-b-xl relative bg-slate-200">
+                                            <div id="token-bucket-tokens" class="absolute bottom-0 left-0 right-0 flex flex-wrap-reverse p-1 gap-1 justify-center"></div>
+                                        </div>
+                                        <p class="text-center text-sm mt-2">Tokens: <span id="token-count">5</span>/10</p>
+                                        <button id="token-request-btn" class="w-full mt-4 bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 transition">Make Request</button>
+                                        <p id="token-status" class="text-center h-6 mt-2 font-semibold"></p>
+                                    </div>
+                                     <div class="border p-4 rounded-lg">
+                                        <h6 class="font-bold text-center">Leaky Bucket</h6>
+                                        <div id="leaky-bucket-viz" class="w-24 h-32 mx-auto mt-4 border-4 border-slate-700 rounded-t-xl relative bg-blue-200 overflow-hidden">
+                                           <div id="leaky-bucket-water" class="absolute bottom-0 left-0 right-0 bg-blue-500 transition-all duration-500" style="height: 30%;"></div>
+                                           <div class="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-700"></div>
+                                        </div>
+                                        <p class="text-center text-sm mt-2">Queue: <span id="leaky-queue-count">3</span>/10</p>
+                                        <button id="leaky-request-btn" class="w-full mt-4 bg-teal-600 text-white py-2 rounded-md hover:bg-teal-700 transition">Make Request</button>
+                                        <p id="leaky-status" class="text-center h-6 mt-2 font-semibold"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="coding-practice" class="mt-16 space-y-10">
+                        <h3 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-teal-500 pb-3">✅ Coding Practice</h3>
+                        
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-xl font-bold text-slate-800"> [Easy] Cache GET Responses with In-Memory Cache</h4>
+                            <p class="mt-2 text-slate-600">Modify an existing API endpoint that retrieves a list of products from a database to use `IMemoryCache`. The data should be cached for 10 minutes.</p>
+                             <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">// Solution: ProductsController.cs
+[HttpGet]
+public async Task&lt;IActionResult&gt; GetProducts()
+{
+    // The key is a unique identifier for this specific cached data.
+    const string cacheKey = "ListOfProducts";
+
+    // TryGetValue is an efficient way to check for existence and retrieve in one step.
+    if (!_memoryCache.TryGetValue(cacheKey, out List&lt;Product&gt; products))
+    {
+        // --- CACHE MISS ---
+        // Data not in cache, so we perform the expensive operation.
+        products = await _context.Products.ToListAsync();
+
+        // Configure the cache entry options.
+        var cacheEntryOptions = new MemoryCacheEntryOptions()
+            // Keep in cache for this duration, regardless of activity.
+            .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+
+        // Save the freshly retrieved data into the cache.
+        _memoryCache.Set(cacheKey, products, cacheEntryOptions);
+    }
+    // --- CACHE HIT --- (or data now in cache after miss)
+    return Ok(products);
+}
+</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+
+                         <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-xl font-bold text-slate-800">[Medium] Use Redis for Distributed Caching</h4>
+                            <p class="mt-2 text-slate-600">Refactor the product service to use `IDistributedCache` with Redis. Store product data as a JSON string. Ensure your `Program.cs` is configured to use Redis.</p>
+                             <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">// Step 1: Configure Redis in Program.cs
+// This registers the Redis implementation of IDistributedCache.
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "SampleInstance_"; // Prepends to keys to avoid collisions
+});
+
+// Step 2: Update the Controller to use IDistributedCache
+[HttpGet("{id}")]
+public async Task&lt;IActionResult&gt; GetProductById(int id)
+{
+    string cacheKey = $"Product_{id}";
+    Product product;
+
+    // Distributed cache stores data as byte arrays, GetStringAsync is a helper.
+    var cachedProductString = await _distributedCache.GetStringAsync(cacheKey);
+
+    if (!string.IsNullOrEmpty(cachedProductString))
+    {
+        // --- CACHE HIT ---
+        // Deserialize the JSON string back into an object.
+        product = JsonSerializer.Deserialize&lt;Product&gt;(cachedProductString);
+    }
+    else
+    {
+        // --- CACHE MISS ---
+        product = await _context.Products.FindAsync(id);
+        if (product == null) return NotFound();
+
+        // Serialize the object to a JSON string for storage.
+        string jsonProduct = JsonSerializer.Serialize(product);
+        var options = new DistributedCacheEntryOptions()
+            // Sliding expiration resets the timer on each access.
+            .SetSlidingExpiration(TimeSpan.FromMinutes(15));
+        
+        await _distributedCache.SetStringAsync(cacheKey, jsonProduct, options);
+    }
+
+    return Ok(product);
+}
+</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow-sm">
+                            <h4 class="text-xl font-bold text-slate-800">[Hard] Implement Rate Limiting Per User</h4>
+                            <p class="mt-2 text-slate-600">Using ASP.NET Core's built-in rate limiting middleware, configure a policy that limits authenticated users to 100 requests per minute to a specific group of "premium" endpoints. Unauthenticated users should be limited to 20 requests per minute.</p>
+                            <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">// In Program.cs
+using System.Threading.RateLimiting;
+
+// ...
+
+builder.Services.AddRateLimiter(options =>
+{
+    // This defines a named policy that we can apply to endpoints.
+    options.AddPolicy("PremiumUserPolicy", httpContext =>
+    {
+        // Use a unique identifier for the user as the partition key.
+        // This ensures each user gets their own rate limit bucket.
+        var partitionKey = httpContext.User.Identity?.IsAuthenticated ?? false
+            ? httpContext.User.Identity.Name 
+            : httpContext.Connection.RemoteIpAddress?.ToString();
+        
+        if (string.IsNullOrEmpty(partitionKey))
+            return RateLimitPartition.GetNoLimiter(string.Empty); // Failsafe
+
+        var limit = httpContext.User.Identity?.IsAuthenticated ?? false ? 100 : 20;
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = limit,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5 // Queue a few requests instead of instantly rejecting.
+            });
+    });
+
+    // This sets the default status code when a request is rejected.
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+var app = builder.Build();
+// The middleware must be registered to be active.
+app.UseRateLimiter();
+
+// ...
+
+// Apply the policy to a controller or endpoint using its name.
+[EnableRateLimiting("PremiumUserPolicy")]
+[ApiController]
+[Route("api/[controller]")]
+public class PremiumDataController : ControllerBase 
+{
+    //... endpoints here
+}
+</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="uml-schema" class="mt-16">
+                         <h3 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-teal-500 pb-3">✅ UML/Schema Task</h3>
+                         <h4 class="text-xl font-bold text-slate-800 mt-6">Cache Access Sequence Diagram</h4>
+                         <p class="mt-2 text-slate-600">This diagram illustrates the flow of a request when a cache is involved. It shows the two primary paths: a "cache hit" where data is returned quickly from the cache, and a "cache miss" where the application must query the database and then populate the cache for future requests.</p>
+                         <div class="mt-6 p-4 bg-white rounded-lg shadow-sm overflow-x-auto">
+                            <div class="sequence-diagram min-w-[600px]">
+                                <div class="lifeline-container">
+                                    <div class="lifeline"><div class="lifeline-box">Client</div><div class="lifeline-line" style="height: 250px;"></div></div>
+                                    <div class="lifeline"><div class="lifeline-box">API</div><div class="lifeline-line" style="height: 250px;"></div></div>
+                                    <div class="lifeline"><div class="lifeline-box">Cache</div><div class="lifeline-line" style="height: 250px;"></div></div>
+                                    <div class="lifeline"><div class="lifeline-box">Database</div><div class="lifeline-line" style="height: 250px;"></div></div>
+                                </div>
+                                <div class="messages-container">
+                                    <div class="message request" style="left: 13%; top: 20px; width: 22%;"><span class="mr-2">1. Request Data</span><div class="message-arrow"></div></div>
+                                    <div class="message request" style="left: 38%; top: 50px; width: 22%;"><span class="mr-2">2. Check Cache</span><div class="message-arrow"></div></div>
+                                    
+                                    <div class="note" style="left: 45%; top: 80px; transform: translateX(-50%); background-color: #f0fdf4;">
+                                        <p class="font-bold text-green-700">PATH A: Cache Hit</p>
+                                    </div>
+                                    <div class="message response" style="left: 38%; top: 110px; width: 22%;"><span class="mr-2">3a. Data Found</span><div class="message-arrow" style="transform: translateY(-50%) rotate(180deg); left: -8px;"></div></div>
+                                    <div class="message response" style="left: 13%; top: 140px; width: 22%;"><span class="mr-2">4a. Return Data</span><div class="message-arrow" style="transform: translateY(-50%) rotate(180deg); left: -8px;"></div></div>
+
+                                    <div class="note" style="left: 65%; top: 80px; transform: translateX(-50%); background-color: #fffbeb;">
+                                        <p class="font-bold text-amber-700">PATH B: Cache Miss</p>
+                                    </div>
+                                    <div class="message response" style="left: 38%; top: 110px; width: 22%;"><span class="mr-2">3b. Not Found</span><div class="message-arrow" style="transform: translateY(-50%) rotate(180deg); left: -8px;"></div></div>
+                                    <div class="message request" style="left: 63%; top: 140px; width: 22%;"><span class="mr-2">4b. Query DB</span><div class="message-arrow"></div></div>
+                                    <div class="message response" style="left: 63%; top: 170px; width: 22%;"><span class="mr-2">5b. Return Data</span><div class="message-arrow" style="transform: translateY(-50%) rotate(180deg); left: -8px;"></div></div>
+                                    <div class="message request" style="left: 38%; top: 200px; width: 22%;"><span class="mr-2">6b. Store in Cache</span><div class="message-arrow"></div></div>
+                                    <div class="message response" style="left: 13%; top: 230px; width: 22%;"><span class="mr-2">7b. Return Data</span><div class="message-arrow" style="transform: translateY(-50%) rotate(180deg); left: -8px;"></div></div>
+                                </div>
+                            </div>
+                         </div>
+                    </section>
+                    
+                    <section id="case-study" class="mt-16">
+                        <h3 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-teal-500 pb-3">✅ Case Study</h3>
+                        <div class="bg-white p-6 rounded-lg shadow-sm mt-6">
+                            <h4 class="text-xl font-bold text-slate-800">Build a Resilient News API</h4>
+                            <p class="mt-2 text-slate-600"><strong>Scenario:</strong> You are building a News API that aggregates headlines from multiple sources. The "Top Headlines" endpoint is extremely popular and gets hit constantly. Your upstream news providers charge you per API call, and your database is under heavy load.</p>
+                            <h5 class="mt-6 text-lg font-semibold text-slate-700">Design & Implementation Strategy</h5>
+                            <ol class="mt-4 list-decimal list-inside space-y-4 text-slate-600">
+                                <li>
+                                    <strong>Implement Response Caching:</strong> The first step is to cache the "Top Headlines" response. Since news headlines don't change every second, a cache duration of 5 minutes is reasonable. We'll start with an `IMemoryCache` for simplicity.
+                                    <br><em>Result:</em> Database load drops by over 95%. Average response time for users drops from ~400ms to ~15ms. Infrastructure costs related to database CPU are significantly reduced.
+                                </li>
+                                <li>
+                                    <strong>Scale with Distributed Cache:</strong> The API becomes popular and you need to deploy multiple instances behind a load balancer. The in-memory cache is now a problem because each instance has its own, inconsistent cache. We'll switch the implementation to use `IDistributedCache` backed by a shared Redis instance.
+                                    <br><em>Result:</em> All instances now share the same cache. The user experience is consistent regardless of which server handles their request. Cache hit ratio remains high even under load balancing.
+                                </li>
+                                 <li>
+                                    <strong>Protect with Rate Limiting:</strong> A single user with a misconfigured script is spamming your API, costing you money with the upstream providers and threatening your API's stability. We will implement a rate limiter. We'll add a `FixedWindowLimiter` policy that allows 60 requests per minute per IP address.
+                                    <br><em>Result:</em> The abusive script is throttled, receiving `429 Too Many Requests` responses after exceeding the limit. Your API is protected, costs are controlled, and legitimate users are unaffected.
+                                </li>
+                            </ol>
+                            <div class="code-block mt-6">
+                                <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">// Final Controller combining both concepts
+
+[ApiController]
+[Route("api/[controller]")]
+[EnableRateLimiting("FixedByUserIP")] // Applied policy
+public class NewsController : ControllerBase
+{
+    private readonly IDistributedCache _cache;
+    private readonly INewsService _newsService; // Service to fetch news
+
+    public NewsController(IDistributedCache cache, INewsService newsService)
+    {
+        _cache = cache;
+        _newsService = newsService;
+    }
+
+    [HttpGet("top-headlines")]
+    public async Task&lt;IActionResult&gt; GetTopHeadlines()
+    {
+        const string cacheKey = "TopHeadlines";
+        var cachedHeadlines = await _cache.GetStringAsync(cacheKey);
+
+        if (cachedHeadlines != null)
+        {
+            // Cache Hit: Return the cached JSON directly.
+            // This is extremely fast as it avoids deserialization on the server.
+            return Content(cachedHeadlines, "application/json");
+        }
+
+        // Cache Miss: Fetch, serialize, cache, and then return.
+        var headlines = await _newsService.FetchTopHeadlinesAsync();
+        var headlinesJson = JsonSerializer.Serialize(headlines);
+
+        await _cache.SetStringAsync(cacheKey, headlinesJson, new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+        });
+
+        return Ok(headlines);
+    }
+}</code></pre>
+                                <button class="copy-btn">Copy</button>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <section id="knowledge-check" class="mt-16">
+                        <h3 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-teal-500 pb-3">🧠 Knowledge Check</h3>
+                        <div class="bg-white p-6 rounded-lg shadow-sm mt-6">
+                            <form id="quiz-form" class="space-y-8">
+                                <div>
+                                    <p class="font-semibold text-slate-800">1. When scaling a web application from one server to multiple servers, what is the primary reason to switch from an in-memory cache to a distributed cache like Redis?</p>
+                                    <div class="mt-4 space-y-2">
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q1" value="a" class="mr-3"> A) To maintain cache consistency across all application instances.</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q1" value="b" class="mr-3"> B) Because distributed caches are always faster than in-memory caches.</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q1" value="c" class="mr-3"> C) To reduce the memory usage of the database server.</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q1" value="d" class="mr-3"> D) Because in-memory caches cannot store complex objects.</label>
+                                    </div>
+                                    <p class="text-sm mt-2 hidden quiz-feedback"></p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">2. Which rate limiting algorithm is better suited for an API that needs to handle sudden, short bursts of traffic from clients?</p>
+                                    <div class="mt-4 space-y-2">
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q2" value="a" class="mr-3"> A) Leaky Bucket</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q2" value="b" class="mr-3"> B) Token Bucket</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q2" value="c" class="mr-3"> C) Fixed Window Counter</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q2" value="d" class="mr-3"> D) Sliding Window Log</label>
+                                    </div>
+                                     <p class="text-sm mt-2 hidden quiz-feedback"></p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">3. In ASP.NET Core, what is the primary interface for interacting with a configured distributed cache?</p>
+                                    <div class="mt-4 space-y-2">
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q3" value="a" class="mr-3"> A) IRedisCache</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q3" value="b" class="mr-3"> B) IMemoryCache</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q3" value="c" class="mr-3"> C) IDistributedCache</label>
+                                        <label class="flex items-center p-3 border rounded-md quiz-option cursor-pointer"><input type="radio" name="q3" value="d" class="mr-3"> D) ICacheProvider</label>
+                                    </div>
+                                    <p class="text-sm mt-2 hidden quiz-feedback"></p>
+                                </div>
+                                <button type="submit" class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition">Check Answers</button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section id="self-assessment" class="mt-16">
+                        <h3 class="text-3xl font-bold text-slate-800 font-lexend border-b-2 border-teal-500 pb-3">🚀 Self-Assessment Challenge</h3>
+                        <div class="bg-white p-6 rounded-lg shadow-sm mt-6">
+                             <h4 class="text-xl font-bold text-slate-800">Challenge: The Resilient Stock Ticker API</h4>
+                             <p class="mt-4 text-slate-600">You are building an API for a stock-tracking service. The endpoint <strong>/api/stocks/{symbol}</strong> fetches real-time stock prices from an expensive third-party provider that has its own strict rate limits.</p>
+                             <p class="mt-4 font-semibold text-slate-700">Your task is to design a resilient and cost-effective solution in ASP.NET Core that meets the following requirements:</p>
+                             <ol class="mt-4 list-decimal list-inside space-y-3 text-slate-600">
+                                 <li><strong>Cost Reduction:</strong> Cache the stock price for any given symbol for <strong>60 seconds</strong> to minimize calls to the expensive third-party API.</li>
+                                 <li><strong>Scale-Ready:</strong> The caching solution must work correctly even when the application is scaled out to multiple server instances.</li>
+                                 <li><strong>Abuse Prevention:</strong> Implement a rate limit to prevent any single user (identified by an API key in the request header `X-API-KEY`) from calling your endpoint more than <strong>30 times per minute</strong>.</li>
+                                 <li><strong>Clear Feedback:</strong> When the rate limit is exceeded, the API must return a `429 Too Many Requests` status code.</li>
+                             </ol>
+                             <button id="show-solution-btn" class="mt-6 bg-slate-700 text-white font-semibold py-2 px-6 rounded-lg hover:bg-slate-800 transition">Show Solution</button>
+                             <div id="solution-container" class="solution-reveal mt-6 border-t pt-6">
+                                 <h4 class="text-lg font-bold text-slate-800">Solution Breakdown</h4>
+                                 <p class="mt-2 text-slate-600">The solution involves combining a distributed cache (Redis) with a custom rate-limiting policy that partitions based on a request header.</p>
+                                 <div class="code-block mt-4">
+                                <pre class="bg-slate-800 text-white p-4 rounded-md text-sm overflow-x-auto"><code class="language-csharp">// In Program.cs
+
+// 1. Add Redis for distributed caching
+builder.Services.AddStackExchangeRedisCache(options => { /* ... */ });
+
+// 2. Configure the rate limiter
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("ApiKeyPolicy", httpContext =>
+    {
+        // Attempt to get the API key from the header.
+        if (httpContext.Request.Headers.TryGetValue("X-API-KEY", out var apiKey))
+        {
+            // Use the API key as the partition for the rate limit.
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: apiKey.ToString(),
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1)
+                });
+        }
+
+        // If no API key, use the IP address as a fallback with a stricter limit.
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString(),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1)
+            });
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+// In StocksController.cs
+[ApiController]
+[Route("api/[controller]")]
+// 3. Apply the rate limiting policy to the controller
+[EnableRateLimiting("ApiKeyPolicy")]
+public class StocksController : ControllerBase
+{
+    private readonly IDistributedCache _cache;
+    private readonly IThirdPartyStockService _stockService;
+
+    public StocksController(IDistributedCache cache, IThirdPartyStockService stockService)
+    {
+        _cache = cache;
+        _stockService = stockService;
+    }
+
+    [HttpGet("{symbol}")]
+    public async Task&lt;IActionResult&gt; GetStockPrice(string symbol)
+    {
+        string cacheKey = $"stock_{symbol.ToUpper()}";
+        
+        // 4. Check the distributed cache first
+        var cachedPrice = await _cache.GetStringAsync(cacheKey);
+        if (cachedPrice != null)
+        {
+            return Ok(new { Symbol = symbol, Price = cachedPrice, Source = "Cache" });
+        }
+
+        // 5. If not in cache, call the expensive service
+        var price = await _stockService.GetPriceAsync(symbol);
+        if (price == null)
+        {
+            return NotFound("Stock symbol not found.");
+        }
+
+        // 6. Store the result in the cache with a 60-second expiration
+        await _cache.SetStringAsync(cacheKey, price.ToString(), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
+        });
+
+        return Ok(new { Symbol = symbol, Price = price, Source = "Live API" });
+    }
+}
+</code></pre>
+                                    <button class="copy-btn">Copy</button>
+                                </div>
+                             </div>
+                        </div>
+                    </section>
+
+
+                </article>
+            </main>
+
+            <aside class="w-full lg:w-1/4 mt-12 lg:mt-0">
+                <div class="sticky top-8">
+                    <h3 class="text-lg font-bold text-slate-800 font-lexend">On This Page</h3>
+                    <nav id="toc" class="mt-4">
+                        <ul class="space-y-2">
+                            <li><a href="#theory" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Theory Deep Dive</a></li>
+                            <li><a href="#coding-practice" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Coding Practice</a></li>
+                            <li><a href="#uml-schema" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">UML/Schema Task</a></li>
+                            <li><a href="#case-study" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Case Study</a></li>
+                            <li><a href="#knowledge-check" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Knowledge Check</a></li>
+                            <li><a href="#self-assessment" class="toc-link block text-slate-600 hover:text-teal-600 border-l-2 border-transparent pl-4 transition-colors">Self-Assessment</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-16 py-8 border-t border-slate-200">
+        <p class="text-slate-700 font-semibold">Low-Level Design Bootcamp</p>
+        <p class="text-sm text-slate-500 mt-2">A personalized learning roadmap curated by Mr. Mahesh Singare.</p>
+        <p class="text-xs text-slate-400 mt-4">&copy; 2025. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- Copy to Clipboard for Code Blocks ---
+        const allCodeBlocks = document.querySelectorAll('.code-block');
+        allCodeBlocks.forEach(block => {
+            const copyButton = block.querySelector('.copy-btn');
+            const code = block.querySelector('code').innerText;
+            if (copyButton) {
+                copyButton.addEventListener('click', () => {
+                    navigator.clipboard.writeText(code).then(() => {
+                        copyButton.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy';
+                        }, 2000);
+                    });
+                });
+            }
+        });
+
+        // --- Table of Contents Active State ---
+        const tocLinks = document.querySelectorAll('.toc-link');
+        const sections = document.querySelectorAll('section[id]');
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    tocLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${id}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, { rootMargin: '-50% 0px -50% 0px' });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // --- Rate Limiting Visualizations ---
+        const tokenBucket = { tokens: 5, capacity: 10, rate: 1, lastRefill: Date.now() };
+        const tokenCountEl = document.getElementById('token-count');
+        const tokenRequestBtn = document.getElementById('token-request-btn');
+        const tokenStatusEl = document.getElementById('token-status');
+        const tokenBucketTokensEl = document.getElementById('token-bucket-tokens');
+
+        function renderTokens() {
+            tokenBucketTokensEl.innerHTML = '';
+            for(let i = 0; i < tokenBucket.tokens; i++) {
+                const tokenDiv = document.createElement('div');
+                tokenDiv.className = 'w-4 h-4 bg-teal-500 rounded-full token';
+                tokenBucketTokensEl.appendChild(tokenDiv);
+            }
+            tokenCountEl.textContent = `${tokenBucket.tokens}/${tokenBucket.capacity}`;
+        }
+        
+        function refillTokenBucket() {
+            const now = Date.now();
+            const elapsedSeconds = (now - tokenBucket.lastRefill) / 1000;
+            const newTokens = Math.floor(elapsedSeconds * tokenBucket.rate);
+            if (newTokens > 0) {
+                tokenBucket.tokens = Math.min(tokenBucket.capacity, tokenBucket.tokens + newTokens);
+                tokenBucket.lastRefill = now;
+                renderTokens();
+            }
+        }
+
+        tokenRequestBtn.addEventListener('click', () => {
+            refillTokenBucket();
+            if (tokenBucket.tokens >= 1) {
+                tokenBucket.tokens--;
+                tokenStatusEl.textContent = 'Request Accepted!';
+                tokenStatusEl.className = 'text-center h-6 mt-2 font-semibold text-green-600';
+                renderTokens();
+            } else {
+                tokenStatusEl.textContent = 'Request Rejected!';
+                tokenStatusEl.className = 'text-center h-6 mt-2 font-semibold text-red-600';
+            }
+        });
+
+        const leakyBucket = { queue: 3, capacity: 10, leakRate: 1 };
+        const leakyQueueCountEl = document.getElementById('leaky-queue-count');
+        const leakyRequestBtn = document.getElementById('leaky-request-btn');
+        const leakyStatusEl = document.getElementById('leaky-status');
+        const leakyWaterEl = document.getElementById('leaky-bucket-water');
+
+        function renderLeakyBucket() {
+            const percentage = (leakyBucket.queue / leakyBucket.capacity) * 100;
+            leakyWaterEl.style.height = `${percentage}%`;
+            leakyQueueCountEl.textContent = `${leakyBucket.queue}/${leakyBucket.capacity}`;
+        }
+
+        function leakRequest() {
+            if (leakyBucket.queue > 0) {
+                leakyBucket.queue--;
+                renderLeakyBucket();
+            }
+        }
+        
+        leakyRequestBtn.addEventListener('click', () => {
+            if (leakyBucket.queue < leakyBucket.capacity) {
+                leakyBucket.queue++;
+                leakyStatusEl.textContent = 'Request Queued!';
+                leakyStatusEl.className = 'text-center h-6 mt-2 font-semibold text-green-600';
+                renderLeakyBucket();
+            } else {
+                leakyStatusEl.textContent = 'Request Dropped (Full)!';
+                leakyStatusEl.className = 'text-center h-6 mt-2 font-semibold text-red-600';
+            }
+        });
+
+        setInterval(refillTokenBucket, 1000);
+        setInterval(leakRequest, 1500);
+        renderTokens();
+        renderLeakyBucket();
+
+        // --- Knowledge Check Quiz ---
+        const quizForm = document.getElementById('quiz-form');
+        const answers = { q1: 'a', q2: 'b', q3: 'c' };
+        const explanations = {
+            q1: "Correct! When you have multiple servers, each with its own in-memory cache, they become inconsistent. A distributed cache provides a single, shared source of truth for all instances.",
+            q2: "Correct! The Token Bucket algorithm allows for accumulating tokens, which can then be spent in a burst. The Leaky Bucket always processes requests at a steady rate.",
+            q3: "Correct! `IDistributedCache` is the abstraction in ASP.NET Core for distributed caching. Implementations for Redis, SQL Server, etc., all use this common interface."
+        };
+
+        quizForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const formData = new FormData(quizForm);
+            for (const [question, correctAnswer] of Object.entries(answers)) {
+                const userAnswer = formData.get(question);
+                const feedbackEl = quizForm.querySelector(`input[name="${question}"]`).closest('div').nextElementSibling;
+                const optionLabels = quizForm.querySelectorAll(`input[name="${question}"]`);
+                
+                optionLabels.forEach(label => label.parentElement.classList.remove('bg-red-100', 'border-red-300', 'bg-green-100', 'border-green-300'));
+
+                if (userAnswer === correctAnswer) {
+                    const correctLabel = quizForm.querySelector(`input[name="${question}"][value="${userAnswer}"]`).parentElement;
+                    correctLabel.classList.add('bg-green-100', 'border-green-300');
+                    feedbackEl.textContent = explanations[question];
+                    feedbackEl.className = 'text-sm mt-2 quiz-feedback text-green-700';
+                } else {
+                    const correctLabel = quizForm.querySelector(`input[name="${question}"][value="${correctAnswer}"]`).parentElement;
+                    correctLabel.classList.add('bg-green-100', 'border-green-300');
+                    if (userAnswer) {
+                        const wrongLabel = quizForm.querySelector(`input[name="${question}"][value="${userAnswer}"]`).parentElement;
+                        wrongLabel.classList.add('bg-red-100', 'border-red-300');
+                    }
+                    feedbackEl.textContent = `Not quite. ${explanations[question]}`;
+                    feedbackEl.className = 'text-sm mt-2 quiz-feedback text-red-700';
+                }
+            }
+        });
+
+        // --- Self-Assessment Solution Toggle ---
+        const showSolutionBtn = document.getElementById('show-solution-btn');
+        const solutionContainer = document.getElementById('solution-container');
+        showSolutionBtn.addEventListener('click', () => {
+            if (solutionContainer.style.maxHeight) {
+                solutionContainer.style.maxHeight = null;
+                showSolutionBtn.textContent = 'Show Solution';
+            } else {
+                solutionContainer.style.maxHeight = solutionContainer.scrollHeight + "px";
+                showSolutionBtn.textContent = 'Hide Solution';
+            }
+        });
+
+    });
+    </script>
+</body>
+</html>
+
